@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
     <rect width="1280" height="720" fill="#F3F6FA"/>
-    <text x="30" y="40" font-family="Segoe UI,Arial" font-size="27" font-weight="700" fill="#172033">DCM : Quick Sort</text>
-    <text x="30" y="64" font-family="Segoe UI,Arial" font-size="13" fill="#687487">Downloaded Content Management · 1.0.22</text>
+    <text x="30" y="40" font-family="Segoe UI,Arial" font-size="27" font-weight="700" fill="#172033">DCM - Quick Sort</text>
+    <text x="30" y="64" font-family="Segoe UI,Arial" font-size="13" fill="#687487">Downloaded Content Management · 1.0.23</text>
     <rect x="1006" y="24" width="242" height="34" rx="17" fill="#EAF3FF"/>
     <text x="1127" y="46" text-anchor="middle" font-family="Segoe UI,Arial" font-size="12" font-weight="700" fill="#0E4B93">Files · Preview · Processed</text>
 
