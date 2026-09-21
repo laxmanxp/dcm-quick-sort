@@ -28,31 +28,38 @@ jobs:
           mkdir -p /tmp/dcm122
           python3 - <<'PY'
           from pathlib import Path
-          p = Path(".github/workflows/publish-v1.0.22.yml")
-          s = p.read_text()
-          start_marker = "cat > /tmp/dcm122/source.tar.gz.b64 <<'EOF'\n"
-          start = s.index(start_marker) + len(start_marker)
-          end = s.index("\nEOF\n", start)
           import hashlib
-          prefix = s[start:end].strip()
-          assert len(prefix) == 20023, len(prefix)
-          expected = [
-              "1ce123d22cdd1a2c664749ca08cead1a750635002b08b42e281b99cf4394cffd",
+
+          files = [
+              "release-src/v1.0.22/source-prefix-00.b64",
+              "release-src/v1.0.22/source-prefix-01.b64",
+              "release-src/v1.0.22/source-prefix-02.b64",
+              "release-src/v1.0.22/source-suffix-00.b64",
+              "release-src/v1.0.22/source-suffix-01.b64",
+              "release-src/v1.0.22/source-suffix-02.b64",
+          ]
+          expected_lengths = [7000, 7000, 6023, 9000, 9000, 6697]
+          expected_hashes = [
+              "2084910d816e99983687125ba8a71a2d9e59eb119a7659a9c05fb85c9621a7cf",
+              "17f2c61782720bb3e6e2d6804e8508c35019d20294cf7a57f9446e9297d3b986",
+              "510903a68eaf62233ca9744ea79aa296d99298aeb594e81f43e15eaaadea94f9",
               "9ab5a8880cc63e7376816dfadadf468026d103bedaa733d0fcb62535500c1de0",
               "2e8d90fb76167c53451298954492234d617b31c86a5c1b2de5815a6ba09bed12",
               "20a51a58d4a36bd26b877823f19938078d02d4017775e967895bc67f33f12bb9",
           ]
-          parts = [prefix]
-          parts += [Path(f"release-src/v1.0.22/source-suffix-{n:02d}.b64").read_text().strip() for n in range(3)]
-          for i, part in enumerate(parts):
+          parts = []
+          for i, path in enumerate(files):
+              part = Path(path).read_text().strip()
               digest = hashlib.sha256(part.encode()).hexdigest()
-              print(f"part {i}: len={len(part)} sha256={digest} expected={expected[i]}")
-              assert digest == expected[i], (i, digest, expected[i])
+              print(f"part {i}: len={len(part)} sha256={digest}")
+              assert len(part) == expected_lengths[i], (i, len(part), expected_lengths[i])
+              assert digest == expected_hashes[i], (i, digest, expected_hashes[i])
+              parts.append(part)
+
           full = "".join(parts)
           assert len(full) == 44720, len(full)
-          out = Path("/tmp/dcm122/source.tar.gz.b64")
-          out.write_text(full)
-          print("Recovered complete base64 characters:", len(full))
+          Path("/tmp/dcm122/source.tar.gz.b64").write_text(full)
+          print("Verified complete base64 characters:", len(full))
           PY
           base64 -d /tmp/dcm122/source.tar.gz.b64 > /tmp/dcm122/source.tar.gz
           test "$(stat -c%s /tmp/dcm122/source.tar.gz)" = "33538"
