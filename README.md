@@ -1,8 +1,8 @@
-# DCM : Quick Sort
+# DCM - Quick Sort
 
 **Downloaded Content Management**
 
-DCM : Quick Sort is a small Windows utility for cleaning up downloaded and received files.
+DCM - Quick Sort is a small Windows utility for cleaning up downloaded and received files.
 
 **Preview → Rename → Move → Next**
 
@@ -33,7 +33,7 @@ https://laxmanxp.github.io/dcm-quick-sort/privacy.html
 
 ## Donation
 
-DCM : Quick Sort is free to use.
+DCM - Quick Sort is free to use.
 
 Optional UPI donation: **8763320974@upi**
 
@@ -44,4 +44,4 @@ Donations do not unlock features.
 **Cyber Planet**  
 Sector-18, Raurkela, Odisha, India
 
-DCM : Quick Sort is an independent utility and is not a Microsoft product.
+DCM - Quick Sort is an independent utility and is not a Microsoft product.
