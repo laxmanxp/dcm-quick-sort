@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#F3F6FA"/>
+  <text x="48" y="54" font-family="Segoe UI,Arial" font-size="30" font-weight="700" fill="#172033">DCM : Quick Sort</text>
+  <text x="48" y="82" font-family="Segoe UI,Arial" font-size="15" fill="#687487">Downloaded Content Management</text>
+  <rect x="28" y="104" width="1224" height="526" rx="14" fill="#FFFFFF" stroke="#D7DEE8" stroke-width="2"/>
+  <text x="52" y="145" font-family="Segoe UI,Arial" font-size="23" font-weight="700" fill="#0E4B93">Before: Downloads is hard to understand</text>
+  <rect x="72" y="178" width="1136" height="400" rx="9" fill="#FBFCFD" stroke="#D7DEE8"/>
+   <text x="92" y="208" font-family="Segoe UI,Arial" font-size="14" font-weight="700" fill="#687487">Name</text>
+   <text x="830" y="208" font-family="Segoe UI,Arial" font-size="14" font-weight="700" fill="#687487">Type</text>
+   <line x1="88" y1="224" x2="1188" y2="224" stroke="#D7DEE8"/>
+   <g font-family="Segoe UI,Arial" font-size="18" fill="#172033">
+    <text x="104" y="270">Adobe Scan 01.pdf</text><text x="830" y="270" fill="#687487">PDF File</text>
+    <text x="104" y="320">document (17).pdf</text><text x="830" y="320" fill="#687487">PDF File</text>
+    <text x="104" y="370">IMG-20260920-WA0003.jpg</text><text x="830" y="370" fill="#687487">JPEG image</text>
+    <text x="104" y="420">R5Kzw.jpg</text><text x="830" y="420" fill="#687487">JPEG image</text>
+    <text x="104" y="470">scanned 10.02.2026.pdf</text><text x="830" y="470" fill="#687487">PDF File</text>
+    <text x="104" y="520">download</text><text x="830" y="520" fill="#687487">File</text>
+   </g>
+   <rect x="868" y="122" width="326" height="42" rx="10" fill="#FFF0F0" stroke="#E3B4B4"/>
+   <text x="1031" y="149" text-anchor="middle" font-family="Segoe UI,Arial" font-size="16" font-weight="700" fill="#B13B3B">Messy downloaded filenames</text>
+  <rect x="90" y="646" width="1100" height="52" rx="12" fill="#101820" opacity="0.90"/>
+  <text x="640" y="678" text-anchor="middle" font-family="Segoe UI,Arial" font-size="20" fill="#FFFFFF">DCM Quick Sort cleans up messy downloads.</text>
+</svg>
