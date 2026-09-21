@@ -1,0 +1,113 @@
+name: Publish DCM Quick Sort v1.0.22 Fixed
+
+on:
+  push:
+    paths:
+      - ".github/workflows/publish-v1.0.22-fixed.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.x'
+
+      - name: Recover exact 1.0.22 source bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/dcm122
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path(".github/workflows/publish-v1.0.22.yml")
+          s = p.read_text()
+          start_marker = "cat > /tmp/dcm122/source.tar.gz.b64 <<'EOF'\n"
+          start = s.index(start_marker) + len(start_marker)
+          end = s.index("\nEOF\n", start)
+          data = s[start:end].strip()
+          Path("/tmp/dcm122/source.tar.gz.b64").write_text(data)
+          print("Recovered base64 characters:", len(data))
+          PY
+          base64 -d /tmp/dcm122/source.tar.gz.b64 > /tmp/dcm122/source.tar.gz
+          tar -xzf /tmp/dcm122/source.tar.gz -C /tmp/dcm122
+          mkdir -p /tmp/dcm122/installer-src/payload "$GITHUB_WORKSPACE/dist"
+
+      - name: Qualify Windows source
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/dcm122/app-src
+          GOOS=windows GOARCH=amd64 go vet -unsafeptr=false ./...
+          cd /tmp/dcm122/installer-src
+          GOOS=windows GOARCH=amd64 go vet -unsafeptr=false ./...
+
+      - name: Build portable app
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/dcm122/app-src
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags="-H=windowsgui -s -w" -o "$GITHUB_WORKSPACE/dist/DCM-QuickSort-v1.0.22-windows-x64.exe" .
+          cp "$GITHUB_WORKSPACE/dist/DCM-QuickSort-v1.0.22-windows-x64.exe" /tmp/dcm122/installer-src/payload/DCM-QuickSort.exe
+
+      - name: Build installer
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/dcm122/installer-src
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags="-H=windowsgui -s -w" -o "$GITHUB_WORKSPACE/dist/DCM-QuickSort-Setup-v1.0.22.exe" .
+          file "$GITHUB_WORKSPACE/dist/"*.exe
+          sha256sum "$GITHUB_WORKSPACE/dist/"*.exe | tee "$GITHUB_WORKSPACE/dist/SHA256SUMS.txt"
+
+      - name: Publish v1.0.22 release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/release-notes.md <<'EOF'
+          DCM : Quick Sort 1.0.22
+
+          Highlights:
+          - Complete Files | Preview | Processed workspace
+          - Select any matching file for preview and processing
+          - Processed session history with selective Undo
+          - Native Windows styling
+          - Image auto-fit and Edge PDF fit helper
+          - Named destination aliases managed with a normal folder picker
+          - Selecting an alias displays the complete destination path
+          - Alignment grid fixes for Name, Destination, Path and action controls
+          - Keyboard-first workflow with visible Alt shortcuts
+
+          Free app · Donation supported · No account required.
+
+          The Windows installer is per-user and does not require administrator access.
+          EOF
+
+          if gh release view v1.0.22 >/dev/null 2>&1; then
+            gh release upload v1.0.22 \
+              dist/DCM-QuickSort-Setup-v1.0.22.exe \
+              dist/DCM-QuickSort-v1.0.22-windows-x64.exe \
+              dist/SHA256SUMS.txt --clobber
+          else
+            gh release create v1.0.22 \
+              dist/DCM-QuickSort-Setup-v1.0.22.exe \
+              dist/DCM-QuickSort-v1.0.22-windows-x64.exe \
+              dist/SHA256SUMS.txt \
+              --target main \
+              --title "DCM : Quick Sort 1.0.22" \
+              --notes-file /tmp/release-notes.md
+          fi
+
+      - name: Verify published release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release view v1.0.22 --json name,tagName,url,assets
