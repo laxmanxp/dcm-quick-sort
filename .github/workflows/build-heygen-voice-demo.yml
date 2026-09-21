@@ -1,0 +1,106 @@
+name: Build HeyGen Voice Demo
+
+on:
+  push:
+    paths:
+      - ".github/workflows/build-heygen-voice-demo.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install media tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg librsvg2-bin curl
+
+      - name: Download HeyGen narration
+        run: |
+          mkdir -p build/audio build/scenes media
+          curl -L --fail --retry 3 'https://resource2.heygen.ai/text_to_speech/376059ff309d4f1aaeba60ea399dbad6/0be4826fa6fa4a0ca4f410c9d6f6e589/id=b49cc997-68dc-4848-ae36-996e137caf6a.wav' -o build/audio/01.wav
+          curl -L --fail --retry 3 'https://resource2.heygen.ai/text_to_speech/376059ff309d4f1aaeba60ea399dbad6/0be4826fa6fa4a0ca4f410c9d6f6e589/id=6a6aa4b8-fe96-429b-a1c4-121c80b60809.wav' -o build/audio/02.wav
+          curl -L --fail --retry 3 'https://resource2.heygen.ai/text_to_speech/376059ff309d4f1aaeba60ea399dbad6/0be4826fa6fa4a0ca4f410c9d6f6e589/id=4950f0b7-efe9-4541-8804-64b983c5b48b.wav' -o build/audio/03.wav
+          curl -L --fail --retry 3 'https://resource2.heygen.ai/text_to_speech/376059ff309d4f1aaeba60ea399dbad6/0be4826fa6fa4a0ca4f410c9d6f6e589/id=b0aec11b-71e6-4d44-adb2-3d70508b5067.wav' -o build/audio/04.wav
+          curl -L --fail --retry 3 'https://resource2.heygen.ai/text_to_speech/376059ff309d4f1aaeba60ea399dbad6/0be4826fa6fa4a0ca4f410c9d6f6e589/id=f9e44115-691f-4c46-9e1a-02e0b7148de4.wav' -o build/audio/05.wav
+          curl -L --fail --retry 3 'https://resource2.heygen.ai/text_to_speech/376059ff309d4f1aaeba60ea399dbad6/0be4826fa6fa4a0ca4f410c9d6f6e589/id=c68b4e79-5e2a-4d33-a80e-d532c3003496.wav' -o build/audio/06.wav
+
+      - name: Render six visual scenes
+        run: |
+          for i in 01 02 03 04 05 06; do
+            rsvg-convert -w 1280 -h 720 "video-scenes/heygen-${i}.svg" > "build/scenes/${i}.png"
+          done
+
+      - name: Build narrated scene clips
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > build/concat.txt
+          for i in 01 02 03 04 05 06; do
+            DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "build/audio/${i}.wav")
+            TOTAL=$(python3 -c "print(float('${DUR}') + 0.60)")
+            ffmpeg -y -hide_banner -loglevel error \
+              -loop 1 -i "build/scenes/${i}.png" \
+              -i "build/audio/${i}.wav" \
+              -filter_complex "[1:a]adelay=250|250,apad=pad_dur=0.35[a]" \
+              -map 0:v:0 -map "[a]" \
+              -t "${TOTAL}" \
+              -vf "scale=1280:720,format=yuv420p" \
+              -r 30 \
+              -c:v libx264 -preset medium -crf 20 \
+              -c:a aac -b:a 160k \
+              -movflags +faststart \
+              "build/scene-${i}.mp4"
+            echo "file 'scene-${i}.mp4'" >> build/concat.txt
+          done
+
+      - name: Join final video
+        run: |
+          cd build
+          ffmpeg -y -hide_banner -loglevel error \
+            -f concat -safe 0 -i concat.txt \
+            -c:v libx264 -preset medium -crf 20 \
+            -c:a aac -b:a 160k \
+            -pix_fmt yuv420p -movflags +faststart \
+            ../media/DCM-QuickSort-HeyGen-Voice-Demo.mp4
+          cd ..
+          DURATION=$(ffprobe -v error -show_entries format=duration -of csv=p=0 media/DCM-QuickSort-HeyGen-Voice-Demo.mp4)
+          echo "Final duration: ${DURATION} seconds"
+          python3 -c "import sys; d=float('${DURATION}'); print(f'Validated duration: {d:.2f}s'); sys.exit(0 if d < 50 else 1)"
+
+      - name: Save narration text
+        run: |
+          cat > media/DCM-QuickSort-HeyGen-Voice-Narration.txt <<'EOF'
+          1. DCM Quick Sort cleans up messy downloads.
+          2. Select a file, preview it, and replace the random filename with a clear name.
+          3. Create aliases in Manage Destinations by naming a folder and choosing it once.
+          4. Pick a destination alias. The full folder path appears automatically, then Quick Sort moves the file and opens the next one.
+          5. Completed moves appear in Processed. Select any one to undo that exact transaction.
+          6. Clean files are easier to find. DCM Quick Sort: preview, rename, move, next.
+          EOF
+
+      - name: Upload final video artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DCM-QuickSort-HeyGen-Voice-Demo
+          path: |
+            media/DCM-QuickSort-HeyGen-Voice-Demo.mp4
+            media/DCM-QuickSort-HeyGen-Voice-Narration.txt
+
+      - name: Commit final video to repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add media/DCM-QuickSort-HeyGen-Voice-Demo.mp4 media/DCM-QuickSort-HeyGen-Voice-Narration.txt
+          if git diff --cached --quiet; then
+            echo "No media changes to commit."
+          else
+            git commit -m "Add DCM demo with HeyGen neural voice"
+            git push
+          fi
