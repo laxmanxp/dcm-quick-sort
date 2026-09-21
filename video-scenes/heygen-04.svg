@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#F3F6FA"/>
+  <text x="48" y="54" font-family="Segoe UI,Arial" font-size="30" font-weight="700" fill="#172033">DCM : Quick Sort</text>
+  <text x="48" y="82" font-family="Segoe UI,Arial" font-size="15" fill="#687487">No repeated folder navigation</text>
+  <rect x="28" y="104" width="1224" height="526" rx="14" fill="#FFFFFF" stroke="#D7DEE8" stroke-width="2"/>
+  <text x="52" y="145" font-family="Segoe UI,Arial" font-size="23" font-weight="700" fill="#0E4B93">Alias selected → full path appears</text>
+  <text x="70" y="220" font-family="Segoe UI,Arial" font-size="14" font-weight="700" fill="#687487">Destination:</text>
+   <rect x="170" y="194" width="286" height="44" rx="6" fill="#FFFFFF" stroke="#D7DEE8"/>
+   <text x="188" y="222" font-family="Segoe UI,Arial" font-size="17" font-weight="700" fill="#172033">Project Photos</text>
+   <text x="488" y="220" font-family="Segoe UI,Arial" font-size="14" font-weight="700" fill="#687487">Path:</text>
+   <rect x="536" y="194" width="650" height="44" rx="6" fill="#FFFFFF" stroke="#D7DEE8"/>
+   <text x="554" y="222" font-family="Segoe UI,Arial" font-size="16" fill="#172033">D:\Projects\Bridge Inspection\Photos</text>
+   <path d="M 312 275 C 530 350, 760 350, 930 278" fill="none" stroke="#1768C4" stroke-width="6" stroke-linecap="round"/>
+   <polygon points="918,270 950,278 922,294" fill="#1768C4"/>
+   <rect x="400" y="360" width="480" height="84" rx="12" fill="#EAF3FF"/>
+   <text x="640" y="394" text-anchor="middle" font-family="Segoe UI,Arial" font-size="18" font-weight="700" fill="#0E4B93">Choose a short alias</text>
+   <text x="640" y="422" text-anchor="middle" font-family="Segoe UI,Arial" font-size="16" fill="#172033">Quick Sort fills the complete destination path automatically</text>
+   <rect x="490" y="486" width="300" height="54" rx="8" fill="#1768C4"/>
+   <text x="640" y="520" text-anchor="middle" font-family="Segoe UI,Arial" font-size="16" font-weight="700" fill="#FFFFFF">Rename + Move + Next</text>
+  <rect x="90" y="646" width="1100" height="52" rx="12" fill="#101820" opacity="0.90"/>
+  <text x="640" y="678" text-anchor="middle" font-family="Segoe UI,Arial" font-size="20" fill="#FFFFFF">Pick a destination alias. The full folder path appears automatically, then Quick Sort moves the file and opens the next one.</text>
+</svg>
