@@ -46,7 +46,7 @@ jobs:
           PY
           base64 -d /tmp/dcm122/source.tar.gz.b64 > /tmp/dcm122/source.tar.gz
           test "$(stat -c%s /tmp/dcm122/source.tar.gz)" = "33538"
-          echo "0318c7784c10d852a52a475837408b0bb3e5db146bd3f17a0a677b4268f51390  /tmp/dcm122/source.tar.gz" | sha256sum -c -
+          echo "6f9c6084440d1d518c52fa8e1e640cdf00bd6c0bd1d20df50cb230bc76227f44  /tmp/dcm122/source.tar.gz" | sha256sum -c -
           tar -xzf /tmp/dcm122/source.tar.gz -C /tmp/dcm122
           mkdir -p /tmp/dcm122/installer-src/payload "$GITHUB_WORKSPACE/dist"
 
