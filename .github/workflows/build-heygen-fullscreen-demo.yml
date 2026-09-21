@@ -33,9 +33,12 @@ jobs:
 
       - name: Render full-screen DCM scenes
         run: |
-          for i in 01 02 03 04 05 06; do
-            rsvg-convert -w 1280 -h 720 "video-scenes/fullscreen-${i}.svg" > "build/scenes/${i}.png"
-          done
+          rsvg-convert -w 1280 -h 720 "video-scenes/fullscreen-01.svg" > "build/scenes/01.png"
+          rsvg-convert -w 1280 -h 720 "video-scenes/fullscreen-02.svg" > "build/scenes/02.png"
+          rsvg-convert -w 1280 -h 720 "video-scenes/fullscreen-04.svg" > "build/scenes/03.png"
+          rsvg-convert -w 1280 -h 720 "video-scenes/fullscreen-07.svg" > "build/scenes/04.png"
+          rsvg-convert -w 1280 -h 720 "video-scenes/fullscreen-05.svg" > "build/scenes/05.png"
+          rsvg-convert -w 1280 -h 720 "video-scenes/fullscreen-06.svg" > "build/scenes/06.png"
 
       - name: Build scene clips
         shell: bash
@@ -65,12 +68,12 @@ jobs:
           python3 - <<'PY'
           import subprocess
           lines = [
-            "DCM Quick Sort keeps source, filters, files, preview, processed history, filename, destination, and actions together on one screen.",
-            "Select a file on the left. Preview it in the center, give it a clear name, then choose a destination alias. The full path appears automatically.",
-            "Manage Destinations lets you name folders with the normal Windows folder picker. No config editing.",
+            "DCM Quick Sort keeps source, filters, files, preview, processed history,\\nfilename, destination, and actions together on one screen.",
+            "Select a file on the left. Preview it in the center, give it a clear name,\\nthen choose a destination alias. The full path appears automatically.",
+            "Manage Destinations lets you name folders with the normal Windows folder picker.\\nNo config editing.",
             "Rename, Move, and Next files it away and loads the next item.",
-            "Processed on the right records the session. Select any move and undo just that transaction.",
-            "Type and extension filters, Open, Open Folder, Skip, keyboard shortcuts, and PDF fit stay on the same screen. Quick Sort prepares files for FileFlow."
+            "Processed on the right records the session.\\nSelect any move and undo just that transaction.",
+            "Type and extension filters, Open, Open Folder, Skip, keyboard shortcuts, and PDF fit stay on the same screen.\\nQuick Sort prepares files for FileFlow."
           ]
           def dur(path):
               return float(subprocess.check_output([
@@ -99,7 +102,7 @@ jobs:
           cd build
           ffmpeg -y -hide_banner -loglevel error \
             -f concat -safe 0 -i concat.txt \
-            -vf "drawbox=x=74:y=646:w=1132:h=56:color=0x101820@0.94:t=fill,subtitles=captions.srt:force_style='FontName=DejaVu Sans,FontSize=13,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=0,Shadow=0,Alignment=2,MarginV=18'" \
+            -vf "drawbox=x=74:y=638:w=1132:h=70:color=0x101820@1.0:t=fill,subtitles=captions.srt:force_style='FontName=DejaVu Sans,FontSize=11,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=0,Shadow=0,Alignment=2,MarginV=10'" \
             -c:v libx264 -preset medium -crf 19 \
             -c:a aac -b:a 160k \
             -pix_fmt yuv420p -movflags +faststart \
