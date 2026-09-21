@@ -1,0 +1,46 @@
+name: Generate DCM demo video
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "tools/generate_demo.py"
+      - ".github/workflows/generate-demo.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install video dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg fonts-dejavu-core
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Pillow
+        run: python -m pip install --disable-pip-version-check Pillow
+
+      - name: Generate DCM Quick Sort demo
+        run: python tools/generate_demo.py
+
+      - name: Commit generated video
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add media/DCM-QuickSort-v1.0.17-Demo.mp4 media/DCM-QuickSort-v1.0.17-Demo-Poster.png
+          if git diff --cached --quiet; then
+            echo "Demo video already up to date."
+          else
+            git commit -m "Add DCM Quick Sort v1.0.17 demo video"
+            git push
+          fi
