@@ -1,0 +1,63 @@
+name: Publish DCM - Quick Sort v1.0.23
+
+on:
+  push:
+    paths:
+      - ".github/workflows/publish-v1.0.23.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download exact qualified binaries
+        run: |
+          curl -L --fail --retry 3 'https://sdmntprindiasocentral.oaiusercontent.com/files/00000000-067c-8211-bb53-3597fd135cac/raw?se=2026-09-21T08%3A15%3A02Z&sp=r&sv=2026-02-06&sr=b&scid=d678ff5c-ac67-50f9-83e9-c1b4d1d7850e&skoid=f2622f62-3126-45cd-85e0-0bc840c3afdc&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-20T13%3A24%3A07Z&ske=2026-09-21T13%3A24%3A07Z&sks=b&skv=2026-02-06&sig=bqiEk2Qj4cfwJeH8FacaftZXA0LSJ5wbt0cXJ7hcMOI%3D' -o DCM-QuickSort-Setup-v1.0.23.exe
+          curl -L --fail --retry 3 'https://sdmntprindiasocentral.oaiusercontent.com/files/00000000-2a40-8211-a2ae-33169ea6fe33/raw?se=2026-09-21T08%3A15%3A01Z&sp=r&sv=2026-02-06&sr=b&scid=fb520af3-7c5c-533b-a542-eb068b551f56&skoid=f2622f62-3126-45cd-85e0-0bc840c3afdc&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-21T00%3A22%3A31Z&ske=2026-09-22T00%3A22%3A31Z&sks=b&skv=2026-02-06&sig=ZpUX29KbkJq8j1/LYNN83OrowFE0YUCc7aW0P4DhC1o%3D' -o DCM-QuickSort-v1.0.23-windows-x64.exe
+          cat > SHA256SUMS.txt <<'EOF'
+          921df01d3fe69fdc17cbb953326537315da8fa272cb292d92a458d768ef94258  DCM-QuickSort-Setup-v1.0.23.exe
+          8ef3459b13a17c066391955a3fc3cca3a5cdfedb3d0488141357c965d498aba4  DCM-QuickSort-v1.0.23-windows-x64.exe
+          EOF
+          sha256sum -c SHA256SUMS.txt
+          file DCM-QuickSort-Setup-v1.0.23.exe DCM-QuickSort-v1.0.23-windows-x64.exe
+
+      - name: Publish v1.0.23
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > release-notes.md <<'EOF'
+          DCM - Quick Sort 1.0.23
+
+          Branding release:
+          - Canonical product name changed from "DCM : Quick Sort" to "DCM - Quick Sort"
+          - Main window, Manage Destinations, dialogs, installer, shortcut description and settings header updated
+          - Website, privacy page, README and demo branding updated
+          - Existing 1.0.22 functionality retained
+
+          Current workflow:
+          - Files | Preview | Processed workspace
+          - Preview, rename, move and continue
+          - Named destination aliases with folder picker
+          - Selective Undo from Processed history
+          - Type and extension filters
+          - Keyboard shortcuts and PDF fit helper
+
+          Free app · Donation supported · No account required.
+          EOF
+
+          gh release create v1.0.23             DCM-QuickSort-Setup-v1.0.23.exe             DCM-QuickSort-v1.0.23-windows-x64.exe             SHA256SUMS.txt             --repo laxmanxp/dcm-quick-sort             --target main             --title "DCM - Quick Sort 1.0.23"             --notes-file release-notes.md
+
+      - name: Normalize older release titles
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release edit v1.0.22 --repo laxmanxp/dcm-quick-sort --title "DCM - Quick Sort 1.0.22"
+          gh release edit v1.0.15 --repo laxmanxp/dcm-quick-sort --title "DCM - Quick Sort 1.0.15"
+
+      - name: Verify public release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view v1.0.23 --repo laxmanxp/dcm-quick-sort --json name,tagName,url,assets
