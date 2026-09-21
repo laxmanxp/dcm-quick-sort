@@ -1,0 +1,11 @@
+DCM Quick Sort keeps source, filters, files, preview, processed history, filename, destination, and actions together on one screen.
+
+Select a file on the left. Preview it in the center, give it a clear name, then choose a destination alias. The full path appears automatically.
+
+Manage Destinations lets you name folders with the normal Windows folder picker. No config editing.
+
+Rename, Move, and Next files it away and loads the next item.
+
+Processed on the right records the session. Select any move and undo just that transaction.
+
+Type and extension filters, Open, Open Folder, Skip, keyboard shortcuts, and PDF fit stay on the same screen. Quick Sort prepares files for FileFlow.
