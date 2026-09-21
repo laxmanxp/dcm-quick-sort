@@ -33,15 +33,25 @@ jobs:
           start_marker = "cat > /tmp/dcm122/source.tar.gz.b64 <<'EOF'\n"
           start = s.index(start_marker) + len(start_marker)
           end = s.index("\nEOF\n", start)
+          import hashlib
           prefix = s[start:end].strip()
           assert len(prefix) == 20023, len(prefix)
-          out = Path("/tmp/dcm122/source.tar.gz.b64")
-          out.write_text(prefix)
-          with out.open("a") as f:
-              for n in range(3):
-                  f.write(Path(f"release-src/v1.0.22/source-suffix-{n:02d}.b64").read_text().strip())
-          full = out.read_text().strip()
+          expected = [
+              "1ce123d22cdd1a2c664749ca08cead1a750635002b08b42e281b99cf4394cffd",
+              "9ab5a8880cc63e7376816dfadadf468026d103bedaa733d0fcb62535500c1de0",
+              "2e8d90fb76167c53451298954492234d617b31c86a5c1b2de5815a6ba09bed12",
+              "20a51a58d4a36bd26b877823f19938078d02d4017775e967895bc67f33f12bb9",
+          ]
+          parts = [prefix]
+          parts += [Path(f"release-src/v1.0.22/source-suffix-{n:02d}.b64").read_text().strip() for n in range(3)]
+          for i, part in enumerate(parts):
+              digest = hashlib.sha256(part.encode()).hexdigest()
+              print(f"part {i}: len={len(part)} sha256={digest} expected={expected[i]}")
+              assert digest == expected[i], (i, digest, expected[i])
+          full = "".join(parts)
           assert len(full) == 44720, len(full)
+          out = Path("/tmp/dcm122/source.tar.gz.b64")
+          out.write_text(full)
           print("Recovered complete base64 characters:", len(full))
           PY
           base64 -d /tmp/dcm122/source.tar.gz.b64 > /tmp/dcm122/source.tar.gz
