@@ -1,0 +1,148 @@
+name: Build Fullscreen HeyGen Voice Demo
+
+on:
+  push:
+    paths:
+      - ".github/workflows/build-heygen-fullscreen-demo.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install media tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg librsvg2-bin curl fonts-dejavu-core
+
+      - name: Download faster HeyGen narration
+        run: |
+          mkdir -p build/audio build/scenes media
+          curl -L --fail --retry 3 'https://resource2.heygen.ai/text_to_speech/376059ff309d4f1aaeba60ea399dbad6/0be4826fa6fa4a0ca4f410c9d6f6e589/id=8b7e490d-f907-4021-8fa8-7f24920f8f25.wav' -o build/audio/01.wav
+          curl -L --fail --retry 3 'https://resource2.heygen.ai/text_to_speech/376059ff309d4f1aaeba60ea399dbad6/0be4826fa6fa4a0ca4f410c9d6f6e589/id=83d9c081-24f3-4509-9ce4-62d3c041df45.wav' -o build/audio/02.wav
+          curl -L --fail --retry 3 'https://resource2.heygen.ai/text_to_speech/376059ff309d4f1aaeba60ea399dbad6/0be4826fa6fa4a0ca4f410c9d6f6e589/id=9e213473-7fcb-4a90-b0e2-4eed02b4d4fb.wav' -o build/audio/03.wav
+          curl -L --fail --retry 3 'https://resource2.heygen.ai/text_to_speech/376059ff309d4f1aaeba60ea399dbad6/0be4826fa6fa4a0ca4f410c9d6f6e589/id=c1960c41-1cc0-4147-a360-7b79593fb3f0.wav' -o build/audio/04.wav
+          curl -L --fail --retry 3 'https://resource2.heygen.ai/text_to_speech/376059ff309d4f1aaeba60ea399dbad6/0be4826fa6fa4a0ca4f410c9d6f6e589/id=2712a8e4-0991-4cb9-aa8a-6adfc1cd99c7.wav' -o build/audio/05.wav
+          curl -L --fail --retry 3 'https://resource2.heygen.ai/text_to_speech/376059ff309d4f1aaeba60ea399dbad6/0be4826fa6fa4a0ca4f410c9d6f6e589/id=d77a2385-af50-4fea-b82a-1acec8537403.wav' -o build/audio/06.wav
+
+      - name: Render full-screen DCM scenes
+        run: |
+          for i in 01 02 03 04 05 06; do
+            rsvg-convert -w 1280 -h 720 "video-scenes/fullscreen-${i}.svg" > "build/scenes/${i}.png"
+          done
+
+      - name: Build scene clips
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > build/concat.txt
+          for i in 01 02 03 04 05 06; do
+            DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "build/audio/${i}.wav")
+            TOTAL=$(python3 -c "print(float('${DUR}') + 0.20)")
+            ffmpeg -y -hide_banner -loglevel error \
+              -loop 1 -i "build/scenes/${i}.png" \
+              -i "build/audio/${i}.wav" \
+              -filter_complex "[1:a]adelay=80|80,apad=pad_dur=0.12[a]" \
+              -map 0:v:0 -map "[a]" \
+              -t "${TOTAL}" \
+              -vf "scale=1280:720,format=yuv420p" \
+              -r 30 \
+              -c:v libx264 -preset medium -crf 19 \
+              -c:a aac -b:a 160k \
+              -movflags +faststart \
+              "build/scene-${i}.mp4"
+            echo "file 'scene-${i}.mp4'" >> build/concat.txt
+          done
+
+      - name: Generate exact timed captions
+        run: |
+          python3 - <<'PY'
+          import subprocess
+          lines = [
+            "DCM Quick Sort keeps source, filters, files, preview, processed history, filename, destination, and actions together on one screen.",
+            "Select a file on the left. Preview it in the center, give it a clear name, then choose a destination alias. The full path appears automatically.",
+            "Manage Destinations lets you name folders with the normal Windows folder picker. No config editing.",
+            "Rename, Move, and Next files it away and loads the next item.",
+            "Processed on the right records the session. Select any move and undo just that transaction.",
+            "Type and extension filters, Open, Open Folder, Skip, keyboard shortcuts, and PDF fit stay on the same screen. Quick Sort prepares files for FileFlow."
+          ]
+          def dur(path):
+              return float(subprocess.check_output([
+                  "ffprobe","-v","error","-show_entries","format=duration",
+                  "-of","default=noprint_wrappers=1:nokey=1",path
+              ], text=True).strip())
+          def ts(x):
+              h=int(x//3600); x-=h*3600
+              m=int(x//60); x-=m*60
+              s=int(x); ms=round((x-s)*1000)
+              if ms==1000:
+                  s+=1; ms=0
+              return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
+          t=0.0
+          with open("build/captions.srt","w",encoding="utf-8") as f:
+              for i,line in enumerate(lines,1):
+                  d=dur(f"build/audio/{i:02d}.wav")
+                  start=t+0.08
+                  end=start+d
+                  f.write(f"{i}\n{ts(start)} --> {ts(end)}\n{line}\n\n")
+                  t += d + 0.20
+          PY
+
+      - name: Join and burn exact captions
+        run: |
+          cd build
+          ffmpeg -y -hide_banner -loglevel error \
+            -f concat -safe 0 -i concat.txt \
+            -vf "drawbox=x=74:y=646:w=1132:h=56:color=0x101820@0.94:t=fill,subtitles=captions.srt:force_style='FontName=DejaVu Sans,FontSize=13,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=0,Shadow=0,Alignment=2,MarginV=18'" \
+            -c:v libx264 -preset medium -crf 19 \
+            -c:a aac -b:a 160k \
+            -pix_fmt yuv420p -movflags +faststart \
+            ../media/DCM-QuickSort-Fullscreen-HeyGen-Demo.mp4
+          cd ..
+          DURATION=$(ffprobe -v error -show_entries format=duration -of csv=p=0 media/DCM-QuickSort-Fullscreen-HeyGen-Demo.mp4)
+          echo "Final duration: ${DURATION} seconds"
+          python3 -c "import sys; d=float('${DURATION}'); print(f'Validated duration: {d:.2f}s'); sys.exit(0 if d < 50 else 1)"
+
+      - name: Save narration and captions
+        run: |
+          cp build/captions.srt media/DCM-QuickSort-Fullscreen-Captions.srt
+          cat > media/DCM-QuickSort-Fullscreen-Narration.txt <<'EOF'
+          DCM Quick Sort keeps source, filters, files, preview, processed history, filename, destination, and actions together on one screen.
+
+          Select a file on the left. Preview it in the center, give it a clear name, then choose a destination alias. The full path appears automatically.
+
+          Manage Destinations lets you name folders with the normal Windows folder picker. No config editing.
+
+          Rename, Move, and Next files it away and loads the next item.
+
+          Processed on the right records the session. Select any move and undo just that transaction.
+
+          Type and extension filters, Open, Open Folder, Skip, keyboard shortcuts, and PDF fit stay on the same screen. Quick Sort prepares files for FileFlow.
+          EOF
+
+      - name: Upload final artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DCM-QuickSort-Fullscreen-HeyGen-Demo
+          path: |
+            media/DCM-QuickSort-Fullscreen-HeyGen-Demo.mp4
+            media/DCM-QuickSort-Fullscreen-Captions.srt
+            media/DCM-QuickSort-Fullscreen-Narration.txt
+
+      - name: Commit final demo to repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add media/DCM-QuickSort-Fullscreen-HeyGen-Demo.mp4 media/DCM-QuickSort-Fullscreen-Captions.srt media/DCM-QuickSort-Fullscreen-Narration.txt
+          if git diff --cached --quiet; then
+            echo "No media changes to commit."
+          else
+            git commit -m "Add full-screen DCM demo with faster HeyGen narration"
+            git push
+          fi
