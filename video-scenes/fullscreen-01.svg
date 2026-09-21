@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+    <rect width="1280" height="720" fill="#F3F6FA"/>
+    <text x="30" y="40" font-family="Segoe UI,Arial" font-size="27" font-weight="700" fill="#172033">DCM : Quick Sort</text>
+    <text x="30" y="64" font-family="Segoe UI,Arial" font-size="13" fill="#687487">Downloaded Content Management · 1.0.22</text>
+    <rect x="1006" y="24" width="242" height="34" rx="17" fill="#EAF3FF"/>
+    <text x="1127" y="46" text-anchor="middle" font-family="Segoe UI,Arial" font-size="12" font-weight="700" fill="#0E4B93">Files · Preview · Processed</text>
+
+    <rect x="18" y="82" width="1244" height="552" rx="13" fill="#fff" stroke="#D7DEE8" stroke-width="2"/>
+
+    <!-- Source row -->
+    <text x="32" y="116" font-family="Segoe UI,Arial" font-size="12" font-weight="700" fill="#687487">Source:</text>
+    <rect x="92" y="96" width="918" height="34" rx="5" fill="#fff" stroke="#D7DEE8"/>
+    <text x="105" y="118" font-family="Segoe UI,Arial" font-size="12" fill="#172033">C:\Users\Laxman\Downloads</text>
+    <rect x="1022" y="96" width="104" height="34" rx="5" fill="#F8F9FB" stroke="#D7DEE8"/>
+    <text x="1074" y="118" text-anchor="middle" font-family="Segoe UI,Arial" font-size="12" fill="#172033">Browse…</text>
+    <rect x="1138" y="96" width="100" height="34" rx="5" fill="#F8F9FB" stroke="#D7DEE8"/>
+    <text x="1188" y="118" text-anchor="middle" font-family="Segoe UI,Arial" font-size="12" fill="#172033">Reload</text>
+
+    <!-- Filters -->
+    <text x="32" y="156" font-family="Segoe UI,Arial" font-size="12" font-weight="700" fill="#687487">Type:</text>
+    <rect x="86" y="138" width="196" height="34" rx="5" fill="#fff" stroke="#D7DEE8"/>
+    <text x="102" y="160" font-family="Segoe UI,Arial" font-size="12" fill="#172033">All files</text>
+    <text x="308" y="156" font-family="Segoe UI,Arial" font-size="12" font-weight="700" fill="#687487">Extension:</text>
+    <rect x="386" y="138" width="210" height="34" rx="5" fill="#fff" stroke="#D7DEE8"/>
+    <text x="402" y="160" font-family="Segoe UI,Arial" font-size="12" fill="#172033">All extensions</text>
+    <text x="624" y="158" font-family="Segoe UI,Arial" font-size="11" fill="#A2A9B4">☐ Read content as text</text>
+
+    <!-- Main three columns -->
+    <text x="32" y="196" font-family="Segoe UI,Arial" font-size="13" font-weight="700" fill="#0E4B93">FILES · 225 of 320</text>
+    <text x="282" y="196" font-family="Segoe UI,Arial" font-size="13" font-weight="700" fill="#0E4B93">PREVIEW</text>
+    <text x="982" y="196" font-family="Segoe UI,Arial" font-size="13" font-weight="700" fill="#0E4B93">PROCESSED · 2</text>
+
+    <rect x="32" y="205" width="238" height="246" rx="5" fill="#FBFCFD" stroke="#D7DEE8"/>
+    <g font-family="Segoe UI,Arial" font-size="12" fill="#172033">
+      <text x="44" y="234">student-scaffold-2.2.zip</text>
+      <text x="44" y="269">Adobe Scan 01.pdf</text>
+      <rect x="38" y="280" width="226" height="32" rx="4" fill="#E7F1FF" stroke="#B8D1F5"/>
+      <text x="44" y="301">R5Kzw.jpg</text>
+      <text x="44" y="336">IMG-20260920-WA0003.jpg</text>
+      <text x="44" y="371">document (17).pdf</text>
+      <text x="44" y="406">scan_004.jpg</text>
+    </g>
+
+    <rect x="282" y="205" width="688" height="246" rx="5" fill="#D9EAF8" stroke="#D7DEE8"/>
+    <rect x="288" y="211" width="676" height="234" rx="4" fill="#82B4DA"/>
+    <rect x="288" y="355" width="676" height="90" fill="#6A9658"/>
+    <polygon points="288,445 555,326 680,328 964,445" fill="#A09C94"/>
+    <rect x="776" y="286" width="104" height="91" fill="#DAC39A"/>
+    <rect x="807" y="324" width="34" height="53" fill="#4B535B"/>
+    <rect x="302" y="220" width="150" height="30" rx="6" fill="#fff" fill-opacity=".94"/>
+    <text x="377" y="240" text-anchor="middle" font-family="Segoe UI,Arial" font-size="11" font-weight="700" fill="#172033">Selected preview</text>
+
+    <rect x="982" y="205" width="256" height="246" rx="5" fill="#FBFCFD" stroke="#D7DEE8"/>
+    
+    <rect x="997" y="251" width="230" height="62" rx="5" fill="#E7F1FF" stroke="#B8D1F5"/>
+    <text x="1009" y="273" font-family="Segoe UI,Arial" font-size="11" fill="#687487">R5Kzw.jpg</text>
+    <text x="1009" y="296" font-family="Segoe UI,Arial" font-size="11" font-weight="700" fill="#172033">→ Bridge Inspection - Site Photo.jpg</text>
+    <text x="1009" y="338" font-family="Segoe UI,Arial" font-size="11" fill="#687487">IMG-20260920-WA0003.jpg</text>
+    <text x="1009" y="359" font-family="Segoe UI,Arial" font-size="11" font-weight="700" fill="#172033">→ Site Measurement 2026-09-20.jpg</text>
+  
+
+    <!-- Form -->
+    <text x="32" y="486" font-family="Segoe UI,Arial" font-size="12" font-weight="700" fill="#687487">Name:</text>
+    <rect x="92" y="466" width="1146" height="34" rx="5" fill="#fff" stroke="#D7DEE8"/>
+    <text x="106" y="488" font-family="Segoe UI,Arial" font-size="13" fill="#172033">Bridge Inspection - Site Photo</text>
+
+    <text x="32" y="528" font-family="Segoe UI,Arial" font-size="12" font-weight="700" fill="#687487">Destination:</text>
+    <rect x="118" y="508" width="210" height="34" rx="5" fill="#fff" stroke="#D7DEE8"/>
+    <text x="132" y="530" font-family="Segoe UI,Arial" font-size="12" fill="#172033">Project Photos</text>
+    <text x="346" y="528" font-family="Segoe UI,Arial" font-size="12" font-weight="700" fill="#687487">Path:</text>
+    <rect x="388" y="508" width="556" height="34" rx="5" fill="#fff" stroke="#D7DEE8"/>
+    <text x="402" y="530" font-family="Segoe UI,Arial" font-size="12" fill="#172033">D:\Projects\Bridge Inspection\Photos</text>
+    <rect x="954" y="507" width="106" height="36" rx="5" fill="#F8F9FB" stroke="#D7DEE8"/>
+    <text x="1007" y="530" text-anchor="middle" font-family="Segoe UI,Arial" font-size="12" fill="#172033">Browse…</text>
+    <rect x="1072" y="507" width="166" height="36" rx="5" fill="#F8F9FB" stroke="#D7DEE8"/>
+    <text x="1155" y="530" text-anchor="middle" font-family="Segoe UI,Arial" font-size="11" fill="#172033">Manage Destinations…</text>
+
+    <!-- Actions -->
+    <rect x="32" y="560" width="202" height="38" rx="6" fill="#1768C4"/>
+    <text x="133" y="584" text-anchor="middle" font-family="Segoe UI,Arial" font-size="13" font-weight="700" fill="#fff">Rename + Move + Next</text>
+    <rect x="246" y="560" width="94" height="38" rx="6" fill="#F8F9FB" stroke="#D7DEE8"/>
+    <text x="293" y="584" text-anchor="middle" font-family="Segoe UI,Arial" font-size="13" fill="#172033">Skip</text>
+    <rect x="352" y="560" width="136" height="38" rx="6" fill="#F8F9FB" stroke="#D7DEE8"/>
+    <text x="420" y="584" text-anchor="middle" font-family="Segoe UI,Arial" font-size="12" fill="#172033">Undo Selected</text>
+    <rect x="500" y="560" width="90" height="38" rx="6" fill="#F8F9FB" stroke="#D7DEE8"/>
+    <text x="545" y="584" text-anchor="middle" font-family="Segoe UI,Arial" font-size="12" fill="#172033">Open</text>
+    <rect x="602" y="560" width="116" height="38" rx="6" fill="#F8F9FB" stroke="#D7DEE8"/>
+    <text x="660" y="584" text-anchor="middle" font-family="Segoe UI,Arial" font-size="12" fill="#172033">Open Folder</text>
+    <rect x="736" y="560" width="502" height="38" rx="7" fill="#EAF3FF"/>
+    <text x="987" y="584" text-anchor="middle" font-family="Segoe UI,Arial" font-size="11" font-weight="700" fill="#0E4B93">Alt+R Save · Alt+M Manage · Alt+U Undo · Ctrl+\ Fit PDF</text>
+
+    <text x="32" y="620" font-family="Segoe UI,Arial" font-size="10" fill="#687487">DCM - Downloaded Content Management · Free app · Donation supported</text>
+
+    <rect x="24" y="88" width="1228" height="530" rx="10" fill="#1768C4" fill-opacity=".08" stroke="#1768C4" stroke-width="4"/>
+       <rect x="34" y="98" width="260" height="30" rx="15" fill="#1768C4"/>
+       <text x="48" y="119" font-family="Segoe UI,Arial" font-size="13" font-weight="700" fill="#fff">Everything on one screen</text>
+    
+    
+    
+    
+    
+
+    
+
+    <rect x="74" y="650" width="1132" height="52" rx="12" fill="#101820" fill-opacity=".92"/>
+    <text x="640" y="681" text-anchor="middle" font-family="Segoe UI,Arial" font-size="18" fill="#fff">Everything stays together on one complete DCM screen.</text>
+  </svg>
