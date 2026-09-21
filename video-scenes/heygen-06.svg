@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#F3F6FA"/>
+  <text x="48" y="54" font-family="Segoe UI,Arial" font-size="30" font-weight="700" fill="#172033">DCM : Quick Sort</text>
+  <text x="48" y="82" font-family="Segoe UI,Arial" font-size="15" fill="#687487">A cleaner Downloads workflow</text>
+  <rect x="28" y="104" width="1224" height="526" rx="14" fill="#FFFFFF" stroke="#D7DEE8" stroke-width="2"/>
+  <text x="52" y="145" font-family="Segoe UI,Arial" font-size="23" font-weight="700" fill="#0E4B93">After: files are easier to recognize and find</text>
+  <rect x="72" y="184" width="1136" height="344" rx="9" fill="#FBFCFD" stroke="#D7DEE8"/>
+   <text x="94" y="214" font-family="Segoe UI,Arial" font-size="14" font-weight="700" fill="#687487">Name</text>
+   <line x1="90" y1="230" x2="1188" y2="230" stroke="#D7DEE8"/>
+   <g font-family="Segoe UI,Arial" font-size="18" fill="#172033">
+    <text x="106" y="278">Bridge Inspection - Site Photo.jpg</text>
+    <text x="106" y="330">Beneficiary Verification.pdf</text>
+    <text x="106" y="382">April Invoice 2026.pdf</text>
+    <text x="106" y="434">Site Measurement 2026-09-20.jpg</text>
+   </g>
+   <rect x="852" y="126" width="340" height="44" rx="11" fill="#EAF7F0" stroke="#B8DCC8"/>
+   <text x="1022" y="154" text-anchor="middle" font-family="Segoe UI,Arial" font-size="16" font-weight="700" fill="#177548">Clear, useful filenames</text>
+   <text x="640" y="575" text-anchor="middle" font-family="Segoe UI,Arial" font-size="27" font-weight="700" fill="#0E4B93">Preview → Rename → Move → Next</text>
+  <rect x="90" y="646" width="1100" height="52" rx="12" fill="#101820" opacity="0.90"/>
+  <text x="640" y="678" text-anchor="middle" font-family="Segoe UI,Arial" font-size="20" fill="#FFFFFF">Clean files are easier to find. DCM Quick Sort: preview, rename, move, next.</text>
+</svg>
