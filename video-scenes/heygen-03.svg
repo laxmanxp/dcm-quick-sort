@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#F3F6FA"/>
+  <text x="48" y="54" font-family="Segoe UI,Arial" font-size="30" font-weight="700" fill="#172033">DCM : Quick Sort</text>
+  <text x="48" y="82" font-family="Segoe UI,Arial" font-size="15" fill="#687487">Create friendly names for folders you use often</text>
+  <rect x="28" y="104" width="1224" height="526" rx="14" fill="#FFFFFF" stroke="#D7DEE8" stroke-width="2"/>
+  <text x="52" y="145" font-family="Segoe UI,Arial" font-size="23" font-weight="700" fill="#0E4B93">Manage Destinations</text>
+  <rect x="300" y="176" width="680" height="396" rx="12" fill="#FFFFFF" stroke="#BFC9D6" stroke-width="2"/>
+   <text x="330" y="218" font-family="Segoe UI,Arial" font-size="22" font-weight="700" fill="#172033">Manage Destinations</text>
+   <text x="330" y="258" font-family="Segoe UI,Arial" font-size="14" font-weight="700" fill="#687487">Name:</text>
+   <rect x="410" y="236" width="520" height="40" rx="5" fill="#FFFFFF" stroke="#D7DEE8"/>
+   <text x="426" y="262" font-family="Segoe UI,Arial" font-size="16" fill="#172033">Project Photos</text>
+   <text x="330" y="312" font-family="Segoe UI,Arial" font-size="14" font-weight="700" fill="#687487">Folder:</text>
+   <rect x="410" y="290" width="390" height="40" rx="5" fill="#FFFFFF" stroke="#D7DEE8"/>
+   <text x="426" y="316" font-family="Segoe UI,Arial" font-size="14" fill="#172033">D:\Projects\Bridge Inspection\Photos</text>
+   <rect x="816" y="289" width="114" height="42" rx="6" fill="#F8F9FB" stroke="#D7DEE8"/>
+   <text x="873" y="316" text-anchor="middle" font-family="Segoe UI,Arial" font-size="14" fill="#172033">Browse…</text>
+   <rect x="410" y="348" width="132" height="42" rx="6" fill="#1768C4"/>
+   <text x="476" y="375" text-anchor="middle" font-family="Segoe UI,Arial" font-size="14" font-weight="700" fill="#FFFFFF">Save Alias</text>
+   <text x="330" y="430" font-family="Segoe UI,Arial" font-size="15" font-weight="700" fill="#0E4B93">Saved destinations</text>
+   <rect x="330" y="448" width="600" height="90" rx="6" fill="#FBFCFD" stroke="#D7DEE8"/>
+   <text x="350" y="480" font-family="Segoe UI,Arial" font-size="14" font-weight="700" fill="#172033">Documents</text>
+   <text x="510" y="480" font-family="Segoe UI,Arial" font-size="13" fill="#687487">C:\Users\Laxman\Documents</text>
+   <rect x="340" y="492" width="580" height="36" rx="5" fill="#E7F1FF"/>
+   <text x="350" y="516" font-family="Segoe UI,Arial" font-size="14" font-weight="700" fill="#172033">Project Photos</text>
+   <text x="510" y="516" font-family="Segoe UI,Arial" font-size="13" fill="#687487">D:\Projects\Bridge Inspection\Photos</text>
+  <rect x="90" y="646" width="1100" height="52" rx="12" fill="#101820" opacity="0.90"/>
+  <text x="640" y="678" text-anchor="middle" font-family="Segoe UI,Arial" font-size="20" fill="#FFFFFF">Create aliases in Manage Destinations by naming a folder and choosing it once.</text>
+</svg>
