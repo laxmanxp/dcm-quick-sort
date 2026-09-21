@@ -33,11 +33,20 @@ jobs:
           start_marker = "cat > /tmp/dcm122/source.tar.gz.b64 <<'EOF'\n"
           start = s.index(start_marker) + len(start_marker)
           end = s.index("\nEOF\n", start)
-          data = s[start:end].strip()
-          Path("/tmp/dcm122/source.tar.gz.b64").write_text(data)
-          print("Recovered base64 characters:", len(data))
+          prefix = s[start:end].strip()
+          assert len(prefix) == 20023, len(prefix)
+          out = Path("/tmp/dcm122/source.tar.gz.b64")
+          out.write_text(prefix)
+          with out.open("a") as f:
+              for n in range(3):
+                  f.write(Path(f"release-src/v1.0.22/source-suffix-{n:02d}.b64").read_text().strip())
+          full = out.read_text().strip()
+          assert len(full) == 44720, len(full)
+          print("Recovered complete base64 characters:", len(full))
           PY
           base64 -d /tmp/dcm122/source.tar.gz.b64 > /tmp/dcm122/source.tar.gz
+          test "$(stat -c%s /tmp/dcm122/source.tar.gz)" = "33538"
+          echo "0318c7784c10d852a52a475837408b0bb3e5db146bd3f17a0a677b4268f51390  /tmp/dcm122/source.tar.gz" | sha256sum -c -
           tar -xzf /tmp/dcm122/source.tar.gz -C /tmp/dcm122
           mkdir -p /tmp/dcm122/installer-src/payload "$GITHUB_WORKSPACE/dist"
 
