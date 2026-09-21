@@ -67,13 +67,11 @@ jobs:
           tar -xzf /tmp/dcm122/source.tar.gz -C /tmp/dcm122
           mkdir -p /tmp/dcm122/installer-src/payload "$GITHUB_WORKSPACE/dist"
 
-      - name: Qualify Windows source
+      - name: Qualify app source
         shell: bash
         run: |
           set -euo pipefail
           cd /tmp/dcm122/app-src
-          GOOS=windows GOARCH=amd64 go vet -unsafeptr=false ./...
-          cd /tmp/dcm122/installer-src
           GOOS=windows GOARCH=amd64 go vet -unsafeptr=false ./...
 
       - name: Build portable app
@@ -83,6 +81,13 @@ jobs:
           cd /tmp/dcm122/app-src
           CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags="-H=windowsgui -s -w" -o "$GITHUB_WORKSPACE/dist/DCM-QuickSort-v1.0.22-windows-x64.exe" .
           cp "$GITHUB_WORKSPACE/dist/DCM-QuickSort-v1.0.22-windows-x64.exe" /tmp/dcm122/installer-src/payload/DCM-QuickSort.exe
+
+      - name: Qualify installer source
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/dcm122/installer-src
+          GOOS=windows GOARCH=amd64 go vet -unsafeptr=false ./...
 
       - name: Build installer
         shell: bash
