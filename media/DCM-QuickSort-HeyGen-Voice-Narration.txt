@@ -1,0 +1,6 @@
+1. DCM Quick Sort cleans up messy downloads.
+2. Select a file, preview it, and replace the random filename with a clear name.
+3. Create aliases in Manage Destinations by naming a folder and choosing it once.
+4. Pick a destination alias. The full folder path appears automatically, then Quick Sort moves the file and opens the next one.
+5. Completed moves appear in Processed. Select any one to undo that exact transaction.
+6. Clean files are easier to find. DCM Quick Sort: preview, rename, move, next.
