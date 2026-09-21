@@ -1,14 +1,14 @@
 1
 00:00:00,080 --> 00:00:09,536
-DCM Quick Sort keeps source, filters, files, preview, processed history, filename, destination, and actions together on one screen.
+DCM Quick Sort keeps source, filters, files, preview, processed history,\nfilename, destination, and actions together on one screen.
 
 2
 00:00:09,736 --> 00:00:18,566
-Select a file on the left. Preview it in the center, give it a clear name, then choose a destination alias. The full path appears automatically.
+Select a file on the left. Preview it in the center, give it a clear name,\nthen choose a destination alias. The full path appears automatically.
 
 3
 00:00:18,766 --> 00:00:25,819
-Manage Destinations lets you name folders with the normal Windows folder picker. No config editing.
+Manage Destinations lets you name folders with the normal Windows folder picker.\nNo config editing.
 
 4
 00:00:26,019 --> 00:00:30,695
@@ -16,9 +16,9 @@ Rename, Move, and Next files it away and loads the next item.
 
 5
 00:00:30,895 --> 00:00:36,694
-Processed on the right records the session. Select any move and undo just that transaction.
+Processed on the right records the session.\nSelect any move and undo just that transaction.
 
 6
 00:00:36,894 --> 00:00:48,100
-Type and extension filters, Open, Open Folder, Skip, keyboard shortcuts, and PDF fit stay on the same screen. Quick Sort prepares files for FileFlow.
+Type and extension filters, Open, Open Folder, Skip, keyboard shortcuts, and PDF fit stay on the same screen.\nQuick Sort prepares files for FileFlow.
 
