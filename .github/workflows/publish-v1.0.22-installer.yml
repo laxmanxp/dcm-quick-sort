@@ -1,0 +1,54 @@
+name: Publish v1.0.22 Installer
+
+on:
+  push:
+    paths:
+      - ".github/workflows/publish-v1.0.22-installer.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download exact v1.0.22 installer
+        run: |
+          curl -L --fail --retry 3 'https://sdmntprcentralindia.oaiusercontent.com/files/00000000-6ee4-8208-a260-5731c9286c93/raw?se=2026-09-21T07%3A05%3A06Z&sp=r&sv=2026-02-06&sr=b&scid=07f3370a-7c6f-5958-946c-dce4909166e8&skoid=f2622f62-3126-45cd-85e0-0bc840c3afdc&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-21T01%3A32%3A52Z&ske=2026-09-22T01%3A32%3A52Z&sks=b&skv=2026-02-06&sig=fHHMnB6Mlkalykic4Ogdpk2gaw7RQ%2BsTuhgi/vhkYIE%3D' -o DCM-QuickSort-Setup-v1.0.22.exe
+          echo "538244cf8fe5013a1a7f2a14da4c087bcb2a0c388c4088df9e17d988e2e4f0d6  DCM-QuickSort-Setup-v1.0.22.exe" | sha256sum -c -
+          file DCM-QuickSort-Setup-v1.0.22.exe
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > release-notes.md <<'EOF'
+          DCM : Quick Sort 1.0.22
+
+          Highlights:
+          - Files | Preview | Processed three-column workspace
+          - Select any matching file for preview and processing
+          - Processed session history with selective Undo
+          - Native Windows styling
+          - Image auto-fit and Edge PDF fit helper
+          - Named destination aliases managed with a normal folder-picker form
+          - Selecting an alias shows the complete destination path
+          - Alignment fixes for Name, Destination, Path and action controls
+          - Keyboard-first workflow with visible Alt shortcuts
+
+          Free app · Donation supported · No account required.
+
+          Windows x64 per-user installer. No administrator access required for normal installation.
+          EOF
+
+          if gh release view v1.0.22 >/dev/null 2>&1; then
+            gh release upload v1.0.22 DCM-QuickSort-Setup-v1.0.22.exe --clobber
+          else
+            gh release create v1.0.22 DCM-QuickSort-Setup-v1.0.22.exe               --target main               --title "DCM : Quick Sort 1.0.22"               --notes-file release-notes.md
+          fi
+
+      - name: Verify release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release view v1.0.22 --json name,tagName,url,assets
