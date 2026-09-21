@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#F3F6FA"/>
+  <text x="48" y="54" font-family="Segoe UI,Arial" font-size="30" font-weight="700" fill="#172033">DCM : Quick Sort</text>
+  <text x="48" y="82" font-family="Segoe UI,Arial" font-size="15" fill="#687487">Every completed move is recorded for the current session</text>
+  <rect x="28" y="104" width="1224" height="526" rx="14" fill="#FFFFFF" stroke="#D7DEE8" stroke-width="2"/>
+  <text x="52" y="145" font-family="Segoe UI,Arial" font-size="23" font-weight="700" fill="#0E4B93">Processed history with selective Undo</text>
+  <rect x="70" y="190" width="1120" height="292" rx="8" fill="#FBFCFD" stroke="#D7DEE8"/>
+   <text x="88" y="220" font-family="Segoe UI,Arial" font-size="15" font-weight="700" fill="#0E4B93">PROCESSED</text>
+   <rect x="84" y="244" width="1092" height="70" rx="6" fill="#E7F1FF" stroke="#B8D1F5" stroke-width="2"/>
+   <text x="104" y="272" font-family="Segoe UI,Arial" font-size="15" fill="#687487">R5Kzw.jpg</text>
+   <text x="104" y="298" font-family="Segoe UI,Arial" font-size="16" font-weight="700" fill="#172033">→ Bridge Inspection - Site Photo.jpg</text>
+   <text x="104" y="352" font-family="Segoe UI,Arial" font-size="15" fill="#687487">IMG-20260920-WA0003.jpg</text>
+   <text x="104" y="378" font-family="Segoe UI,Arial" font-size="16" font-weight="700" fill="#172033">→ Site Measurement 2026-09-20.jpg</text>
+   <text x="104" y="432" font-family="Segoe UI,Arial" font-size="15" fill="#687487">Adobe Scan 01.pdf</text>
+   <text x="104" y="458" font-family="Segoe UI,Arial" font-size="16" font-weight="700" fill="#172033">→ Beneficiary Verification.pdf</text>
+   <rect x="430" y="506" width="420" height="58" rx="9" fill="#FFF5DA" stroke="#D7B850" stroke-width="2"/>
+   <text x="640" y="542" text-anchor="middle" font-family="Segoe UI,Arial" font-size="18" font-weight="700" fill="#172033">Undo Selected Transaction</text>
+  <rect x="90" y="646" width="1100" height="52" rx="12" fill="#101820" opacity="0.90"/>
+  <text x="640" y="678" text-anchor="middle" font-family="Segoe UI,Arial" font-size="20" fill="#FFFFFF">Completed moves appear in Processed. Select any one to undo that exact transaction.</text>
+</svg>
