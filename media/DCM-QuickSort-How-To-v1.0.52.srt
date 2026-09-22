@@ -1,0 +1,31 @@
+1
+00:00:00,200 --> 00:00:05,700
+Choose a Source folder. Saved Sources and autocomplete make frequent folders quick to reopen.
+
+2
+00:00:05,900 --> 00:00:11,500
+Use Type, Extension, Name, Age and Size filters to narrow the inbox.
+
+3
+00:00:11,700 --> 00:00:18,000
+Select a file and preview it before changing anything. PDFs support Fit, zoom and page navigation.
+
+4
+00:00:18,200 --> 00:00:24,800
+Give the file a clear Name. Rename helpers and templates change only the proposed name.
+
+5
+00:00:25,000 --> 00:00:31,500
+Choose a Destination alias or path. The full destination stays visible before you commit.
+
+6
+00:00:31,700 --> 00:00:38,500
+Press Rename + Move + Next. DCM files it away and loads the next item.
+
+7
+00:00:38,700 --> 00:00:43,800
+Processed keeps durable history. Select a transaction and Undo it if needed.
+
+8
+00:00:44,000 --> 00:00:48,000
+Recovery protects interrupted work; Learning can suggest names and destinations locally.
