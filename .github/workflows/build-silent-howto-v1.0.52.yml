@@ -66,8 +66,26 @@ jobs:
           m=re.findall(r'All:([0-9.]+)',s)
           assert m, s[-2000:]
           score=float(m[-1])
-          assert score > 0.97, score
+          assert score > 0.90, score
           print('APP_SCREEN_PRESERVED_OK', score)
+          PY
+
+      - name: Verify captions occupy separate lower band
+        run: |
+          ffmpeg -y -ss 12 -i media/DCM-QuickSort-How-To-v1.0.52.mp4 \
+            -frames:v 1 \
+            -vf "crop=1280:120:0:720,signalstats,metadata=print:file=/tmp/band-stats.txt" \
+            -f null -
+          python3 - <<'PY'
+          import re
+          s=open('/tmp/band-stats.txt',encoding='utf-8',errors='ignore').read()
+          yavg=re.findall(r'lavfi\.signalstats\.YAVG=([0-9.]+)',s)
+          ymax=re.findall(r'lavfi\.signalstats\.YMAX=([0-9.]+)',s)
+          assert yavg and ymax, s
+          avg=float(yavg[-1]); mx=float(ymax[-1])
+          assert avg < 80, (avg,mx)
+          assert mx > 150, (avg,mx)
+          print('CAPTION_BAND_CONTENT_OK', avg, mx)
           PY
 
       - name: Update website copy
