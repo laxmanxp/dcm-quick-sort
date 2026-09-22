@@ -1,0 +1,67 @@
+name: Build silent captioned DCM how-to v1.0.52
+
+on:
+  push:
+    paths:
+      - ".github/workflows/build-silent-howto-v1.0.52.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Build silent captioned video
+        run: |
+          ffmpeg -y \
+            -i media/DCM-QuickSort-Fullscreen-HeyGen-Demo.mp4 \
+            -vf "subtitles=media/DCM-QuickSort-How-To-v1.0.52.srt:force_style='FontName=DejaVu Sans,FontSize=22,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BackColour=&H90000000,BorderStyle=3,Outline=1,Shadow=0,MarginV=28,Alignment=2'" \
+            -an \
+            -c:v libx264 -preset medium -crf 20 \
+            -movflags +faststart \
+            media/DCM-QuickSort-How-To-v1.0.52.mp4
+
+      - name: Verify video
+        run: |
+          ffprobe -v error -show_entries stream=codec_type,codec_name,width,height -of json media/DCM-QuickSort-How-To-v1.0.52.mp4
+          AUDIO_STREAMS="$(ffprobe -v error -select_streams a -show_entries stream=index -of csv=p=0 media/DCM-QuickSort-How-To-v1.0.52.mp4)"
+          test -z "$AUDIO_STREAMS"
+          DURATION="$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 media/DCM-QuickSort-How-To-v1.0.52.mp4)"
+          python3 - <<'PY'
+          import json, subprocess
+          p='media/DCM-QuickSort-How-To-v1.0.52.mp4'
+          data=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_entries','stream=codec_type,codec_name,width,height','-show_entries','format=duration','-of','json',p]))
+          assert [s['codec_type'] for s in data['streams']] == ['video'], data
+          assert data['streams'][0]['codec_name'] == 'h264', data
+          assert int(data['streams'][0]['width']) == 1280 and int(data['streams'][0]['height']) == 720, data
+          assert 47.0 <= float(data['format']['duration']) <= 49.5, data
+          print('SILENT_CAPTIONED_VIDEO_OK')
+          PY
+
+      - name: Update website video
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('media/DCM-QuickSort-Fullscreen-HeyGen-Demo.mp4','media/DCM-QuickSort-How-To-v1.0.52.mp4')
+          s=s.replace('See the complete Quick Sort workspace: source and filters at the top, Files on the left, a large Preview in the center, Processed history on the right, and rename, destination aliases and actions together below.','A silent, captioned walkthrough of the Quick Sort workflow: choose a source, filter, preview, rename, choose a destination, move, and continue.')
+          p.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Commit generated video
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add media/DCM-QuickSort-How-To-v1.0.52.mp4 media/DCM-QuickSort-How-To-v1.0.52.srt index.html
+          git commit -m "Publish silent captioned DCM 1.0.52 how-to video [skip ci]"
+          git push origin HEAD:main
