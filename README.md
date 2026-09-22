@@ -1,4 +1,4 @@
-﻿# DCM - Quick Sort
+# DCM - Quick Sort
 
 **Downloaded Content Management**
 
