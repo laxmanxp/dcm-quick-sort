@@ -1,27 +1,31 @@
-# DCM - Quick Sort
+﻿# DCM - Quick Sort
 
 **Downloaded Content Management**
 
-DCM - Quick Sort is a small Windows utility for cleaning up downloaded and received files.
+DCM - Quick Sort is a small Windows utility for turning an unorganized folder into a fast, continuous sorting workflow.
 
 **Preview → Rename → Move → Next**
 
+## Current release
+
+**v1.0.52**
+
+Download the Windows installer from the repository Releases page:
+
+https://github.com/laxmanxp/dcm-quick-sort/releases/latest
+
 ## What it does
 
-- Preview supported images and documents
-- Rename files while viewing their contents
-- Move files into the correct folder
-- Filter Images, Documents, Video and Audio by extension
-- Use an editable destination path with folder suggestions
-- Create a typed final destination folder when needed
-- Keyboard navigation and Alt-key shortcuts
-- Local-first operation with no account requirement
-
-## Download
-
-Use the repository's **Releases** section for Windows installers:
-
-https://github.com/laxmanxp/dcm-quick-sort/releases
+- Preview PDFs with a DCM-owned renderer: Fit, 100%, 25–800% zoom, Ctrl+mouse-wheel, page navigation and pan
+- Preview supported images, text and Office/Open XML files
+- Rename while previewing, with cleanup, case, date-prefix and template helpers
+- Save Source and Destination aliases with folder pickers and autocomplete
+- Filter the inbox by type, extension, filename, age and size
+- Keep durable Processed history with selective Undo
+- Recover conservatively from interrupted cross-volume moves and replacements
+- Learn rename/destination patterns locally and show explainable suggestions
+- Hand completed transactions to FileFlow through a local metadata queue
+- Work locally with no account requirement
 
 ## Website
 
