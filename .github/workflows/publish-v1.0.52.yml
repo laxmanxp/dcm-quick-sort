@@ -1,0 +1,98 @@
+name: Publish DCM - Quick Sort v1.0.52
+
+on:
+  push:
+    paths:
+      - ".github/workflows/publish-v1.0.52.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact release assets
+        uses: actions/checkout@v4
+        with:
+          ref: release-v1.0.52-assets
+          path: assets
+          fetch-depth: 1
+
+      - name: Verify qualified hashes
+        run: |
+          cd assets/release-assets/v1.0.52
+          sha256sum -c SHA256SUMS.txt
+          file DCM-QuickSort-Setup-v1.0.52.exe DCM-QuickSort-v1.0.52-windows-x64.exe
+          cp DCM-QuickSort-Setup-v1.0.52.exe "$GITHUB_WORKSPACE/"
+          cp DCM-QuickSort-v1.0.52-windows-x64.exe "$GITHUB_WORKSPACE/"
+          cp SHA256SUMS.txt "$GITHUB_WORKSPACE/"
+
+      - name: Prepare release notes
+        run: |
+          cat > release-notes.md <<'EOF'
+          DCM - Quick Sort 1.0.52
+
+          PDF preview is now owned by DCM instead of depending on the Edge/Windows PDF preview handler.
+
+          Highlights:
+          - DCM-owned Windows.Data.Pdf preview path
+          - PDF Fit, 100%, 25–800% zoom, + / -, and Ctrl+mouse-wheel
+          - Previous / Next page controls with Page N of M
+          - Drag-to-pan at manual PDF zoom
+          - Saved Source and Destination aliases with autocomplete
+          - Filename, age, size, type and extension inbox filters
+          - Durable move journal, selective Undo and restart recovery
+          - Local non-AI learning with explainable suggestions
+          - FileFlow metadata handoff
+          - Local-first operation; no account required
+
+          Live Windows acceptance:
+          - DCM PDF renderer active on a 24-page PDF
+          - Fit, 100%, 125%, 150% and Ctrl+mouse-wheel verified
+          - Previous/Next page navigation verified
+          - Real mouse drag-to-pan verified
+          - v1.0.35 large cross-volume move also remains accepted
+
+          SHA-256:
+          - Installer: f7d6d385c37181bbe5e524bb7e7386dec3e33a6a795ed1ff095bea05f80c7a73
+          - App: 8e0b1de5c3b8779a08735276a275c27ef4292ba370ca487ed7d0a8b5fc864545
+
+          Free app · Donation supported · No account required.
+          EOF
+
+      - name: Publish or refresh v1.0.52
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view v1.0.52 --repo laxmanxp/dcm-quick-sort >/dev/null 2>&1; then
+            gh release edit v1.0.52 \
+              --repo laxmanxp/dcm-quick-sort \
+              --title "DCM - Quick Sort 1.0.52" \
+              --notes-file release-notes.md \
+              --latest
+            gh release upload v1.0.52 \
+              DCM-QuickSort-Setup-v1.0.52.exe \
+              DCM-QuickSort-v1.0.52-windows-x64.exe \
+              SHA256SUMS.txt \
+              --repo laxmanxp/dcm-quick-sort \
+              --clobber
+          else
+            gh release create v1.0.52 \
+              DCM-QuickSort-Setup-v1.0.52.exe \
+              DCM-QuickSort-v1.0.52-windows-x64.exe \
+              SHA256SUMS.txt \
+              --repo laxmanxp/dcm-quick-sort \
+              --target main \
+              --title "DCM - Quick Sort 1.0.52" \
+              --notes-file release-notes.md \
+              --latest
+          fi
+
+      - name: Verify public release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view v1.0.52 \
+            --repo laxmanxp/dcm-quick-sort \
+            --json name,tagName,url,assets,isLatest
