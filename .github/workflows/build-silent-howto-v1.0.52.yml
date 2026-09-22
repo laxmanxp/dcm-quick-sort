@@ -52,19 +52,22 @@ jobs:
           print('SILENT_CAPTION_BAND_VIDEO_OK')
           PY
 
-      - name: Verify caption band stays outside app frame
+      - name: Verify app screen is preserved above caption band
         run: |
-          ffmpeg -y -ss 12 -i media/DCM-QuickSort-How-To-v1.0.52.mp4 -frames:v 1 /tmp/howto-check.png
+          ffmpeg -y -ss 12 -i media/DCM-QuickSort-Fullscreen-HeyGen-Demo.mp4 \
+            -frames:v 1 -vf "scale=1280:720" /tmp/source.png
+          ffmpeg -y -ss 12 -i media/DCM-QuickSort-How-To-v1.0.52.mp4 \
+            -frames:v 1 -vf "crop=1280:720:0:0" /tmp/output-top.png
+          ffmpeg -i /tmp/source.png -i /tmp/output-top.png \
+            -lavfi "ssim=stats_file=/tmp/ssim.log" -f null - 2>&1 | tee /tmp/ssim-output.txt
           python3 - <<'PY'
-          from PIL import Image
-          im=Image.open('/tmp/howto-check.png').convert('RGB')
-          assert im.size == (1280, 840), im.size
-          # The added band occupies y=720..839. Confirm it remains predominantly dark.
-          px=im.crop((0,720,1280,840))
-          vals=list(px.getdata())
-          avg=sum(sum(v) for v in vals)/(len(vals)*3)
-          assert avg < 80, avg
-          print('CAPTION_BAND_OUTSIDE_APP_OK')
+          import re
+          s=open('/tmp/ssim-output.txt',encoding='utf-8',errors='ignore').read()
+          m=re.findall(r'All:([0-9.]+)',s)
+          assert m, s[-2000:]
+          score=float(m[-1])
+          assert score > 0.97, score
+          print('APP_SCREEN_PRESERVED_OK', score)
           PY
 
       - name: Update website copy
