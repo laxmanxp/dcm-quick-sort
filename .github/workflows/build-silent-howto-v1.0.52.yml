@@ -24,7 +24,7 @@ jobs:
         run: |
           ffmpeg -y \
             -i media/DCM-QuickSort-Fullscreen-HeyGen-Demo.mp4 \
-            -vf "subtitles=media/DCM-QuickSort-How-To-v1.0.52.srt:force_style='FontName=DejaVu Sans,FontSize=22,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BackColour=&H90000000,BorderStyle=3,Outline=1,Shadow=0,MarginV=28,Alignment=2'" \
+            -vf "pad=1280:840:0:0:color=black,subtitles=media/DCM-QuickSort-How-To-v1.0.52.srt:force_style='FontName=DejaVu Sans,FontSize=22,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BackColour=&H00000000,BorderStyle=1,Outline=1,Shadow=0,MarginV=20,Alignment=2'" \
             -an \
             -c:v libx264 -preset medium -crf 20 \
             -movflags +faststart \
@@ -35,33 +35,62 @@ jobs:
           ffprobe -v error -show_entries stream=codec_type,codec_name,width,height -of json media/DCM-QuickSort-How-To-v1.0.52.mp4
           AUDIO_STREAMS="$(ffprobe -v error -select_streams a -show_entries stream=index -of csv=p=0 media/DCM-QuickSort-How-To-v1.0.52.mp4)"
           test -z "$AUDIO_STREAMS"
-          DURATION="$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 media/DCM-QuickSort-How-To-v1.0.52.mp4)"
           python3 - <<'PY'
           import json, subprocess
           p='media/DCM-QuickSort-How-To-v1.0.52.mp4'
-          data=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_entries','stream=codec_type,codec_name,width,height','-show_entries','format=duration','-of','json',p]))
+          data=json.loads(subprocess.check_output([
+              'ffprobe','-v','error',
+              '-show_entries','stream=codec_type,codec_name,width,height',
+              '-show_entries','format=duration',
+              '-of','json',p
+          ]))
           assert [s['codec_type'] for s in data['streams']] == ['video'], data
           assert data['streams'][0]['codec_name'] == 'h264', data
-          assert int(data['streams'][0]['width']) == 1280 and int(data['streams'][0]['height']) == 720, data
+          assert int(data['streams'][0]['width']) == 1280, data
+          assert int(data['streams'][0]['height']) == 840, data
           assert 47.0 <= float(data['format']['duration']) <= 49.5, data
-          print('SILENT_CAPTIONED_VIDEO_OK')
+          print('SILENT_CAPTION_BAND_VIDEO_OK')
           PY
 
-      - name: Update website video
+      - name: Verify caption band stays outside app frame
+        run: |
+          ffmpeg -y -ss 12 -i media/DCM-QuickSort-How-To-v1.0.52.mp4 -frames:v 1 /tmp/howto-check.png
+          python3 - <<'PY'
+          from PIL import Image
+          im=Image.open('/tmp/howto-check.png').convert('RGB')
+          assert im.size == (1280, 840), im.size
+          # The added band occupies y=720..839. Confirm it remains predominantly dark.
+          px=im.crop((0,720,1280,840))
+          vals=list(px.getdata())
+          avg=sum(sum(v) for v in vals)/(len(vals)*3)
+          assert avg < 80, avg
+          print('CAPTION_BAND_OUTSIDE_APP_OK')
+          PY
+
+      - name: Update website copy
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('index.html')
-          s=p.read_text(encoding='utf-8')
-          s=s.replace('media/DCM-QuickSort-Fullscreen-HeyGen-Demo.mp4','media/DCM-QuickSort-How-To-v1.0.52.mp4')
-          s=s.replace('See the complete Quick Sort workspace: source and filters at the top, Files on the left, a large Preview in the center, Processed history on the right, and rename, destination aliases and actions together below.','A silent, captioned walkthrough of the Quick Sort workflow: choose a source, filter, preview, rename, choose a destination, move, and continue.')
-          p.write_text(s,encoding='utf-8')
+          for fn in ('index.html','how-to.html'):
+              p=Path(fn)
+              if not p.exists():
+                  continue
+              s=p.read_text(encoding='utf-8')
+              s=s.replace(
+                  'A silent, captioned walkthrough of the Quick Sort workflow: choose a source, filter, preview, rename, choose a destination, move, and continue.',
+                  'A silent, captioned walkthrough with the DCM screen kept fully visible above a dedicated caption band.'
+              )
+              s=s.replace(
+                  'This video has no audio. Instructions are shown as captions inside the video.',
+                  'This video has no audio. The DCM screen stays fully visible, with instructions shown in a separate caption band underneath.'
+              )
+              p.write_text(s,encoding='utf-8')
           PY
 
       - name: Commit generated video
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add media/DCM-QuickSort-How-To-v1.0.52.mp4 media/DCM-QuickSort-How-To-v1.0.52.srt index.html
-          git commit -m "Publish silent captioned DCM 1.0.52 how-to video [skip ci]"
+          git add media/DCM-QuickSort-How-To-v1.0.52.mp4 media/DCM-QuickSort-How-To-v1.0.52.srt index.html how-to.html
+          git commit -m "Move DCM how-to captions below app screen [skip ci]"
           git push origin HEAD:main
