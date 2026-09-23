@@ -8,7 +8,7 @@ DCM - Quick Sort is a small Windows utility for turning an unorganized folder in
 
 ## Current release
 
-**v1.0.52**
+**v1.0.53**
 
 Download the Windows installer from the repository Releases page:
 
