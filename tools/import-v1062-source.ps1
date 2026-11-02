@@ -20,7 +20,7 @@ try {
     $src=Join-Path $stage $part
     $dst=Join-Path $Checkout ('source-v1.0.62\'+$part)
     New-Item -ItemType Directory -Force -Path $dst|Out-Null
-    Copy-Item -LiteralPath (Join-Path $src '*') -Destination $dst -Recurse -Force
+    Get-ChildItem -LiteralPath $src -Force | Copy-Item -Destination $dst -Recurse -Force
     foreach($f in Get-ChildItem -LiteralPath $src -Recurse -File) {
       $rel=$f.FullName.Substring($src.Length+1)
       $copy=Join-Path $dst $rel
