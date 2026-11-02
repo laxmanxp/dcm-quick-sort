@@ -1,0 +1,71 @@
+DCM - Quick Sort v1.0.62 — Qualification
+Multi-Select + Batch Move
+
+TDD — BATCH PLAN
+PASS  RED first: batch move planner absent
+PASS  preserves selected-file order
+PASS  preserves each current filename at the destination
+PASS  deduplicates duplicate selected paths
+PASS  rejects moving a batch into its current source folder
+
+TDD — WINDOWS MULTI-SELECTION / WIRING
+PASS  source File List uses LBS_EXTENDEDSEL
+PASS  selected paths are read with LB_GETSELCOUNT + LB_GETSELITEMS
+PASS  focused item is read with LB_GETCARETINDEX, so Preview can follow focus without collapsing selection
+PASS  Move detects multi-selection and starts batch mode
+PASS  batch items feed through the existing beginFileOperation(fileOperationMove, source, target) pipeline
+PASS  batch continuation is posted through WM_BATCH_MOVE_NEXT
+PASS  per-file success/cancel/failure advances the remaining batch safely
+PASS  Move button exposes the selected count
+PASS  Ctrl+A selects all visible source files
+PASS  selection count is shown in the Files heading
+
+SAFETY / BEHAVIOR
+PASS  Rename remains a focused single-file action
+PASS  Move ignores uncommitted New Name edits and preserves current filenames
+PASS  existing conflict inspection / SHA-256 duplicate handling remains per file
+PASS  existing durable journal / Recovery / Undo remains per file
+PASS  skipped/failed batch item does not discard later items
+PASS  batch completion reports moved vs issue count
+PASS  existing staged FileFlow metadata, when present from older builds, still follows its individual moved file
+
+REGRESSION
+PASS  v1.0.61 Alt+W/P/C/L and focus workflow retained
+PASS  Markdown/CSV plain-text preview retained
+PASS  source filters and Sort By retained
+PASS  searchable/collapsible Processed history retained
+PASS  Handoff to FileFlow retained
+
+BUILD
+PASS  app go test ./...
+PASS  app go test -race ./...
+PASS  app go vet ./...
+PASS  app Windows x64 test binary cross-compile
+PASS  app Windows x64 vet (-unsafeptr=false for established Win32 interop)
+PASS  app Windows x64 GUI build
+PASS  installer go test ./...
+PASS  installer go vet ./...
+PASS  installer Windows x64 test binary cross-compile
+PASS  installer Windows x64 vet (-unsafeptr=false)
+PASS  installer Windows x64 GUI build
+PASS  installer embedded payload equals qualified app bytes
+PASS  PE32+ Windows x86-64 GUI validation
+
+REPRODUCIBILITY
+PASS  final packaged source archive re-runs app tests/race/vet
+PASS  final packaged source archive re-runs installer tests/vet
+PASS  clean packaged-source app rebuild is byte-for-byte identical
+PASS  clean packaged-source installer rebuild is byte-for-byte identical
+
+LIVE ACCEPTANCE — TEST PENDING, NOT FAILED
+- Ctrl-click / Shift-click / Ctrl+A selection behavior
+- focused Preview/New Name does not collapse a multi-selection
+- Move N Files confirmation and real multi-file move
+- one conflict inside a batch followed by successful later items
+- restart Recovery check after a completed batch
+
+Qualified v1.0.62 app SHA-256:
+53ed5f61ecde3df6b2d3cd5dd8a5a08b25209ec234ef715cd05a0f6359fb5e21
+
+Qualified v1.0.62 installer SHA-256:
+47e7e8314de69ac2ece45085e9d8854678405e7c83fe1285e29d83fb814d6533
