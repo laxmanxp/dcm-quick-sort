@@ -55,7 +55,8 @@ click clear
 select sort "Name"
 type name "01-alpha"
 wait_ready type=textbox target=newname text="01-alpha" timeout=5s
-type name ""
+click clear
+select sort "Name"
 delay 400ms
 click next
 wait_ready type=textbox target=newname text="02-beta" timeout=5s
