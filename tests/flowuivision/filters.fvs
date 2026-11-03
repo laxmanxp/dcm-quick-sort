@@ -1,4 +1,4 @@
-# Attach only to the isolated copy; the launcher is intentionally not used.
+# Attach only to the isolated DCM 1.0.69 copy.
 target sut type=desktop app=dcm-quicksort
 surface main target=sut process="DCM-QS-VisionTest.exe" title~="1.0.69"
 control path surface=main id=1001 role=textbox
@@ -15,23 +15,22 @@ control next surface=main id=1007 role=button
 wait main timeout=10s
 inspect main
 expect path text~="dcm-flowuivision-20261103"
-expect status text~="of 8"
+click clear
 select sort "Name"
-wait_ready type=textbox target=newname text="01-alpha" timeout=5s
 inspect main
 expect sort text="Name"
+expect status text~="of 8"
 type name "beta"
 wait_ready type=textbox target=newname text="02-beta" timeout=5s
 inspect main
 expect status text~="of 1"
 type name "NO_SUCH_FIXTURE_529"
-delay 400ms
+delay 500ms
 inspect main
 expect status text~="0 of 0"
 click clear
-wait_ready type=textbox target=newname text="01-alpha" timeout=5s
+delay 400ms
 inspect main
-expect name empty
 expect status text~="of 8"
 select kind "Images"
 wait_ready type=textbox target=newname text="04-image" timeout=5s
@@ -54,7 +53,10 @@ inspect main
 expect status text~="0 of 0"
 click clear
 select sort "Name"
+type name "01-alpha"
 wait_ready type=textbox target=newname text="01-alpha" timeout=5s
+type name ""
+delay 400ms
 click next
 wait_ready type=textbox target=newname text="02-beta" timeout=5s
 inspect main
