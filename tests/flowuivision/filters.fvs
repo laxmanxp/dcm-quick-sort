@@ -1,0 +1,62 @@
+# Attach only to the isolated copy; the launcher is intentionally not used.
+target sut type=desktop app=dcm-quicksort
+surface main target=sut process="DCM-QS-VisionTest.exe" title~="1.0.69"
+control path surface=main id=1001 role=textbox
+control name surface=main id=1030 role=textbox
+control kind surface=main id=1012 role=combobox
+control extension surface=main id=1013 role=combobox
+control age surface=main id=1031 role=combobox
+control size surface=main id=1032 role=combobox
+control sort surface=main id=1045 role=combobox
+control clear surface=main id=1033 role=button
+control newname surface=main id=1005 role=textbox
+control status surface=main role=text text~="FILES"
+control next surface=main id=1007 role=button
+wait main timeout=10s
+inspect main
+expect path text~="dcm-flowuivision-20261103"
+expect status text~="of 8"
+select sort "Name"
+wait_ready type=textbox target=newname text="01-alpha" timeout=5s
+inspect main
+expect sort text="Name"
+type name "beta"
+wait_ready type=textbox target=newname text="02-beta" timeout=5s
+inspect main
+expect status text~="of 1"
+type name "NO_SUCH_FIXTURE_529"
+delay 400ms
+inspect main
+expect status text~="0 of 0"
+click clear
+wait_ready type=textbox target=newname text="01-alpha" timeout=5s
+inspect main
+expect name empty
+expect status text~="of 8"
+select kind "Images"
+wait_ready type=textbox target=newname text="04-image" timeout=5s
+inspect main
+expect status text~="of 1"
+click clear
+select extension ".txt"
+delay 400ms
+inspect main
+expect status text~="of 3"
+click clear
+select size "1-10 MiB"
+delay 400ms
+inspect main
+expect status text~="0 of 0"
+click clear
+select age "Older than 30 days"
+delay 400ms
+inspect main
+expect status text~="0 of 0"
+click clear
+select sort "Name"
+wait_ready type=textbox target=newname text="01-alpha" timeout=5s
+click next
+wait_ready type=textbox target=newname text="02-beta" timeout=5s
+inspect main
+expect status text~="2 of 8"
+capture "filters-and-next"
