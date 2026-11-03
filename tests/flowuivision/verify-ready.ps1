@@ -11,22 +11,24 @@ try{
  [void][QSWindowState]::ShowWindow($hwnd,9)
  [void][QSWindowState]::SetWindowPos($hwnd,[IntPtr](-1),0,0,1280,820,0x0050)
  Start-Sleep -Milliseconds 300
- [void](Run-Case 'pptx-slide2-visible' @'
+ $second=@'
 click clear
 type name "07-slides"
 wait_ready type=textbox target=newname text="07-slides" timeout=5s
 delay 1000ms
-select slides "Slide 2 · SECOND SLIDE"
+select slides "Slide 2 @DOT@ SECOND SLIDE"
 delay 900ms
 inspect main
 expect slides text~="SECOND SLIDE"
-'@ $null)
- [void](Run-Case 'pptx-slide1-return-visible' @'
-select slides "Slide 1 · FILEFLOW OFFICE PREVIEW"
+'@
+ [void](Run-Case 'pptx-slide2-visible' ($second.Replace('@DOT@',[string][char]183)) $null)
+ $first=@'
+select slides "Slide 1 @DOT@ FILEFLOW OFFICE PREVIEW"
 delay 900ms
 inspect main
 expect slides text~="FILEFLOW OFFICE PREVIEW"
-'@ $null)
+'@
+ [void](Run-Case 'pptx-slide1-return-visible' ($first.Replace('@DOT@',[string][char]183)) $null)
  [void](Run-Case 'xlsx-sheet2-visible' @'
 click clear
 type name "06-orders"
