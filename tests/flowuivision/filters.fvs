@@ -1,4 +1,4 @@
-# Attach only to the isolated DCM 1.0.69 copy.
+# Eight isolated files; only 02-beta.txt is older than 30 days.
 target sut type=desktop app=dcm-quicksort
 surface main target=sut process="DCM-QS-VisionTest.exe" title~="1.0.69"
 control path surface=main id=1001 role=textbox
@@ -9,6 +9,7 @@ control age surface=main id=1031 role=combobox
 control size surface=main id=1032 role=combobox
 control sort surface=main id=1045 role=combobox
 control clear surface=main id=1033 role=button
+control reload surface=main id=1011 role=button
 control newname surface=main id=1005 role=textbox
 control status surface=main role=text text~="FILES"
 control next surface=main id=1007 role=button
@@ -16,6 +17,8 @@ wait main timeout=10s
 inspect main
 expect path text~="dcm-flowuivision-20261103"
 click clear
+click reload
+delay 300ms
 select sort "Name"
 inspect main
 expect sort text="Name"
@@ -48,9 +51,9 @@ inspect main
 expect status text~="0"
 click clear
 select age "Older than 30 days"
-delay 400ms
+wait_ready type=textbox target=newname text="02-beta" timeout=5s
 inspect main
-expect status text~="0"
+expect status text~="of 1"
 click clear
 select sort "Name"
 type name "01-alpha"
