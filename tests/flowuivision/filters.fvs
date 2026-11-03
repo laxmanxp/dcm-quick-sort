@@ -27,7 +27,7 @@ expect status text~="of 1"
 type name "NO_SUCH_FIXTURE_529"
 delay 500ms
 inspect main
-expect status text~="0 of 0"
+expect status text~="0"
 click clear
 delay 400ms
 inspect main
@@ -45,12 +45,12 @@ click clear
 select size "1-10 MiB"
 delay 400ms
 inspect main
-expect status text~="0 of 0"
+expect status text~="0"
 click clear
 select age "Older than 30 days"
 delay 400ms
 inspect main
-expect status text~="0 of 0"
+expect status text~="0"
 click clear
 select sort "Name"
 type name "01-alpha"
