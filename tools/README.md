@@ -1,0 +1,37 @@
+# DCM QuickSort native qualification
+
+Use the existing standalone FlowDev runtime with this repository's isolated profile.
+Do not use FileFlow's profile, the historical DCM clone, or the installed app.
+
+```powershell
+$env:FLOWDEV_WORKSPACE_ROOT = 'C:\FlowverseReports'
+Set-Location 'C:\FlowverseReports\dcm-quicksort-candidate\tools\flowdev-dcm'
+$flowdev = 'C:\FlowverseReports\flowdev-standalone-validation\flowdev-test.exe'
+& $flowdev update dcm-quicksort
+& $flowdev test dcm-quicksort d3-journal
+& $flowdev test dcm-quicksort d4-templates
+& $flowdev test dcm-quicksort installer-regressions
+& $flowdev test dcm-quicksort baseline
+& $flowdev test dcm-quicksort package
+```
+
+The initial candidate clone is created by the committed FlowDev bootstrap selector,
+before changing to this profile. The updater itself intentionally does not clone.
+
+Each check requires a clean `release/v1.0.71` checkout with the expected origin. It
+copies tracked source into a uniquely named report directory outside the checkout,
+records commit and per-file SHA-256 identity, and verifies that the original source
+stays unchanged. Native `go test -json -count=1` runs preserve raw output, individual
+failures, and skips. Targeted selectors fail when they execute zero tests.
+
+`baseline` runs all app unit tests. `regressions` runs `^Test(D[1-6]|Release)`.
+`installer-regressions` uses that pattern in the installer module; `installer-unit`
+runs its entire suite. `build` produces the app for subsequent owned UI testing.
+`package` runs both full suites and builds app and installer from the same snapshot.
+The exact app bytes are staged as the embedded installer payload, and the package
+verifier checks that those bytes occur exactly once in the Windows amd64 installer.
+Hashes and receipts accompany the artifacts. The runner never executes an installer.
+
+Passing these checks is source/package evidence. UI screenshots require separate
+review, and installer registration requires a disposable Windows user/VM because
+changing LOCALAPPDATA/APPDATA does not isolate HKCU integration keys.

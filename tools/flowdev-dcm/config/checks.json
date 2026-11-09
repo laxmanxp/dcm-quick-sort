@@ -1,0 +1,16 @@
+{
+  "apps": {
+    "dcm-quicksort": {
+      "tests": {
+        "baseline": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "baseline"],
+        "regressions": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "regressions"],
+        "d3-journal": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "regressions", "-Run", "^TestD3"],
+        "d4-templates": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "regressions", "-Run", "^TestD4"],
+        "installer-regressions": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "installer-regressions"],
+        "installer-unit": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "installer-unit"],
+        "build": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "build"],
+        "package": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "package"]
+      }
+    }
+  }
+}
