@@ -399,7 +399,7 @@ func uninstall(silent bool) error {
 		"\"%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -NonInteractive -Command \"Start-Sleep -Seconds 2\" >nul 2>nul\r\nif errorlevel 1 exit /b 3\r\n" +
 		"del /f /q \"" + uninstallExe + "\" >nul 2>nul\r\nif exist \"" + uninstallExe + "\" exit /b 1\r\n" +
 		"rmdir /s /q \"" + installDir + "\" >nul 2>nul\r\nif exist \"" + installDir + "\" exit /b 1\r\n" +
-		"del /f /q \"%~f0\" >nul 2>nul & if exist \"%~f0\" (exit /b 2) else (exit /b 0)\r\n"
+		"del /f /q \"%~f0\" >nul 2>nul & if exist \"%~f0\" (exit 2) else (exit 0)\r\n"
 	if err := os.WriteFile(batch, []byte(script), 0o644); err == nil {
 		cmd := exec.Command("cmd.exe", "/C", batch)
 		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: CREATE_NO_WINDOW}
