@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -259,15 +261,63 @@ func moveJournalEntryByID(path, id string) (MoveJournalEntry, error) {
 	return MoveJournalEntry{}, fmt.Errorf("move journal entry %q was not found", id)
 }
 
-func completeRecoveredMoveAfterVerifiedDestination(journalPath string, rec MoveRecord, detail string) error {
-	if err := os.Remove(rec.From); err != nil && !os.IsNotExist(err) {
-		_ = failMoveJournal(journalPath, rec, MoveJournalAttention, detail+"; destination is verified but source could not be removed: "+err.Error(), time.Now())
-		return fmt.Errorf("destination is complete and verified, but source could not be removed: %w", err)
+func completeRecoveredMoveAfterVerifiedDestination(journalPath string, rec MoveRecord, detail string, expected sourceSnapshot) error {
+	if err := retireVerifiedSource(rec.From, rec.To, expected); err != nil {
+		_ = failMoveJournal(journalPath, rec, MoveJournalAttention, detail+"; verified source retirement was refused: "+err.Error(), time.Now())
+		return fmt.Errorf("source was retained because verified retirement could not complete: %w", err)
 	}
 	if err := completeMoveJournal(journalPath, rec, time.Now()); err != nil {
 		return fmt.Errorf("move completed, but durable journal finalization failed: %w", err)
 	}
 	return nil
+}
+
+// removeVerifiedPartialDestination rechecks both admitted file identities and
+// the actual prefix while both handles are guarded, then removes only that
+// target handle. A changed destination must never be cleaned up by pathname.
+func removeVerifiedPartialDestination(source, target string, expectedSource, expectedTarget sourceSnapshot) error {
+	sourceFile, err := openGuardedRegularFile(source, false)
+	if err != nil {
+		return fmt.Errorf("could not guard source before partial cleanup: %w", err)
+	}
+	defer sourceFile.Close()
+	currentSource, err := snapshotOpenFile(sourceFile)
+	if err != nil {
+		return err
+	}
+	if !os.SameFile(expectedSource.Info, currentSource.Info) || currentSource.Size != expectedSource.Size || currentSource.SHA256 != expectedSource.SHA256 {
+		return errors.New("source changed after recovery admission; both files were retained")
+	}
+	targetFile, err := openGuardedRegularFile(target, true)
+	if err != nil {
+		return fmt.Errorf("could not guard partial destination: %w", err)
+	}
+	defer targetFile.Close()
+	currentTarget, err := snapshotOpenFile(targetFile)
+	if err != nil {
+		return err
+	}
+	if !os.SameFile(expectedTarget.Info, currentTarget.Info) || currentTarget.Size != expectedTarget.Size || currentTarget.SHA256 != expectedTarget.SHA256 {
+		return errors.New("partial destination changed after recovery admission; both files were retained")
+	}
+	if os.SameFile(currentSource.Info, currentTarget.Info) || currentTarget.Size >= currentSource.Size {
+		return errors.New("destination is not a distinct partial copy; nothing was removed")
+	}
+	if _, err := sourceFile.Seek(0, io.SeekStart); err != nil {
+		return err
+	}
+	prefixHash := sha256.New()
+	size, err := io.Copy(prefixHash, io.LimitReader(sourceFile, currentTarget.Size))
+	if err != nil {
+		return err
+	}
+	if size != currentTarget.Size || hex.EncodeToString(prefixHash.Sum(nil)) != currentTarget.SHA256 {
+		return errors.New("destination is not the verified source prefix; both files were retained")
+	}
+	if err := deleteGuardedFile(targetFile); err != nil {
+		return err
+	}
+	return targetFile.Close()
 }
 
 func executeInterruptedMoveRecovery(journalPath, id string, action RecoveryMoveAction, progress CopyProgressFunc) InterruptedMoveRecoveryResult {
@@ -287,17 +337,28 @@ func executeInterruptedMoveRecovery(journalPath, id string, action RecoveryMoveA
 		return result
 	}
 
-	analysis, err := inspectInterruptedStandardMove(entry.Record.From, entry.Record.To)
-	result.Analysis = analysis
-	if err != nil {
-		result.Err = err
-		return result
-	}
 	rec := entry.Record
 	now := time.Now()
 
 	failAttention := func(err error, detail string) InterruptedMoveRecoveryResult {
 		_ = failMoveJournal(journalPath, rec, MoveJournalAttention, detail+": "+err.Error(), time.Now())
+		result.Err = err
+		return result
+	}
+	expected, err := snapshotSource(rec.From)
+	if err != nil {
+		return failAttention(err, "could not snapshot the source before recovery")
+	}
+	var expectedTarget sourceSnapshot
+	if action == RecoveryMoveRestart || action == RecoveryMoveRemovePartial {
+		expectedTarget, err = snapshotSource(rec.To)
+		if err != nil {
+			return failAttention(err, "could not snapshot the partial destination before recovery")
+		}
+	}
+	analysis, err := inspectInterruptedStandardMove(rec.From, rec.To)
+	result.Analysis = analysis
+	if err != nil {
 		result.Err = err
 		return result
 	}
@@ -315,7 +376,7 @@ func executeInterruptedMoveRecovery(journalPath, id string, action RecoveryMoveA
 		if err := resumeVerifiedPartialCopyWithProgress(rec.From, rec.To, progress); err != nil {
 			return failAttention(err, "resume did not complete; source was retained")
 		}
-		if err := completeRecoveredMoveAfterVerifiedDestination(journalPath, rec, "resumed destination verified"); err != nil {
+		if err := completeRecoveredMoveAfterVerifiedDestination(journalPath, rec, "resume copy completed", expected); err != nil {
 			result.Err = err
 			return result
 		}
@@ -328,7 +389,7 @@ func executeInterruptedMoveRecovery(journalPath, id string, action RecoveryMoveA
 			result.Err = err
 			return result
 		}
-		if err := os.Remove(rec.To); err != nil {
+		if err := removeVerifiedPartialDestination(rec.From, rec.To, expected, expectedTarget); err != nil {
 			return failAttention(err, "could not remove verified partial destination before restart")
 		}
 		if err := updateMoveJournalStage(journalPath, rec, MoveJournalStageRecoveryPartialRemoved, "verified partial destination removed; source remains authoritative", time.Now()); err != nil {
@@ -340,7 +401,7 @@ func executeInterruptedMoveRecovery(journalPath, id string, action RecoveryMoveA
 			result.Err = err
 			return result
 		}
-		if err := completeRecoveredMoveAfterVerifiedDestination(journalPath, rec, "restarted destination verified"); err != nil {
+		if err := completeRecoveredMoveAfterVerifiedDestination(journalPath, rec, "restart copy completed", expected); err != nil {
 			result.Err = err
 			return result
 		}
@@ -353,7 +414,7 @@ func executeInterruptedMoveRecovery(journalPath, id string, action RecoveryMoveA
 			result.Err = err
 			return result
 		}
-		if err := os.Remove(rec.To); err != nil {
+		if err := removeVerifiedPartialDestination(rec.From, rec.To, expected, expectedTarget); err != nil {
 			return failAttention(err, "could not remove verified partial destination")
 		}
 		if err := updateMoveJournalStage(journalPath, rec, MoveJournalStageRecoveryPartialRemoved, "verified partial destination removed; source retained", time.Now()); err != nil {
@@ -373,7 +434,7 @@ func executeInterruptedMoveRecovery(journalPath, id string, action RecoveryMoveA
 			result.Err = err
 			return result
 		}
-		if err := completeRecoveredMoveAfterVerifiedDestination(journalPath, rec, "exact destination verified"); err != nil {
+		if err := completeRecoveredMoveAfterVerifiedDestination(journalPath, rec, "finish requested after prior destination verification", expected); err != nil {
 			result.Err = err
 			return result
 		}

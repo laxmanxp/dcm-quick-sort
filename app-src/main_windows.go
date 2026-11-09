@@ -3,6 +3,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -2874,26 +2875,26 @@ func finishBackgroundFallbackMove() {
 	case BackgroundMoveCopiedSourceRetained:
 		cancelPendingFileOperation()
 		if journalRec.JournalID != "" {
-			_ = failMoveJournal(moveJournalFilePath(), journalRec, MoveJournalAttention, "destination copy exists but source deletion did not complete; both files retained", time.Now())
+			_ = failMoveJournal(moveJournalFilePath(), journalRec, MoveJournalAttention, "copy step finished but verified source retirement was refused; review source and destination", time.Now())
 		}
 		if result.Source == currentFile() {
 			loadPreview(result.Source)
 		} else {
 			reloadFiles()
 		}
-		setText(app.statusLabel, "Background copy complete, but the source is still present; journal marked for attention: "+result.Target)
-		showError("The file was copied successfully in the background, but the original could not be deleted yet:\n" + result.Err.Error() + "\n\nThe copied file is safe at:\n" + result.Target + "\n\nDCM left both files in place and marked the durable journal for attention.")
+		setText(app.statusLabel, "Source retained; the move needs attention before retrying: "+result.Target)
+		showError("DCM could not verify and protect the source and destination for source removal:\n" + result.Err.Error() + "\n\nSource:\n" + result.Source + "\n\nDestination:\n" + result.Target + "\n\nReview these files before retrying. DCM marked the durable journal for attention.")
 	default:
 		cancelPendingFileOperation()
 		if journalRec.JournalID != "" {
-			_ = failMoveJournal(moveJournalFilePath(), journalRec, MoveJournalFailed, "background copy failed; source retained", time.Now())
+			_ = failMoveJournal(moveJournalFilePath(), journalRec, MoveJournalFailed, "source snapshot or background copy failed; source retirement was not attempted", time.Now())
 		}
 		if result.Source == currentFile() {
 			loadPreview(result.Source)
 		} else {
 			reloadFiles()
 		}
-		setText(app.statusLabel, "Background move failed; source file was kept unchanged and journaled as failed.")
+		setText(app.statusLabel, "Background move failed before verified source retirement; review the error before retrying.")
 		if result.Err != nil {
 			showError("Could not copy file to destination:\n" + result.Err.Error())
 		}
@@ -4289,14 +4290,19 @@ func applySelectedRenameTool() {
 	}
 }
 
-func removeSourceAfterAdvance(path string) error {
+func removeSourceAfterAdvance(source, target string, expected sourceSnapshot) error {
 	var err error
 	for attempt := 0; attempt < 8; attempt++ {
-		err = os.Remove(path)
-		if err == nil || os.IsNotExist(err) {
+		err = retireVerifiedSource(source, target, expected)
+		if err == nil {
 			return nil
 		}
-		time.Sleep(60 * time.Millisecond)
+		if !errors.Is(err, syscall.Errno(32)) && !errors.Is(err, syscall.Errno(33)) {
+			return err
+		}
+		if attempt < 7 {
+			time.Sleep(60 * time.Millisecond)
+		}
 	}
 	return err
 }

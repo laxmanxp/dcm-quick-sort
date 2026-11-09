@@ -20,14 +20,20 @@ type BackgroundMoveResult struct {
 // stages. A failed copy never removes the source. If the copy succeeds but the
 // source cannot be removed, the destination copy is intentionally retained so
 // user data is never discarded merely to make the operation look atomic.
-func executeBackgroundCopyMove(source, target string, copyFn func(string, string) error, removeFn func(string) error) BackgroundMoveResult {
+func executeBackgroundCopyMove(source, target string, copyFn func(string, string) error, retireFn verifiedRetireFunc) BackgroundMoveResult {
 	result := BackgroundMoveResult{Source: source, Target: target}
+	expected, err := snapshotSource(source)
+	if err != nil {
+		result.Status = BackgroundMoveFailed
+		result.Err = err
+		return result
+	}
 	if err := copyFn(source, target); err != nil {
 		result.Status = BackgroundMoveFailed
 		result.Err = err
 		return result
 	}
-	if err := removeFn(source); err != nil {
+	if err := retireFn(source, target, expected); err != nil {
 		result.Status = BackgroundMoveCopiedSourceRetained
 		result.Err = err
 		return result
@@ -40,10 +46,10 @@ func executeBackgroundCopyMove(source, target string, copyFn func(string, string
 // startBackgroundCopyMove deliberately returns a buffered result channel
 // immediately. The worker may take minutes; callers can keep their event loop
 // responsive while waiting for completion.
-func startBackgroundCopyMove(source, target string, copyFn func(string, string) error, removeFn func(string) error) <-chan BackgroundMoveResult {
+func startBackgroundCopyMove(source, target string, copyFn func(string, string) error, retireFn verifiedRetireFunc) <-chan BackgroundMoveResult {
 	results := make(chan BackgroundMoveResult, 1)
 	go func() {
-		results <- executeBackgroundCopyMove(source, target, copyFn, removeFn)
+		results <- executeBackgroundCopyMove(source, target, copyFn, retireFn)
 		close(results)
 	}()
 	return results
@@ -59,27 +65,12 @@ type BackgroundMoveProgress struct {
 // startBackgroundCopyMoveWithProgress is the observable Go 9C variant of the
 // fallback worker. Progress callbacks describe copy bytes only; source removal
 // still occurs only after the verified copy completes successfully.
-func startBackgroundCopyMoveWithProgress(source, target string, copyFn func(string, string, CopyProgressFunc) error, removeFn func(string) error, progressFn CopyProgressFunc) <-chan BackgroundMoveResult {
+func startBackgroundCopyMoveWithProgress(source, target string, copyFn func(string, string, CopyProgressFunc) error, retireFn verifiedRetireFunc, progressFn CopyProgressFunc) <-chan BackgroundMoveResult {
 	results := make(chan BackgroundMoveResult, 1)
 	go func() {
-		result := BackgroundMoveResult{Source: source, Target: target}
-		if err := copyFn(source, target, progressFn); err != nil {
-			result.Status = BackgroundMoveFailed
-			result.Err = err
-			results <- result
-			close(results)
-			return
-		}
-		if err := removeFn(source); err != nil {
-			result.Status = BackgroundMoveCopiedSourceRetained
-			result.Err = err
-			results <- result
-			close(results)
-			return
-		}
-		result.Status = BackgroundMoveSucceeded
-		result.Record = MoveRecord{From: source, To: target, Kind: MoveKindMove}
-		results <- result
+		results <- executeBackgroundCopyMove(source, target, func(source, target string) error {
+			return copyFn(source, target, progressFn)
+		}, retireFn)
 		close(results)
 	}()
 	return results

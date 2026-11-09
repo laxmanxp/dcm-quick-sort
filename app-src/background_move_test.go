@@ -17,7 +17,7 @@ func TestExecuteBackgroundCopyMoveSuccess(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got := executeBackgroundCopyMove(src, target, copyFileVerified, os.Remove)
+	got := executeBackgroundCopyMove(src, target, copyFileVerified, retireVerifiedSource)
 	if got.Status != BackgroundMoveSucceeded {
 		t.Fatalf("status=%q err=%v", got.Status, got.Err)
 	}
@@ -42,7 +42,7 @@ func TestExecuteBackgroundCopyMoveRemoveFailureKeepsSafeCopy(t *testing.T) {
 	}
 
 	removeErr := errors.New("source is locked")
-	got := executeBackgroundCopyMove(src, target, copyFileVerified, func(string) error { return removeErr })
+	got := executeBackgroundCopyMove(src, target, copyFileVerified, func(string, string, sourceSnapshot) error { return removeErr })
 	if got.Status != BackgroundMoveCopiedSourceRetained {
 		t.Fatalf("status=%q err=%v", got.Status, got.Err)
 	}
@@ -70,7 +70,7 @@ func TestExecuteBackgroundCopyMoveCopyFailureLeavesSource(t *testing.T) {
 
 	copyErr := errors.New("copy failed")
 	removed := false
-	got := executeBackgroundCopyMove(src, target, func(string, string) error { return copyErr }, func(string) error {
+	got := executeBackgroundCopyMove(src, target, func(string, string) error { return copyErr }, func(string, string, sourceSnapshot) error {
 		removed = true
 		return nil
 	})
@@ -86,15 +86,20 @@ func TestExecuteBackgroundCopyMoveCopyFailureLeavesSource(t *testing.T) {
 }
 
 func TestStartBackgroundCopyMoveReturnsBeforeWorkCompletes(t *testing.T) {
+	root := t.TempDir()
+	source, target := filepath.Join(root, "source.bin"), filepath.Join(root, "target.bin")
+	if err := os.WriteFile(source, []byte("payload"), 0o600); err != nil {
+		t.Fatal(err)
+	}
 	entered := make(chan struct{})
 	release := make(chan struct{})
-	copyFn := func(string, string) error {
+	copyFn := func(source, target string) error {
 		close(entered)
 		<-release
-		return nil
+		return copyFileVerified(source, target)
 	}
 
-	resultCh := startBackgroundCopyMove("source", "target", copyFn, func(string) error { return nil })
+	resultCh := startBackgroundCopyMove(source, target, copyFn, retireVerifiedSource)
 
 	select {
 	case <-entered:
@@ -121,13 +126,18 @@ func TestStartBackgroundCopyMoveReturnsBeforeWorkCompletes(t *testing.T) {
 }
 
 func TestBackgroundCopyMoveWithProgressForwardsProgress(t *testing.T) {
+	root := t.TempDir()
+	source, target := filepath.Join(root, "source.bin"), filepath.Join(root, "target.bin")
+	if err := os.WriteFile(source, make([]byte, 100), 0o600); err != nil {
+		t.Fatal(err)
+	}
 	var points [][2]int64
-	results := startBackgroundCopyMoveWithProgress("a", "b", func(_, _ string, progress CopyProgressFunc) error {
+	results := startBackgroundCopyMoveWithProgress(source, target, func(source, target string, progress CopyProgressFunc) error {
 		progress(0, 100)
 		progress(50, 100)
 		progress(100, 100)
-		return nil
-	}, func(string) error { return nil }, func(copied, total int64) {
+		return copyFileVerified(source, target)
+	}, retireVerifiedSource, func(copied, total int64) {
 		points = append(points, [2]int64{copied, total})
 	})
 	got := <-results

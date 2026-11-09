@@ -306,7 +306,7 @@ func removeExactDuplicateSource(source, target string) (MoveRecord, error) {
 }
 
 func moveFile(source, target string) error {
-	return moveFileWith(source, target, os.Rename, os.Remove)
+	return moveFileWith(source, target, os.Rename, retireVerifiedSource)
 }
 
 // copyFileVerified stages a safe copy while leaving the source untouched.
@@ -401,7 +401,7 @@ func copyFileVerifiedWithProgress(source, target string, progress CopyProgressFu
 	return nil
 }
 
-func moveFileWith(source, target string, renameFn func(string, string) error, removeFn func(string) error) error {
+func moveFileWith(source, target string, renameFn func(string, string) error, retireFn verifiedRetireFunc) error {
 	if source == target {
 		return nil
 	}
@@ -412,40 +412,16 @@ func moveFileWith(source, target string, renameFn func(string, string) error, re
 		return nil
 	}
 
-	in, err := os.Open(source)
+	expected, err := snapshotSource(source)
 	if err != nil {
 		return err
 	}
-	defer in.Close()
-	info, err := in.Stat()
-	if err != nil {
+	if err := copyFileVerified(source, target); err != nil {
 		return err
 	}
-	out, err := os.OpenFile(target, os.O_CREATE|os.O_EXCL|os.O_WRONLY, info.Mode())
-	if err != nil {
-		return err
-	}
-	moveComplete := false
-	defer func() {
-		_ = out.Close()
-		if !moveComplete {
-			_ = os.Remove(target)
-		}
-	}()
-	if _, err = io.Copy(out, in); err != nil {
-		return err
-	}
-	if err = out.Sync(); err != nil {
-		return err
-	}
-	if err = out.Close(); err != nil {
-		return err
-	}
-	if err = removeFn(source); err != nil {
-		return err
-	}
-	moveComplete = true
-	return nil
+	// A completed copy is retained if retirement refuses. Removing target by
+	// pathname here could discard a destination that another process changed.
+	return retireFn(source, target, expected)
 }
 
 func validateUndoMove(rec MoveRecord) error {

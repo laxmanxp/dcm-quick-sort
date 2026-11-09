@@ -353,7 +353,7 @@ func TestClampPreviewPan(t *testing.T) {
 	}
 }
 
-func TestMoveRollbackIfSourceCannotBeRemoved(t *testing.T) {
+func TestMoveRetainsBothFilesIfSourceCannotBeRetired(t *testing.T) {
 	srcDir := t.TempDir()
 	dstDir := t.TempDir()
 	src := filepath.Join(srcDir, "locked.jpg")
@@ -366,7 +366,7 @@ func TestMoveRollbackIfSourceCannotBeRemoved(t *testing.T) {
 	removeErr := errors.New("source is locked")
 	err := moveFileWith(src, target,
 		func(string, string) error { return renameErr },
-		func(string) error { return removeErr },
+		func(string, string, sourceSnapshot) error { return removeErr },
 	)
 	if err == nil || !strings.Contains(err.Error(), "source is locked") {
 		t.Fatalf("expected source removal error, got %v", err)
@@ -374,8 +374,8 @@ func TestMoveRollbackIfSourceCannotBeRemoved(t *testing.T) {
 	if _, err := os.Stat(src); err != nil {
 		t.Fatalf("source must remain after failed move: %v", err)
 	}
-	if _, err := os.Stat(target); !os.IsNotExist(err) {
-		t.Fatalf("partial copied target must be rolled back; stat err=%v", err)
+	if data, err := os.ReadFile(target); err != nil || string(data) != "image-data" {
+		t.Fatalf("completed copy must be retained when retirement refuses; data=%q err=%v", data, err)
 	}
 }
 

@@ -58,9 +58,9 @@ func TestD2BackgroundMoveRefusesChangedFilesBeforeSourceRetirement(t *testing.T)
 				if worker == "plain" {
 					got = executeBackgroundCopyMove(source, target, func(source, target string) error {
 						return copyThenChange(source, target, nil)
-					}, os.Remove)
+					}, retireVerifiedSource)
 				} else {
-					results := startBackgroundCopyMoveWithProgress(source, target, copyThenChange, os.Remove, nil)
+					results := startBackgroundCopyMoveWithProgress(source, target, copyThenChange, retireVerifiedSource, nil)
 					select {
 					case got = <-results:
 					case <-time.After(10 * time.Second):
@@ -123,10 +123,14 @@ func TestD2RecoveryCompletionRejectsStaleVerification(t *testing.T) {
 	if err != nil || !analysis.CanFinish {
 		t.Fatalf("fixture did not reach verified Finish boundary: analysis=%#v err=%v", analysis, err)
 	}
+	expected, err := snapshotSource(source)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if err := os.WriteFile(source, []byte("ABCDEFGHIJ"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if err := completeRecoveredMoveAfterVerifiedDestination(journal, rec, "previous verification is now stale"); err == nil {
+	if err := completeRecoveredMoveAfterVerifiedDestination(journal, rec, "previous verification is now stale", expected); err == nil {
 		t.Error("recovery trusted stale verification and removed the edited source")
 	}
 	assertD2FileBytes(t, source, "ABCDEFGHIJ")
