@@ -6,13 +6,15 @@ DCM - Quick Sort is a small Windows utility for turning an unorganized folder in
 
 **Preview → Rename → Move → Next**
 
-## Current release
+## Current published release
 
-**v1.0.53**
+**[v1.0.63](https://github.com/laxmanxp/dcm-quick-sort/releases/tag/v1.0.63)**
 
 Download the Windows installer from the repository Releases page:
 
 https://github.com/laxmanxp/dcm-quick-sort/releases/latest
+
+DCM QuickSort remains a separate application and window within the **FileFlow Suite** umbrella, alongside Flow Search, DeepSearch and FileFlow. Existing Go behavior remains the reuse baseline. See [project context](CONTEXT.md) and [tracked work](todo.json) for source provenance, native test evidence and the remaining release gates; the newer v1.0.69 test record and v1.0.70 archive do not establish a certified newer release.
 
 ## What it does
 

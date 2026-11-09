@@ -1,0 +1,230 @@
+{
+  "schema_version": 1,
+  "app": "DCM QuickSort",
+  "suite": "FileFlow Suite",
+  "updated_on": "2026-11-09",
+  "scope": "Independent native Go application/window alongside Flow Search, DeepSearch and FileFlow. Reuse existing behavior; a Walk/Rust migration, new PDF engine or shared launcher is not a DCM release prerequisite.",
+  "status_values": [
+    "planned",
+    "implemented",
+    "tested",
+    "fixed"
+  ],
+  "status_rule": "Feature status, UI test status and user-test status are separate. Existing source probes or another app's acceptance never certify the current DCM Windows release candidate.",
+  "checkpoints": {
+    "published_release": "v1.0.63",
+    "last_identified_native_test_version": "v1.0.69",
+    "last_identified_native_test_date": "2026-11-03",
+    "native_test_result": "partial",
+    "native_executable_sha256": "BF93CE364909F8541D015D42CAFF3A2B0970574197CD60D0A0E756DF97E9683B",
+    "recovered_source_version": "v1.0.62",
+    "supplied_archive_version": "v1.0.70",
+    "archive_imported_into_canonical_source": false,
+    "archive_release_certified": false
+  },
+  "evidence": {
+    "published_release": "https://github.com/laxmanxp/dcm-quick-sort/releases/tag/v1.0.63",
+    "archive_source_audit": "https://chatgpt.com/library?file_id=libfile_2c8db3c7893481919491f94250a2c300&account_id=personal",
+    "native_1069_report": "https://github.com/laxmanxp/dcm-quick-sort/blob/2ece9b1e044545c666b6c6296052feb6b985b750/tests/flowuivision/TEST_REPORT_2026-11-03.md",
+    "recovery_context": "https://github.com/laxmanxp/dcm-quick-sort/blob/c27d514ffeb2a76a8d77d776855ecf22b460930c/source-v1.0.62/TRANSFER-CONTEXT.md"
+  },
+  "items": [
+    {
+      "id": "DCM-SOURCE-01",
+      "feature": "Establish canonical source and installer provenance",
+      "status": "planned",
+      "ui_test": "not_applicable",
+      "user_test": "not_recorded",
+      "release_gate": true,
+      "acceptance": "Import the complete supplied source with its provenance, resolve version differences and identify the exact source revision, executable hash and embedded installer payload to qualify. Do not assume the v1.0.69 native binary came from the v1.0.62 recovery or v1.0.70 archive.",
+      "evidence_refs": [
+        "published_release",
+        "archive_source_audit",
+        "native_1069_report",
+        "recovery_context"
+      ]
+    },
+    {
+      "id": "D1",
+      "feature": "Preserve a source when source and destination identify the same file",
+      "status": "planned",
+      "severity": "high",
+      "ui_test": "not_run_on_release_candidate",
+      "user_test": "not_recorded",
+      "release_gate": true,
+      "existing_evidence": "The Nov2 v1.0.70 archive audit reproduced exact-path self-duplicate removal with no recoverable Undo. Windows case-only UI behavior was source-traced only. No later fix is verified.",
+      "acceptance": "Verify exact-path and Windows case/alias identity cases leave the source intact, without reporting a completed deletion or unusable Undo.",
+      "blocked_by": [
+        "DCM-SOURCE-01"
+      ],
+      "evidence_refs": [
+        "archive_source_audit"
+      ]
+    },
+    {
+      "id": "D2",
+      "feature": "Preserve a source changed during cross-volume copy",
+      "status": "planned",
+      "severity": "high",
+      "ui_test": "not_run_on_release_candidate",
+      "user_test": "not_recorded",
+      "release_gate": true,
+      "existing_evidence": "The archive audit's controlled same-length edit left older destination bytes and removed newer source bytes. This is a historical source probe, not a current Windows reproduction.",
+      "acceptance": "Qualify source-change detection before deletion with independent byte checks, including same-length changes, while retaining the changed source and reporting truthful recovery status.",
+      "blocked_by": [
+        "DCM-SOURCE-01"
+      ],
+      "evidence_refs": [
+        "archive_source_audit"
+      ]
+    },
+    {
+      "id": "D3",
+      "feature": "Persist batch membership at the transaction boundary",
+      "status": "planned",
+      "severity": "medium",
+      "ui_test": "not_run_on_release_candidate",
+      "user_test": "not_recorded",
+      "release_gate": true,
+      "existing_evidence": "The archive audit found BatchID assigned late, creating a crash gap in batch membership. Individual history remains; this is not evidence that all move journals are lost.",
+      "acceptance": "Restart at the identified boundary and retain correct batch membership together with the existing individual transaction and recovery records.",
+      "blocked_by": [
+        "DCM-SOURCE-01"
+      ],
+      "evidence_refs": [
+        "archive_source_audit"
+      ]
+    },
+    {
+      "id": "D4",
+      "feature": "Round-trip naming templates through configuration export/import",
+      "status": "planned",
+      "severity": "medium",
+      "ui_test": "not_run_on_release_candidate",
+      "user_test": "not_recorded",
+      "release_gate": true,
+      "existing_evidence": "The archive audit found naming templates included in export/digest but excluded from the import allowlist, causing valid export checksum failure.",
+      "acceptance": "Export and import non-default naming templates successfully, preserve their content and continue rejecting genuinely invalid payloads.",
+      "blocked_by": [
+        "DCM-SOURCE-01"
+      ],
+      "evidence_refs": [
+        "archive_source_audit"
+      ]
+    },
+    {
+      "id": "D5",
+      "feature": "Restore supported settings through the installer",
+      "status": "planned",
+      "severity": "medium",
+      "ui_test": "not_run_on_release_candidate",
+      "user_test": "not_recorded",
+      "release_gate": true,
+      "existing_evidence": "The archive audit found the installer restore schema retained default_source but excluded pdf_default_view and vault_root.",
+      "acceptance": "Qualify backup/restore and upgrade with non-default default_source, pdf_default_view and vault_root; verify all supported values survive.",
+      "blocked_by": [
+        "DCM-SOURCE-01"
+      ],
+      "evidence_refs": [
+        "archive_source_audit"
+      ]
+    },
+    {
+      "id": "D6",
+      "feature": "Define and enforce duplicate-removal Undo's byte-restoration contract",
+      "status": "planned",
+      "finding_kind": "undo_contract",
+      "ui_test": "not_run_on_release_candidate",
+      "user_test": "not_recorded",
+      "release_gate": true,
+      "existing_evidence": "The archive audit found Undo copies current destination bytes, so an edited destination restores changed content rather than the removed original.",
+      "acceptance": "Undo restores the original bytes, or clearly refuses when original-byte recovery is unavailable; verify the changed-destination case using independent hashes.",
+      "blocked_by": [
+        "DCM-SOURCE-01"
+      ],
+      "evidence_refs": [
+        "archive_source_audit"
+      ]
+    },
+    {
+      "id": "DCM-NATIVE-01",
+      "feature": "Qualify single/batch Move, Undo, conflicts and restart recovery",
+      "status": "planned",
+      "ui_test": "partial_on_v1.0.69; current_candidate_not_run",
+      "user_test": "not_recorded",
+      "release_gate": true,
+      "existing_evidence": "Nov3 automated Move attempts did not complete and the independent filesystem check failed; Undo Move was untested. Batch coverage was blocked by the FlowUIVision native ListBox selection adapter. Existing batch behavior is documented in v1.0.63 and recovered source.",
+      "acceptance": "Use the supported destination UI and a disposable fixture set; verify selection, successful moves, per-file hashes, conflicts, Processed entries, Undo and restart recovery with readable images and filesystem checks.",
+      "blocked_by": [
+        "DCM-SOURCE-01",
+        "D1",
+        "D2",
+        "D3",
+        "D6"
+      ],
+      "evidence_refs": [
+        "native_1069_report",
+        "published_release",
+        "recovery_context"
+      ]
+    },
+    {
+      "id": "DCM-PDF-01",
+      "feature": "Resolve manual PDF zoom visual qualification",
+      "status": "planned",
+      "ui_test": "initial_and_fit_width_pass_on_v1.0.69; manual_zoom_unresolved",
+      "user_test": "not_recorded",
+      "release_gate": true,
+      "existing_evidence": "Nov3 100%/110% captures were blank despite passing footer assertions; Fit Width restored content. Rendering versus capture/focus cause remains unknown.",
+      "acceptance": "Verify visible page content after manual zoom and Fit Width in a restored, identified window. Resolve any rendering or capture defect; footer text alone is not a visual PASS.",
+      "blocked_by": [
+        "DCM-SOURCE-01"
+      ],
+      "evidence_refs": [
+        "native_1069_report"
+      ]
+    },
+    {
+      "id": "DCM-PREVIEW-01",
+      "feature": "Qualify advertised preview formats and failure states",
+      "status": "planned",
+      "ui_test": "limited_fixture_pass_on_v1.0.69; remaining_formats_not_run",
+      "user_test": "not_recorded",
+      "release_gate": true,
+      "existing_evidence": "TXT, PNG and lightweight DOCX/XLSX/PPTX fallbacks passed the Nov3 fixture checks. Legacy DOC/XLS/PPT, complex Office fidelity and protected/damaged files were not certified.",
+      "acceptance": "Record visible success, blank/error and cancellation behavior for the formats advertised by the selected release. State fallback fidelity limits explicitly.",
+      "blocked_by": [
+        "DCM-SOURCE-01"
+      ],
+      "evidence_refs": [
+        "native_1069_report"
+      ]
+    },
+    {
+      "id": "DCM-RELEASE-01",
+      "feature": "Qualify and publish the exact packaged release candidate",
+      "status": "planned",
+      "ui_test": "not_run_on_release_candidate",
+      "user_test": "not_recorded",
+      "release_gate": true,
+      "acceptance": "Record source revision and app/installer hashes; verify payload identity, install/upgrade/restore, native feature evidence on Lenovo against the advertised DCM release scope. Do not introduce a new printing feature as a prerequisite. Publish a newer release only after its gates are satisfied; keep v1.0.63 publication distinct from later development evidence.",
+      "blocked_by": [
+        "DCM-SOURCE-01",
+        "D1",
+        "D2",
+        "D3",
+        "D4",
+        "D5",
+        "D6",
+        "DCM-NATIVE-01",
+        "DCM-PDF-01",
+        "DCM-PREVIEW-01"
+      ],
+      "evidence_refs": [
+        "published_release",
+        "archive_source_audit",
+        "native_1069_report"
+      ]
+    }
+  ]
+}
