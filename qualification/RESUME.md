@@ -1,37 +1,33 @@
-# DCM v1.0.71 — resume native qualification
+# DCM v1.0.71 — resume after DCM-06
 
-This checkpoint is blocked by the native host, not complete. The source review is [draft PR #1](https://github.com/laxmanxp/dcm-quick-sort/pull/1). Preserve the user's test-first sequence: native RED, smallest fix, native GREEN; then full units and actual visible workflow. User acceptance remains unrecorded.
+Latest checkpoint: [DCM-06 native GREEN](2026-11-09-dcm06.md). Earlier records in `2026-11-09-progress.md` and `2026-11-09-baby-steps.md` remain historical evidence.
 
-## Host and source
+## Current state
 
-The retained [diagnostic excerpt](native-host-2026-11-09.json) records 650,547,200 bytes free on C: and 478,658,560 bytes available physical memory at 05:03 UTC. The connection briefly dropped and file reads were very slow. Restore resource headroom and a reliable Desktop Commander connection before resuming. Do not delete user files or close unrelated applications automatically.
+Source/tested commit: `c88abef150de794a028b466b6a0a28a5fab7707d` on `release/v1.0.71`. Later documentation commits do not change this tested source identity. Draft PR #1 remains open; no release or installer is qualified.
 
-Native device: `Laxman_Lenovo`, `d18227f2-0b54-4b11-9026-56ac40305f02`.
+The no-overwrite proposal is now applied to both core and normal UI fast paths. `TestD2MoveFileRefusesExistingForeignDestination` passed natively. The selected group completed **20 passed / 1 failed / 0 skipped**, no timeout, with unchanged source. Its overall exit is still 1.
 
-Candidate: `C:\FlowverseReports\dcm-quicksort-candidate`, branch `release/v1.0.71`, origin `https://github.com/laxmanxp/dcm-quick-sort.git`.
+**Next: DCM-07.** `TestD6MovedDuplicateSurvivorRequiresAttentionAfterRestart` is the sole remaining failure in this selected group. Review and apply `proposed-fixes/duplicate-kind-gate.patch` locally. The assertion RED prerequisite exists in both the earlier `20261109-133423-16576b74` report and the latest `20261109-141655-4b4f9621` report. Do not reapply `no-replace.patch` or mistake the earlier zero-test timeout for RED.
 
-FlowDev executable: `C:\FlowverseReports\flowdev-standalone-validation\flowdev-test.exe`.
+## Native runner
 
-Set `FLOWDEV_WORKSPACE_ROOT=C:\FlowverseReports` and run from the candidate's `tools\flowdev-dcm` directory. Use `flowdev update dcm-quicksort` and registered `flowdev test dcm-quicksort <selector>` routes. Do not use the unrelated older monorepo FlowDev executable or dirty v1.0.62 checkout.
+Device: `Laxman_Lenovo`, `d18227f2-0b54-4b11-9026-56ac40305f02`.
 
-The final confirmed native update was `59b9d9cd4611ae71edd139913fdae51a5d93286d`. Later context commits may exist on the release branch; always record the exact updated HEAD. No qualified v1.0.71 executable or setup has been produced.
+Candidate: `C:\FlowverseReports\dcm-quicksort-candidate`, origin `https://github.com/laxmanxp/dcm-quick-sort.git`.
 
-## Resume in order
+Set `FLOWDEV_WORKSPACE_ROOT=C:\FlowverseReports`, run from the candidate's `tools\flowdev-dcm` directory, and use `C:\FlowverseReports\flowdev-standalone-validation\flowdev-test.exe`.
 
-1. Retrieve the interrupted regression receipt and logs from `C:\FlowverseReports\dcm-quicksort-regressions-20261109-044942-5df3654c`. The app-regressions child hit its 300-second deadline on `a88d4f28ab801113487248d833c898c344138f0c`; its partial tests remain unknown. Do not assume a timeout is the required assertion RED.
-2. Update the candidate and run `host-diagnostics` if resource recovery is uncertain. The previous diagnostic command completed successfully; no restart of that old command is needed.
-3. Run `regressions` and obtain actual assertion results for `TestD2MoveFileRefusesExistingForeignDestination` and `TestD6MovedDuplicateSurvivorRequiresAttentionAfterRestart`. D1/D2/D6's earlier defects already have native RED evidence, and their main fixes are committed.
-4. After the two additional assertion REDs, apply the reviewed proposals in `qualification/proposed-fixes/no-replace.patch` and `qualification/proposed-fixes/duplicate-kind-gate.patch` to local product source. They are deliberately **not applied** at this checkpoint. Recheck patch context, commit small changes, update through FlowDev, and run regressions again. Do not weaken the original-byte or existing-destination expectations.
-5. Run the final full app suite (`baseline`), current `ui-tooling`, and `package`. Package includes app/installer units, private-registry installer engine lifecycle, fresh app/setup builds and exact embedded-payload verification. Preserve receipts and failures; fix any real problem before proceeding.
-6. Bind `DCM_BUILD_RECEIPT` to the successful build/package receipt and run `ui-filters`, `ui-rename`, `ui-move`, `ui-batch`, `ui-pdf`, `ui-previews`. Bind `DCM_PACKAGE_RECEIPT` for `installer-ui-cancel`. Review the actual retained images; `visual_reviewed=false` is not human visual acceptance. Keep private app/backup/registry isolation intact. Installer UI checks open and cancel the actual setup; the installer engine test separately exercises install/upgrade/restore/uninstall in a private registry scope.
-7. Update the checkpoint, todo, release notes and both shared project contexts with exact source identities, test totals, artifact hashes, evidence and material preview limitations. Keep feature implementation, UI and user-test statuses distinct.
-8. Run `release-prepare` with the exact package receipt and final notes. `gh.exe` availability/authentication are unverified. If supported, `release-draft` requires `DCM_EXPECTED_COMMIT` matching the package. It creates only a release draft with the exact two assets; it does not publish. Do not merge or publish while any native release gate is open.
+Use `flowdev update dcm-quicksort`, then `flowdev test dcm-quicksort regressions`. Record the actual updated HEAD. Code locally, store in GitHub, and use Lenovo only for validation. Do not use the older monorepo profile or dirty v1.0.62 checkout. Run one native selector at a time.
 
-## Outstanding observations
+Latest native report: `C:\FlowverseReports\dcm-quicksort-regressions-20261109-141655-4b4f9621`. Its receipt, summary and relevant raw stdout were retrieved. A compact summary is in `evidence/dcm-06-native-summary.json`.
 
-The read-only host diagnostic and its separate receipt-read process completed. The two asynchronous reads for the old regression summary/stdout were still unresolved at the checkpoint; check their status before repeating those exact calls:
+The last resource observation (13:32 UTC, not a current guarantee) showed 2,271,277,056 bytes free on C: and 1,920,344,064 bytes available RAM. The later bounded regression run completed. Recheck with `host-diagnostics` if stalls return. Never delete user files or close unrelated applications automatically.
 
-- Summary: `cb3e2cc9-876d-483d-a2d9-e8cdc2f3da8f`.
-- Stdout: `1760efa6-e7c9-4060-bec6-7a5d388f44be`.
+## After DCM-07
 
-The stderr read failed with `Result could not be stored (TypeError: fetch failed)`; it supplied no product result. No cause beyond the observed resource shortage and unreliable access is asserted.
+Continue `completion-50.json`, not a UI migration. Preserve original defect IDs in `../todo.json`. All affected evidence must be tied to the candidate tested, and source, UI and user acceptance remain separate.
+
+The remaining sequence includes final `baseline`, `installer-unit`, `ui-tooling`, and `package`; exact app/setup and embedded-payload hashes; isolated installer lifecycle; normal-app filters, navigation, Preview/Rename/Move, conflict and restart Undo workflows; and actual reviewed images. Bind `DCM_BUILD_RECEIPT` for UI selectors and `DCM_PACKAGE_RECEIPT` for `installer-ui-cancel`. Read `../tools/README.md` and `../tests/native/README.md` before running those gates.
+
+`visual_reviewed=false` is not visible-content acceptance. No user acceptance is recorded. Keep private configuration/backup/registry isolation intact; actual Explorer registration requires a disposable Windows user or VM. Update evidence and release notes before `release-prepare`; any `release-draft` requires the exact expected package commit. Do not merge or publish until all required gates and publication approval are complete.

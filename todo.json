@@ -8,8 +8,9 @@
     "path": "qualification/completion-50.json",
     "step_count": 50,
     "completed_setup_steps": ["DCM-01", "DCM-02", "DCM-03", "DCM-04", "DCM-05"],
-    "next_step": "DCM-06",
-    "checkpoint": "qualification/2026-11-09-baby-steps.md",
+    "completed_product_steps": ["DCM-06"],
+    "next_step": "DCM-07",
+    "checkpoint": "qualification/2026-11-09-dcm06.md",
     "rule": "The first five completed steps are setup/diagnostic work, not product acceptance. Preserve all original defect IDs and prior evidence."
   },
   "status_values": ["planned", "implemented", "tested", "fixed"],
@@ -26,12 +27,12 @@
     "archive_release_certified": false,
     "candidate_version": "v1.0.71",
     "candidate_branch": "release/v1.0.71",
-    "candidate_code_commit": "c630a4ddff3161ae9129ab306ee74aeec7f43d1e",
+    "candidate_code_commit": "c88abef150de794a028b466b6a0a28a5fab7707d",
     "source_import_commit": "abe95acad96343e16d93396790a52bfe4d4b7b59",
     "archive_sha256": "64e1cb1666acc9a70aeeb9656b4f30ca26fc30ad142ea32e154cb7a63dc7b5aa",
-    "native_regression_commit": "3f7784583b0ebc292ea1572373b6bcbea22cad44",
-    "native_regression_result": "21 top-level app regressions: 19 passed, 2 assertion failures, zero skips, no timeout. D2 no-overwrite and D6 duplicate rename-chain recovery remain RED. Earlier installer full-suite result remains 24 passed at 7c413fd, not requalified here.",
-    "last_native_attempt": "3f7784583b0ebc292ea1572373b6bcbea22cad44 / 20261109-133423-16576b74: completed assertion RED, 19 passed / 2 failed; original 20261109-044942-5df3654c summary retrieved: zero tests, timeout true",
+    "native_regression_commit": "c88abef150de794a028b466b6a0a28a5fab7707d",
+    "native_regression_result": "21 top-level app regressions: 20 passed, 1 assertion failure, zero skips, no timeout. DCM-06 no-overwrite regression is GREEN; DCM-07 duplicate rename-chain recovery remains RED. Overall selection still fails. Earlier installer full-suite result remains 24 passed at 7c413fd, not requalified here.",
+    "last_native_attempt": "c88abef150de794a028b466b6a0a28a5fab7707d / 20261109-141655-4b4f9621: 20 passed / 1 failed, no skips or timeout; source unchanged. The sole remaining failure is TestD6MovedDuplicateSurvivorRequiresAttentionAfterRestart.",
     "final_package_qualified": false,
     "user_acceptance": "not_recorded",
     "native_execution_blocker": {
@@ -58,7 +59,8 @@
     "source_import": "https://github.com/laxmanxp/dcm-quick-sort/blob/abe95acad96343e16d93396790a52bfe4d4b7b59/provenance/v1.0.70/IMPORT.md",
     "qualification_checkpoint": "qualification/2026-11-09-progress.md",
     "release_notes_draft": "qualification/v1.0.71-release-notes.md",
-    "baby_steps_checkpoint": "qualification/2026-11-09-baby-steps.md"
+    "baby_steps_checkpoint": "qualification/2026-11-09-baby-steps.md",
+    "dcm06_checkpoint": "qualification/2026-11-09-dcm06.md"
   },
   "items": [
     {
@@ -76,28 +78,28 @@
     },
     {
       "id": "D1", "feature": "Preserve a source when source and destination identify the same file", "status": "implemented", "severity": "high", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
-      "existing_evidence": "The Nov2 v1.0.70 archive audit reproduced exact-path self-duplicate removal with no recoverable Undo. Windows case-only UI behavior was source-traced only. No later fix is verified.",
-      "acceptance": "Verify exact-path and Windows case/alias identity cases leave the source intact, without reporting a completed deletion or unusable Undo.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint"],
-      "native_test": "identity regression passed at 3f778458; final candidate and visible UI recheck pending"
+      "existing_evidence": "The Nov2 v1.0.70 archive audit reproduced exact-path self-duplicate removal with no recoverable Undo. At that historical checkpoint, Windows case-only UI behavior was source-traced only. Later native evidence is recorded separately below.",
+      "acceptance": "Verify exact-path and Windows case/alias identity cases leave the source intact, without reporting a completed deletion or unusable Undo.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint", "dcm06_checkpoint"],
+      "native_test": "identity regression passed at 3f778458 and c88abef; final candidate and visible UI recheck pending"
     },
     {
       "id": "D2", "feature": "Preserve a source changed during cross-volume copy", "status": "implemented", "severity": "high", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "The archive audit's controlled same-length edit left older destination bytes and removed newer source bytes. This is a historical source probe, not a current Windows reproduction.",
-      "acceptance": "Qualify source-change detection before deletion with independent byte checks, including same-length changes, while retaining the changed source and reporting truthful recovery status.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint"],
-      "native_test": "guarded-retirement regressions passed at 3f778458; no-overwrite regression failed; final candidate GREEN pending",
-      "additional_open_boundary": "Native assertion RED observed for TestD2MoveFileRefusesExistingForeignDestination in 20261109-133423-16576b74. Apply the locally reviewed minimal fix next (DCM-06), then obtain native GREEN."
+      "acceptance": "Qualify source-change detection before deletion with independent byte checks, including same-length changes, while retaining the changed source and reporting truthful recovery status.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint", "dcm06_checkpoint"],
+      "native_test": "guarded-retirement and no-overwrite regressions passed at c88abef; final full-suite and visible UI qualification pending",
+      "additional_open_boundary": "No-overwrite boundary closed by DCM-06 at c88abef: both call sites changed and TestD2MoveFileRefusesExistingForeignDestination passed natively. Broader D2 release qualification remains open."
     },
     {
       "id": "D3", "feature": "Persist batch membership at the transaction boundary", "status": "fixed", "severity": "medium", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "The archive audit found BatchID assigned late, creating a crash gap in batch membership. Individual history remains; this is not evidence that all move journals are lost.",
-      "acceptance": "Restart at the identified boundary and retain correct batch membership together with the existing individual transaction and recovery records.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint"],
-      "native_test": "pass_at_7c413fd and rechecked at 3f778458; final_candidate_recheck_pending"
+      "acceptance": "Restart at the identified boundary and retain correct batch membership together with the existing individual transaction and recovery records.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint", "dcm06_checkpoint"],
+      "native_test": "pass_at_7c413fd and rechecked at 3f778458 and c88abef; final_candidate_recheck_pending"
     },
     {
       "id": "D4", "feature": "Round-trip naming templates through configuration export/import", "status": "fixed", "severity": "medium", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "The archive audit found naming templates included in export/digest but excluded from the import allowlist, causing valid export checksum failure.",
-      "acceptance": "Export and import non-default naming templates successfully, preserve their content and continue rejecting genuinely invalid payloads.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint"],
-      "native_test": "pass_at_7c413fd and rechecked at 3f778458; final_candidate_recheck_pending"
+      "acceptance": "Export and import non-default naming templates successfully, preserve their content and continue rejecting genuinely invalid payloads.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint", "dcm06_checkpoint"],
+      "native_test": "pass_at_7c413fd and rechecked at 3f778458 and c88abef; final_candidate_recheck_pending"
     },
     {
       "id": "D5", "feature": "Restore supported settings through the installer", "status": "fixed", "severity": "medium", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
@@ -108,9 +110,9 @@
     {
       "id": "D6", "feature": "Define and enforce duplicate-removal Undo's byte-restoration contract", "status": "implemented", "finding_kind": "undo_contract", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "The archive audit found Undo copies current destination bytes, so an edited destination restores changed content rather than the removed original.",
-      "acceptance": "Undo restores the original bytes, or clearly refuses when original-byte recovery is unavailable; verify the changed-destination case using independent hashes.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint"],
-      "native_test": "fingerprint regressions passed at 3f778458; moved-survivor recovery regression failed; final candidate GREEN pending",
-      "additional_open_boundary": "Native assertion RED observed for TestD6MovedDuplicateSurvivorRequiresAttentionAfterRestart in 20261109-133423-16576b74. Prevent duplicate records entering ordinary rename-chain reconciliation (DCM-07), then obtain native GREEN."
+      "acceptance": "Undo restores the original bytes, or clearly refuses when original-byte recovery is unavailable; verify the changed-destination case using independent hashes.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint", "dcm06_checkpoint"],
+      "native_test": "fingerprint regressions passed at 3f778458 and c88abef; moved-survivor recovery still fails at c88abef; final candidate GREEN pending",
+      "additional_open_boundary": "Native assertion RED observed in 20261109-133423-16576b74 and repeated at c88abef in 20261109-141655-4b4f9621 for TestD6MovedDuplicateSurvivorRequiresAttentionAfterRestart. Prevent duplicate records entering ordinary rename-chain reconciliation (DCM-07), then obtain native GREEN."
     },
     {
       "id": "DCM-NATIVE-01", "feature": "Qualify single/batch Move, Undo, conflicts and restart recovery", "status": "planned", "ui_test": "partial_on_v1.0.69; current_candidate_not_run", "user_test": "not_recorded", "release_gate": true,
