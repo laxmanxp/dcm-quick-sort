@@ -7,12 +7,15 @@ import (
 	"time"
 )
 
-func replaceMoveWithRecoveryJournaled(journalPath, source, target, recoveryDir string) (MoveRecord, error) {
-	return replaceMoveWithRecoveryJournaledUsing(journalPath, source, target, recoveryDir, moveFile)
+func replaceMoveWithRecoveryJournaled(journalPath, source, target, recoveryDir string, batchID ...string) (MoveRecord, error) {
+	return replaceMoveWithRecoveryJournaledUsing(journalPath, source, target, recoveryDir, moveFile, batchID...)
 }
 
-func replaceMoveWithRecoveryJournaledUsing(journalPath, source, target, recoveryDir string, moveFn func(string, string) error) (MoveRecord, error) {
+func replaceMoveWithRecoveryJournaledUsing(journalPath, source, target, recoveryDir string, moveFn func(string, string) error, batchID ...string) (MoveRecord, error) {
 	rec := MoveRecord{From: source, To: target, Kind: MoveKindReplace}
+	if len(batchID) > 0 {
+		rec.BatchID = batchID[0]
+	}
 	info, err := inspectDestinationConflict(source, target)
 	if err != nil {
 		return rec, err
@@ -89,8 +92,11 @@ func replaceMoveWithRecoveryJournaledUsing(journalPath, source, target, recovery
 	return rec, nil
 }
 
-func removeExactDuplicateSourceJournaled(journalPath, source, target string) (MoveRecord, error) {
+func removeExactDuplicateSourceJournaled(journalPath, source, target string, batchID ...string) (MoveRecord, error) {
 	rec := MoveRecord{From: source, To: target, Kind: MoveKindDuplicateRemoved}
+	if len(batchID) > 0 {
+		rec.BatchID = batchID[0]
+	}
 	info, err := inspectDestinationConflict(source, target)
 	if err != nil {
 		return rec, err

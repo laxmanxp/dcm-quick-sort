@@ -31,10 +31,10 @@ func TestRenameToolSelectionAutomaticallyAppliesSelectedTool(t *testing.T) {
 
 func TestBackgroundConflictActionsUseDurableJournaledOperations(t *testing.T) {
 	src := windowsMainSource(t)
-	if !strings.Contains(src, "removeExactDuplicateSourceJournaled(moveJournalFilePath(), source, target)") {
+	if !strings.Contains(src, "removeExactDuplicateSourceJournaled(moveJournalFilePath(), source, target, batchID)") {
 		t.Fatal("exact-duplicate removal is not using the durable journaled operation")
 	}
-	if !strings.Contains(src, "replaceMoveWithRecoveryJournaled(moveJournalFilePath(), source, target, replacementRecoveryDirectory())") {
+	if !strings.Contains(src, "replaceMoveWithRecoveryJournaled(moveJournalFilePath(), source, target, replacementRecoveryDirectory(), batchID)") {
 		t.Fatal("replace is not using the durable journaled operation")
 	}
 }
@@ -773,10 +773,15 @@ func TestBatchUndoButtonAndJournalTaggingAreWired(t *testing.T) {
 		`undoLatestBatch()`,
 		`BatchID: app.batchMoveID`,
 		`result.Record.BatchID = journalRec.BatchID`,
-		`result.Record.BatchID = app.batchMoveID`,
+		`batchID = app.batchMoveID`,
+		`removeExactDuplicateSourceJournaled(moveJournalFilePath(), source, target, batchID)`,
+		`replaceMoveWithRecoveryJournaled(moveJournalFilePath(), source, target, replacementRecoveryDirectory(), batchID)`,
 	} {
 		if !strings.Contains(src, want) {
 			t.Fatalf("Batch Undo Windows wiring missing %q", want)
 		}
+	}
+	if strings.Contains(src, `result.Record.BatchID = app.batchMoveID`) {
+		t.Fatal("conflict completion must preserve the admitted batch instead of restamping a later active batch")
 	}
 }

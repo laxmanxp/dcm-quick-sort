@@ -2947,6 +2947,12 @@ func beginBackgroundConflictAction(kind BackgroundConflictActionKind, source, ta
 		setText(app.statusLabel, "A background file operation is already running.")
 		return
 	}
+	// Capture admission metadata before the worker can mutate files or append
+	// its first journal event. Completion must not read a later active batch.
+	batchID := ""
+	if app.batchMoveActive {
+		batchID = app.batchMoveID
+	}
 	setBackgroundMoveBusy(true)
 	var label string
 	var action func() (MoveRecord, error)
@@ -2954,12 +2960,12 @@ func beginBackgroundConflictAction(kind BackgroundConflictActionKind, source, ta
 	case BackgroundConflictRemoveDuplicate:
 		label = "Verifying and removing exact duplicate in background: " + filepath.Base(source)
 		action = func() (MoveRecord, error) {
-			return removeExactDuplicateSourceJournaled(moveJournalFilePath(), source, target)
+			return removeExactDuplicateSourceJournaled(moveJournalFilePath(), source, target, batchID)
 		}
 	default:
 		label = "Replacing destination safely in background: " + filepath.Base(source)
 		action = func() (MoveRecord, error) {
-			return replaceMoveWithRecoveryJournaled(moveJournalFilePath(), source, target, replacementRecoveryDirectory())
+			return replaceMoveWithRecoveryJournaled(moveJournalFilePath(), source, target, replacementRecoveryDirectory(), batchID)
 		}
 	}
 	setText(app.statusLabel, label+" | The window stays responsive.")
@@ -3048,12 +3054,6 @@ func finishBackgroundConflictAction() {
 			showError("Could not replace destination safely:\n" + result.Err.Error())
 		}
 		return
-	}
-	if app.batchMoveActive && strings.TrimSpace(app.batchMoveID) != "" {
-		result.Record.BatchID = app.batchMoveID
-		if err := completeMoveJournal(moveJournalFilePath(), result.Record, time.Now()); err != nil {
-			setText(app.statusLabel, "Conflict action completed, but batch metadata journal update is pending recovery.")
-		}
 	}
 	finishSuccessfulFileOperation(result.Source, result.Target, result.Record, result.Kind == BackgroundConflictRemoveDuplicate)
 	if result.Kind == BackgroundConflictRemoveDuplicate {
