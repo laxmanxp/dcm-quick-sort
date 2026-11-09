@@ -22,9 +22,8 @@ type installerConfigurationSnapshot struct {
 
 func installerSnapshotFromRaw(files map[string][]byte) (configurationSnapshot, error) {
 	names := make([]string, 0, len(files))
-	allowed := map[string]bool{"settings.json": true, "destinations.conf": true, "sources.conf": true, "learning.json": true}
-	for name := range files {
-		if allowed[name] {
+	for _, name := range configurationFileNames() {
+		if _, exists := files[name]; exists {
 			names = append(names, name)
 		}
 	}
@@ -187,7 +186,10 @@ func loadLatestBackupSnapshot(backupRoot string) (installerConfigurationSnapshot
 		return installerConfigurationSnapshot{}, fmt.Errorf("backup configuration checksum does not match")
 	}
 	manifestFiles := map[string]configurationBackupFileInfo{}
-	allowedManifest := map[string]bool{"settings.json": true, "destinations.conf": true, "sources.conf": true, "learning.json": true}
+	allowedManifest := make(map[string]bool)
+	for _, name := range configurationFileNames() {
+		allowedManifest[name] = true
+	}
 	for _, item := range info.Files {
 		if !allowedManifest[item.Name] {
 			return installerConfigurationSnapshot{}, fmt.Errorf("backup manifest contains unsupported file %q", item.Name)

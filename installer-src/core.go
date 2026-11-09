@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,7 +15,9 @@ const (
 )
 
 type settings struct {
-	DefaultSource string `json:"default_source"`
+	DefaultSource  string `json:"default_source"`
+	PDFDefaultView string `json:"pdf_default_view,omitempty"`
+	VaultRoot      string `json:"vault_root,omitempty"`
 }
 
 func parseInstallerArgs(args []string) (silent, uninstall bool, source string) {
@@ -51,7 +54,18 @@ func settingsJSON(source string) ([]byte, error) {
 }
 
 func writeSettings(path, source string) error {
-	data, err := settingsJSON(source)
+	var cfg settings
+	if existing, err := os.ReadFile(path); err == nil {
+		cfg, err = validateInstallerSettings(existing)
+		if err != nil {
+			return fmt.Errorf("read existing settings: %w", err)
+		}
+	} else if !os.IsNotExist(err) {
+		return fmt.Errorf("read existing settings: %w", err)
+	}
+	// An upgrade changes the source folder while keeping the app's preferences.
+	cfg.DefaultSource = filepath.Clean(source)
+	data, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
 		return err
 	}
