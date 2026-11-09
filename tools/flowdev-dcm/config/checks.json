@@ -2,6 +2,7 @@
   "apps": {
     "dcm-quicksort": {
       "tests": {
+        "host-diagnostics": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/diagnose-host.ps1"],
         "format": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "format"],
         "baseline": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "baseline"],
         "regressions": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "regressions"],
