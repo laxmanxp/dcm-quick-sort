@@ -251,3 +251,28 @@ func TestD6PendingRestartRefusesChangedSurvivingCopy(t *testing.T) {
 	d16WantAbsent(t, rec.From)
 	d16WantBytes(t, rec.To, "MODIFIED")
 }
+
+func TestD6MovedDuplicateSurvivorRequiresAttentionAfterRestart(t *testing.T) {
+	duplicate, journal := d6RemoveFixture(t, "ORIGINAL")
+	final := filepath.Join(t.TempDir(), "later-location.txt")
+	next, err := beginMoveJournal(journal, MoveRecord{From: duplicate.To, To: final, Kind: MoveKindMove}, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := moveFile(duplicate.To, final); err != nil {
+		t.Fatal(err)
+	}
+	if err := completeMoveJournal(journal, next, time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	recovered, err := recoverMoveJournal(journal, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(recovered.Attention) != 1 || recovered.Attention[0].ID != duplicate.JournalID || len(recovered.History) != 1 || recovered.History[0].JournalID != next.JournalID {
+		t.Fatalf("duplicate removal was mistaken for an ordinary rename chain: %#v", recovered)
+	}
+	d16WantAbsent(t, duplicate.From)
+	d16WantAbsent(t, duplicate.To)
+	d16WantBytes(t, final, "ORIGINAL")
+}
