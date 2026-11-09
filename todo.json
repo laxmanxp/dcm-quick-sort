@@ -8,9 +8,9 @@
     "path": "qualification/completion-50.json",
     "step_count": 50,
     "completed_setup_steps": ["DCM-01", "DCM-02", "DCM-03", "DCM-04", "DCM-05"],
-    "completed_product_steps": ["DCM-06", "DCM-07", "DCM-08", "DCM-09"],
-    "next_step": "DCM-10",
-    "checkpoint": "qualification/2026-11-09-dcm09.md",
+    "completed_product_steps": ["DCM-06", "DCM-07", "DCM-08", "DCM-09", "DCM-10"],
+    "next_step": "DCM-11",
+    "checkpoint": "qualification/2026-11-09-dcm10.md",
     "rule": "The first five completed steps are setup/diagnostic work, not product acceptance. Preserve all original defect IDs and prior evidence."
   },
   "status_values": ["planned", "implemented", "tested", "fixed"],
@@ -63,7 +63,8 @@
     "dcm06_checkpoint": "qualification/2026-11-09-dcm06.md",
     "dcm07_checkpoint": "qualification/2026-11-09-dcm07.md",
     "dcm08_checkpoint": "qualification/2026-11-09-dcm08.md",
-    "dcm09_checkpoint": "qualification/2026-11-09-dcm09.md"
+    "dcm09_checkpoint": "qualification/2026-11-09-dcm09.md",
+    "dcm10_checkpoint": "qualification/2026-11-09-dcm10.md"
   },
   "items": [
     {
@@ -111,10 +112,10 @@
       "native_test": "pass_at_7c413fd; final_candidate_recheck_pending"
     },
     {
-      "id": "D6", "feature": "Define and enforce duplicate-removal Undo's byte-restoration contract", "status": "implemented", "finding_kind": "undo_contract", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
+      "id": "D6", "feature": "Define and enforce duplicate-removal Undo's byte-restoration contract", "status": "tested", "finding_kind": "undo_contract", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "The archive audit found Undo copies current destination bytes, so an edited destination restores changed content rather than the removed original.",
-      "acceptance": "Undo restores the original bytes, or clearly refuses when original-byte recovery is unavailable; verify the changed-destination case using independent hashes.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint", "dcm06_checkpoint", "dcm07_checkpoint"],
-      "native_test": "All selected D6 fingerprint and moved-survivor recovery regressions passed at 26eeaed3; broader DCM-10 review, final full-suite and visible UI acceptance remain pending.",
+      "acceptance": "Undo restores the original bytes, or clearly refuses when original-byte recovery is unavailable; verify the changed-destination case using independent hashes.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint", "dcm06_checkpoint", "dcm07_checkpoint", "dcm10_checkpoint"],
+      "native_test": "DCM-10 reviewed all eight D6 top-level tests and two nested changed-survivor subtests at 26eeaed3: all passed without skips. Original-byte and empty-file restoration, missing-fingerprint refusal, batch preflight and restart attention were verified. Existing native evidence only; no new run. Full-suite, visible Undo/restart workflows and user acceptance remain open.",
       "additional_open_boundary": "DCM-07 boundary closed at 26eeaed3 after native assertion RED at c88abef: duplicate-removal records cannot enter ordinary rename-chain reconciliation. Native TestD6MovedDuplicateSurvivorRequiresAttentionAfterRestart passed in 20261109-151557-80d9f368. Broader release qualification remains open."
     },
     {
