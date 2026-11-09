@@ -7,6 +7,30 @@ import (
 	"time"
 )
 
+func TestD2MoveFileRefusesExistingForeignDestination(t *testing.T) {
+	root := t.TempDir()
+	source, target := filepath.Join(root, "source.bin"), filepath.Join(root, "target.bin")
+	writeRecoveryMoveFile(t, source, "INCOMING")
+	writeRecoveryMoveFile(t, target, "EXISTING")
+	sourceHash, err := fileSHA256(source)
+	if err != nil {
+		t.Fatal(err)
+	}
+	targetHash, err := fileSHA256(target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := moveFile(source, target); err == nil {
+		t.Error("move overwrote an existing destination without a replacement transaction")
+	}
+	if got, err := fileSHA256(source); err != nil || got != sourceHash {
+		t.Errorf("refused move changed source: hash=%q err=%v; want %q", got, err, sourceHash)
+	}
+	if got, err := fileSHA256(target); err != nil || got != targetHash {
+		t.Errorf("refused move changed destination: hash=%q err=%v; want %q", got, err, targetHash)
+	}
+}
+
 func TestD2BackgroundMoveRefusesChangedFilesBeforeSourceRetirement(t *testing.T) {
 	for _, worker := range []string{"plain", "progress"} {
 		for _, change := range []string{"source-content", "source-identity", "destination-content"} {
