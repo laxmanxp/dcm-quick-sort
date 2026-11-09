@@ -1,0 +1,100 @@
+# Owned native DCM qualification
+
+These checks extend the assertions used on `qa/flowuivision-v1069` at
+`2ece9b1e044545c666b6c6296052feb6b985b750`. They reuse FlowUIVision for readiness,
+ordinary text/combobox operations, and state assertions. DCM owns the narrow native
+adapter needed for asynchronous button activation, exact native ListBox selection
+and readback, confirmation ownership, and reliable screen capture.
+
+## Invocation
+
+From the isolated DCM FlowDev profile, first run `update dcm-quicksort`, then
+`test dcm-quicksort ui-tooling`. This parses the committed scripts, compiles the C#
+adapter, and creates disposable fixtures; it does not launch DCM or certify it.
+Run `test dcm-quicksort build` or `package` on the same commit. Set the exact receipt
+path emitted by that check, rather than selecting an artifact by newest filename:
+
+```powershell
+$env:DCM_BUILD_RECEIPT = 'C:\FlowverseReports\dcm-quicksort-build-<exact-run>\receipt.json'
+$env:DCM_FLOWUIVISION_EXE = 'C:\FlowverseReports\dcm-flowuivision-20261103\FlowUIVision.exe'
+& $flowdev test dcm-quicksort ui-basics
+& $flowdev test dcm-quicksort ui-move
+& $flowdev test dcm-quicksort ui-batch
+& $flowdev test dcm-quicksort ui-pdf
+& $flowdev test dcm-quicksort ui-previews
+```
+
+The runner requires the receipt's commit and per-file source hashes to match the
+clean checkout. It verifies the app hash before copying it into a unique owned lab,
+then launches only that copy with isolated configuration and temporary directories.
+Every action checks the PID, executable path, process start time, and window owner.
+Each lab retains its exact fixtures, app, source binding, raw FVS outputs, journal,
+filesystem evidence, screenshots and cleanup outcome. No installed DCM files change.
+
+## Behavioral gates
+
+- `ui-basics`: text/extension/name/age/size filters, no-match state, deterministic
+  Name and File Type order, Next, Clean spacing, Rename and Undo Rename. Native
+  ListBox readback and independent original/restored byte hashes supplement FVS
+  assertions; extra or missing fixture files fail the filesystem oracle.
+- `ui-move`: select one exact fixture, enter the existing logical destination
+  `Accepted`, move it, check source absence/destination hash/durable completed
+  journal, restart the app, select the recovered Processed record and Undo. Verify
+  the original bytes and durable undone state; unselected files remain unchanged.
+- `ui-batch`: select exactly two filenames through the native extended-selection
+  ListBox and read back the actual indexes. Verify the two-file UI label, cancel
+  once and prove no file changed, then approve the explicitly scoped dialog.
+  Check both files and every journal event's BatchID, restart, and Undo Batch.
+- `ui-pdf`: render an owned two-page PDF, capture Fit Width, 100%, 110%, return to
+  100%, page two, and return to page one. Window restoration, visibility, PID,
+  geometry and nine occlusion probes guard each screen capture. Separate document
+  crops must contain the fixture's teal/orange pixels, so a footer alone cannot pass.
+- `ui-previews`: repeat PDF qualification and reuse the previous TXT/PNG/DOCX/XLSX/
+  PPTX readiness assertions plus XLSX sheet and PPTX slide navigation. Four prior
+  Office/image fixture files are copied read-only from the historical lab and
+  hashed in the new receipt. Missing inputs fail explicitly. Office screenshot
+  readability/fidelity still requires review and is not inferred from a visible
+  control or filename.
+
+Screenshots always begin with `visual_reviewed=false`. Pixel presence detects a
+blank PDF pane; it is not an OCR/readability, font fidelity, or complete layout test.
+The reviewer must inspect the actual images and record a separate decision. A
+failed script stops before issuing further action. A forced app/renderer cleanup
+fails lifecycle qualification and remains in the report.
+
+## Installer qualification without touching the installed app
+
+`installer-regressions` and `installer-unit` exercise installer logic against
+disposable test directories. `package` checks app/installer native builds and the
+exact embedded payload identity. None invokes installer main or registry writes.
+
+Full installer registration must run in a fresh Windows Sandbox, disposable VM,
+or dedicated disposable Windows account with its own HKCU. Changing only APPDATA
+and LOCALAPPDATA is insufficient: the installer writes fixed uninstall, App Paths
+and Explorer integration keys under HKCU.
+
+The isolated-environment sequence is:
+
+1. Transfer only the package's exact app, setup executable, hashes and receipt.
+   Rehash both executables before running anything. Record the disposable account,
+   OS and initial absence of DCM install paths and HKCU integration keys.
+2. Install the candidate normally or with the supported `/silent` option inside
+   that environment. Verify the installed app hash exactly matches the qualified
+   payload, launch it, inspect its version, and verify shortcut/App Paths/Explorer
+   registrations resolve to that environment's installed location.
+3. Seed a marked disposable configuration including `default_source`,
+   `pdf_default_view`, `vault_root`, destinations, source aliases and naming
+   templates. Save independent original hashes and contents. Exercise supported
+   upgrade/reinstall and backup/restore paths; compare all expected configuration
+   values and validate restored logical Vault destinations.
+4. Exercise uninstall there. Verify expected executable/shortcut/integration key
+   removal and the intended configuration-backup retention contract. Preserve
+   before/after registry exports, file hashes, installer logs and screenshots.
+5. Close the sandbox or discard the disposable account/VM. Keep the package and
+   receipt unchanged. An unavailable disposable environment leaves this gate
+   pending; host installation must not be substituted or described as tested.
+
+Actual installer command-line spelling and restore switches should be checked
+against the committed `installer-src/main_windows.go` for the package revision.
+This plan is separate from source-level tests; it does not claim that full install,
+upgrade, shell registration or uninstall has already passed.

@@ -58,6 +58,7 @@ function Invoke-OwnedCommand([string]$Name, [string]$File, [string[]]$Arguments,
     $psi.EnvironmentVariables['GOCACHE'] = $goCache
     $psi.EnvironmentVariables['LOCALAPPDATA'] = Join-Path $report 'profile\local'
     $psi.EnvironmentVariables['APPDATA'] = Join-Path $report 'profile\roaming'
+    $psi.EnvironmentVariables['DCM_QUICKSORT_BACKUP_DIR'] = Join-Path $report 'configuration-backups'
     $proc = New-Object Diagnostics.Process
     $proc.StartInfo = $psi
     $entry = [ordered]@{name=$Name; file=$File; arguments=$Arguments; directory=$Directory; started_utc=[DateTime]::UtcNow.ToString('o'); stdout=$outPath; stderr=$errPath; timed_out=$false}

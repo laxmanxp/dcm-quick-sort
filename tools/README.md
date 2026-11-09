@@ -18,6 +18,11 @@ $flowdev = 'C:\FlowverseReports\flowdev-standalone-validation\flowdev-test.exe'
 The initial candidate clone is created by the committed FlowDev bootstrap selector,
 before changing to this profile. The updater itself intentionally does not clone.
 
+The runner sets `CGO_ENABLED=0` and uses the stable tooling cache
+`%FLOWDEV_WORKSPACE_ROOT%\dcm-quicksort-go-cache`; each run still has separate app
+configuration. `format` reports gofmt differences and emits formatted copies into
+its report only. It never reformats the committed checkout on the device.
+
 Each check requires a clean `release/v1.0.71` checkout with the expected origin. It
 copies tracked source into a uniquely named report directory outside the checkout,
 records commit and per-file SHA-256 identity, and verifies that the original source
@@ -35,3 +40,6 @@ Hashes and receipts accompany the artifacts. The runner never executes an instal
 Passing these checks is source/package evidence. UI screenshots require separate
 review, and installer registration requires a disposable Windows user/VM because
 changing LOCALAPPDATA/APPDATA does not isolate HKCU integration keys.
+
+See `../tests/native/README.md` for `ui-tooling`, `ui-move`, `ui-batch`, `ui-pdf`,
+`ui-previews`, their exact artifact binding, and the isolated installer test plan.

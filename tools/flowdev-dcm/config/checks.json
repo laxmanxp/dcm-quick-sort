@@ -2,6 +2,7 @@
   "apps": {
     "dcm-quicksort": {
       "tests": {
+        "format": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "format"],
         "baseline": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "baseline"],
         "regressions": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "regressions"],
         "d3-journal": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "regressions", "-Run", "^TestD3"],
@@ -9,7 +10,13 @@
         "installer-regressions": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "installer-regressions"],
         "installer-unit": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "installer-unit"],
         "build": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "build"],
-        "package": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "package"]
+        "package": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "package"],
+        "ui-tooling": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-tooling.ps1"],
+        "ui-basics": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-ui.ps1", "-Suite", "basics"],
+        "ui-move": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-ui.ps1", "-Suite", "move"],
+        "ui-batch": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-ui.ps1", "-Suite", "batch"],
+        "ui-pdf": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-ui.ps1", "-Suite", "pdf"],
+        "ui-previews": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-ui.ps1", "-Suite", "previews"]
       }
     }
   }
