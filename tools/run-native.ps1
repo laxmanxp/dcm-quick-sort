@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('baseline','regressions','installer-unit','installer-regressions','build','package')]
+    [ValidateSet('baseline','regressions','installer-unit','installer-regressions','build','package','format')]
     [string]$Mode = 'baseline',
     [string]$Run = '^Test(D[1-6]|Release)',
     [string]$ExpectedBranch = 'release/v1.0.71'
@@ -19,6 +19,8 @@ New-Item -ItemType Directory -Path $report | Out-Null
 $source = Join-Path $report 'source'
 $artifacts = Join-Path $report 'artifacts'
 New-Item -ItemType Directory -Path $source,$artifacts | Out-Null
+$goCache = Join-Path $workspace 'dcm-quicksort-go-cache'
+New-Item -ItemType Directory -Path $goCache -Force | Out-Null
 $utf8 = New-Object Text.UTF8Encoding($false)
 $commands = New-Object 'Collections.Generic.List[object]'
 $testRuns = New-Object 'Collections.Generic.List[object]'
@@ -52,6 +54,8 @@ function Invoke-OwnedCommand([string]$Name, [string]$File, [string[]]$Arguments,
     $psi.EnvironmentVariables['GOOS'] = 'windows'
     $psi.EnvironmentVariables['GOARCH'] = 'amd64'
     $psi.EnvironmentVariables['GOFLAGS'] = ''
+    $psi.EnvironmentVariables['CGO_ENABLED'] = '0'
+    $psi.EnvironmentVariables['GOCACHE'] = $goCache
     $psi.EnvironmentVariables['LOCALAPPDATA'] = Join-Path $report 'profile\local'
     $psi.EnvironmentVariables['APPDATA'] = Join-Path $report 'profile\roaming'
     $proc = New-Object Diagnostics.Process
@@ -109,6 +113,7 @@ function Run-Tests([string]$Name, [string]$Directory, [string]$Pattern = '') {
     Require-Success $result $Name
     if ($finished.Count -eq 0) { throw "$Name ran no tests; a green process exit is insufficient." }
     if ($failures.Count -gt 0) { throw "$Name contains failed test events." }
+    if ($Pattern -and $skips.Count -gt 0) { throw "$Name skipped targeted regression coverage; inspect the explicit skip events." }
 }
 function Build-App {
     $appExe = Join-Path $artifacts 'DCM-QuickSort.exe'
@@ -155,6 +160,21 @@ try {
     Require-Success $goEnv 'go-environment'
     $receipt['go_environment'] = $goEnv.Stdout | ConvertFrom-Json
     if ($receipt.go_environment.GOHOSTOS -ne 'windows' -or $receipt.go_environment.GOHOSTARCH -ne 'amd64') { throw 'Cross-compilation is not native qualification.' }
+    $receipt['go_cache'] = $goCache
+
+    if ($Mode -eq 'format') {
+        $goFiles = @($tracked | Where-Object { $_ -like '*.go' } | ForEach-Object { Join-Path $source $_ })
+        $format = Invoke-OwnedCommand 'gofmt-check' 'gofmt.exe' (@('-l') + $goFiles) $source 60
+        Require-Success $format 'gofmt-check'
+        $differences = @($format.Stdout -split '\r?\n' | Where-Object { $_.Trim() })
+        $receipt['format_differences'] = $differences
+        if ($differences.Count -gt 0) {
+            $formatted = Invoke-OwnedCommand 'gofmt-staged-only' 'gofmt.exe' (@('-w') + $differences) $source 60
+            Require-Success $formatted 'gofmt-staged-only'
+            Write-Json (Join-Path $report 'formatted-files.json') @($differences | ForEach-Object { [ordered]@{path=$_;sha256=(Get-FileHash -LiteralPath $_ -Algorithm SHA256).Hash.ToLowerInvariant();content=[IO.File]::ReadAllText($_)} })
+            throw 'gofmt differences found; formatted copies are preserved in the report source tree and formatted-files.json. The checkout was not edited.'
+        }
+    }
 
     if ($Mode -in @('baseline','package')) { Run-Tests 'app-unit' (Join-Path $source 'app-src') }
     if ($Mode -eq 'regressions') { Run-Tests 'app-regressions' (Join-Path $source 'app-src') $Run }
