@@ -319,7 +319,11 @@ func TestRecoverPendingDuplicateFinalizesIfSourceDeletionCommittedBeforeJournalA
 	if err := os.WriteFile(dst, []byte("SAME"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	rec, err := beginMoveJournal(journalPath, MoveRecord{From: src, To: dst, Kind: MoveKindDuplicateRemoved}, time.Now())
+	originalHash, err := fileSHA256(src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rec, err := beginMoveJournal(journalPath, MoveRecord{From: src, To: dst, Kind: MoveKindDuplicateRemoved, OriginalSHA256: originalHash, OriginalSize: 4}, time.Now())
 	if err != nil {
 		t.Fatal(err)
 	}

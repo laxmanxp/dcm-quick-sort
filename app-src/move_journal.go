@@ -474,7 +474,7 @@ func recoverPendingReplace(path string, entry MoveJournalEntry, now time.Time) (
 func recoverPendingDuplicate(path string, entry MoveJournalEntry, now time.Time) (MoveJournalEntry, bool, bool, error) {
 	srcExists := pathExists(entry.Record.From)
 	dstExists := pathExists(entry.Record.To)
-	if !srcExists && dstExists && (entry.Stage == MoveJournalStageDuplicateVerified || entry.Stage == MoveJournalStageDuplicateSourceRemoved) {
+	if !srcExists && dstExists && verifyDuplicateOriginal(entry.Record.To, entry.Record) == nil && (entry.Stage == MoveJournalStageDuplicateVerified || entry.Stage == MoveJournalStageDuplicateSourceRemoved) {
 		entry.State = MoveJournalCompleted
 		entry.Stage = MoveJournalStageDuplicateSourceRemoved
 		entry.Detail = "finalized exact-duplicate removal after restart"
@@ -575,10 +575,10 @@ func reconcileCompletedReplace(path string, entry MoveJournalEntry, now time.Tim
 func reconcileCompletedDuplicate(path string, entry MoveJournalEntry, now time.Time) (MoveJournalEntry, error) {
 	srcExists := pathExists(entry.Record.From)
 	dstExists := pathExists(entry.Record.To)
-	if !srcExists && dstExists {
+	if !srcExists && dstExists && verifyDuplicateOriginal(entry.Record.To, entry.Record) == nil {
 		return entry, nil
 	}
-	if srcExists && dstExists && sameFileContent(entry.Record.From, entry.Record.To) {
+	if srcExists && dstExists && verifyDuplicateOriginal(entry.Record.From, entry.Record) == nil && verifyDuplicateOriginal(entry.Record.To, entry.Record) == nil {
 		entry.State = MoveJournalUndone
 		entry.Detail = "reconciled after restart: exact-duplicate removal was undone"
 		if err := appendRecoveredEntry(path, entry, now); err != nil {
@@ -587,7 +587,7 @@ func reconcileCompletedDuplicate(path string, entry MoveJournalEntry, now time.T
 		return entry, nil
 	}
 	entry.State = MoveJournalAttention
-	entry.Detail = "completed duplicate removal no longer matches a safe undoable state; manual review required"
+	entry.Detail = "completed duplicate removal lacks a verified original fingerprint or its files changed; manual review required"
 	if err := appendRecoveredEntry(path, entry, now); err != nil {
 		return entry, err
 	}

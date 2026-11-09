@@ -31,6 +31,8 @@ type MoveRecord struct {
 	ReplacedBackup string   `json:"replaced_backup,omitempty"`
 	JournalID      string   `json:"journal_id,omitempty"`
 	BatchID        string   `json:"batch_id,omitempty"`
+	OriginalSHA256 string   `json:"original_sha256,omitempty"`
+	OriginalSize   int64    `json:"original_size,omitempty"`
 }
 
 type DestinationConflictKind int
@@ -194,6 +196,9 @@ func inspectDestinationConflict(source, target string) (DestinationConflictInfo,
 	if !tgtInfo.Mode().IsRegular() {
 		return info, errors.New("destination path exists but is not a regular file")
 	}
+	if os.SameFile(srcInfo, tgtInfo) {
+		return info, errors.New("source and destination refer to the same file; no conflict action is safe")
+	}
 	info.TargetSize = tgtInfo.Size()
 	if info.SourceSize != info.TargetSize {
 		info.Kind = ConflictDifferent
@@ -299,7 +304,12 @@ func removeExactDuplicateSource(source, target string) (MoveRecord, error) {
 	if info.Kind != ConflictExactDuplicate {
 		return rec, errors.New("source is not an exact duplicate of the destination")
 	}
-	if err := os.Remove(source); err != nil {
+	expected, err := snapshotSource(source)
+	if err != nil {
+		return rec, err
+	}
+	rec.OriginalSHA256, rec.OriginalSize = expected.SHA256, expected.Size
+	if err := retireVerifiedSource(source, target, expected); err != nil {
 		return rec, err
 	}
 	return rec, nil
@@ -427,11 +437,13 @@ func moveFileWith(source, target string, renameFn func(string, string) error, re
 func validateUndoMove(rec MoveRecord) error {
 	switch rec.Kind {
 	case MoveKindDuplicateRemoved:
-		if _, err := os.Stat(rec.From); err == nil {
+		if _, err := os.Lstat(rec.From); err == nil {
 			return errors.New("cannot undo: original path is already occupied")
+		} else if !os.IsNotExist(err) {
+			return fmt.Errorf("cannot inspect original path for duplicate undo: %w", err)
 		}
-		if _, err := os.Stat(rec.To); err != nil {
-			return errors.New("cannot undo duplicate removal: destination copy no longer exists")
+		if err := verifyDuplicateOriginal(rec.To, rec); err != nil {
+			return fmt.Errorf("cannot undo duplicate removal: %w", err)
 		}
 		return nil
 	case MoveKindReplace:
@@ -465,7 +477,7 @@ func undoMove(rec MoveRecord) error {
 	}
 	switch rec.Kind {
 	case MoveKindDuplicateRemoved:
-		return copyFileVerifiedHash(rec.To, rec.From)
+		return restoreDuplicateOriginal(rec)
 	case MoveKindReplace:
 		if err := moveFile(rec.To, rec.From); err != nil {
 			return err

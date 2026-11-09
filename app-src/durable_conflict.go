@@ -104,6 +104,13 @@ func removeExactDuplicateSourceJournaled(journalPath, source, target string, bat
 	if info.Kind != ConflictExactDuplicate {
 		return rec, errors.New("source is not an exact duplicate of the destination")
 	}
+	expected, err := snapshotSource(source)
+	if err != nil {
+		return rec, err
+	}
+	// The original fingerprint is part of the first durable event. It must
+	// never be inferred from the surviving destination during a later Undo.
+	rec.OriginalSHA256, rec.OriginalSize = expected.SHA256, expected.Size
 
 	rec, err = beginMoveJournal(journalPath, rec, time.Now())
 	if err != nil {
@@ -112,8 +119,8 @@ func removeExactDuplicateSourceJournaled(journalPath, source, target string, bat
 	if err := updateMoveJournalStage(journalPath, rec, MoveJournalStageDuplicateVerified, "source and destination verified identical by size and SHA-256", time.Now()); err != nil {
 		return rec, fmt.Errorf("duplicate was verified but journal stage could not be persisted; source was not removed: %w", err)
 	}
-	if err := os.Remove(source); err != nil {
-		_ = failMoveJournal(journalPath, rec, MoveJournalFailed, "verified duplicate source could not be removed", time.Now())
+	if err := retireVerifiedSource(source, target, expected); err != nil {
+		_ = failMoveJournal(journalPath, rec, MoveJournalAttention, "duplicate source retirement refused; remaining files preserved: "+err.Error(), time.Now())
 		return rec, err
 	}
 	if err := updateMoveJournalStage(journalPath, rec, MoveJournalStageDuplicateSourceRemoved, "verified duplicate source removed; destination retained", time.Now()); err != nil {
