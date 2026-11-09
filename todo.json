@@ -30,7 +30,15 @@
     "native_regression_result": "D3/D4 passed; installer full suite 24 passed, 0 failed, 0 skipped; D1/D2/D6 fixed-candidate validation pending",
     "last_native_attempt": "a88d4f28ab801113487248d833c898c344138f0c / 20261109-044942-5df3654c: app regression command exceeded 300s deadline; partial result retrieval pending",
     "final_package_qualified": false,
-    "user_acceptance": "not_recorded"
+    "user_acceptance": "not_recorded",
+    "native_execution_blocker": {
+      "observed_at": "2026-11-09T05:03:37.5201923Z",
+      "c_drive_free_bytes": 650547200,
+      "available_physical_memory_bytes": 478658560,
+      "status": "resource_headroom_required; native qualification pending",
+      "evidence": "qualification/native-host-2026-11-09.json"
+    },
+    "source_draft_pr": "https://github.com/laxmanxp/dcm-quick-sort/pull/1"
   },
   "evidence": {
     "published_release": "https://github.com/laxmanxp/dcm-quick-sort/releases/tag/v1.0.63",

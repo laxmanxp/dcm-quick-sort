@@ -1,0 +1,99 @@
+diff --git a/app-src/core.go b/app-src/core.go
+--- a/app-src/core.go
++++ b/app-src/core.go
+@@ -316,7 +316,7 @@
+ }
+ 
+ func moveFile(source, target string) error {
+-	return moveFileWith(source, target, os.Rename, retireVerifiedSource)
++	return moveFileWith(source, target, renameFileNoReplace, retireVerifiedSource)
+ }
+ 
+ // copyFileVerified stages a safe copy while leaving the source untouched.
+diff --git a/app-src/main_windows.go b/app-src/main_windows.go
+--- a/app-src/main_windows.go
++++ b/app-src/main_windows.go
+@@ -2910,7 +2910,7 @@
+ 		showError("DCM refused to change the file because it could not persist the durable move journal:\n" + journalErr.Error() + "\n\nThe source file was left unchanged.")
+ 		return
+ 	}
+-	if err := os.Rename(source, target); err == nil {
++	if err := renameFileNoReplace(source, target); err == nil {
+ 		journalErr = completeMoveJournal(moveJournalFilePath(), rec, time.Now())
+ 		finishSuccessfulFileOperation(source, target, rec, false)
+ 		if journalErr != nil {
+diff --git a/app-src/rename_no_replace_windows.go b/app-src/rename_no_replace_windows.go
+new file mode 100644
+--- /dev/null
++++ b/app-src/rename_no_replace_windows.go
+@@ -0,0 +1,53 @@
++//go:build windows
++
++package main
++
++import (
++	"os"
++	"path/filepath"
++	"runtime"
++	"strings"
++	"syscall"
++	"unsafe"
++)
++
++var renameNoReplaceMoveFileExW = syscall.NewLazyDLL("kernel32.dll").NewProc("MoveFileExW")
++
++// renameFileNoReplace atomically refuses an occupied destination. Flags zero
++// also refuse a cross-volume move, which must use the verified copy/retirement
++// fallback instead of an opaque native copy-and-delete operation.
++func renameFileNoReplace(source, target string) error {
++	from, err := renameNoReplaceWindowsPath(source)
++	if err != nil {
++		return &os.LinkError{Op: "rename", Old: source, New: target, Err: err}
++	}
++	to, err := renameNoReplaceWindowsPath(target)
++	if err != nil {
++		return &os.LinkError{Op: "rename", Old: source, New: target, Err: err}
++	}
++	result, _, callErr := renameNoReplaceMoveFileExW.Call(uintptr(unsafe.Pointer(from)), uintptr(unsafe.Pointer(to)), 0)
++	runtime.KeepAlive(from)
++	runtime.KeepAlive(to)
++	if result == 0 {
++		if callErr == syscall.Errno(0) {
++			callErr = syscall.EINVAL
++		}
++		return &os.LinkError{Op: "rename", Old: source, New: target, Err: callErr}
++	}
++	return nil
++}
++
++func renameNoReplaceWindowsPath(path string) (*uint16, error) {
++	absolute, err := filepath.Abs(path)
++	if err != nil {
++		return nil, err
++	}
++	if !strings.HasPrefix(absolute, `\\?\`) && !strings.HasPrefix(absolute, `\\.\`) {
++		if strings.HasPrefix(absolute, `\\`) {
++			absolute = `\\?\UNC\` + absolute[2:]
++		} else {
++			absolute = `\\?\` + absolute
++		}
++	}
++	return syscall.UTF16PtrFromString(absolute)
++}
+diff --git a/app-src/rename_no_replace_other.go b/app-src/rename_no_replace_other.go
+new file mode 100644
+--- /dev/null
++++ b/app-src/rename_no_replace_other.go
+@@ -0,0 +1,12 @@
++//go:build !windows
++
++package main
++
++import (
++	"errors"
++	"os"
++)
++
++func renameFileNoReplace(source, target string) error {
++	return &os.LinkError{Op: "rename", Old: source, New: target, Err: errors.New("atomic no-replace rename requires the supported Windows runtime")}
++}

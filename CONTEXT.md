@@ -16,7 +16,7 @@ D3 batch journal membership and D4 template import/restore passed native regress
 
 Two additional regression boundaries remain open: refuse an existing foreign destination on the fast rename path, and prevent a duplicate record from being reconciled as an ordinary rename chain. Their tests are committed; their implementation/validation is not closed.
 
-Native report `20261109-043859-6216f4a1` timed out at `go version`, before product tests. Report `20261109-044942-5df3654c` reached the app regression command but exceeded its 300-second deadline; detailed partial test results were still being retrieved at this checkpoint. Do not infer a product PASS from either timeout. A committed read-only host diagnostic is being used to investigate the slowdown.
+Native report `20261109-043859-6216f4a1` timed out at `go version`, before product tests. Report `20261109-044942-5df3654c` reached the app regression command but exceeded its 300-second deadline; detailed partial test results were still being retrieved at this checkpoint. Do not infer a product PASS from either timeout. The completed FlowDev host diagnostic found 650,547,200 bytes free on C: and 478,658,560 bytes of available physical memory at 05:03 UTC. This resource pressure is consistent with the timeouts; it does not prove their individual causes. Restore resource headroom before further qualification. See [the diagnostic excerpt](qualification/native-host-2026-11-09.json). The source work is saved in [draft PR #1](https://github.com/laxmanxp/dcm-quick-sort/pull/1).
 
 Exact v1.0.71 build/setup hashes, embedded-payload verification, isolated installer lifecycle, actual setup UI, visible filters/Rename/Move/Batch Undo, PDF zoom and preview checks remain outstanding. User acceptance is not recorded. The latest public release remains v1.0.63.
 
@@ -64,3 +64,4 @@ Before a newer release: identify the exact source and installer payload; resolve
 ## Working rules
 
 Code in the ChatGPT development environment; store changes in small GitHub commits; validate on Lenovo through the registered FlowDev app/feature route (`flowdev update <app>` then `flowdev test <app> <feature>`). Follow Feature → Units → Unit → Units → Feature. Record implementation, UI test and user-test status separately. Source-review probes, cross-builds, existing release notes and another app's tests must not be relabeled as current DCM native acceptance.
+
