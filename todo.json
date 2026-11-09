@@ -4,12 +4,15 @@
   "suite": "FileFlow Suite",
   "updated_on": "2026-11-09",
   "scope": "Independent native Go application/window alongside Flow Search, DeepSearch and FileFlow. Reuse existing behavior; a Walk/Rust migration, new PDF engine or shared launcher is not a DCM release prerequisite.",
-  "status_values": [
-    "planned",
-    "implemented",
-    "tested",
-    "fixed"
-  ],
+  "completion_plan": {
+    "path": "qualification/completion-50.json",
+    "step_count": 50,
+    "completed_setup_steps": ["DCM-01", "DCM-02", "DCM-03", "DCM-04", "DCM-05"],
+    "next_step": "DCM-06",
+    "checkpoint": "qualification/2026-11-09-baby-steps.md",
+    "rule": "The first five completed steps are setup/diagnostic work, not product acceptance. Preserve all original defect IDs and prior evidence."
+  },
+  "status_values": ["planned", "implemented", "tested", "fixed"],
   "status_rule": "Feature status, UI test status and user-test status are separate. Existing source probes or another app's acceptance never certify the current DCM Windows release candidate.",
   "checkpoints": {
     "published_release": "v1.0.63",
@@ -26,17 +29,24 @@
     "candidate_code_commit": "c630a4ddff3161ae9129ab306ee74aeec7f43d1e",
     "source_import_commit": "abe95acad96343e16d93396790a52bfe4d4b7b59",
     "archive_sha256": "64e1cb1666acc9a70aeeb9656b4f30ca26fc30ad142ea32e154cb7a63dc7b5aa",
-    "native_regression_commit": "7c413fd530126398732cab7cda426b591514deb5",
-    "native_regression_result": "D3/D4 passed; installer full suite 24 passed, 0 failed, 0 skipped; D1/D2/D6 fixed-candidate validation pending",
-    "last_native_attempt": "a88d4f28ab801113487248d833c898c344138f0c / 20261109-044942-5df3654c: app regression command exceeded 300s deadline; partial result retrieval pending",
+    "native_regression_commit": "3f7784583b0ebc292ea1572373b6bcbea22cad44",
+    "native_regression_result": "21 top-level app regressions: 19 passed, 2 assertion failures, zero skips, no timeout. D2 no-overwrite and D6 duplicate rename-chain recovery remain RED. Earlier installer full-suite result remains 24 passed at 7c413fd, not requalified here.",
+    "last_native_attempt": "3f7784583b0ebc292ea1572373b6bcbea22cad44 / 20261109-133423-16576b74: completed assertion RED, 19 passed / 2 failed; original 20261109-044942-5df3654c summary retrieved: zero tests, timeout true",
     "final_package_qualified": false,
     "user_acceptance": "not_recorded",
     "native_execution_blocker": {
       "observed_at": "2026-11-09T05:03:37.5201923Z",
       "c_drive_free_bytes": 650547200,
       "available_physical_memory_bytes": 478658560,
-      "status": "resource_headroom_required; native qualification pending",
+      "status": "historical_resource_pressure; later bounded regression run completed; no general host health certification",
       "evidence": "qualification/native-host-2026-11-09.json"
+    },
+    "native_resource_recheck": {
+      "observed_at": "2026-11-09T13:32:02Z",
+      "c_drive_free_bytes": 2271277056,
+      "available_physical_memory_bytes": 1920344064,
+      "status": "read_only_observation_complete; one_serial_targeted_run_completed",
+      "evidence": "qualification/2026-11-09-baby-steps.md"
     },
     "source_draft_pr": "https://github.com/laxmanxp/dcm-quick-sort/pull/1"
   },
@@ -47,7 +57,8 @@
     "recovery_context": "https://github.com/laxmanxp/dcm-quick-sort/blob/c27d514ffeb2a76a8d77d776855ecf22b460930c/source-v1.0.62/TRANSFER-CONTEXT.md",
     "source_import": "https://github.com/laxmanxp/dcm-quick-sort/blob/abe95acad96343e16d93396790a52bfe4d4b7b59/provenance/v1.0.70/IMPORT.md",
     "qualification_checkpoint": "qualification/2026-11-09-progress.md",
-    "release_notes_draft": "qualification/v1.0.71-release-notes.md"
+    "release_notes_draft": "qualification/v1.0.71-release-notes.md",
+    "baby_steps_checkpoint": "qualification/2026-11-09-baby-steps.md"
   },
   "items": [
     {
@@ -58,201 +69,69 @@
       "user_test": "not_recorded",
       "release_gate": true,
       "acceptance": "Import the complete supplied source with its provenance, resolve version differences and identify the exact source revision, executable hash and embedded installer payload to qualify. Do not assume the v1.0.69 native binary came from the v1.0.62 recovery or v1.0.70 archive.",
-      "evidence_refs": [
-        "published_release",
-        "archive_source_audit",
-        "native_1069_report",
-        "recovery_context",
-        "source_import",
-        "qualification_checkpoint"
-      ],
+      "evidence_refs": ["published_release", "archive_source_audit", "native_1069_report", "recovery_context", "source_import", "qualification_checkpoint"],
       "source_import": "complete",
       "packaged_payload": "pending",
       "current_evidence": "Complete v1.0.70 source/provenance imported and verified against Git tree; final app/setup payload remains part of release qualification."
     },
     {
-      "id": "D1",
-      "feature": "Preserve a source when source and destination identify the same file",
-      "status": "implemented",
-      "severity": "high",
-      "ui_test": "not_run_on_release_candidate",
-      "user_test": "not_recorded",
-      "release_gate": true,
+      "id": "D1", "feature": "Preserve a source when source and destination identify the same file", "status": "implemented", "severity": "high", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "The Nov2 v1.0.70 archive audit reproduced exact-path self-duplicate removal with no recoverable Undo. Windows case-only UI behavior was source-traced only. No later fix is verified.",
-      "acceptance": "Verify exact-path and Windows case/alias identity cases leave the source intact, without reporting a completed deletion or unusable Undo.",
-      "blocked_by": [],
-      "evidence_refs": [
-        "archive_source_audit",
-        "qualification_checkpoint"
-      ],
-      "native_test": "original_failure_reproduced; fixed_candidate_green_pending"
+      "acceptance": "Verify exact-path and Windows case/alias identity cases leave the source intact, without reporting a completed deletion or unusable Undo.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint"],
+      "native_test": "identity regression passed at 3f778458; final candidate and visible UI recheck pending"
     },
     {
-      "id": "D2",
-      "feature": "Preserve a source changed during cross-volume copy",
-      "status": "implemented",
-      "severity": "high",
-      "ui_test": "not_run_on_release_candidate",
-      "user_test": "not_recorded",
-      "release_gate": true,
+      "id": "D2", "feature": "Preserve a source changed during cross-volume copy", "status": "implemented", "severity": "high", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "The archive audit's controlled same-length edit left older destination bytes and removed newer source bytes. This is a historical source probe, not a current Windows reproduction.",
-      "acceptance": "Qualify source-change detection before deletion with independent byte checks, including same-length changes, while retaining the changed source and reporting truthful recovery status.",
-      "blocked_by": [],
-      "evidence_refs": [
-        "archive_source_audit",
-        "qualification_checkpoint"
-      ],
-      "native_test": "original_failure_reproduced; fixed_candidate_green_pending",
-      "additional_open_boundary": "No-overwrite fast rename regression committed; native RED and minimal fix pending."
+      "acceptance": "Qualify source-change detection before deletion with independent byte checks, including same-length changes, while retaining the changed source and reporting truthful recovery status.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint"],
+      "native_test": "guarded-retirement regressions passed at 3f778458; no-overwrite regression failed; final candidate GREEN pending",
+      "additional_open_boundary": "Native assertion RED observed for TestD2MoveFileRefusesExistingForeignDestination in 20261109-133423-16576b74. Apply the locally reviewed minimal fix next (DCM-06), then obtain native GREEN."
     },
     {
-      "id": "D3",
-      "feature": "Persist batch membership at the transaction boundary",
-      "status": "fixed",
-      "severity": "medium",
-      "ui_test": "not_run_on_release_candidate",
-      "user_test": "not_recorded",
-      "release_gate": true,
+      "id": "D3", "feature": "Persist batch membership at the transaction boundary", "status": "fixed", "severity": "medium", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "The archive audit found BatchID assigned late, creating a crash gap in batch membership. Individual history remains; this is not evidence that all move journals are lost.",
-      "acceptance": "Restart at the identified boundary and retain correct batch membership together with the existing individual transaction and recovery records.",
-      "blocked_by": [],
-      "evidence_refs": [
-        "archive_source_audit",
-        "qualification_checkpoint"
-      ],
-      "native_test": "pass_at_7c413fd; final_candidate_recheck_pending"
+      "acceptance": "Restart at the identified boundary and retain correct batch membership together with the existing individual transaction and recovery records.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint"],
+      "native_test": "pass_at_7c413fd and rechecked at 3f778458; final_candidate_recheck_pending"
     },
     {
-      "id": "D4",
-      "feature": "Round-trip naming templates through configuration export/import",
-      "status": "fixed",
-      "severity": "medium",
-      "ui_test": "not_run_on_release_candidate",
-      "user_test": "not_recorded",
-      "release_gate": true,
+      "id": "D4", "feature": "Round-trip naming templates through configuration export/import", "status": "fixed", "severity": "medium", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "The archive audit found naming templates included in export/digest but excluded from the import allowlist, causing valid export checksum failure.",
-      "acceptance": "Export and import non-default naming templates successfully, preserve their content and continue rejecting genuinely invalid payloads.",
-      "blocked_by": [],
-      "evidence_refs": [
-        "archive_source_audit",
-        "qualification_checkpoint"
-      ],
-      "native_test": "pass_at_7c413fd; final_candidate_recheck_pending"
+      "acceptance": "Export and import non-default naming templates successfully, preserve their content and continue rejecting genuinely invalid payloads.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint"],
+      "native_test": "pass_at_7c413fd and rechecked at 3f778458; final_candidate_recheck_pending"
     },
     {
-      "id": "D5",
-      "feature": "Restore supported settings through the installer",
-      "status": "fixed",
-      "severity": "medium",
-      "ui_test": "not_run_on_release_candidate",
-      "user_test": "not_recorded",
-      "release_gate": true,
+      "id": "D5", "feature": "Restore supported settings through the installer", "status": "fixed", "severity": "medium", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "The archive audit found the installer restore schema retained default_source but excluded pdf_default_view and vault_root.",
-      "acceptance": "Qualify backup/restore and upgrade with non-default default_source, pdf_default_view and vault_root; verify all supported values survive.",
-      "blocked_by": [],
-      "evidence_refs": [
-        "archive_source_audit",
-        "qualification_checkpoint"
-      ],
+      "acceptance": "Qualify backup/restore and upgrade with non-default default_source, pdf_default_view and vault_root; verify all supported values survive.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint"],
       "native_test": "pass_at_7c413fd; final_candidate_recheck_pending"
     },
     {
-      "id": "D6",
-      "feature": "Define and enforce duplicate-removal Undo's byte-restoration contract",
-      "status": "implemented",
-      "finding_kind": "undo_contract",
-      "ui_test": "not_run_on_release_candidate",
-      "user_test": "not_recorded",
-      "release_gate": true,
+      "id": "D6", "feature": "Define and enforce duplicate-removal Undo's byte-restoration contract", "status": "implemented", "finding_kind": "undo_contract", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "The archive audit found Undo copies current destination bytes, so an edited destination restores changed content rather than the removed original.",
-      "acceptance": "Undo restores the original bytes, or clearly refuses when original-byte recovery is unavailable; verify the changed-destination case using independent hashes.",
-      "blocked_by": [],
-      "evidence_refs": [
-        "archive_source_audit",
-        "qualification_checkpoint"
-      ],
-      "native_test": "original_failure_reproduced; fixed_candidate_green_pending",
-      "additional_open_boundary": "Consumed duplicate must not bypass fingerprint validation through ordinary rename-chain reconciliation; regression committed, native RED and Kind gate pending."
+      "acceptance": "Undo restores the original bytes, or clearly refuses when original-byte recovery is unavailable; verify the changed-destination case using independent hashes.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint"],
+      "native_test": "fingerprint regressions passed at 3f778458; moved-survivor recovery regression failed; final candidate GREEN pending",
+      "additional_open_boundary": "Native assertion RED observed for TestD6MovedDuplicateSurvivorRequiresAttentionAfterRestart in 20261109-133423-16576b74. Prevent duplicate records entering ordinary rename-chain reconciliation (DCM-07), then obtain native GREEN."
     },
     {
-      "id": "DCM-NATIVE-01",
-      "feature": "Qualify single/batch Move, Undo, conflicts and restart recovery",
-      "status": "planned",
-      "ui_test": "partial_on_v1.0.69; current_candidate_not_run",
-      "user_test": "not_recorded",
-      "release_gate": true,
+      "id": "DCM-NATIVE-01", "feature": "Qualify single/batch Move, Undo, conflicts and restart recovery", "status": "planned", "ui_test": "partial_on_v1.0.69; current_candidate_not_run", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "Nov3 automated Move attempts did not complete and the independent filesystem check failed; Undo Move was untested. Batch coverage was blocked by the FlowUIVision native ListBox selection adapter. Existing batch behavior is documented in v1.0.63 and recovered source.",
       "acceptance": "Use the supported destination UI and a disposable fixture set; verify selection, successful moves, per-file hashes, conflicts, Processed entries, Undo and restart recovery with readable images and filesystem checks.",
-      "blocked_by": [
-        "DCM-SOURCE-01",
-        "D1",
-        "D2",
-        "D3",
-        "D6"
-      ],
-      "evidence_refs": [
-        "native_1069_report",
-        "published_release",
-        "recovery_context"
-      ]
+      "blocked_by": ["DCM-SOURCE-01", "D1", "D2", "D3", "D6"], "evidence_refs": ["native_1069_report", "published_release", "recovery_context"]
     },
     {
-      "id": "DCM-PDF-01",
-      "feature": "Resolve manual PDF zoom visual qualification",
-      "status": "planned",
-      "ui_test": "initial_and_fit_width_pass_on_v1.0.69; manual_zoom_unresolved",
-      "user_test": "not_recorded",
-      "release_gate": true,
+      "id": "DCM-PDF-01", "feature": "Resolve manual PDF zoom visual qualification", "status": "planned", "ui_test": "initial_and_fit_width_pass_on_v1.0.69; manual_zoom_unresolved", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "Nov3 100%/110% captures were blank despite passing footer assertions; Fit Width restored content. Rendering versus capture/focus cause remains unknown.",
-      "acceptance": "Verify visible page content after manual zoom and Fit Width in a restored, identified window. Resolve any rendering or capture defect; footer text alone is not a visual PASS.",
-      "blocked_by": [
-        "DCM-SOURCE-01"
-      ],
-      "evidence_refs": [
-        "native_1069_report"
-      ]
+      "acceptance": "Verify visible page content after manual zoom and Fit Width in a restored, identified window. Resolve any rendering or capture defect; footer text alone is not a visual PASS.", "blocked_by": ["DCM-SOURCE-01"], "evidence_refs": ["native_1069_report"]
     },
     {
-      "id": "DCM-PREVIEW-01",
-      "feature": "Qualify advertised preview formats and failure states",
-      "status": "planned",
-      "ui_test": "limited_fixture_pass_on_v1.0.69; remaining_formats_not_run",
-      "user_test": "not_recorded",
-      "release_gate": true,
+      "id": "DCM-PREVIEW-01", "feature": "Qualify advertised preview formats and failure states", "status": "planned", "ui_test": "limited_fixture_pass_on_v1.0.69; remaining_formats_not_run", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "TXT, PNG and lightweight DOCX/XLSX/PPTX fallbacks passed the Nov3 fixture checks. Legacy DOC/XLS/PPT, complex Office fidelity and protected/damaged files were not certified.",
-      "acceptance": "Record visible success, blank/error and cancellation behavior for the formats advertised by the selected release. State fallback fidelity limits explicitly.",
-      "blocked_by": [
-        "DCM-SOURCE-01"
-      ],
-      "evidence_refs": [
-        "native_1069_report"
-      ]
+      "acceptance": "Record visible success, blank/error and cancellation behavior for the formats advertised by the selected release. State fallback fidelity limits explicitly.", "blocked_by": ["DCM-SOURCE-01"], "evidence_refs": ["native_1069_report"]
     },
     {
-      "id": "DCM-RELEASE-01",
-      "feature": "Qualify and publish the exact packaged release candidate",
-      "status": "planned",
-      "ui_test": "not_run_on_release_candidate",
-      "user_test": "not_recorded",
-      "release_gate": true,
+      "id": "DCM-RELEASE-01", "feature": "Qualify and publish the exact packaged release candidate", "status": "planned", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
       "acceptance": "Record source revision and app/installer hashes; verify payload identity, install/upgrade/restore, native feature evidence on Lenovo against the advertised DCM release scope. Do not introduce a new printing feature as a prerequisite. Publish a newer release only after its gates are satisfied; keep v1.0.63 publication distinct from later development evidence.",
-      "blocked_by": [
-        "DCM-SOURCE-01",
-        "D1",
-        "D2",
-        "D3",
-        "D4",
-        "D5",
-        "D6",
-        "DCM-NATIVE-01",
-        "DCM-PDF-01",
-        "DCM-PREVIEW-01"
-      ],
-      "evidence_refs": [
-        "published_release",
-        "archive_source_audit",
-        "native_1069_report"
-      ]
+      "blocked_by": ["DCM-SOURCE-01", "D1", "D2", "D3", "D4", "D5", "D6", "DCM-NATIVE-01", "DCM-PDF-01", "DCM-PREVIEW-01"], "evidence_refs": ["published_release", "archive_source_audit", "native_1069_report", "baby_steps_checkpoint"]
     }
   ]
 }
