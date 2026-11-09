@@ -8,9 +8,9 @@
     "path": "qualification/completion-50.json",
     "step_count": 50,
     "completed_setup_steps": ["DCM-01", "DCM-02", "DCM-03", "DCM-04", "DCM-05"],
-    "completed_product_steps": ["DCM-06"],
-    "next_step": "DCM-07",
-    "checkpoint": "qualification/2026-11-09-dcm06.md",
+    "completed_product_steps": ["DCM-06", "DCM-07"],
+    "next_step": "DCM-08",
+    "checkpoint": "qualification/2026-11-09-dcm07.md",
     "rule": "The first five completed steps are setup/diagnostic work, not product acceptance. Preserve all original defect IDs and prior evidence."
   },
   "status_values": ["planned", "implemented", "tested", "fixed"],
@@ -27,12 +27,12 @@
     "archive_release_certified": false,
     "candidate_version": "v1.0.71",
     "candidate_branch": "release/v1.0.71",
-    "candidate_code_commit": "c88abef150de794a028b466b6a0a28a5fab7707d",
+    "candidate_code_commit": "26eeaed3b9041a31b17c197ef2a095f53ee2a9e6",
     "source_import_commit": "abe95acad96343e16d93396790a52bfe4d4b7b59",
     "archive_sha256": "64e1cb1666acc9a70aeeb9656b4f30ca26fc30ad142ea32e154cb7a63dc7b5aa",
-    "native_regression_commit": "c88abef150de794a028b466b6a0a28a5fab7707d",
-    "native_regression_result": "21 top-level app regressions: 20 passed, 1 assertion failure, zero skips, no timeout. DCM-06 no-overwrite regression is GREEN; DCM-07 duplicate rename-chain recovery remains RED. Overall selection still fails. Earlier installer full-suite result remains 24 passed at 7c413fd, not requalified here.",
-    "last_native_attempt": "c88abef150de794a028b466b6a0a28a5fab7707d / 20261109-141655-4b4f9621: 20 passed / 1 failed, no skips or timeout; source unchanged. The sole remaining failure is TestD6MovedDuplicateSurvivorRequiresAttentionAfterRestart.",
+    "native_regression_commit": "26eeaed3b9041a31b17c197ef2a095f53ee2a9e6",
+    "native_regression_result": "21 top-level app regressions: 21 passed, 0 failed, 0 skipped, no timeout, exit 0. DCM-07 recovery and DCM-06 no-overwrite are GREEN. Selected regression group only; full app/installer/UI/package qualification remains open. Historical installer suite remains 24 passed at 7c413fd.",
+    "last_native_attempt": "26eeaed3b9041a31b17c197ef2a095f53ee2a9e6 / 20261109-151557-80d9f368: 21 passed / 0 failed / 0 skipped, exit 0, no timeout, source unchanged. DCM-07 native regression complete.",
     "final_package_qualified": false,
     "user_acceptance": "not_recorded",
     "native_execution_blocker": {
@@ -60,7 +60,8 @@
     "qualification_checkpoint": "qualification/2026-11-09-progress.md",
     "release_notes_draft": "qualification/v1.0.71-release-notes.md",
     "baby_steps_checkpoint": "qualification/2026-11-09-baby-steps.md",
-    "dcm06_checkpoint": "qualification/2026-11-09-dcm06.md"
+    "dcm06_checkpoint": "qualification/2026-11-09-dcm06.md",
+    "dcm07_checkpoint": "qualification/2026-11-09-dcm07.md"
   },
   "items": [
     {
@@ -110,9 +111,9 @@
     {
       "id": "D6", "feature": "Define and enforce duplicate-removal Undo's byte-restoration contract", "status": "implemented", "finding_kind": "undo_contract", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "The archive audit found Undo copies current destination bytes, so an edited destination restores changed content rather than the removed original.",
-      "acceptance": "Undo restores the original bytes, or clearly refuses when original-byte recovery is unavailable; verify the changed-destination case using independent hashes.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint", "dcm06_checkpoint"],
-      "native_test": "fingerprint regressions passed at 3f778458 and c88abef; moved-survivor recovery still fails at c88abef; final candidate GREEN pending",
-      "additional_open_boundary": "Native assertion RED observed in 20261109-133423-16576b74 and repeated at c88abef in 20261109-141655-4b4f9621 for TestD6MovedDuplicateSurvivorRequiresAttentionAfterRestart. Prevent duplicate records entering ordinary rename-chain reconciliation (DCM-07), then obtain native GREEN."
+      "acceptance": "Undo restores the original bytes, or clearly refuses when original-byte recovery is unavailable; verify the changed-destination case using independent hashes.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint", "dcm06_checkpoint", "dcm07_checkpoint"],
+      "native_test": "All selected D6 fingerprint and moved-survivor recovery regressions passed at 26eeaed3; broader DCM-10 review, final full-suite and visible UI acceptance remain pending.",
+      "additional_open_boundary": "DCM-07 boundary closed at 26eeaed3 after native assertion RED at c88abef: duplicate-removal records cannot enter ordinary rename-chain reconciliation. Native TestD6MovedDuplicateSurvivorRequiresAttentionAfterRestart passed in 20261109-151557-80d9f368. Broader release qualification remains open."
     },
     {
       "id": "DCM-NATIVE-01", "feature": "Qualify single/batch Move, Undo, conflicts and restart recovery", "status": "planned", "ui_test": "partial_on_v1.0.69; current_candidate_not_run", "user_test": "not_recorded", "release_gate": true,

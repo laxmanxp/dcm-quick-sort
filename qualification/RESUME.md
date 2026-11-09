@@ -1,14 +1,14 @@
-# DCM v1.0.71 — resume after DCM-06
+# DCM v1.0.71 — resume after DCM-07
 
-Latest checkpoint: [DCM-06 native GREEN](2026-11-09-dcm06.md). Earlier records in `2026-11-09-progress.md` and `2026-11-09-baby-steps.md` remain historical evidence.
+Latest checkpoint: [DCM-07 native GREEN](2026-11-09-dcm07.md). Earlier DCM-06 and baseline records remain historical evidence.
 
 ## Current state
 
-Source/tested commit: `c88abef150de794a028b466b6a0a28a5fab7707d` on `release/v1.0.71`. Later documentation commits do not change this tested source identity. Draft PR #1 remains open; no release or installer is qualified.
+Product/tested commit: `26eeaed3b9041a31b17c197ef2a095f53ee2a9e6` on `release/v1.0.71`. Later documentation commits do not change this tested identity. Draft PR #1 remains open; no release package is qualified.
 
-The no-overwrite proposal is now applied to both core and normal UI fast paths. `TestD2MoveFileRefusesExistingForeignDestination` passed natively. The selected group completed **20 passed / 1 failed / 0 skipped**, no timeout, with unchanged source. Its overall exit is still 1.
+The selected native safety group is **21 passed / 0 failed / 0 skipped**, exit 0, no timeout, source unchanged. Duplicate restart recovery now requests attention instead of using ordinary rename-chain reconciliation. The prior no-overwrite regression remains GREEN. Both `proposed-fixes/no-replace.patch` and `proposed-fixes/duplicate-kind-gate.patch` are applied: do not reapply either.
 
-**Next: DCM-07.** `TestD6MovedDuplicateSurvivorRequiresAttentionAfterRestart` is the sole remaining failure in this selected group. Review and apply `proposed-fixes/duplicate-kind-gate.patch` locally. The assertion RED prerequisite exists in both the earlier `20261109-133423-16576b74` report and the latest `20261109-141655-4b4f9621` report. Do not reapply `no-replace.patch` or mistake the earlier zero-test timeout for RED.
+**Next: DCM-08**, explicit same-file protection review. Its exact-path/hard-link/case-alias assertions are present in the latest native run; inspect the supporting test and raw evidence before closing it. Continue DCM-09 onward in `completion-50.json`. Do not turn this selected group PASS into a full-app, UI, installer or release PASS.
 
 ## Native runner
 
@@ -18,16 +18,16 @@ Candidate: `C:\FlowverseReports\dcm-quicksort-candidate`, origin `https://github
 
 Set `FLOWDEV_WORKSPACE_ROOT=C:\FlowverseReports`, run from the candidate's `tools\flowdev-dcm` directory, and use `C:\FlowverseReports\flowdev-standalone-validation\flowdev-test.exe`.
 
-Use `flowdev update dcm-quicksort`, then `flowdev test dcm-quicksort regressions`. Record the actual updated HEAD. Code locally, store in GitHub, and use Lenovo only for validation. Do not use the older monorepo profile or dirty v1.0.62 checkout. Run one native selector at a time.
+Use `flowdev update dcm-quicksort`, then registered `flowdev test dcm-quicksort <selector>` routes. Record the actual updated HEAD. Code locally, store in GitHub, validate on Lenovo. Do not use the older monorepo profile or dirty v1.0.62 checkout. Run one native selector at a time.
 
-Latest native report: `C:\FlowverseReports\dcm-quicksort-regressions-20261109-141655-4b4f9621`. Its receipt, summary and relevant raw stdout were retrieved. A compact summary is in `evidence/dcm-06-native-summary.json`.
+Latest native report: `C:\FlowverseReports\dcm-quicksort-regressions-20261109-151557-80d9f368`. Receipt, summary and relevant raw stdout were retrieved. Compact evidence: `evidence/dcm-07-native-summary.json`.
 
-The last resource observation (13:32 UTC, not a current guarantee) showed 2,271,277,056 bytes free on C: and 1,920,344,064 bytes available RAM. The later bounded regression run completed. Recheck with `host-diagnostics` if stalls return. Never delete user files or close unrelated applications automatically.
+The last resource observation at 13:32 UTC showed 2,271,277,056 bytes free on C: and 1,920,344,064 bytes available RAM; this is historical, not a current guarantee. The 15:15 UTC regression run completed. Use `host-diagnostics` if stalls return. Do not delete user files or close unrelated applications automatically.
 
-## After DCM-07
+## Remaining qualification
 
-Continue `completion-50.json`, not a UI migration. Preserve original defect IDs in `../todo.json`. All affected evidence must be tied to the candidate tested, and source, UI and user acceptance remain separate.
+Preserve original defect IDs in `../todo.json`. Bind evidence to exact tested source; keep code, UI and user-test status separate.
 
-The remaining sequence includes final `baseline`, `installer-unit`, `ui-tooling`, and `package`; exact app/setup and embedded-payload hashes; isolated installer lifecycle; normal-app filters, navigation, Preview/Rename/Move, conflict and restart Undo workflows; and actual reviewed images. Bind `DCM_BUILD_RECEIPT` for UI selectors and `DCM_PACKAGE_RECEIPT` for `installer-ui-cancel`. Read `../tools/README.md` and `../tests/native/README.md` before running those gates.
+The remaining sequence includes `baseline`, `installer-unit`, `ui-tooling`, `package`, exact app/setup and embedded-payload hashes, isolated installer lifecycle, normal-app navigation/preview/rename/move/conflict/restart-Undo workflows, and reviewed images. Bind `DCM_BUILD_RECEIPT` for UI selectors and `DCM_PACKAGE_RECEIPT` for `installer-ui-cancel`. Read `../tools/README.md` and `../tests/native/README.md` before those gates.
 
-`visual_reviewed=false` is not visible-content acceptance. No user acceptance is recorded. Keep private configuration/backup/registry isolation intact; actual Explorer registration requires a disposable Windows user or VM. Update evidence and release notes before `release-prepare`; any `release-draft` requires the exact expected package commit. Do not merge or publish until all required gates and publication approval are complete.
+`visual_reviewed=false` is not visible-content acceptance. No user acceptance is recorded. Preserve private configuration/backup/registry isolation; actual Explorer registration requires a disposable Windows user or VM. Update evidence and release notes before `release-prepare`; any release draft must use the exact qualified package commit. Do not merge or publish until required gates and explicit publication approval are complete.
