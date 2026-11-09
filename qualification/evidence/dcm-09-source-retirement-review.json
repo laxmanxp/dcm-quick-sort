@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "step": "DCM-09",
+  "review_date": "2026-11-09",
+  "review_kind": "existing_native_evidence_review",
+  "new_native_run": false,
+  "product_source_changed": false,
+  "tested_source": "26eeaed3b9041a31b17c197ef2a095f53ee2a9e6",
+  "reviewed_branch_head": "6e0616877dbb66b4087a14911865d2557041d4ca",
+  "comparison": "26eeaed3..6e061687 changes seven qualification/tracker files only; no product, installer, test or runner changes.",
+  "report": "C:\\FlowverseReports\\dcm-quicksort-regressions-20261109-151557-80d9f368",
+  "read_files": [
+    "app-regressions.stdout.log (1-based lines 106-220)",
+    "app-regressions.summary.json",
+    "receipt.json"
+  ],
+  "event_note": "Compact transcription of inspected Action=pass events, not a copy of the complete raw log. Full logs remain on Lenovo.",
+  "selected_suite": {
+    "top_level_passed": 21,
+    "failed": 0,
+    "skipped": 0,
+    "exit_code": 0,
+    "timed_out": false,
+    "source_unchanged": true
+  },
+  "d2_review": {
+    "top_level_passed": 9,
+    "nested_subtests_passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "counting_note": "The nine D2 tests and their 12 nested subtests are included in the existing 21-top-level-test selection; do not add these to the suite total."
+  },
+  "receipt_source_manifest_sha256": "3f9dd6e0f9fe7d518dbeaea6be8f2a1c8b3bda62d7e22231f06deea885af296d",
+  "receipt_source_manifest_files": 189,
+  "native_go_version": "go1.27.0 windows/amd64",
+  "reviewed_source_blobs": {
+    "app-src/d2_source_retirement_regression_test.go": "6fe92546ed0144f9ff6daeae8691a1fc1cadc8c3",
+    "app-src/source_retirement_windows_test.go": "a7887c0321d39f10599caeb27d1b204bba1b98c4",
+    "app-src/source_retirement.go": "ad8f705fd8f94faa15530ad064affc75c3e1288c",
+    "app-src/source_retirement_windows.go": "ffb74017034f917c256f89bce8328ada268c7da3"
+  },
+  "acceptance": [
+    "Same-size source edits with original modification time restored are refused after copy; source and destination bytes are read independently.",
+    "Replacement source identity is refused even with identical content; prior original, replacement source and destination remain present.",
+    "Changed destination contents and existing destination writers prevent source deletion.",
+    "Both plain and progress workers return source-retained with an error and no successful MoveRecord for the injected changes.",
+    "Recovery restart and stale Finish verification retain changed source bytes and keep the journal in attention.",
+    "Windows read/delete guards deny competing writer, rename and pathname-delete operations; the delete-handle case actually retires its owned fixture.",
+    "Final-component symlink fixture ran and passed, not skipped; neither linked source nor destination was removed.",
+    "Partial-copy cleanup refuses changed target identity, target bytes, source bytes and unverified prefix; files are preserved."
+  ],
+  "pass_events": [
+    {
+      "test": "TestD2MoveFileRefusesExistingForeignDestination",
+      "action": "pass",
+      "time": "2026-11-09T20:46:37.997379+05:30"
+    },
+    {
+      "test": "TestD2BackgroundMoveRefusesChangedFilesBeforeSourceRetirement/plain/source-content",
+      "action": "pass",
+      "time": "2026-11-09T20:46:38.0359007+05:30"
+    },
+    {
+      "test": "TestD2BackgroundMoveRefusesChangedFilesBeforeSourceRetirement/plain/source-identity",
+      "action": "pass",
+      "time": "2026-11-09T20:46:38.0694552+05:30"
+    },
+    {
+      "test": "TestD2BackgroundMoveRefusesChangedFilesBeforeSourceRetirement/plain/destination-content",
+      "action": "pass",
+      "time": "2026-11-09T20:46:38.1140955+05:30"
+    },
+    {
+      "test": "TestD2BackgroundMoveRefusesChangedFilesBeforeSourceRetirement/progress/source-content",
+      "action": "pass",
+      "time": "2026-11-09T20:46:38.1499809+05:30"
+    },
+    {
+      "test": "TestD2BackgroundMoveRefusesChangedFilesBeforeSourceRetirement/progress/source-identity",
+      "action": "pass",
+      "time": "2026-11-09T20:46:38.1873812+05:30"
+    },
+    {
+      "test": "TestD2BackgroundMoveRefusesChangedFilesBeforeSourceRetirement/progress/destination-content",
+      "action": "pass",
+      "time": "2026-11-09T20:46:38.2257796+05:30"
+    },
+    {
+      "test": "TestD2BackgroundMoveRefusesChangedFilesBeforeSourceRetirement",
+      "action": "pass",
+      "time": "2026-11-09T20:46:38.2257796+05:30"
+    },
+    {
+      "test": "TestD2RecoveryRestartRetainsSourceEditedAtCopyCompletion",
+      "action": "pass",
+      "time": "2026-11-09T20:46:38.469141+05:30"
+    },
+    {
+      "test": "TestD2RecoveryCompletionRejectsStaleVerification",
+      "action": "pass",
+      "time": "2026-11-09T20:46:38.5932204+05:30"
+    },
+    {
+      "test": "TestD2WindowsGuardBlocksWriteRenameAndDelete/read",
+      "action": "pass",
+      "time": "2026-11-09T20:46:40.0428916+05:30"
+    },
+    {
+      "test": "TestD2WindowsGuardBlocksWriteRenameAndDelete/retire",
+      "action": "pass",
+      "time": "2026-11-09T20:46:40.05795+05:30"
+    },
+    {
+      "test": "TestD2WindowsGuardBlocksWriteRenameAndDelete",
+      "action": "pass",
+      "time": "2026-11-09T20:46:40.05795+05:30"
+    },
+    {
+      "test": "TestD2WindowsRetirementRejectsReplacementIdentity",
+      "action": "pass",
+      "time": "2026-11-09T20:46:40.0748666+05:30"
+    },
+    {
+      "test": "TestD2WindowsRetirementRefusesOpenDestinationWriter",
+      "action": "pass",
+      "time": "2026-11-09T20:46:40.0882452+05:30"
+    },
+    {
+      "test": "TestD2WindowsRetirementRejectsFinalSymlink",
+      "action": "pass",
+      "time": "2026-11-09T20:46:40.1029452+05:30"
+    },
+    {
+      "test": "TestD2RecoveryPartialRetirementRefusesChangedIdentityOrBytes/target-identity",
+      "action": "pass",
+      "time": "2026-11-09T20:46:40.1332662+05:30"
+    },
+    {
+      "test": "TestD2RecoveryPartialRetirementRefusesChangedIdentityOrBytes/target-content",
+      "action": "pass",
+      "time": "2026-11-09T20:46:40.160612+05:30"
+    },
+    {
+      "test": "TestD2RecoveryPartialRetirementRefusesChangedIdentityOrBytes/source-content",
+      "action": "pass",
+      "time": "2026-11-09T20:46:40.189469+05:30"
+    },
+    {
+      "test": "TestD2RecoveryPartialRetirementRefusesChangedIdentityOrBytes/unverified-prefix",
+      "action": "pass",
+      "time": "2026-11-09T20:46:40.2384182+05:30"
+    },
+    {
+      "test": "TestD2RecoveryPartialRetirementRefusesChangedIdentityOrBytes",
+      "action": "pass",
+      "time": "2026-11-09T20:46:40.2384182+05:30"
+    }
+  ],
+  "boundaries": [
+    "Existing bounded native regression evidence, not a fresh run or new fix.",
+    "No physical second-volume UI workflow was exercised in this review; DCM-40 remains pending.",
+    "No full app/installer suite, package, visible UI or user acceptance is implied.",
+    "Not a guarantee covering every filesystem race or crash boundary.",
+    "Only DCM-09 is newly closed; DCM-10 remains next."
+  ]
+}

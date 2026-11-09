@@ -8,9 +8,9 @@
     "path": "qualification/completion-50.json",
     "step_count": 50,
     "completed_setup_steps": ["DCM-01", "DCM-02", "DCM-03", "DCM-04", "DCM-05"],
-    "completed_product_steps": ["DCM-06", "DCM-07", "DCM-08"],
-    "next_step": "DCM-09",
-    "checkpoint": "qualification/2026-11-09-dcm08.md",
+    "completed_product_steps": ["DCM-06", "DCM-07", "DCM-08", "DCM-09"],
+    "next_step": "DCM-10",
+    "checkpoint": "qualification/2026-11-09-dcm09.md",
     "rule": "The first five completed steps are setup/diagnostic work, not product acceptance. Preserve all original defect IDs and prior evidence."
   },
   "status_values": ["planned", "implemented", "tested", "fixed"],
@@ -62,7 +62,8 @@
     "baby_steps_checkpoint": "qualification/2026-11-09-baby-steps.md",
     "dcm06_checkpoint": "qualification/2026-11-09-dcm06.md",
     "dcm07_checkpoint": "qualification/2026-11-09-dcm07.md",
-    "dcm08_checkpoint": "qualification/2026-11-09-dcm08.md"
+    "dcm08_checkpoint": "qualification/2026-11-09-dcm08.md",
+    "dcm09_checkpoint": "qualification/2026-11-09-dcm09.md"
   },
   "items": [
     {
@@ -85,10 +86,10 @@
       "native_test": "DCM-08 reviewed all 15 same-path/hard-link/case-alias subtests from the native run at 26eeaed3: 15 pass, 0 fail, 0 skip; action refusal and original bytes checked. Existing evidence reviewed, no new run. Full-suite, journal-state UI and successful case-only Rename acceptance remain pending."
     },
     {
-      "id": "D2", "feature": "Preserve a source changed during cross-volume copy", "status": "implemented", "severity": "high", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
+      "id": "D2", "feature": "Preserve a source changed during cross-volume copy", "status": "tested", "severity": "high", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "The archive audit's controlled same-length edit left older destination bytes and removed newer source bytes. This is a historical source probe, not a current Windows reproduction.",
-      "acceptance": "Qualify source-change detection before deletion with independent byte checks, including same-length changes, while retaining the changed source and reporting truthful recovery status.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint", "dcm06_checkpoint"],
-      "native_test": "guarded-retirement and no-overwrite regressions passed at c88abef; final full-suite and visible UI qualification pending",
+      "acceptance": "Qualify source-change detection before deletion with independent byte checks, including same-length changes, while retaining the changed source and reporting truthful recovery status.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint", "dcm06_checkpoint", "dcm09_checkpoint"],
+      "native_test": "DCM-09 reviewed all nine D2 top-level tests and 12 nested subtests at 26eeaed3: all passed without skips. Changed bytes/identity, competing writers, stale verification, guarded deletion, final-component symlink refusal and partial-copy cleanup were checked. Existing Windows evidence only; no new run. Full-suite and physical cross-drive UI qualification remain pending.",
       "additional_open_boundary": "No-overwrite boundary closed by DCM-06 at c88abef: both call sites changed and TestD2MoveFileRefusesExistingForeignDestination passed natively. Broader D2 release qualification remains open."
     },
     {
