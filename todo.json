@@ -17,22 +17,35 @@
     "last_identified_native_test_date": "2026-11-03",
     "native_test_result": "partial",
     "native_executable_sha256": "BF93CE364909F8541D015D42CAFF3A2B0970574197CD60D0A0E756DF97E9683B",
-    "recovered_source_version": "v1.0.62",
+    "recovered_source_version": "v1.0.70",
     "supplied_archive_version": "v1.0.70",
-    "archive_imported_into_canonical_source": false,
-    "archive_release_certified": false
+    "archive_imported_into_canonical_source": true,
+    "archive_release_certified": false,
+    "candidate_version": "v1.0.71",
+    "candidate_branch": "release/v1.0.71",
+    "candidate_code_commit": "c630a4ddff3161ae9129ab306ee74aeec7f43d1e",
+    "source_import_commit": "abe95acad96343e16d93396790a52bfe4d4b7b59",
+    "archive_sha256": "64e1cb1666acc9a70aeeb9656b4f30ca26fc30ad142ea32e154cb7a63dc7b5aa",
+    "native_regression_commit": "7c413fd530126398732cab7cda426b591514deb5",
+    "native_regression_result": "D3/D4 passed; installer full suite 24 passed, 0 failed, 0 skipped; D1/D2/D6 fixed-candidate validation pending",
+    "last_native_attempt": "a88d4f28ab801113487248d833c898c344138f0c / 20261109-044942-5df3654c: app regression command exceeded 300s deadline; partial result retrieval pending",
+    "final_package_qualified": false,
+    "user_acceptance": "not_recorded"
   },
   "evidence": {
     "published_release": "https://github.com/laxmanxp/dcm-quick-sort/releases/tag/v1.0.63",
     "archive_source_audit": "https://chatgpt.com/library?file_id=libfile_2c8db3c7893481919491f94250a2c300&account_id=personal",
     "native_1069_report": "https://github.com/laxmanxp/dcm-quick-sort/blob/2ece9b1e044545c666b6c6296052feb6b985b750/tests/flowuivision/TEST_REPORT_2026-11-03.md",
-    "recovery_context": "https://github.com/laxmanxp/dcm-quick-sort/blob/c27d514ffeb2a76a8d77d776855ecf22b460930c/source-v1.0.62/TRANSFER-CONTEXT.md"
+    "recovery_context": "https://github.com/laxmanxp/dcm-quick-sort/blob/c27d514ffeb2a76a8d77d776855ecf22b460930c/source-v1.0.62/TRANSFER-CONTEXT.md",
+    "source_import": "https://github.com/laxmanxp/dcm-quick-sort/blob/abe95acad96343e16d93396790a52bfe4d4b7b59/provenance/v1.0.70/IMPORT.md",
+    "qualification_checkpoint": "qualification/2026-11-09-progress.md",
+    "release_notes_draft": "qualification/v1.0.71-release-notes.md"
   },
   "items": [
     {
       "id": "DCM-SOURCE-01",
       "feature": "Establish canonical source and installer provenance",
-      "status": "planned",
+      "status": "implemented",
       "ui_test": "not_applicable",
       "user_test": "not_recorded",
       "release_gate": true,
@@ -41,110 +54,117 @@
         "published_release",
         "archive_source_audit",
         "native_1069_report",
-        "recovery_context"
-      ]
+        "recovery_context",
+        "source_import",
+        "qualification_checkpoint"
+      ],
+      "source_import": "complete",
+      "packaged_payload": "pending",
+      "current_evidence": "Complete v1.0.70 source/provenance imported and verified against Git tree; final app/setup payload remains part of release qualification."
     },
     {
       "id": "D1",
       "feature": "Preserve a source when source and destination identify the same file",
-      "status": "planned",
+      "status": "implemented",
       "severity": "high",
       "ui_test": "not_run_on_release_candidate",
       "user_test": "not_recorded",
       "release_gate": true,
       "existing_evidence": "The Nov2 v1.0.70 archive audit reproduced exact-path self-duplicate removal with no recoverable Undo. Windows case-only UI behavior was source-traced only. No later fix is verified.",
       "acceptance": "Verify exact-path and Windows case/alias identity cases leave the source intact, without reporting a completed deletion or unusable Undo.",
-      "blocked_by": [
-        "DCM-SOURCE-01"
-      ],
+      "blocked_by": [],
       "evidence_refs": [
-        "archive_source_audit"
-      ]
+        "archive_source_audit",
+        "qualification_checkpoint"
+      ],
+      "native_test": "original_failure_reproduced; fixed_candidate_green_pending"
     },
     {
       "id": "D2",
       "feature": "Preserve a source changed during cross-volume copy",
-      "status": "planned",
+      "status": "implemented",
       "severity": "high",
       "ui_test": "not_run_on_release_candidate",
       "user_test": "not_recorded",
       "release_gate": true,
       "existing_evidence": "The archive audit's controlled same-length edit left older destination bytes and removed newer source bytes. This is a historical source probe, not a current Windows reproduction.",
       "acceptance": "Qualify source-change detection before deletion with independent byte checks, including same-length changes, while retaining the changed source and reporting truthful recovery status.",
-      "blocked_by": [
-        "DCM-SOURCE-01"
-      ],
+      "blocked_by": [],
       "evidence_refs": [
-        "archive_source_audit"
-      ]
+        "archive_source_audit",
+        "qualification_checkpoint"
+      ],
+      "native_test": "original_failure_reproduced; fixed_candidate_green_pending",
+      "additional_open_boundary": "No-overwrite fast rename regression committed; native RED and minimal fix pending."
     },
     {
       "id": "D3",
       "feature": "Persist batch membership at the transaction boundary",
-      "status": "planned",
+      "status": "fixed",
       "severity": "medium",
       "ui_test": "not_run_on_release_candidate",
       "user_test": "not_recorded",
       "release_gate": true,
       "existing_evidence": "The archive audit found BatchID assigned late, creating a crash gap in batch membership. Individual history remains; this is not evidence that all move journals are lost.",
       "acceptance": "Restart at the identified boundary and retain correct batch membership together with the existing individual transaction and recovery records.",
-      "blocked_by": [
-        "DCM-SOURCE-01"
-      ],
+      "blocked_by": [],
       "evidence_refs": [
-        "archive_source_audit"
-      ]
+        "archive_source_audit",
+        "qualification_checkpoint"
+      ],
+      "native_test": "pass_at_7c413fd; final_candidate_recheck_pending"
     },
     {
       "id": "D4",
       "feature": "Round-trip naming templates through configuration export/import",
-      "status": "planned",
+      "status": "fixed",
       "severity": "medium",
       "ui_test": "not_run_on_release_candidate",
       "user_test": "not_recorded",
       "release_gate": true,
       "existing_evidence": "The archive audit found naming templates included in export/digest but excluded from the import allowlist, causing valid export checksum failure.",
       "acceptance": "Export and import non-default naming templates successfully, preserve their content and continue rejecting genuinely invalid payloads.",
-      "blocked_by": [
-        "DCM-SOURCE-01"
-      ],
+      "blocked_by": [],
       "evidence_refs": [
-        "archive_source_audit"
-      ]
+        "archive_source_audit",
+        "qualification_checkpoint"
+      ],
+      "native_test": "pass_at_7c413fd; final_candidate_recheck_pending"
     },
     {
       "id": "D5",
       "feature": "Restore supported settings through the installer",
-      "status": "planned",
+      "status": "fixed",
       "severity": "medium",
       "ui_test": "not_run_on_release_candidate",
       "user_test": "not_recorded",
       "release_gate": true,
       "existing_evidence": "The archive audit found the installer restore schema retained default_source but excluded pdf_default_view and vault_root.",
       "acceptance": "Qualify backup/restore and upgrade with non-default default_source, pdf_default_view and vault_root; verify all supported values survive.",
-      "blocked_by": [
-        "DCM-SOURCE-01"
-      ],
+      "blocked_by": [],
       "evidence_refs": [
-        "archive_source_audit"
-      ]
+        "archive_source_audit",
+        "qualification_checkpoint"
+      ],
+      "native_test": "pass_at_7c413fd; final_candidate_recheck_pending"
     },
     {
       "id": "D6",
       "feature": "Define and enforce duplicate-removal Undo's byte-restoration contract",
-      "status": "planned",
+      "status": "implemented",
       "finding_kind": "undo_contract",
       "ui_test": "not_run_on_release_candidate",
       "user_test": "not_recorded",
       "release_gate": true,
       "existing_evidence": "The archive audit found Undo copies current destination bytes, so an edited destination restores changed content rather than the removed original.",
       "acceptance": "Undo restores the original bytes, or clearly refuses when original-byte recovery is unavailable; verify the changed-destination case using independent hashes.",
-      "blocked_by": [
-        "DCM-SOURCE-01"
-      ],
+      "blocked_by": [],
       "evidence_refs": [
-        "archive_source_audit"
-      ]
+        "archive_source_audit",
+        "qualification_checkpoint"
+      ],
+      "native_test": "original_failure_reproduced; fixed_candidate_green_pending",
+      "additional_open_boundary": "Consumed duplicate must not bypass fingerprint validation through ordinary rename-chain reconciliation; regression committed, native RED and Kind gate pending."
     },
     {
       "id": "DCM-NATIVE-01",
