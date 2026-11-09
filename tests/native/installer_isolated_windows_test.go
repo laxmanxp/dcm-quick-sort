@@ -23,6 +23,11 @@ import (
 	"unsafe"
 )
 
+// winreg.h defines HKCU as (HKEY)(ULONG_PTR)(LONG)0x80000001.
+// RegOverridePredefKey requires that sign-extended pointer-width value on amd64.
+// Marker/readback checks below still use the installer's original handle value.
+const qualOverrideHKCU = ^uintptr(0x7ffffffe)
+
 var (
 	qualRegOpen = advapi32.NewProc("RegOpenKeyExW")
 	qualRegOpenCurrentUser = advapi32.NewProc("RegOpenCurrentUser")
@@ -101,7 +106,7 @@ func TestNativeInstallerIsolatedRegistryLifecycle(t *testing.T) {
 	overridden := false
 	defer func() {
 		if overridden {
-			code, _, _ := qualRegOverride.Call(HKEY_CURRENT_USER, 0)
+			code, _, _ := qualRegOverride.Call(qualOverrideHKCU, 0)
 			evidence["registry_override_reset"] = code == 0
 			if code != 0 { t.Errorf("reset HKCU redirection: %d", code) }
 		}
@@ -117,7 +122,7 @@ func TestNativeInstallerIsolatedRegistryLifecycle(t *testing.T) {
 	marker, _ := syscall.UTF16FromString(token)
 	r, _, _ = procRegSetValueExW.Call(privateRoot, uintptr(unsafe.Pointer(wstr("qualification-owner"))), 0, REG_SZ, uintptr(unsafe.Pointer(&marker[0])), uintptr(len(marker)*2))
 	if r != 0 { t.Fatalf("write private hive marker: %d", r) }
-	r, _, _ = qualRegOverride.Call(HKEY_CURRENT_USER, privateRoot)
+	r, _, _ = qualRegOverride.Call(qualOverrideHKCU, privateRoot)
 	if r != 0 { t.Fatalf("HKCU override failed; no installer call is permitted: %d", r) }
 	overridden = true
 	qualAssertMarker(t, token)
@@ -243,7 +248,7 @@ func qualReadRegistry(root uintptr, path string) (qualRegistryNode, error) {
 	}
 	for index := uint32(0); ; index++ {
 		name := make([]uint16, 256); size := uint32(len(name))
-		r, _, _ := qualRegEnumKey.Call(key, uintptr(index), uintptr(unsafe.Pointer(&name[0])), uintptr(unsafe.Pointer(&size)), 0, 0, 0, 0)
+		r, _, _ = qualRegEnumKey.Call(key, uintptr(index), uintptr(unsafe.Pointer(&name[0])), uintptr(unsafe.Pointer(&size)), 0, 0, 0, 0)
 		if r == 259 { break }; if r != 0 { return node, fmt.Errorf("registry enumerate child keys: %d", r) }
 		childName := syscall.UTF16ToString(name[:size]); child, err := qualReadRegistry(key, childName); if err != nil { return node, err }; node.Children[childName] = child
 	}
