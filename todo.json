@@ -8,9 +8,9 @@
     "path": "qualification/completion-50.json",
     "step_count": 50,
     "completed_setup_steps": ["DCM-01", "DCM-02", "DCM-03", "DCM-04", "DCM-05"],
-    "completed_product_steps": ["DCM-06", "DCM-07"],
-    "next_step": "DCM-08",
-    "checkpoint": "qualification/2026-11-09-dcm07.md",
+    "completed_product_steps": ["DCM-06", "DCM-07", "DCM-08"],
+    "next_step": "DCM-09",
+    "checkpoint": "qualification/2026-11-09-dcm08.md",
     "rule": "The first five completed steps are setup/diagnostic work, not product acceptance. Preserve all original defect IDs and prior evidence."
   },
   "status_values": ["planned", "implemented", "tested", "fixed"],
@@ -61,7 +61,8 @@
     "release_notes_draft": "qualification/v1.0.71-release-notes.md",
     "baby_steps_checkpoint": "qualification/2026-11-09-baby-steps.md",
     "dcm06_checkpoint": "qualification/2026-11-09-dcm06.md",
-    "dcm07_checkpoint": "qualification/2026-11-09-dcm07.md"
+    "dcm07_checkpoint": "qualification/2026-11-09-dcm07.md",
+    "dcm08_checkpoint": "qualification/2026-11-09-dcm08.md"
   },
   "items": [
     {
@@ -78,10 +79,10 @@
       "current_evidence": "Complete v1.0.70 source/provenance imported and verified against Git tree; final app/setup payload remains part of release qualification."
     },
     {
-      "id": "D1", "feature": "Preserve a source when source and destination identify the same file", "status": "implemented", "severity": "high", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
+      "id": "D1", "feature": "Preserve a source when source and destination identify the same file", "status": "tested", "severity": "high", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "The Nov2 v1.0.70 archive audit reproduced exact-path self-duplicate removal with no recoverable Undo. At that historical checkpoint, Windows case-only UI behavior was source-traced only. Later native evidence is recorded separately below.",
-      "acceptance": "Verify exact-path and Windows case/alias identity cases leave the source intact, without reporting a completed deletion or unusable Undo.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint", "dcm06_checkpoint"],
-      "native_test": "identity regression passed at 3f778458 and c88abef; final candidate and visible UI recheck pending"
+      "acceptance": "Verify exact-path and Windows case/alias identity cases leave the source intact, without reporting a completed deletion or unusable Undo.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint", "dcm06_checkpoint", "dcm08_checkpoint"],
+      "native_test": "DCM-08 reviewed all 15 same-path/hard-link/case-alias subtests from the native run at 26eeaed3: 15 pass, 0 fail, 0 skip; action refusal and original bytes checked. Existing evidence reviewed, no new run. Full-suite, journal-state UI and successful case-only Rename acceptance remain pending."
     },
     {
       "id": "D2", "feature": "Preserve a source changed during cross-volume copy", "status": "implemented", "severity": "high", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
