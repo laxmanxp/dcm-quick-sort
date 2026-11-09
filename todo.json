@@ -8,9 +8,9 @@
     "path": "qualification/completion-50.json",
     "step_count": 50,
     "completed_setup_steps": ["DCM-01", "DCM-02", "DCM-03", "DCM-04", "DCM-05"],
-    "completed_product_steps": ["DCM-06", "DCM-07", "DCM-08", "DCM-09", "DCM-10"],
-    "next_step": "DCM-11",
-    "checkpoint": "qualification/2026-11-09-dcm10.md",
+    "completed_product_steps": ["DCM-06", "DCM-07", "DCM-08", "DCM-09", "DCM-10", "DCM-11"],
+    "next_step": "DCM-12",
+    "checkpoint": "qualification/2026-11-09-dcm11.md",
     "rule": "The first five completed steps are setup/diagnostic work, not product acceptance. Preserve all original defect IDs and prior evidence."
   },
   "status_values": ["planned", "implemented", "tested", "fixed"],
@@ -30,9 +30,9 @@
     "candidate_code_commit": "26eeaed3b9041a31b17c197ef2a095f53ee2a9e6",
     "source_import_commit": "abe95acad96343e16d93396790a52bfe4d4b7b59",
     "archive_sha256": "64e1cb1666acc9a70aeeb9656b4f30ca26fc30ad142ea32e154cb7a63dc7b5aa",
-    "native_regression_commit": "26eeaed3b9041a31b17c197ef2a095f53ee2a9e6",
-    "native_regression_result": "21 top-level app regressions: 21 passed, 0 failed, 0 skipped, no timeout, exit 0. DCM-07 recovery and DCM-06 no-overwrite are GREEN. Selected regression group only; full app/installer/UI/package qualification remains open. Historical installer suite remains 24 passed at 7c413fd.",
-    "last_native_attempt": "26eeaed3b9041a31b17c197ef2a095f53ee2a9e6 / 20261109-151557-80d9f368: 21 passed / 0 failed / 0 skipped, exit 0, no timeout, source unchanged. DCM-07 native regression complete.",
+    "native_regression_commit": "5782984f9064179a5dd75c5799560e15e26f588d",
+    "native_regression_result": "22 top-level app regressions: 22 passed, 0 failed, 0 skipped, exit 0, no timeout. New DCM-11 ordinary-batch interruption test and both existing conflict cases passed. All previous safety tests remain GREEN. Full app/installer/UI/package qualification remains open.",
+    "last_native_attempt": "5782984f9064179a5dd75c5799560e15e26f588d / 20261109-163302-7366e944: 22 passed / 0 failed / 0 skipped, exit 0, no timeout, source unchanged. DCM-11 adds test coverage only; application behavior is unchanged.",
     "final_package_qualified": false,
     "user_acceptance": "not_recorded",
     "native_execution_blocker": {
@@ -64,7 +64,8 @@
     "dcm07_checkpoint": "qualification/2026-11-09-dcm07.md",
     "dcm08_checkpoint": "qualification/2026-11-09-dcm08.md",
     "dcm09_checkpoint": "qualification/2026-11-09-dcm09.md",
-    "dcm10_checkpoint": "qualification/2026-11-09-dcm10.md"
+    "dcm10_checkpoint": "qualification/2026-11-09-dcm10.md",
+    "dcm11_checkpoint": "qualification/2026-11-09-dcm11.md"
   },
   "items": [
     {
@@ -96,8 +97,8 @@
     {
       "id": "D3", "feature": "Persist batch membership at the transaction boundary", "status": "fixed", "severity": "medium", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "The archive audit found BatchID assigned late, creating a crash gap in batch membership. Individual history remains; this is not evidence that all move journals are lost.",
-      "acceptance": "Restart at the identified boundary and retain correct batch membership together with the existing individual transaction and recovery records.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint", "dcm06_checkpoint"],
-      "native_test": "pass_at_7c413fd and rechecked at 3f778458 and c88abef; final_candidate_recheck_pending"
+      "acceptance": "Restart at the identified boundary and retain correct batch membership together with the existing individual transaction and recovery records.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "baby_steps_checkpoint", "dcm06_checkpoint", "dcm11_checkpoint"],
+      "native_test": "DCM-11 native PASS at 5782984f: two D3 top-level tests with five nested cases. Ordinary move is checked before move, after move before completion, and after completion; replacement and duplicate workers retain admitted BatchID without UI completion. Journal-boundary acceptance only; visible Batch Move/Undo and full release qualification remain pending."
     },
     {
       "id": "D4", "feature": "Round-trip naming templates through configuration export/import", "status": "fixed", "severity": "medium", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
