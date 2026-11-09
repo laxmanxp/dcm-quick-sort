@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const currentAppVersion = "1.0.70"
+const currentAppVersion = "1.0.71"
 
 type localSettings struct {
 	DefaultSource  string `json:"default_source"`

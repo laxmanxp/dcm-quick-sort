@@ -2,6 +2,8 @@
   "apps": {
     "dcm-quicksort": {
       "tests": {
+        "release-prepare": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/publish-release.ps1", "-Mode", "prepare"],
+        "release-draft": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/publish-release.ps1", "-Mode", "draft"],
         "host-diagnostics": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/diagnose-host.ps1"],
         "format": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "format"],
         "baseline": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "baseline"],

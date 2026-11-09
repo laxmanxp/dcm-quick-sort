@@ -10,7 +10,7 @@ import (
 
 const (
 	productName    = "DCM - Quick Sort"
-	productVersion = "1.0.70"
+	productVersion = "1.0.71"
 	publisherName  = "Laxman Mahanto"
 )
 
