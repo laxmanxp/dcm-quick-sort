@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('basics','move','batch','pdf','previews')][string]$Suite='move',
+    [ValidateSet('basics','filters','rename','move','batch','pdf','previews')][string]$Suite='move',
     [string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,
     [string]$VisionExe=$env:DCM_FLOWUIVISION_EXE,
     [string]$PreviousFixtureInbox='C:\FlowverseReports\dcm-flowuivision-20261103\inbox'
@@ -30,11 +30,14 @@ Write-Output ('REPORT_ROOT='+$lab)
 function Write-Json([string]$Path,$Value){[IO.File]::WriteAllText($Path,($Value | ConvertTo-Json -Depth 30),$utf8)}
 function Quote-Argument([string]$Value){return '"'+(($Value -replace '(\\*)"','$1$1\"') -replace '(\\+)$','$1$1')+'"'}
 function Hash([string]$Path){return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()}
-function Assert-Owned {
+function Assert-OwnedProcess {
     if($null -eq $script:app){throw 'Owned app has not started.'}
     $script:app.Refresh()
     if($script:app.HasExited){throw 'Owned app exited before its acceptance step completed.'}
     if($script:app.Path -ne $script:owned.exe -or $script:app.StartTime.ToUniversalTime().ToString('o') -ne $script:owned.start){throw 'App process identity changed.'}
+}
+function Assert-Owned {
+    Assert-OwnedProcess
     [DcmNative]::RequireOwned($script:hwnd,$script:app.Id)
 }
 function Wait-For([string]$Name,[scriptblock]$Predicate,[int]$Seconds=15,[switch]$AllowDialog){
@@ -70,7 +73,10 @@ function Save-State([string]$Name){
 function Start-OwnedApp {
     $psi=New-Object Diagnostics.ProcessStartInfo
     $psi.FileName=$exe
-    $psi.Arguments=Quote-Argument $fixture.inbox
+    $startupFile=Get-ChildItem -LiteralPath $fixture.inbox -Filter '*.txt' -File | Sort-Object Name | Select-Object -First 1
+    $startupArgument=$fixture.inbox
+    if($startupFile){$startupArgument=$startupFile.FullName}
+    $psi.Arguments=Quote-Argument $startupArgument
     $psi.WorkingDirectory=$lab
     $psi.UseShellExecute=$false
     $psi.EnvironmentVariables['LOCALAPPDATA']=$fixture.local
@@ -81,11 +87,13 @@ function Start-OwnedApp {
     $script:app=New-Object Diagnostics.Process
     $script:app.StartInfo=$psi
     if(-not $script:app.Start()){throw 'Could not launch exact candidate copy.'}
+    $script:owned=[ordered]@{pid=$script:app.Id;exe=$exe;start=$script:app.StartTime.ToUniversalTime().ToString('o');hwnd=0;sha256=(Hash $exe);startup_argument=$startupArgument;backup_root=(Join-Path $lab 'configuration-backups')}
+    $processes.Add($script:owned)
+    Write-Json (Join-Path $lab ('owned-'+$processes.Count+'.json')) $script:owned
     $until=[DateTime]::UtcNow.AddSeconds(20)
     do {$script:app.Refresh();if($script:app.HasExited){throw 'Candidate exited during launch.'};$script:hwnd=$script:app.MainWindowHandle;if($script:hwnd -ne [IntPtr]::Zero){break};Start-Sleep -Milliseconds 100} while([DateTime]::UtcNow -lt $until)
     if($script:hwnd -eq [IntPtr]::Zero){throw 'Candidate main window deadline.'}
-    $script:owned=[ordered]@{pid=$script:app.Id;exe=$exe;start=$script:app.StartTime.ToUniversalTime().ToString('o');hwnd=$script:hwnd.ToInt64();sha256=(Hash $exe)}
-    $processes.Add($script:owned)
+    $script:owned.hwnd=$script:hwnd.ToInt64()
     Write-Json (Join-Path $lab ('owned-'+$processes.Count+'.json')) $script:owned
     Assert-Owned
     if([DcmNative]::Text($script:hwnd,$script:app.Id) -notlike ('*'+$version+'*')){throw 'Candidate title does not identify the source version.'}
@@ -94,19 +102,34 @@ function Start-OwnedApp {
 function Stop-OwnedApp {
     if($null -eq $script:app){return}
     $script:app.Refresh()
+    if($script:app.HasExited -and -not $script:owned.Contains('close_requested_utc')){
+        $script:owned['unexpected_exit']=$true;$script:owned['exit_code']=$script:app.ExitCode
+        $script:app.Dispose();$script:app=$null;$script:hwnd=[IntPtr]::Zero
+        throw 'Owned app exited before a close request; lifecycle acceptance failed.'
+    }
     if(-not $script:app.HasExited){
-        Assert-Owned
+        Assert-OwnedProcess
         # Retain identity of direct renderer children before parent shutdown.
         $children=@(Get-CimInstance Win32_Process -Filter ('ParentProcessId='+$script:app.Id) | ForEach-Object {[ordered]@{pid=[int]$_.ProcessId;path=$_.ExecutablePath;created=$_.CreationDate.ToUniversalTime().ToString('o')}})
         $script:owned['children_before_close']=$children
-        [DcmNative]::CloseAsync($script:hwnd,$script:app.Id)
+        $script:owned['close_attempted_utc']=[DateTime]::UtcNow.ToString('o')
+        $closeError=''
+        try{
+            [DcmNative]::CloseAsync($script:hwnd,$script:app.Id)
+            $script:owned['close_requested_utc']=[DateTime]::UtcNow.ToString('o')
+        }catch{$closeError=$_.Exception.Message;$script:owned['close_window_error']=$closeError}
         if(-not $script:app.WaitForExit(15000)){
-            Assert-Owned
+            Assert-OwnedProcess
             & "$env:SystemRoot\System32\taskkill.exe" /PID $script:app.Id /T /F | Out-Null
             $null=$script:app.WaitForExit(10000)
             $script:owned['forced_stop']=$true
             throw 'Owned app required forced shutdown; lifecycle acceptance failed.'
         }
+        $parentStart=[DateTime]::Parse($script:owned.start).ToUniversalTime()
+        $parentExit=$script:app.ExitTime.ToUniversalTime()
+        $late=@(Get-CimInstance Win32_Process -Filter ('ParentProcessId='+$script:app.Id) | Where-Object {$_.CreationDate.ToUniversalTime() -ge $parentStart -and $_.CreationDate.ToUniversalTime() -le $parentExit} | ForEach-Object {[ordered]@{pid=[int]$_.ProcessId;path=$_.ExecutablePath;created=$_.CreationDate.ToUniversalTime().ToString('o')}})
+        $script:owned['children_after_close']=$late
+        $children=@(@($children)+@($late) | Sort-Object -Property {$_['pid']} -Unique)
         foreach($child in $children){
             $live=Get-CimInstance Win32_Process -Filter ('ProcessId='+$child.pid)
             if($live -and $live.ExecutablePath -eq $child.path -and $live.CreationDate.ToUniversalTime().ToString('o') -eq $child.created){
@@ -117,10 +140,13 @@ function Stop-OwnedApp {
                 }
             }
         }
+        if($closeError){throw ('Owned app lost its main window before close: '+$closeError)}
     }
     $script:owned['closed_utc']=[DateTime]::UtcNow.ToString('o')
     $script:owned['exit_code']=$script:app.ExitCode
+    $cleanExit=($script:app.ExitCode -eq 0)
     $script:app.Dispose();$script:app=$null;$script:hwnd=[IntPtr]::Zero
+    if(-not $cleanExit){throw 'Owned app returned a nonzero exit code on close.'}
 }
 function Invoke-Fvs([string]$Name,[string]$Body){
     Assert-Owned
@@ -136,6 +162,7 @@ control extension surface=main id=1013 role=combobox
 control age surface=main id=1031 role=combobox
 control size surface=main id=1032 role=combobox
 control sort surface=main id=1045 role=combobox
+control processedsearch surface=main id=1046 role=textbox
 control next surface=main id=1007 role=button
 control newname surface=main id=1005 role=textbox
 control destination surface=main id=1003 role=textbox
@@ -211,6 +238,17 @@ function Assert-Journal([string]$Name,[string[]]$Names,[string]$State,[switch]$B
     }
     Copy-Item -LiteralPath $path -Destination (Join-Path $lab ($Name+'.journal.jsonl'))
     $cases.Add([ordered]@{name=$Name;kind='independent filesystem and journal oracle';passed=$true;state=$State;files=$Names;batch_id=$batchID;journal_sha256=(Hash $path);terminal_entries=$terminal})
+}
+function Assert-RenameJournal([string]$Name,[string]$From,[string]$To,[string]$State,[string]$ExpectedID=''){
+    $path=Join-Path $fixture.config 'recovery\move-journal.jsonl'
+    $events=@(Get-Content -LiteralPath $path -Encoding UTF8 | Where-Object {$_.Trim()} | ForEach-Object {$_ | ConvertFrom-Json})
+    $matched=@($events | Where-Object {$_.record.from -eq $From -and $_.record.to -eq $To})
+    if(-not $matched.Count -or $matched[0].state -ne 'pending' -or $matched[-1].state -ne $State){throw "Rename durable journal does not prove pending-to-$State"}
+    $ids=@($matched | ForEach-Object {$_.id} | Sort-Object -Unique)
+    if($ids.Count -ne 1 -or ($ExpectedID -and $ids[0] -ne $ExpectedID)){throw 'Rename journal operation identity changed.'}
+    Copy-Item -LiteralPath $path -Destination (Join-Path $lab ($Name+'.journal.jsonl'))
+    $cases.Add([ordered]@{name=$Name;kind='independent rename journal oracle';passed=$true;from=$From;to=$To;state=$State;id=$ids[0];journal_sha256=(Hash $path);terminal_entry=$matched[-1]})
+    return $ids[0]
 }
 function Confirm-Dialog([string]$Title,[string[]]$TextFragments,[int]$Button=6){
     Wait-For 'expected confirmation' { @([DcmNative]::Dialogs($script:hwnd,$script:app.Id)).Count -gt 0 } 10 -AllowDialog
@@ -294,7 +332,7 @@ try {
     Copy-Item -LiteralPath $build.app_artifact.path -Destination $exe
     if((Hash $exe) -ne $build.app_artifact.sha256){throw 'Owned app copy changed bytes.'}
     Start-OwnedApp
-    if($Suite -eq 'basics'){
+    if($Suite -in @('basics','filters')){
         Invoke-Fvs 'filters-text' "click clear`nselect category `"Documents`"`nselect extension `".txt`"`ninspect main`nexpect count text~=`"of 3`""
         Assert-List 'text extension filter' @('01-alpha.txt','02-bravo.txt','03-charlie.txt')
         Invoke-Fvs 'filters-name' "type name `"alpha`"`nwait_ready type=textbox target=newname text=`"01-alpha`" timeout=5s`ninspect main`nexpect count text~=`"of 1`""
@@ -313,6 +351,9 @@ try {
         Invoke-Fvs 'next-file' "click next`nwait_ready type=textbox target=newname text=`"02-bravo`" timeout=5s`ninspect main`nexpect newname text=`"02-bravo`""
         Invoke-Fvs 'sort-type' "select sort `"File Type`"`ninspect main"
         Assert-List 'file type sort' @('08-preview.pdf','01-alpha.txt','02-bravo.txt','03-charlie.txt') -Ordered
+        Assert-Fixtures
+    }
+    if($Suite -in @('basics','rename')){
         Invoke-Fvs 'name-clean-spacing' "click clear`ntype name `"03-charlie`"`nwait_ready type=textbox target=newname text=`"03-charlie`" timeout=5s`ntype newname `"03   cleanup   test`"`nselect tool `"Clean spacing`"`nclick apply`ninspect main`nexpect newname text=`"03 cleanup test`""
         Invoke-Fvs 'rename-readiness' "click clear`ntype name `"01-alpha`"`nwait_ready type=textbox target=newname text=`"01-alpha`" timeout=5s`ntype newname `"01-renamed-alpha`"`ninspect main`nexpect rename enabled"
         $old=Join-Path $fixture.inbox '01-alpha.txt';$renamed=Join-Path $fixture.inbox '01-renamed-alpha.txt'
@@ -320,12 +361,21 @@ try {
         [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1006)
         Wait-For 'rename completion' { -not(Test-Path -LiteralPath $old) -and (Test-Path -LiteralPath $renamed) -and [DcmNative]::IsWindowEnabled([DcmNative]::Control($script:hwnd,$script:app.Id,1008)) } 20
         if((Hash $renamed) -ne $originalHash){throw 'Rename changed fixture content.'}
+        $renameID=Assert-RenameJournal 'rename-journal-completed' $old $renamed 'completed'
         $cases.Add([ordered]@{name='rename independent byte oracle';passed=$true;from=$old;to=$renamed;sha256=$originalHash})
         Save-State 'rename-completed';$null=Save-Shot 'rename-completed'
+        Stop-OwnedApp;Start-OwnedApp
+        Invoke-Fvs 'rename-recovery-search' "type processedsearch `"01-renamed-alpha`"`ninspect main"
+        $processed=[DcmNative]::ListItems($script:hwnd,$script:app.Id,1017)
+        $processedMatches=@();for($i=0;$i -lt $processed.Length;$i++){if($processed[$i].Contains('01-renamed-alpha')){$processedMatches+=$i}}
+        if($processedMatches.Count -ne 1){throw 'Restarted Processed list did not expose exactly one renamed fixture.'}
+        $selected=[DcmNative]::SelectSingleItem($script:hwnd,$script:app.Id,1017,$processedMatches[0])
+        $cases.Add([ordered]@{name='durable Rename visible after restart';passed=$true;processed_selection=$selected;journal_id=$renameID})
         [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1008)
         Wait-For 'Undo Rename completion' { (Test-Path -LiteralPath $old) -and -not(Test-Path -LiteralPath $renamed) } 20
         Wait-For 'Undo Rename status' {Status-Contains 'Undid processed transaction'}
         Assert-Fixtures
+        $null=Assert-RenameJournal 'undo-rename-journal-completed' $old $renamed 'undone' $renameID
         $cases.Add([ordered]@{name='Undo Rename independent byte oracle';passed=$true;restored=$old;sha256=(Hash $old)})
         Save-State 'undo-rename-completed';$null=Save-Shot 'undo-rename-completed'
     }
@@ -338,6 +388,7 @@ try {
         Assert-Journal 'move-completed' @('01-alpha.txt') 'completed'
         Save-State 'move-completed';$null=Save-Shot 'move-completed'
         Stop-OwnedApp;Start-OwnedApp
+        Invoke-Fvs 'move-recovery-search' "type processedsearch `"01-alpha`"`ninspect main"
         $items=[DcmNative]::ListItems($script:hwnd,$script:app.Id,1017)
         $index=-1;for($i=0;$i -lt $items.Length;$i++){if($items[$i].Contains('01-alpha')){$index=$i}}
         if($index -lt 0){throw 'Restarted Processed list did not recover moved fixture.'}

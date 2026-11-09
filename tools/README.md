@@ -31,11 +31,15 @@ failures, and skips. Targeted selectors fail when they execute zero tests.
 
 `baseline` runs all app unit tests. `regressions` runs `^Test(D[1-6]|Release)`.
 `installer-regressions` uses that pattern in the installer module; `installer-unit`
-runs its entire suite. `build` produces the app for subsequent owned UI testing.
-`package` runs both full suites and builds app and installer from the same snapshot.
+runs its entire suite. `installer-integration` runs the in-process installer engine
+in a verified private HKCU mapping and disposable configuration. `build` produces
+the app for subsequent owned UI testing. `package` runs both full suites, the
+private-registry engine gate, and app/installer builds from the same snapshot.
 The exact app bytes are staged as the embedded installer payload, and the package
 verifier checks that those bytes occur exactly once in the Windows amd64 installer.
-Hashes and receipts accompany the artifacts. The runner never executes an installer.
+Hashes and receipts accompany the artifacts. The core/package runner never starts
+the setup executable. `installer-ui-cancel` separately opens the hash-bound actual
+setup and activates only Cancel, while proving unchanged installed state.
 
 Passing these checks is source/package evidence. UI screenshots require separate
 review, and installer registration requires a disposable Windows user/VM because

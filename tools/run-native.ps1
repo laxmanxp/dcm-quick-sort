@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('baseline','regressions','installer-unit','installer-regressions','build','package','format')]
+    [ValidateSet('baseline','regressions','installer-unit','installer-regressions','installer-integration','build','package','format')]
     [string]$Mode = 'baseline',
     [string]$Run = '^Test(D[1-6]|Release)',
     [string]$ExpectedBranch = 'release/v1.0.71'
@@ -27,7 +27,7 @@ $testRuns = New-Object 'Collections.Generic.List[object]'
 $receipt = [ordered]@{
     schema = 1; app = 'dcm-quicksort'; mode = $Mode; started_utc = [DateTime]::UtcNow.ToString('o')
     report = $report; repository = $repo; passed = $false
-    installer_execution = 'not run; tests and embedded payload identity only'
+    installer_execution = 'setup EXE not executed; engine install/uninstall only in explicitly reported private-HKCU stage'
     commands = $commands; test_runs = $testRuns
 }
 Write-Output ('REPORT_ROOT=' + $report)
@@ -35,11 +35,18 @@ Write-Output ('REPORT_ROOT=' + $report)
 function Write-Json([string]$Path, $Value) {
     [IO.File]::WriteAllText($Path, ($Value | ConvertTo-Json -Depth 30), $utf8)
 }
+function Write-Checkpoint([string]$Phase, $Details) {
+    $checkpoint = [ordered]@{schema=1;app='dcm-quicksort';mode=$Mode;runner_pid=$PID;updated_utc=[DateTime]::UtcNow.ToString('o');phase=$Phase;details=$Details}
+    $temporary = Join-Path $report 'active-step.tmp'
+    Write-Json $temporary $checkpoint
+    Move-Item -LiteralPath $temporary -Destination (Join-Path $report 'active-step.json') -Force
+}
 function Quote-Argument([string]$Value) {
     # Windows CommandLineToArgvW quoting, including terminal backslashes.
     return '"' + (($Value -replace '(\\*)"', '$1$1\"') -replace '(\\+)$', '$1$1') + '"'
 }
 function Invoke-OwnedCommand([string]$Name, [string]$File, [string[]]$Arguments, [string]$Directory, [int]$Seconds = 600) {
+    Write-Checkpoint 'command-starting' ([ordered]@{name=$Name;file=$File;arguments=$Arguments;directory=$Directory;deadline_seconds=$Seconds})
     $outPath = Join-Path $report ($Name + '.stdout.log')
     $errPath = Join-Path $report ($Name + '.stderr.log')
     $psi = New-Object Diagnostics.ProcessStartInfo
@@ -59,6 +66,7 @@ function Invoke-OwnedCommand([string]$Name, [string]$File, [string[]]$Arguments,
     $psi.EnvironmentVariables['LOCALAPPDATA'] = Join-Path $report 'profile\local'
     $psi.EnvironmentVariables['APPDATA'] = Join-Path $report 'profile\roaming'
     $psi.EnvironmentVariables['DCM_QUICKSORT_BACKUP_DIR'] = Join-Path $report 'configuration-backups'
+    $psi.EnvironmentVariables['DCM_INSTALLER_EVIDENCE_ROOT'] = Join-Path $report 'installer-engine'
     $proc = New-Object Diagnostics.Process
     $proc.StartInfo = $psi
     $entry = [ordered]@{name=$Name; file=$File; arguments=$Arguments; directory=$Directory; started_utc=[DateTime]::UtcNow.ToString('o'); stdout=$outPath; stderr=$errPath; timed_out=$false}
@@ -66,6 +74,7 @@ function Invoke-OwnedCommand([string]$Name, [string]$File, [string[]]$Arguments,
     try {
         if (-not $proc.Start()) { throw "Could not start $Name" }
         $entry['pid'] = $proc.Id
+        Write-Checkpoint 'command-running' ([ordered]@{name=$Name;pid=$proc.Id;started_utc=$entry.started_utc;deadline_seconds=$Seconds;stdout=$outPath;stderr=$errPath})
         $outTask = $proc.StandardOutput.ReadToEndAsync()
         $errTask = $proc.StandardError.ReadToEndAsync()
         if (-not $proc.WaitForExit($Seconds * 1000)) {
@@ -79,6 +88,7 @@ function Invoke-OwnedCommand([string]$Name, [string]$File, [string[]]$Arguments,
         [IO.File]::WriteAllText($errPath, $stderr, $utf8)
         $entry['exit_code'] = $proc.ExitCode
         $entry['finished_utc'] = [DateTime]::UtcNow.ToString('o')
+        Write-Checkpoint 'command-finished' ([ordered]@{name=$Name;pid=$proc.Id;exit_code=$proc.ExitCode;timed_out=$entry.timed_out})
         return [pscustomobject]@{Stdout=$stdout; Stderr=$stderr; ExitCode=$proc.ExitCode; TimedOut=$entry.timed_out}
     } finally { $proc.Dispose() }
 }
@@ -90,9 +100,12 @@ function Git-Value([string]$Name, [string[]]$Arguments) {
     Require-Success $result $Name
     return $result.Stdout.Trim()
 }
-function Source-Manifest([string[]]$Paths, [string]$Root) {
+function Source-Manifest([string[]]$Paths, [string]$Root, [string]$Phase='source-hashing') {
+    $index = 0
     return @($Paths | ForEach-Object {
         $relative = $_
+        $index++
+        if ($index -eq 1 -or $index % 8 -eq 0 -or $index -eq $Paths.Count) { Write-Checkpoint $Phase ([ordered]@{root=$Root;file=$relative;index=$index;total=$Paths.Count}) }
         $full = [IO.Path]::GetFullPath((Join-Path $Root $relative))
         if (-not $full.StartsWith($Root + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { throw "Tracked path escapes source root: $relative" }
         if (-not [IO.File]::Exists($full)) { throw "Tracked file is missing: $relative" }
@@ -133,6 +146,7 @@ function Build-App {
 $tracked = @()
 $beforeManifestJson = ''
 try {
+    Write-Checkpoint 'identity-checks' ([ordered]@{repository=$repo;expected_branch=$ExpectedBranch})
     $receipt['commit'] = Git-Value 'git-head' @('rev-parse','HEAD')
     $receipt['branch'] = Git-Value 'git-branch' @('symbolic-ref','--quiet','--short','HEAD')
     $receipt['origin'] = Git-Value 'git-origin' @('remote','get-url','origin')
@@ -143,16 +157,19 @@ try {
     Require-Success $ls 'git-tracked'
     $tracked = @($ls.Stdout.Split([char]0) | Where-Object { $_ -ne '' } | Sort-Object)
     if ($tracked.Count -eq 0) { throw 'No tracked source files.' }
-    $before = Source-Manifest $tracked $repo
+    $before = Source-Manifest $tracked $repo 'hashing-checkout'
     $beforeManifestJson = $before | ConvertTo-Json -Depth 5 -Compress
     Write-Json (Join-Path $report 'source-hashes.json') $before
     $receipt['source_hash_manifest'] = [ordered]@{path=(Join-Path $report 'source-hashes.json'); sha256=(Get-FileHash -LiteralPath (Join-Path $report 'source-hashes.json') -Algorithm SHA256).Hash.ToLowerInvariant(); files=$tracked.Count}
+    $copyIndex = 0
     foreach ($relative in $tracked) {
+        $copyIndex++
+        if ($copyIndex -eq 1 -or $copyIndex % 8 -eq 0 -or $copyIndex -eq $tracked.Count) { Write-Checkpoint 'copying-source' ([ordered]@{file=$relative;index=$copyIndex;total=$tracked.Count;destination=$source}) }
         $destination = Join-Path $source $relative
         New-Item -ItemType Directory -Path (Split-Path -Parent $destination) -Force | Out-Null
         Copy-Item -LiteralPath (Join-Path $repo $relative) -Destination $destination
     }
-    $copyJson = (Source-Manifest $tracked $source) | ConvertTo-Json -Depth 5 -Compress
+    $copyJson = (Source-Manifest $tracked $source 'hashing-staged-copy') | ConvertTo-Json -Depth 5 -Compress
     if ($copyJson -cne $beforeManifestJson) { throw 'Staged source differs from the committed checkout bytes.' }
     $go = Invoke-OwnedCommand 'go-version' 'go.exe' @('version') $source 30
     Require-Success $go 'go-version'
@@ -179,9 +196,18 @@ try {
 
     if ($Mode -in @('baseline','package')) { Run-Tests 'app-unit' (Join-Path $source 'app-src') }
     if ($Mode -eq 'regressions') { Run-Tests 'app-regressions' (Join-Path $source 'app-src') $Run }
-    if ($Mode -in @('build','installer-unit','installer-regressions','package')) { Build-App }
+    if ($Mode -in @('build','installer-unit','installer-regressions','installer-integration','package')) { Build-App }
     if ($Mode -in @('installer-unit','package')) { Run-Tests 'installer-unit' (Join-Path $source 'installer-src') }
     if ($Mode -eq 'installer-regressions') { Run-Tests 'installer-regressions' (Join-Path $source 'installer-src') $Run }
+    if ($Mode -in @('installer-integration','package')) {
+        Copy-Item -LiteralPath (Join-Path $source 'tests\native\installer_isolated_windows_test.go') -Destination (Join-Path $source 'installer-src\installer_isolated_windows_test.go')
+        Run-Tests 'installer-engine' (Join-Path $source 'installer-src') '^TestNativeInstallerIsolatedRegistryLifecycle$'
+        $enginePath = Join-Path $report 'installer-engine\engine-receipt.json'
+        $engine = Get-Content -LiteralPath $enginePath -Raw -Encoding UTF8 | ConvertFrom-Json
+        if ($engine.passed -ne $true -or $engine.live_registry_unchanged -ne $true -or $engine.registry_override_reset -ne $true -or $engine.private_registry_removed -ne $true) { throw 'Installer engine did not prove successful private-registry cleanup and unchanged live keys.' }
+        if ($engine.fresh_install.installed_app_sha256 -ne $receipt.app_artifact.sha256) { throw 'Installer engine installed different app bytes.' }
+        $receipt['installer_engine'] = [ordered]@{path=$enginePath;sha256=(Get-FileHash -LiteralPath $enginePath -Algorithm SHA256).Hash.ToLowerInvariant();scope=$engine.scope;limitations=$engine.limitations}
+    }
     if ($Mode -eq 'package') {
         $installerExe = Join-Path $artifacts 'DCM-QuickSort-Setup.exe'
         $built = Invoke-OwnedCommand 'build-installer' 'go.exe' @('build','-trimpath','-buildvcs=false','-ldflags=-H=windowsgui','-o',$installerExe,'.') (Join-Path $source 'installer-src')
@@ -200,7 +226,7 @@ try {
 } finally {
     try {
         if ($beforeManifestJson) {
-            $afterJson = (Source-Manifest $tracked $repo) | ConvertTo-Json -Depth 5 -Compress
+            $afterJson = (Source-Manifest $tracked $repo 'verifying-unchanged-source') | ConvertTo-Json -Depth 5 -Compress
             $receipt['source_unchanged'] = ($afterJson -ceq $beforeManifestJson)
             if (-not $receipt.source_unchanged) { throw 'Tracked source changed during validation.' }
             if ((Git-Value 'git-head-after' @('rev-parse','HEAD')) -ne $receipt.commit) { throw 'Candidate HEAD changed during validation.' }
@@ -209,6 +235,7 @@ try {
     } catch { $receipt.passed=$false; $receipt['integrity_error']=$_.Exception.Message }
     $receipt['finished_utc'] = [DateTime]::UtcNow.ToString('o')
     Write-Json (Join-Path $report 'receipt.json') $receipt
+    Write-Checkpoint 'finished' ([ordered]@{passed=$receipt.passed;receipt=(Join-Path $report 'receipt.json')})
     Write-Output ('RECEIPT=' + (Join-Path $report 'receipt.json'))
 }
 if (-not $receipt.passed) { exit 1 }

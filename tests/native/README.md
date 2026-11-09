@@ -17,7 +17,8 @@ path emitted by that check, rather than selecting an artifact by newest filename
 ```powershell
 $env:DCM_BUILD_RECEIPT = 'C:\FlowverseReports\dcm-quicksort-build-<exact-run>\receipt.json'
 $env:DCM_FLOWUIVISION_EXE = 'C:\FlowverseReports\dcm-flowuivision-20261103\FlowUIVision.exe'
-& $flowdev test dcm-quicksort ui-basics
+& $flowdev test dcm-quicksort ui-filters
+& $flowdev test dcm-quicksort ui-rename
 & $flowdev test dcm-quicksort ui-move
 & $flowdev test dcm-quicksort ui-batch
 & $flowdev test dcm-quicksort ui-pdf
@@ -33,10 +34,11 @@ filesystem evidence, screenshots and cleanup outcome. No installed DCM files cha
 
 ## Behavioral gates
 
-- `ui-basics`: text/extension/name/age/size filters, no-match state, deterministic
-  Name and File Type order, Next, Clean spacing, Rename and Undo Rename. Native
-  ListBox readback and independent original/restored byte hashes supplement FVS
-  assertions; extra or missing fixture files fail the filesystem oracle.
+- `ui-filters`: text/extension/name/age/size filters, no-match state, deterministic
+  Name and File Type order, and Next, with native ListBox readback. `ui-rename`
+  checks Clean spacing, Rename, durable Processed history after restart, and Undo
+  Rename, using original/restored byte hashes and exact journal operation identity.
+  `ui-basics` combines both. Extra or missing fixture files fail the filesystem oracle.
 - `ui-move`: select one exact fixture, enter the existing logical destination
   `Accepted`, move it, check source absence/destination hash/durable completed
   journal, restart the app, select the recovered Processed record and Undo. Verify
@@ -65,8 +67,44 @@ fails lifecycle qualification and remains in the report.
 ## Installer qualification without touching the installed app
 
 `installer-regressions` and `installer-unit` exercise installer logic against
-disposable test directories. `package` checks app/installer native builds and the
-exact embedded payload identity. None invokes installer main or registry writes.
+disposable test directories. `installer-integration` stages the committed Windows
+engine test into a copied installer module. `package` runs this integration stage
+after both unit suites and also checks native builds and exact embedded payload.
+
+The engine test uses `RegOpenCurrentUser` to obtain an independent real HKCU handle,
+snapshots the five live DCM registration trees, creates one uniquely named private
+qualification key, and checks
+`RegOverridePredefKey(HKCU, privateRoot)` plus an ownership marker before calling any
+installer action. Within this process only, it exercises fresh install, actual
+ShellLink creation/readback, uninstall/App Paths/Explorer values, upgrade,
+configuration backup/restore, and uninstall. Install paths, roaming configuration,
+TEMP/TMP and `DCM_QUICKSORT_BACKUP_DIR` all point inside the owned evidence root.
+It checks exact embedded/installed app bytes, preserves PDF/Vault preferences,
+aliases, learning and naming templates, waits for the owned uninstall cleanup,
+resets the override, removes its private key, and verifies live DCM registry trees
+are byte-for-byte unchanged. It never launches the setup EXE under the override;
+the override would not propagate to a child process.
+
+The private root is nonvolatile because the unchanged installer creates normal
+nonvolatile children, which Windows prohibits below a volatile parent. Its exact
+unique path is logged before installation and removed during cleanup. Existing
+keys are never reused. `RegOpenKeyEx(HKCU, NULL, ...)` is deliberately avoided
+because that would return the predefined pseudo-handle rather than an independent
+handle to the original root.
+
+This engine gate is explicitly **in-process coverage**. `install()` copies the
+running test executable into the uninstaller location, so it does not claim that
+the packaged uninstaller executable was exercised. The package payload check is
+separate. See Microsoft documentation for
+[RegOverridePredefKey](https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regoverridepredefkey)
+and [COM initialization](https://learn.microsoft.com/en-us/windows/win32/api/combaseapi/nf-combaseapi-coinitializeex).
+
+`installer-ui-cancel` launches the actual hash-bound packaged setup, checks its
+version and isolated source textbox, captures its window, and activates **only
+Cancel (control 1004)**. It requires a clean zero exit, absence of installed files
+and shortcuts in the fixture, and unchanged host app/config hashes and DCM registry
+snapshots. Set `DCM_PACKAGE_RECEIPT` to the exact successful package receipt before
+invoking it through FlowDev. Its capture still needs visual review.
 
 Full installer registration must run in a fresh Windows Sandbox, disposable VM,
 or dedicated disposable Windows account with its own HKCU. Changing only APPDATA
@@ -96,5 +134,6 @@ The isolated-environment sequence is:
 
 Actual installer command-line spelling and restore switches should be checked
 against the committed `installer-src/main_windows.go` for the package revision.
-This plan is separate from source-level tests; it does not claim that full install,
-upgrade, shell registration or uninstall has already passed.
+This final packaged-executable plan is separate from the available in-process
+engine and setup-open/cancel gates. Record their results separately; never relabel
+them as a packaged setup/uninstaller end-to-end installation test.
