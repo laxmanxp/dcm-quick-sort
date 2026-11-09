@@ -248,7 +248,7 @@ func qualReadRegistry(root uintptr, path string) (qualRegistryNode, error) {
 	}
 	for index := uint32(0); ; index++ {
 		name := make([]uint16, 256); size := uint32(len(name))
-		r, _, _ = qualRegEnumKey.Call(key, uintptr(index), uintptr(unsafe.Pointer(&name[0])), uintptr(unsafe.Pointer(&size)), 0, 0, 0, 0)
+		r, _, _ := qualRegEnumKey.Call(key, uintptr(index), uintptr(unsafe.Pointer(&name[0])), uintptr(unsafe.Pointer(&size)), 0, 0, 0, 0)
 		if r == 259 { break }; if r != 0 { return node, fmt.Errorf("registry enumerate child keys: %d", r) }
 		childName := syscall.UTF16ToString(name[:size]); child, err := qualReadRegistry(key, childName); if err != nil { return node, err }; node.Children[childName] = child
 	}
