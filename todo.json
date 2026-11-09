@@ -8,9 +8,9 @@
     "path": "qualification/completion-50.json",
     "step_count": 50,
     "completed_setup_steps": ["DCM-01", "DCM-02", "DCM-03", "DCM-04", "DCM-05"],
-    "completed_product_steps": ["DCM-06", "DCM-07", "DCM-08", "DCM-09", "DCM-10", "DCM-11", "DCM-12"],
-    "next_step": "DCM-13",
-    "checkpoint": "qualification/2026-11-09-dcm13.md",
+    "completed_product_steps": ["DCM-06", "DCM-07", "DCM-08", "DCM-09", "DCM-10", "DCM-11", "DCM-12", "DCM-13"],
+    "next_step": "DCM-14",
+    "checkpoint": "qualification/dcm13-complete.md",
     "rule": "The first five completed steps are setup/diagnostic work, not product acceptance. Preserve all original defect IDs and prior evidence."
   },
   "status_values": ["planned", "implemented", "tested", "fixed"],
@@ -27,14 +27,14 @@
     "archive_release_certified": false,
     "candidate_version": "v1.0.71",
     "candidate_branch": "release/v1.0.71",
-    "candidate_code_commit": "26eeaed3b9041a31b17c197ef2a095f53ee2a9e6",
+    "candidate_code_commit": "70e8f240a0228c8548562bb627db4213cbaf1d17",
     "source_import_commit": "abe95acad96343e16d93396790a52bfe4d4b7b59",
     "archive_sha256": "64e1cb1666acc9a70aeeb9656b4f30ca26fc30ad142ea32e154cb7a63dc7b5aa",
     "native_regression_commit": "4619e0ef2bed51b7685c5f84d0fc0f87702bb1ca",
     "native_regression_result": "23 top-level app regressions: 23 passed, 0 failed, 0 skipped, exit 0, no timeout, source unchanged. DCM-12 adds invalid-template-package coverage; all three D4 parent tests and five nested cases passed. All earlier safety tests remain GREEN. Full app/installer/UI/package qualification remains open.",
-    "last_native_attempt": "2a302e38c92b271e97d484e7eb77010559dfba03 / 20261109-173550-9f982691: isolated installer engine failed at owned uninstall cleanup exit 1 after preference upgrade/restore assertions passed. No timeout; source unchanged. DCM-13 remains open.",
-    "installer_unit_checkpoint": {"commit": "1c5bbcae5eaf21f147958dab52e5fdc949df4dd0", "result": "24 passed, 0 failed, 0 skipped", "report": "20261109-172517-35406408"},
-    "installer_engine_checkpoint": {"commit": "2a302e38c92b271e97d484e7eb77010559dfba03", "result": "FAIL: owned uninstall cleanup exited 1", "registry_override_reset": true, "private_registry_removed": true, "live_registry_unchanged": true},
+    "last_native_attempt": "a49e65951b5be9d26dc7d74a4916ae0b1b54664d / 20261109-181814-920da14f: complete isolated engine and outer FlowDev validation PASS, 1 passed / 0 failed / 0 skipped, exit 0, no timeout, source unchanged. DCM-13 native acceptance complete.",
+    "installer_unit_checkpoint": {"commit": "70e8f240a0228c8548562bb627db4213cbaf1d17", "result": "26 passed, 0 failed, 0 skipped", "report": "20261109-180724-83ef3b94"},
+    "installer_engine_checkpoint": {"commit": "a49e65951b5be9d26dc7d74a4916ae0b1b54664d", "result": "PASS: full isolated lifecycle and receipt validation", "report": "20261109-181814-920da14f", "registry_override_reset": true, "private_registry_removed": true, "live_registry_unchanged": true},
     "final_package_qualified": false,
     "user_acceptance": "not_recorded",
     "native_execution_blocker": {
@@ -69,7 +69,8 @@
     "dcm10_checkpoint": "qualification/2026-11-09-dcm10.md",
     "dcm11_checkpoint": "qualification/2026-11-09-dcm11.md",
     "dcm12_checkpoint": "qualification/2026-11-09-dcm12.md",
-    "dcm13_checkpoint": "qualification/2026-11-09-dcm13.md"
+    "dcm13_checkpoint": "qualification/2026-11-09-dcm13.md",
+    "dcm13_completion": "qualification/dcm13-complete.md"
   },
   "items": [
     {
@@ -113,8 +114,8 @@
     {
       "id": "D5", "feature": "Restore supported settings through the installer", "status": "fixed", "severity": "medium", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "The archive audit found the installer restore schema retained default_source but excluded pdf_default_view and vault_root.",
-      "acceptance": "Qualify backup/restore and upgrade with non-default default_source, pdf_default_view and vault_root; verify all supported values survive.", "blocked_by": ["DCM-INSTALL-CLEANUP-01"], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "dcm13_checkpoint"],
-      "native_test": "DCM-13: 24 installer units passed at 1c5bbcae; preference upgrade/restore assertions passed at 2a302e38, but isolated lifecycle failed at uninstall cleanup exit 1. Do not close DCM-13 or qualify the package until DCM-INSTALL-CLEANUP-01 is resolved."
+      "acceptance": "Qualify backup/restore and upgrade with non-default default_source, pdf_default_view and vault_root; verify all supported values survive.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "dcm13_checkpoint", "dcm13_completion"],
+      "native_test": "DCM-13 complete: 26 installer units passed at 70e8f240; full isolated fresh-install/upgrade/restore/uninstall and outer FlowDev receipt validation passed at a49e6595. All five configuration hashes match after upgrade, restore and retained backup. Packaged setup/uninstaller and UI/user acceptance remain pending."
     },
     {
       "id": "D6", "feature": "Define and enforce duplicate-removal Undo's byte-restoration contract", "status": "tested", "finding_kind": "undo_contract", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
@@ -142,8 +143,8 @@
     {
       "id": "DCM-RELEASE-01", "feature": "Qualify and publish the exact packaged release candidate", "status": "planned", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
       "acceptance": "Record source revision and app/installer hashes; verify payload identity, install/upgrade/restore, native feature evidence on Lenovo against the advertised DCM release scope. Do not introduce a new printing feature as a prerequisite. Publish a newer release only after its gates are satisfied; keep v1.0.63 publication distinct from later development evidence.",
-      "blocked_by": ["DCM-SOURCE-01", "D1", "D2", "D3", "D4", "D5", "D6", "DCM-NATIVE-01", "DCM-PDF-01", "DCM-PREVIEW-01", "DCM-INSTALL-CLEANUP-01"], "evidence_refs": ["published_release", "archive_source_audit", "native_1069_report", "baby_steps_checkpoint"]
+      "blocked_by": ["DCM-SOURCE-01", "D1", "D2", "D3", "D4", "D5", "D6", "DCM-NATIVE-01", "DCM-PDF-01", "DCM-PREVIEW-01"], "evidence_refs": ["published_release", "archive_source_audit", "native_1069_report", "baby_steps_checkpoint"]
     },
-    {"id": "DCM-INSTALL-CLEANUP-01", "feature": "Resolve isolated installer uninstall-cleanup nonzero exit", "status": "planned", "severity": "medium", "finding_kind": "reproduced_lifecycle_failure", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true, "acceptance": "Diagnose the owned cleanup subprocess exit 1 without weakening assertions. Preserve backup contents, prove owned path/registration cleanup, and obtain a clean full installer-engine result before package qualification.", "native_test": "Observed at 2a302e38 after upgrade/restore assertions passed; registry override reset, private key removed and live registry unchanged. Cause not established.", "evidence_refs": ["dcm13_checkpoint"]}
+    {"id": "DCM-INSTALL-CLEANUP-01", "feature": "Resolve isolated installer uninstall-cleanup nonzero exit", "status": "fixed", "severity": "medium", "finding_kind": "reproduced_lifecycle_failure", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true, "acceptance": "Diagnose the owned cleanup subprocess exit 1 without weakening assertions. Preserve backup contents, prove owned path/registration cleanup, and obtain a clean full installer-engine result before package qualification.", "native_test": "Reproduced script self-deletion exit 1 and console-dependent delay failure. Corrected by 70e8f240; success and three locked-target cases passed. Full isolated engine and FlowDev PASS at a49e6595 after preserving unnamed registry JSON keys in the evidence reader. Registry cleanup and unchanged live keys verified; final package requalification remains required.", "evidence_refs": ["dcm13_checkpoint", "dcm13_completion"]}
   ]
 }
