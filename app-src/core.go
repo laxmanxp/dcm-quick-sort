@@ -503,6 +503,9 @@ func sameMovePath(a, b string) bool {
 }
 
 func isRenameOnlyRecord(rec MoveRecord) bool {
+	if rec.Kind != "" && rec.Kind != MoveKindMove {
+		return false
+	}
 	if strings.TrimSpace(rec.From) == "" || strings.TrimSpace(rec.To) == "" {
 		return false
 	}
