@@ -2910,7 +2910,7 @@ func continueMoveAfterConflict(source, target string) {
 		showError("DCM refused to change the file because it could not persist the durable move journal:\n" + journalErr.Error() + "\n\nThe source file was left unchanged.")
 		return
 	}
-	if err := os.Rename(source, target); err == nil {
+	if err := renameFileNoReplace(source, target); err == nil {
 		journalErr = completeMoveJournal(moveJournalFilePath(), rec, time.Now())
 		finishSuccessfulFileOperation(source, target, rec, false)
 		if journalErr != nil {

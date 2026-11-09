@@ -316,7 +316,7 @@ func removeExactDuplicateSource(source, target string) (MoveRecord, error) {
 }
 
 func moveFile(source, target string) error {
-	return moveFileWith(source, target, os.Rename, retireVerifiedSource)
+	return moveFileWith(source, target, renameFileNoReplace, retireVerifiedSource)
 }
 
 // copyFileVerified stages a safe copy while leaving the source untouched.
