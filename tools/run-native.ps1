@@ -203,7 +203,13 @@ try {
         Copy-Item -LiteralPath (Join-Path $source 'tests\native\installer_isolated_windows_test.go') -Destination (Join-Path $source 'installer-src\installer_isolated_windows_test.go')
         Run-Tests 'installer-engine' (Join-Path $source 'installer-src') '^TestNativeInstallerIsolatedRegistryLifecycle$'
         $enginePath = Join-Path $report 'installer-engine\engine-receipt.json'
-        $engine = Get-Content -LiteralPath $enginePath -Raw -Encoding UTF8 | ConvertFrom-Json
+        # Registry default values have an empty-string name. Keep those raw keys
+        # intact; Windows PowerShell 5.1 cannot represent them as PSObject members.
+        Add-Type -AssemblyName System.Web.Extensions
+        $engineReader = New-Object System.Web.Script.Serialization.JavaScriptSerializer
+        $engineReader.MaxJsonLength = 16 * 1024 * 1024
+        $engine = $engineReader.DeserializeObject([IO.File]::ReadAllText($enginePath))
+        if ($engine -isnot [Collections.IDictionary]) { throw 'Installer engine receipt must be a JSON object.' }
         if ($engine.passed -ne $true -or $engine.live_registry_unchanged -ne $true -or $engine.registry_override_reset -ne $true -or $engine.private_registry_removed -ne $true) { throw 'Installer engine did not prove successful private-registry cleanup and unchanged live keys.' }
         if ($engine.fresh_install.installed_app_sha256 -ne $receipt.app_artifact.sha256) { throw 'Installer engine installed different app bytes.' }
         $receipt['installer_engine'] = [ordered]@{path=$enginePath;sha256=(Get-FileHash -LiteralPath $enginePath -Algorithm SHA256).Hash.ToLowerInvariant();scope=$engine.scope;limitations=$engine.limitations}
