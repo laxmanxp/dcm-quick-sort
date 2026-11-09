@@ -1,0 +1,92 @@
+name: Apply reviewed DCM-06 patch
+
+on:
+  push:
+    branches: ['release/v1.0.71']
+    paths: ['.github/workflows/dcm-apply-reviewed-no-replace.yml']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dcm-reviewed-source-patch
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: github.repository == 'laxmanxp/dcm-quick-sort'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+      - name: Apply only the locally authored, hash-bound patch
+        env:
+          TRIGGER_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          import pathlib
+          import subprocess
+
+          def git(*args):
+              return subprocess.check_output(['git', *args], text=True).strip()
+
+          def require(condition, message):
+              if not condition:
+                  raise SystemExit(message)
+
+          base = 'acbbe150611cc3f6b6aa07c3911bd16f95f4e4a2'
+          require(git('rev-parse', 'HEAD') == os.environ['TRIGGER_SHA'], 'Unexpected checkout')
+          require(git('rev-parse', 'HEAD^') == base, 'Parent changed; re-review instead of applying')
+          require(not git('status', '--porcelain'), 'Checkout is not clean')
+          patch = 'qualification/proposed-fixes/no-replace.patch'
+          require(git('hash-object', patch) == '0d69254128173b590390ba0d04be35c6b650cf68', 'Patch identity changed')
+          before = {
+              'app-src/core.go': '9814a5201d66541c380d58581f6c13eea1832d9c',
+              'app-src/main_windows.go': '4fbff6acf0d3c2fabb0daf0cfe4fb7e71b39dce1',
+          }
+          originals = {}
+          for path, expected in before.items():
+              require(git('hash-object', path) == expected, 'Preimage changed: ' + path)
+              originals[path] = pathlib.Path(path).read_bytes()
+          helpers = {
+              'app-src/rename_no_replace_windows.go': 'f333cdb91a7ccc60b6adf265edd67594e622cb58',
+              'app-src/rename_no_replace_other.go': 'e9bb72d30ee373f1ec40ecda9b3177fba8427951',
+          }
+          for path in helpers:
+              require(not pathlib.Path(path).exists(), 'Helper already exists: ' + path)
+          subprocess.run(['git', 'apply', '--check', patch], check=True)
+          subprocess.run(['git', 'apply', patch], check=True)
+          replacements = {
+              'app-src/core.go': (
+                  b'return moveFileWith(source, target, os.Rename, retireVerifiedSource)',
+                  b'return moveFileWith(source, target, renameFileNoReplace, retireVerifiedSource)',
+              ),
+              'app-src/main_windows.go': (
+                  b'if err := os.Rename(source, target); err == nil {',
+                  b'if err := renameFileNoReplace(source, target); err == nil {',
+              ),
+          }
+          for path, (old, new) in replacements.items():
+              require(originals[path].count(old) == 1, 'Ambiguous replacement: ' + path)
+              require(pathlib.Path(path).read_bytes() == originals[path].replace(old, new), 'Unexpected edit: ' + path)
+          for path, expected in helpers.items():
+              require(git('hash-object', path) == expected, 'Unexpected helper bytes: ' + path)
+          subprocess.run(['git', 'diff', '--check'], check=True)
+          paths = sorted([*before, *helpers])
+          subprocess.run(['git', 'add', '--', *paths], check=True)
+          require(sorted(git('diff', '--cached', '--name-only').splitlines()) == paths, 'Unexpected staged files')
+          subprocess.run(['git', 'config', 'user.name', 'DCM reviewed-patch automation'], check=True)
+          subprocess.run(['git', 'config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com'], check=True)
+          subprocess.run(['git', 'commit', '-m', 'fix: prevent unapproved overwrite in DCM move fast paths', '-m', 'Apply locally authored and hash-verified DCM-06 proposal after native assertion RED at 3f778458. No acceptance PASS, merge or release is claimed.'], check=True)
+          subprocess.run(['git', 'push', 'origin', 'HEAD:refs/heads/release/v1.0.71'], check=True)
+          source = git('rev-parse', 'HEAD')
+          print('APPLIED_SOURCE_COMMIT=' + source)
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as stream:
+              stream.write('Applied DCM-06 source commit: `' + source + '`. Native qualification remains pending.\n')
+          PY
