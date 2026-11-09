@@ -1,0 +1,522 @@
+{
+  "archive_name": "DCM-QuickSort-v1.0.70-Source-and-Installer(1).zip",
+  "archive_size": 6403655,
+  "archive_sha256": "64e1cb1666acc9a70aeeb9656b4f30ca26fc30ad142ea32e154cb7a63dc7b5aa",
+  "imported_source_paths": [
+    "app-src",
+    "installer-src"
+  ],
+  "supplied_binaries_are_historical_not_newly_qualified": true,
+  "entries": [
+    {
+      "path": "DCM-QuickSort-Setup-v1.0.70.exe",
+      "size": 6394368,
+      "sha256": "4c021a5871bc70e58efb6492a0cbb12313300ba7faca6e7aa7404089740511fc"
+    },
+    {
+      "path": "DCM-QuickSort.exe",
+      "size": 3948032,
+      "sha256": "458fbc737047fb9b783dde06724a514215f6a71db53f4d6cc24da3c7acc52ad7"
+    },
+    {
+      "path": "QUALIFICATION.txt",
+      "size": 1464,
+      "sha256": "6528253c7d06cdbd52ee269485c87369b50857bafdea8fc87d5d24faa43221eb"
+    },
+    {
+      "path": "README.txt",
+      "size": 521,
+      "sha256": "20a8e8f4c8b40aece05644652a0615a3f0b1a3a73b6a987b1ed9684fdfe50033"
+    },
+    {
+      "path": "SHA256SUMS.txt",
+      "size": 246,
+      "sha256": "743063e816213adb0515d414bbd79c824809768c914c4a26d7ef1611ead683a8"
+    },
+    {
+      "path": "TRANSFER-CONTEXT.md",
+      "size": 795,
+      "sha256": "98db12071bb5480e46db3a90dfce752a6e6d1b7ff382cdf0a775e9e6657a5dd5"
+    },
+    {
+      "path": "app-src/assets/pdf_render.ps1",
+      "size": 4193,
+      "sha256": "3068cd66f2056b85640115e823c3a5cae57dbdee25440f46c4a98798f7391b74"
+    },
+    {
+      "path": "app-src/background_conflict.go",
+      "size": 1309,
+      "sha256": "7e86a0c859cd2c599c11d6244a0a8c71a50f9e2deb376e622d8211bd7bec7d5b"
+    },
+    {
+      "path": "app-src/background_conflict_test.go",
+      "size": 2322,
+      "sha256": "fbf7ff009ab3d059b06209643abe3aba87a23541689202d9528126bfd01e3a56"
+    },
+    {
+      "path": "app-src/background_move.go",
+      "size": 3014,
+      "sha256": "fb2824f65205832ce2cbe2f38f89e6d925c64273807b19cb4d4a1734360c2caf"
+    },
+    {
+      "path": "app-src/background_move_test.go",
+      "size": 4187,
+      "sha256": "8d8d9c17dc6104a8cb77d1a282b92683ffd9afc152ed2a18c5458b3919fb9112"
+    },
+    {
+      "path": "app-src/batch_move.go",
+      "size": 1209,
+      "sha256": "5115adc1f3ea32ff11c6ab4a5220db64e10fa69fe5291250115f6b9e6d166b75"
+    },
+    {
+      "path": "app-src/batch_move_test.go",
+      "size": 1695,
+      "sha256": "0e20d95d313331438663cd3ef7e235ce043aa1f80b51294e74ab3e0c48c34f14"
+    },
+    {
+      "path": "app-src/batch_undo.go",
+      "size": 1785,
+      "sha256": "87d0ab67b7b262b00bb174b90ed6667273b29c7176f6fb73d416213a89e612c5"
+    },
+    {
+      "path": "app-src/batch_undo_test.go",
+      "size": 3038,
+      "sha256": "664882ee7966a6020627220d9a676cc7c0dedbb2e20bde20c1a7d693a3df3b47"
+    },
+    {
+      "path": "app-src/config_backup.go",
+      "size": 9845,
+      "sha256": "2b13ec4567170094b8d395f35722e99a2e45c61ad1c37f4354cc19287bee9f6f"
+    },
+    {
+      "path": "app-src/config_backup_test.go",
+      "size": 8149,
+      "sha256": "2c2ec070087041025633dc9293e543d65493405b510f07c1c17df243bad2a493"
+    },
+    {
+      "path": "app-src/config_import.go",
+      "size": 27501,
+      "sha256": "a3e505264a1149701af2e5f14d6534617b129321a36cdb5a8e562e4e7a0709d7"
+    },
+    {
+      "path": "app-src/config_import_test.go",
+      "size": 13152,
+      "sha256": "e6049e439f77a0c517e5ea815f3d16e1c87de4fd99392d81ec7b20cf7f24748c"
+    },
+    {
+      "path": "app-src/conflict_test.go",
+      "size": 7297,
+      "sha256": "a058dd83cef4444a95a8e216d19a064bf7bb373e6ba544a5a523a45e43894e4f"
+    },
+    {
+      "path": "app-src/copy_progress_test.go",
+      "size": 1560,
+      "sha256": "65c39ce6778a62efff4858d7b5e0b0e5f4c3b60f50f3a9fef55535971322a9b5"
+    },
+    {
+      "path": "app-src/core.go",
+      "size": 30479,
+      "sha256": "9b5fd5c32fbfb9ed0b23891560a80beba9f4a8e96058015c0a2d985288bd2721"
+    },
+    {
+      "path": "app-src/core_test.go",
+      "size": 19158,
+      "sha256": "9710a0d670cefc985ef15fb9592f878769f1bba611c9b4e3bc6059b7900f1ac8"
+    },
+    {
+      "path": "app-src/docx_preview.go",
+      "size": 13545,
+      "sha256": "e0c68e7054d8b83e5fc0c2e9adf7e0f3d5e0380c5ac9cf03976f7761ec29116a"
+    },
+    {
+      "path": "app-src/docx_preview_test.go",
+      "size": 7149,
+      "sha256": "afed128500e80ff754435dd58f62e3b53855923fb30f480ec2d0f574a646011f"
+    },
+    {
+      "path": "app-src/durable_conflict.go",
+      "size": 6523,
+      "sha256": "4660c031080725d898268e0276c34acdb892c109d00661d3fa48c68f8f464ce2"
+    },
+    {
+      "path": "app-src/explorer_startup.go",
+      "size": 1101,
+      "sha256": "804af73708eef50b568805973f37b67898a3eb951df21e73455e5a23ae7205fa"
+    },
+    {
+      "path": "app-src/explorer_startup_test.go",
+      "size": 1445,
+      "sha256": "afc142600fb105d1ed6b911d3740df94674e68508c4cd2023e885f70d2798ff1"
+    },
+    {
+      "path": "app-src/file_created_other.go",
+      "size": 337,
+      "sha256": "fa0891e1163a069308c84c30cbc81d6cf575fdbd9cf3550d144a409155ade2e6"
+    },
+    {
+      "path": "app-src/file_created_windows.go",
+      "size": 377,
+      "sha256": "8cd56182d450318804a50e36ea1478f22f812dfbd50c2673a61dfe925285c4d6"
+    },
+    {
+      "path": "app-src/fileflow_handoff.go",
+      "size": 6556,
+      "sha256": "70745ae104c190f5980c69069c6e77b503f2295991d86187700ea549fbdf66d2"
+    },
+    {
+      "path": "app-src/fileflow_handoff_test.go",
+      "size": 2937,
+      "sha256": "ab14b27786bc50ab8fd2aa603c872ec59f836348c6f5dd4367e70214a305c335"
+    },
+    {
+      "path": "app-src/fileflow_metadata.go",
+      "size": 5096,
+      "sha256": "d18a25fb4589bfaa35cf53f8ea98f69d1cb7131e5cf61acc92280382d1dcee19"
+    },
+    {
+      "path": "app-src/fileflow_metadata_test.go",
+      "size": 3938,
+      "sha256": "36aeb09c6ecec5e00b7bb1b6cd7594b06581a9c2df45a6797a24ce90ade10e84"
+    },
+    {
+      "path": "app-src/fileflow_metadata_windows.go",
+      "size": 5719,
+      "sha256": "81eface6946c5808fcdd400888f2f277ec823ee3f1fbaffd695c4218603caf2d"
+    },
+    {
+      "path": "app-src/fileflow_service.go",
+      "size": 935,
+      "sha256": "5b1622f5ed447b3ad461950d01ba9b1e9aa154b771122a760efc6ab5b3d444f2"
+    },
+    {
+      "path": "app-src/fileflow_service_other.go",
+      "size": 185,
+      "sha256": "30132f0e78087ac965fde8c18f34d72c712ec260e77d47276b52b916cba926e9"
+    },
+    {
+      "path": "app-src/fileflow_service_test.go",
+      "size": 575,
+      "sha256": "068987131f3116d72e8e3a5d4fe47756f27567a91ec874c9f7220eb959c991ca"
+    },
+    {
+      "path": "app-src/fileflow_service_windows.go",
+      "size": 316,
+      "sha256": "24862051db24f5024cf06ad5586696b78a4614c122da39d3436cc9c9bd9f97d0"
+    },
+    {
+      "path": "app-src/go.mod",
+      "size": 26,
+      "sha256": "290b0f55857c78e58878441c6e4a15bc20411f6387a62085113c08968c27a2d6"
+    },
+    {
+      "path": "app-src/inbox_filter.go",
+      "size": 5255,
+      "sha256": "f35d21e63e1505c252779009dc8cdd68c91507fd9869f114d0f5bf9c4e06b784"
+    },
+    {
+      "path": "app-src/inbox_filter_test.go",
+      "size": 6335,
+      "sha256": "1a5cfe6c0d1fdf514a3fb634158a2d911315bdab59e08b5d4941584129db0877"
+    },
+    {
+      "path": "app-src/inbox_type_filter_test.go",
+      "size": 2031,
+      "sha256": "e91b973a30327865da83e1af4a94905772f4352d85fe3275e306d32d3b592007"
+    },
+    {
+      "path": "app-src/journal_compaction.go",
+      "size": 4426,
+      "sha256": "215493355ff91328ee69487cc89790c2698ad43c4d9d0b678fca89035b110c57"
+    },
+    {
+      "path": "app-src/journal_compaction_test.go",
+      "size": 2346,
+      "sha256": "7bfdc7a86f778d4aa966cfb23d65f7e01375d1c37827767151ec81364ca9a4c4"
+    },
+    {
+      "path": "app-src/learning.go",
+      "size": 9605,
+      "sha256": "68abbc526c1ad4cb355e0bf43912747acc055a13456cb10b0ae13b0d4a123eb5"
+    },
+    {
+      "path": "app-src/learning_center.go",
+      "size": 2054,
+      "sha256": "9a6323692d4e6910a5ac7fe5185560b5e9ed718bfee69ec4dc05df2a608b9c74"
+    },
+    {
+      "path": "app-src/learning_center_test.go",
+      "size": 2213,
+      "sha256": "188108c8954c62441aede3190fb6e00808ed24244182b6082be8dc4a47f51b5d"
+    },
+    {
+      "path": "app-src/learning_center_windows.go",
+      "size": 10214,
+      "sha256": "5614fc386bf55c101086961ee1836440dfb6516f77d52bd64ce9e927ae9f54ef"
+    },
+    {
+      "path": "app-src/learning_test.go",
+      "size": 5757,
+      "sha256": "909f645df202eb828e2f84a414358dcd663c16d8580aa9277dfd2050a1b5db41"
+    },
+    {
+      "path": "app-src/main_windows.go",
+      "size": 212526,
+      "sha256": "2de59badf033ec7774556cfd7aa56e7a00ff8d6bba9199b44053b45f604df9ef"
+    },
+    {
+      "path": "app-src/move_journal.go",
+      "size": 22274,
+      "sha256": "5fb6df84162aff6b58f161cad304763ca68ba21d2bb7e6c610ef9a7a0466594d"
+    },
+    {
+      "path": "app-src/move_journal_conflict_test.go",
+      "size": 10621,
+      "sha256": "e778c929b83368ce6d7c90d92c0f4578b32a1f7865c4ff482b001aaac84263da"
+    },
+    {
+      "path": "app-src/move_journal_test.go",
+      "size": 14223,
+      "sha256": "a81cd0871b9a4ed0e409b5cff4e1c446b1f8b307aa434c70cde4ad95d6761f94"
+    },
+    {
+      "path": "app-src/naming_template_windows.go",
+      "size": 19056,
+      "sha256": "b75247454deed52d155d2bd4441a93a2d14433e601c09e8f2d7b346a83ee30ec"
+    },
+    {
+      "path": "app-src/naming_templates.go",
+      "size": 8110,
+      "sha256": "7bc6de957f3637ca0ab225b1bd76affc65aa3d2d1824c0e65a304c3044872461"
+    },
+    {
+      "path": "app-src/naming_templates_test.go",
+      "size": 2638,
+      "sha256": "fc5851c0a41c3199f2a42e8ee61e8b0a1e356bff650699cffa8e5980f6558a38"
+    },
+    {
+      "path": "app-src/office_openxml.go",
+      "size": 13349,
+      "sha256": "8d108c43b1259c5dbcf8a74bf3dddcf6a09bcb58bb26b2bb28b502cd1b7a6294"
+    },
+    {
+      "path": "app-src/office_openxml_test.go",
+      "size": 11951,
+      "sha256": "70d4c6453b096a29a4e903e9b0c7f591f18b3d8f2a7cef7b7453af014fa8cadd"
+    },
+    {
+      "path": "app-src/pdf_preview.go",
+      "size": 2757,
+      "sha256": "5e5aa0f86d49fdc95dc5909bfc48acf1467a3f43b513d99cc0285149c33ad3ec"
+    },
+    {
+      "path": "app-src/pdf_preview_test.go",
+      "size": 2172,
+      "sha256": "46ae780b45e54caf095347093bd5147ff42aa196668d55277a4b0726b5e3a001"
+    },
+    {
+      "path": "app-src/pdf_preview_windows.go",
+      "size": 11726,
+      "sha256": "9d6ddfb28f37500730732f9d256554d0c943be345d57c8ceced62939cf77b2fd"
+    },
+    {
+      "path": "app-src/pptx_preview.go",
+      "size": 15578,
+      "sha256": "0347db4ea01e073ec79bf31770abad4ac07d9e015c0b44a4586298181bf52744"
+    },
+    {
+      "path": "app-src/pptx_preview_test.go",
+      "size": 12949,
+      "sha256": "7cb7b10532693b01b72ed2b1c84d45d37a633ba589cf7dc4371c856cad5fef80"
+    },
+    {
+      "path": "app-src/pptx_real_integration_test.go",
+      "size": 981,
+      "sha256": "cd8b699bb91b617fcdf3c470b44a71024a15914f525a6aedda54453e86bcee2a"
+    },
+    {
+      "path": "app-src/processed_view.go",
+      "size": 3406,
+      "sha256": "a48b1dc2b933e12a24504e04360540193d2e75c4ccbf61604378c872c88192e6"
+    },
+    {
+      "path": "app-src/processed_view_test.go",
+      "size": 2992,
+      "sha256": "ebbfe66bdbeee9fd4314f768e142ac0544b9106efe7450cad56f3d6843708b50"
+    },
+    {
+      "path": "app-src/recovery_center.go",
+      "size": 4658,
+      "sha256": "9948ba823482f71a4c1b69b748c22295f08973eb0354340a7c204a22b0b0b8be"
+    },
+    {
+      "path": "app-src/recovery_center_test.go",
+      "size": 5839,
+      "sha256": "5ac8bbd721bda2bfc2294c744ad26b5bf56c59a15b639a25bc56de7d47e79e43"
+    },
+    {
+      "path": "app-src/recovery_center_windows.go",
+      "size": 22949,
+      "sha256": "8a078cb0885aeaf79ac7daa9b56a70891863cc7348c65021fb677cf0c25da7d2"
+    },
+    {
+      "path": "app-src/recovery_move.go",
+      "size": 11952,
+      "sha256": "e1f1c917751efd4dc06e499a0fa0662f3f308158db2d0bb8488cbed509e9b09c"
+    },
+    {
+      "path": "app-src/recovery_move_test.go",
+      "size": 9000,
+      "sha256": "fed7feffdc88088c807631ef37b3911c5eec23aa57d1f224e0aba39a38d43466"
+    },
+    {
+      "path": "app-src/rename_tools.go",
+      "size": 4875,
+      "sha256": "518a5acdfb45adb8552b3ceebad59e20a2386ef7fb137bd51b3e87ea31dd13b6"
+    },
+    {
+      "path": "app-src/rename_tools_test.go",
+      "size": 4896,
+      "sha256": "58a0788f4fee775ccb1503ad9bc5e1c1458bcd3de7d6f8ff103d26567bd2fd5c"
+    },
+    {
+      "path": "app-src/settings.go",
+      "size": 10858,
+      "sha256": "c884b2929c94ecbc53b856c3255874853e5beab60ce6f79f6d0ccac50b3e78b2"
+    },
+    {
+      "path": "app-src/settings_test.go",
+      "size": 9362,
+      "sha256": "face38186a99fdb0cdb9e033c3a85739260d32878338f9d31c250478e9dcf0e6"
+    },
+    {
+      "path": "app-src/source_alias.go",
+      "size": 5572,
+      "sha256": "27a3a261fa9c51a11f68f9b8ae9f28cacf1fd57bbda35ce9583dc8f0610adfc7"
+    },
+    {
+      "path": "app-src/source_alias_test.go",
+      "size": 2539,
+      "sha256": "cdae831aed93b2f2a3684fdd27ada4e8b2d957115f9ec621842a770e013778b4"
+    },
+    {
+      "path": "app-src/source_config_backup_test.go",
+      "size": 885,
+      "sha256": "b3f4707fcadb8dd637a0b369e2447ad2cdedab5ec1b0c03d174e20db2151ce43"
+    },
+    {
+      "path": "app-src/source_config_import_test.go",
+      "size": 910,
+      "sha256": "b4f77133337c5f4208e70d8b36022d3087b97d987cc22829410b8c14762ccc9b"
+    },
+    {
+      "path": "app-src/source_manager_windows.go",
+      "size": 10553,
+      "sha256": "68dabad08f006897be7dd50310a7417a6d78cb1bab0a115f43a2e143cf4f5977"
+    },
+    {
+      "path": "app-src/source_ui_windows.go",
+      "size": 5220,
+      "sha256": "b97abfd8561e6df07818aa632ed940b0133bc954e1beb252918db4e7db0ad5fa"
+    },
+    {
+      "path": "app-src/suggestion.go",
+      "size": 6616,
+      "sha256": "82bdcde82529183d900fb988272b699c2df04d97a272ca575333a0cc251f21b4"
+    },
+    {
+      "path": "app-src/suggestion_center_windows.go",
+      "size": 9504,
+      "sha256": "2ee8650047e4234d07edad5bb5481ea852ccc61813115f59fbed4d9c1e32adf0"
+    },
+    {
+      "path": "app-src/suggestion_test.go",
+      "size": 5089,
+      "sha256": "3f783ba7e829e1f28babf517006fdf6a4c6d8f34770efcbdb2291b88b2db48d1"
+    },
+    {
+      "path": "app-src/ui_wiring_test.go",
+      "size": 25041,
+      "sha256": "e44a30a89705cd76f64b740c84b4c6a37d98dc561dcb4b135616784db51ce9d4"
+    },
+    {
+      "path": "app-src/vault_address.go",
+      "size": 8431,
+      "sha256": "b14f463edeb578f195da3fc1dae04acb80a98882bd45cd1e308746123aca7be9"
+    },
+    {
+      "path": "app-src/vault_address_test.go",
+      "size": 5354,
+      "sha256": "02f551f52965726cffccfbb8272f03b9aaa6e8518f149ae224131b1c290dbf0f"
+    },
+    {
+      "path": "app-src/vault_destination.go",
+      "size": 6863,
+      "sha256": "cb76ac05bb74809147d076e9a7c50da2fd9985ccd550ab6589d1ef4b076e16f2"
+    },
+    {
+      "path": "app-src/vault_destination_test.go",
+      "size": 6804,
+      "sha256": "15c3d7aa67e7ed3edc4fe55c8330447ae93439d374fecd9ca709afeeaf5264f2"
+    },
+    {
+      "path": "app-src/xlsx_preview.go",
+      "size": 15073,
+      "sha256": "b36d04afa677793848d9d35e675c91f543444280488612850b4ea5bf3d573c97"
+    },
+    {
+      "path": "app-src/xlsx_preview_test.go",
+      "size": 8563,
+      "sha256": "cc8c7e9baf6588d9aca2a93053a283f1200512359552e3ffd24ced809a815675"
+    },
+    {
+      "path": "installer-src/config_backup.go",
+      "size": 9845,
+      "sha256": "2b13ec4567170094b8d395f35722e99a2e45c61ad1c37f4354cc19287bee9f6f"
+    },
+    {
+      "path": "installer-src/config_backup_test.go",
+      "size": 8149,
+      "sha256": "2c2ec070087041025633dc9293e543d65493405b510f07c1c17df243bad2a493"
+    },
+    {
+      "path": "installer-src/config_restore.go",
+      "size": 10679,
+      "sha256": "5d86a3e6dd45d5afce82ecea816ff84b8500315994ec9f52c948bac02b06cbc6"
+    },
+    {
+      "path": "installer-src/config_restore_test.go",
+      "size": 3243,
+      "sha256": "3fc1ca6fafd4a3e43488d055649efb3a08a83cc642d6399a1f9dd03195ea2730"
+    },
+    {
+      "path": "installer-src/core.go",
+      "size": 1990,
+      "sha256": "e24b864049a779ea2b6b6f2efc19b2c8224876274ec1b87e267d08ad226afc26"
+    },
+    {
+      "path": "installer-src/core_test.go",
+      "size": 1885,
+      "sha256": "0b6a5d1814a2fb95460b90722218420b094a40ab5f3dfc883de09e6bb2248551"
+    },
+    {
+      "path": "installer-src/go.mod",
+      "size": 38,
+      "sha256": "45f68761c4cd071d396121357fa366b019a1517617d8d2a14e87ae7fb1e2a983"
+    },
+    {
+      "path": "installer-src/main_windows.go",
+      "size": 25903,
+      "sha256": "ab80cf90a5b255b3b7fd79cb3586ed5d40fe20926c4fb764bf1734b027da4dd6"
+    },
+    {
+      "path": "installer-src/payload/DCM-QuickSort.exe",
+      "size": 3948032,
+      "sha256": "458fbc737047fb9b783dde06724a514215f6a71db53f4d6cc24da3c7acc52ad7"
+    },
+    {
+      "path": "installer-src/source_config_restore_test.go",
+      "size": 445,
+      "sha256": "2eaa0c07729d5e672a50853a0a4677d93876f2fbbed16d4f5f70077291be7e71"
+    }
+  ]
+}
