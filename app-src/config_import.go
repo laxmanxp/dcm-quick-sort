@@ -286,9 +286,8 @@ func mergeImportedDestinationAliases(existing, imported []DestinationAlias, mode
 
 func snapshotFromRawFiles(files map[string][]byte) (configurationSnapshot, error) {
 	names := make([]string, 0, len(files))
-	allowed := map[string]bool{"settings.json": true, "destinations.conf": true, "sources.conf": true, "learning.json": true}
-	for name := range files {
-		if allowed[name] {
+	for _, name := range configurationFileNames() {
+		if _, exists := files[name]; exists {
 			names = append(names, name)
 		}
 	}
@@ -327,7 +326,10 @@ func validateConfigurationManifest(info configurationBackupInfo, files map[strin
 		return fmt.Errorf("configuration checksum does not match the manifest")
 	}
 	manifestFiles := make(map[string]configurationBackupFileInfo, len(info.Files))
-	allowedManifest := map[string]bool{"settings.json": true, "destinations.conf": true, "sources.conf": true, "learning.json": true}
+	allowedManifest := make(map[string]bool)
+	for _, name := range configurationFileNames() {
+		allowedManifest[name] = true
+	}
 	for _, f := range info.Files {
 		if !allowedManifest[f.Name] {
 			return fmt.Errorf("manifest contains unsupported file %q", f.Name)
@@ -411,7 +413,10 @@ func loadConfigurationArchive(path string) (configurationImportPackage, error) {
 	if len(zr.File) == 0 || len(zr.File) > maxConfigurationArchiveEntries {
 		return configurationImportPackage{}, fmt.Errorf("configuration archive contains an unexpected number of entries")
 	}
-	allowed := map[string]bool{"settings.json": true, "destinations.conf": true, "sources.conf": true, "learning.json": true, "naming-templates.json": true, "backup-info.json": true}
+	allowed := map[string]bool{"backup-info.json": true}
+	for _, name := range configurationFileNames() {
+		allowed[name] = true
+	}
 	files := make(map[string][]byte)
 	for _, f := range zr.File {
 		name := strings.ReplaceAll(f.Name, "\\", "/")
