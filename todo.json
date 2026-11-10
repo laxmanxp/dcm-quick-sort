@@ -2,15 +2,15 @@
   "schema_version": 1,
   "app": "DCM QuickSort",
   "suite": "FileFlow Suite",
-  "updated_on": "2026-11-09",
+  "updated_on": "2026-11-10",
   "scope": "Independent native Go application/window alongside Flow Search, DeepSearch and FileFlow. Reuse existing behavior; a Walk/Rust migration, new PDF engine or shared launcher is not a DCM release prerequisite.",
   "completion_plan": {
     "path": "qualification/completion-50.json",
     "step_count": 50,
     "completed_setup_steps": ["DCM-01", "DCM-02", "DCM-03", "DCM-04", "DCM-05"],
-    "completed_product_steps": ["DCM-06", "DCM-07", "DCM-08", "DCM-09", "DCM-10", "DCM-11", "DCM-12", "DCM-13"],
-    "next_step": "DCM-14",
-    "checkpoint": "qualification/dcm13-complete.md",
+    "completed_product_steps": ["DCM-06", "DCM-07", "DCM-08", "DCM-09", "DCM-10", "DCM-11", "DCM-12", "DCM-13", "DCM-14"],
+    "next_step": "DCM-15",
+    "checkpoint": "qualification/2026-11-10-dcm14.md",
     "rule": "The first five completed steps are setup/diagnostic work, not product acceptance. Preserve all original defect IDs and prior evidence."
   },
   "status_values": ["planned", "implemented", "tested", "fixed"],
@@ -32,7 +32,8 @@
     "archive_sha256": "64e1cb1666acc9a70aeeb9656b4f30ca26fc30ad142ea32e154cb7a63dc7b5aa",
     "native_regression_commit": "4619e0ef2bed51b7685c5f84d0fc0f87702bb1ca",
     "native_regression_result": "23 top-level app regressions: 23 passed, 0 failed, 0 skipped, exit 0, no timeout, source unchanged. DCM-12 adds invalid-template-package coverage; all three D4 parent tests and five nested cases passed. All earlier safety tests remain GREEN. Full app/installer/UI/package qualification remains open.",
-    "last_native_attempt": "a49e65951b5be9d26dc7d74a4916ae0b1b54664d / 20261109-181814-920da14f: complete isolated engine and outer FlowDev validation PASS, 1 passed / 0 failed / 0 skipped, exit 0, no timeout, source unchanged. DCM-13 native acceptance complete.",
+    "last_native_attempt": "13f52cb0ed5e494bd838062c6b7e3fcca424f068 / 20261110-030347-e80c1e53: full baseline 351 passed / 0 failed / 1 external-fixture skip; 352 results, exit 0, no timeout, source unchanged. DCM-14 completed with explicit PPTX skip disposition; no UI or release acceptance.",
+    "app_baseline_checkpoint": {"commit": "13f52cb0ed5e494bd838062c6b7e3fcca424f068", "report": "20261110-030347-e80c1e53", "count": 352, "passed": 351, "failed": 0, "skipped": ["TestRealGeneratedPPTXIntegration"], "exit_code": 0, "timed_out": false, "source_unchanged": true, "skip_disposition": "DCM_REAL_PPTX not set; not executed, not passed. External fixture remains required under DCM-32 / DCM-PREVIEW-01 / DCM-47."},
     "installer_unit_checkpoint": {"commit": "70e8f240a0228c8548562bb627db4213cbaf1d17", "result": "26 passed, 0 failed, 0 skipped", "report": "20261109-180724-83ef3b94"},
     "installer_engine_checkpoint": {"commit": "a49e65951b5be9d26dc7d74a4916ae0b1b54664d", "result": "PASS: full isolated lifecycle and receipt validation", "report": "20261109-181814-920da14f", "registry_override_reset": true, "private_registry_removed": true, "live_registry_unchanged": true},
     "final_package_qualified": false,
@@ -70,7 +71,8 @@
     "dcm11_checkpoint": "qualification/2026-11-09-dcm11.md",
     "dcm12_checkpoint": "qualification/2026-11-09-dcm12.md",
     "dcm13_checkpoint": "qualification/2026-11-09-dcm13.md",
-    "dcm13_completion": "qualification/dcm13-complete.md"
+    "dcm13_completion": "qualification/dcm13-complete.md",
+    "dcm14_checkpoint": "qualification/2026-11-10-dcm14.md"
   },
   "items": [
     {
@@ -114,7 +116,7 @@
     {
       "id": "D5", "feature": "Restore supported settings through the installer", "status": "fixed", "severity": "medium", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "The archive audit found the installer restore schema retained default_source but excluded pdf_default_view and vault_root.",
-      "acceptance": "Qualify backup/restore and upgrade with non-default default_source, pdf_default_view and vault_root; verify all supported values survive.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "dcm13_checkpoint", "dcm13_completion"],
+      "acceptance": "Qualify backup/restore and upgrade with non-default default_source, pdf_default_view, vault_root; verify all supported values survive.", "blocked_by": [], "evidence_refs": ["archive_source_audit", "qualification_checkpoint", "dcm13_checkpoint", "dcm13_completion"],
       "native_test": "DCM-13 complete: 26 installer units passed at 70e8f240; full isolated fresh-install/upgrade/restore/uninstall and outer FlowDev receipt validation passed at a49e6595. All five configuration hashes match after upgrade, restore and retained backup. Packaged setup/uninstaller and UI/user acceptance remain pending."
     },
     {
@@ -138,6 +140,7 @@
     {
       "id": "DCM-PREVIEW-01", "feature": "Qualify advertised preview formats and failure states", "status": "planned", "ui_test": "limited_fixture_pass_on_v1.0.69; remaining_formats_not_run", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "TXT, PNG and lightweight DOCX/XLSX/PPTX fallbacks passed the Nov3 fixture checks. Legacy DOC/XLS/PPT, complex Office fidelity and protected/damaged files were not certified.",
+      "external_fixture_status": "DCM-14 baseline skipped TestRealGeneratedPPTXIntegration because DCM_REAL_PPTX was not supplied. Supply an identified fixture and run unchanged assertions before PPTX/final-package acceptance; visible UI review remains separate.",
       "acceptance": "Record visible success, blank/error and cancellation behavior for the formats advertised by the selected release. State fallback fidelity limits explicitly.", "blocked_by": ["DCM-SOURCE-01"], "evidence_refs": ["native_1069_report"]
     },
     {
