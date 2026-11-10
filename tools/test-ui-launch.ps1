@@ -170,7 +170,7 @@ try{
     $head=Git-Value @('rev-parse','HEAD')
     if($head -ne $build.commit -or (Git-Value @('symbolic-ref','--short','HEAD')) -ne 'release/v1.0.71' -or (Git-Value @('remote','get-url','origin')) -ne 'https://github.com/laxmanxp/dcm-quick-sort.git'){throw 'Build/source identity mismatch.'}
     if((Hash $build.source_hash_manifest.path) -ne $build.source_hash_manifest.sha256){throw 'Manifest hash mismatch.'}
-    $sourceManifest=@(Get-Content -LiteralPath $build.source_hash_manifest.path -Raw -Encoding UTF8 | ConvertFrom-Json)
+    $sourceManifest=Get-Content -LiteralPath $build.source_hash_manifest.path -Raw -Encoding UTF8 | ConvertFrom-Json
     Check-Source
     if((Hash $build.app_artifact.path) -ne $build.app_artifact.sha256){throw 'App hash mismatch.'}
     $receipt['commit']=$head;$receipt['build_receipt']=[ordered]@{path=$BuildReceipt;sha256=(Hash $BuildReceipt)};$receipt['app_sha256']=$build.app_artifact.sha256
@@ -215,7 +215,7 @@ try{
     Assert-Files;Save-State 'DCM-17-restored-selection';Stop-App
     $receipt['fixture_sha256']=$expected;$receipt.passed=$true
 }catch{
-    $receipt['error']=$_.Exception.Message;Write-Output ('FAIL='+$_.Exception.Message)
+    $receipt['error']=$_.Exception.Message;$receipt['error_position']=$_.InvocationInfo.PositionMessage;Write-Output ('FAIL='+$_.Exception.Message)
     if($null -ne $script:app){try{Save-State 'DCM-17-failure'}catch{$receipt['failure_capture_error']=$_.Exception.Message}}
 }finally{
     try{Stop-App}catch{$receipt.passed=$false;$receipt['cleanup_error']=$_.Exception.Message}
