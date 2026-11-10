@@ -26,7 +26,8 @@
         "ui-pdf": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-ui.ps1", "-Suite", "pdf"],
         "ui-previews": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-ui.ps1", "-Suite", "previews"],
         "ui-folder-probe": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-folder.ps1", "-Probe"],
-        "ui-folder": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-folder.ps1"]
+        "ui-folder": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-folder.ps1"],
+        "explorer-isolation": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/check-explorer-isolation.ps1"]
       }
     }
   }
