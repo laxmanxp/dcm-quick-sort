@@ -12,7 +12,9 @@ func windowsMainSource(t *testing.T) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return string(data)
+	// Git may check out Windows sources as CRLF. Preserve all source tokens
+	// and indentation while comparing the same logical lines on every host.
+	return strings.ReplaceAll(string(data), "\r\n", "\n")
 }
 
 func TestClearFiltersButtonIsWiredToClearInboxFilters(t *testing.T) {
@@ -702,7 +704,7 @@ func TestFitWidthResetsVerticalPanToTop(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	pdfSrc := string(pdfData)
+	pdfSrc := strings.ReplaceAll(string(pdfData), "\r\n", "\n")
 	pdfStart := strings.Index(pdfSrc, "func finishPDFRender()")
 	if pdfStart < 0 {
 		t.Fatal("finishPDFRender missing")
@@ -737,7 +739,7 @@ func TestPDFDefaultViewPreferenceMenuAndStartupAreWired(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	pdfSrc := string(pdfData)
+	pdfSrc := strings.ReplaceAll(string(pdfData), "\r\n", "\n")
 	for _, want := range []string{
 		"normalizePDFDefaultView(app.pdfDefaultView)",
 		"app.previewFitWidth = defaultView == pdfDefaultViewFitWidth",

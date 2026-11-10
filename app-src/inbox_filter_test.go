@@ -17,6 +17,7 @@ func writeInboxFixture(t *testing.T, dir, name string, size int, mod time.Time) 
 	if err := os.Chtimes(p, mod, mod); err != nil {
 		t.Fatal(err)
 	}
+	setInboxFixtureCreatedTime(t, p, mod)
 	return p
 }
 
