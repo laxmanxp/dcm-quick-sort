@@ -69,6 +69,49 @@ function Check-SourceView([string]$Path,[string[]]$Names){
     Check-Files
     $cases.Add([ordered]@{name='source/list/read-only integrity';source=$Path;files=$Names;passed=$true})
 }
+function Select-PickerPath([string]$Folder,[string]$Name){
+    if($Folder -notin @($inbox,$target) -or -not(Test-Path -LiteralPath $Folder -PathType Container)){throw 'Refusing picker path outside declared fixtures.'}
+    $dialog=Open-Picker
+    $edit=[DcmNative]::Control($dialog,$app.Id,1152)
+    if([DcmNative]::ClassName($edit) -ne 'Edit' -or -not [DcmNative]::IsWindowVisible($edit) -or -not [DcmNative]::IsWindowEnabled($edit)){throw 'Observed folder field is unavailable.'}
+    if([DcmNative]::Text([DcmNative]::Control($dialog,$app.Id,1090),$app.Id) -ne 'Folder:'){throw 'Picker field label changed.'}
+    [DcmFolderEdit]::Set($edit,$Folder)
+    if([DcmNative]::Text($edit,$app.Id) -ne $Folder){throw 'Picker folder field readback differs.'}
+    if([DcmNative]::Text([DcmNative]::Control($dialog,$app.Id,1),$app.Id) -ne 'Select Folder'){throw 'Unexpected picker confirmation.'}
+    Shot ($Name+'-picker') $dialog
+    [DcmNative]::ClickAsync($dialog,$app.Id,1)
+    Wait-For 'picker accepted' { @([DcmNative]::Dialogs($hwnd,$app.Id)).Count -eq 0 }
+    $cases.Add([ordered]@{name=$Name;kind='actual folder picker selection';passed=$true;folder=$Folder;field_id=1152;confirm_id=1})
+}
+function Verify-Vision([string]$Folder,[string]$Name){
+    Require-App
+    $vision=$env:DCM_FLOWUIVISION_EXE
+    if(-not $vision){$vision='C:\FlowverseReports\dcm-flowuivision-20261103\FlowUIVision.exe'}
+    $receipt['flowuivision']=[ordered]@{path=$vision;sha256=(Hash $vision)}
+    $fvs=Join-Path $lab ($Name+'.fvs')
+    $body=@"
+target sut type=desktop app=dcm-quicksort
+surface main target=sut process="$([IO.Path]::GetFileName($exe))" title~="1.0.71"
+control source surface=main id=1001 role=textbox
+wait main timeout=5s
+inspect main
+expect source text="$Folder"
+"@
+    [IO.File]::WriteAllText($fvs,$body,$utf8)
+    $psi=New-Object Diagnostics.ProcessStartInfo
+    $psi.FileName=$vision;$psi.Arguments='run-script "'+$fvs+'"';$psi.WorkingDirectory=$lab;$psi.UseShellExecute=$false;$psi.CreateNoWindow=$true;$psi.RedirectStandardOutput=$true;$psi.RedirectStandardError=$true;$psi.EnvironmentVariables['FLOWVERSE_REPO']=$lab
+    $job=New-Object Diagnostics.Process;$job.StartInfo=$psi
+    try{
+        if(-not $job.Start()){throw 'FlowUIVision start failed.'}
+        $out=$job.StandardOutput.ReadToEndAsync();$err=$job.StandardError.ReadToEndAsync()
+        if(-not $job.WaitForExit(60000)){& "$env:SystemRoot\System32\taskkill.exe" /PID $job.Id /T /F | Out-Null;$null=$job.WaitForExit(10000);throw 'Owned FlowUIVision deadline.'}
+        $raw=$out.GetAwaiter().GetResult();$errors=$err.GetAwaiter().GetResult()
+        [IO.File]::WriteAllText((Join-Path $lab ($Name+'.vision.json')),$raw,$utf8);[IO.File]::WriteAllText((Join-Path $lab ($Name+'.stderr.log')),$errors,$utf8)
+        $r=$raw | ConvertFrom-Json
+        if($job.ExitCode -ne 0 -or -not $r.Passed -or @($r.Steps).Count -eq 0){throw 'Folder source expectation failed in FlowUIVision.'}
+        Require-App;$cases.Add([ordered]@{name=$Name;kind='FlowUIVision source-path expectation';passed=$true;steps=@($r.Steps).Count})
+    }finally{$job.Dispose()}
+}
 try{
     $b=Get-Content -LiteralPath $BuildReceipt -Raw -Encoding UTF8 | ConvertFrom-Json
     $head=Git-Value @('rev-parse','HEAD')
@@ -104,7 +147,28 @@ try{
     Cancel-Picker $dialog
     Check-SourceView $inbox @('00-initial.txt')
     Shot 'DCM-18-cancel-preserves-source' $hwnd
-    if(-not $Probe){throw 'Folder-selection acceptance awaits observed picker controls; probe only.'}
+    if(-not $Probe){
+        Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class DcmFolderEdit {
+    [DllImport("user32.dll", EntryPoint="SendMessageTimeoutW", CharSet=CharSet.Unicode)]
+    private static extern IntPtr Send(IntPtr h,uint m,IntPtr w,string text,uint flags,uint ms,out IntPtr result);
+    public static void Set(IntPtr h,string text){IntPtr r;if(Send(h,0x000C,IntPtr.Zero,text,2,1500,out r)==IntPtr.Zero || r==IntPtr.Zero)throw new Exception("Owned folder text input failed");}
+}
+'@
+        Select-PickerPath $target 'DCM-18-open-spaced-folder'
+        Check-SourceView $target @('01-target alpha.txt','02-target bravo.txt')
+        if((Text 1005) -notin @('01-target alpha','02-target bravo')){throw 'Filename draft does not belong to new folder.'}
+        Verify-Vision $target 'DCM-18-source-after-browse'
+        Shot 'DCM-18-spaced-folder-loaded' $hwnd
+        $dialog=Open-Picker;Cancel-Picker $dialog
+        Check-SourceView $target @('01-target alpha.txt','02-target bravo.txt')
+        Select-PickerPath $inbox 'DCM-18-return-original-folder'
+        Check-SourceView $inbox @('00-initial.txt')
+        Verify-Vision $inbox 'DCM-18-source-after-return'
+        Shot 'DCM-18-original-folder-restored' $hwnd
+    }
     $receipt['fixture_sha256']=$expected
     $receipt.passed=$true
 }catch{
