@@ -1,28 +1,33 @@
-# DCM v1.0.71 — resume after DCM-16
+# DCM v1.0.71 — resume after DCM-17
 
-Latest checkpoint: [DCM-16 source-bound build](2026-11-10-dcm16.md). Preserve earlier checkpoints and tested identities. DCM-01–16 are complete at their defined boundaries; only DCM-16 was newly closed. Five completed steps are setup/diagnostic work, not a product percentage.
+Latest checkpoint: [DCM-17 actual launch and empty-state UI](2026-11-10-dcm17.md). Preserve all previous failures, checkpoints and exact tested identities.
 
-## Verified candidate
+## Verified state
 
-Dedicated `build` passed at `4eec87801ed31b64ed9d71d91005b81dfcade481`: exit 0, no timeout, source unchanged; 215-file source manifest. App size 7,166,464 bytes; SHA-256 `a10e368eef249dbb38b340c52cfc8e2c2cb583758d14f07d09778c5ab9ee98c5`.
+DCM-01–17 are complete at their stated boundaries; only DCM-17 was newly closed. Five completed steps are setup/diagnostic work, not a product percentage.
 
-Receipt: `C:\FlowverseReports\dcm-quicksort-build-20261110-154145-94223282\receipt.json`. No test suite, app UI or setup was executed in that build. The matching payload was staged, not packaged or installed.
+Latest UI-tested commit: `443153a35c09a85d2438b8aca0aba6a983c41539`. The registered `ui-launch` check passed 12 recorded acceptance cases (nine native state/filesystem checks and three FlowUIVision flows), two clean app closes and unchanged-source checks. All four actual screenshots were separately inspected. The raw automation receipt remains `visual_reviewed=false`; see the separate review in `evidence/dcm-17-native-summary.json`.
 
-## Next exact action — DCM-17
+New tooling is `tools/test-ui-launch.ps1` plus the registered selector. Manifest-array and stale-inspection harness failures were corrected. Product implementation and existing assertions were unchanged. Do not confuse these harness fixes with application feature changes.
 
-Check PR #1 for any refreshed exact build binding. Update through FlowDev. If the candidate's HEAD differs from a recorded receipt's commit, run the registered `build` selector again, read its complete receipt and use that exact `DCM_BUILD_RECEIPT`. Even documentation commits invalidate the strict current-checkout binding. Do not alter receipts or weaken identity checks. Record final binding in PR metadata when necessary rather than repeatedly invalidating it with tracking-only commits.
+Open visual findings: `DCM-UI-EMPTY-COPY-01` (filtered no-match says Folder complete; DCM-21/46) and `DCM-UI-LABEL-01` (clipped labels/crowded Processed heading at captured scaling; DCM-46). They require resolution or explicit disposition before final release; the functional DCM-17 pass is not global visual approval.
 
-Verify launch with an empty source folder and with no selected item, responsiveness and clean close. Retain feature-labelled screenshots and review them separately. The existing `run-ui.ps1` lists basics/filters/rename/move/batch/pdf/previews, not a dedicated empty-state selector; inspect its coverage before using or extending it. A successful populated launch is not empty-state acceptance. New tooling, if needed, must be authored locally and committed before Lenovo validation. Do not silently close DCM-18 or later steps.
+## Next exact action — DCM-18
 
-## Registered workflow
+Verify opening a source folder through the supported UI, including spaces in its path; compare source textbox, list and displayed content with disposable fixtures. Inspect existing Browse/folder-picker coverage before extending tools. Do not certify the picker from a startup folder argument alone. New tooling must be authored locally, committed, then used through FlowDev; keep actions bound to the owned candidate and expected dialogs.
+
+Update the candidate, run tooling validation for any changes, then `build`. The DCM-17 receipt matches only its exact tested commit; this later documentation revision requires a fresh matching receipt before further UI interaction. Never edit receipt identities or bypass source checks. Record the final binding in PR metadata to avoid a documentation/build loop. Do not close later steps silently.
+
+## Native workflow and evidence
 
 Device: `Laxman_Lenovo`, `d18227f2-0b54-4b11-9026-56ac40305f02`.
 Candidate: `C:\FlowverseReports\dcm-quicksort-candidate`, branch `release/v1.0.71`.
-Set `FLOWDEV_WORKSPACE_ROOT=C:\FlowverseReports`; run from the candidate's `tools\flowdev-dcm` using `C:\FlowverseReports\flowdev-standalone-validation\flowdev-test.exe`.
-Use `flowdev update dcm-quicksort`, then one registered selector at a time. No remote source editing, host installation or unrelated cleanup. Read `../tools/README.md` and `../tests/native/README.md` before visible or packaging tests.
+Set `FLOWDEV_WORKSPACE_ROOT=C:\FlowverseReports`, run from the candidate's `tools\flowdev-dcm`, using `C:\FlowverseReports\flowdev-standalone-validation\flowdev-test.exe`.
+Run update before one registered selector at a time. Code locally, GitHub storage, Lenovo validation. No remote editing, host installation or unrelated cleanup.
 
-## Evidence and remaining gates
+UI evidence: `C:\FlowverseReports\dcm-quicksort-ui-launch-20261110-174648-a112f78b`.
+Matching historic build receipt: `C:\FlowverseReports\dcm-quicksort-build-20261110-174601-4def7398\receipt.json`.
+Final script blob: `63822da5daee4af18cb3486a7af8f331b0b15841`.
+The four PNGs and raw control/FVS/receipt records remain in the exact UI report directory. Review decisions and image hashes are committed separately; user acceptance is not inferred.
 
-Full app baseline: 351 passed, 0 failed, 1 skipped at `13f52cb0`. `TestRealGeneratedPPTXIntegration` remains unexecuted because `DCM_REAL_PPTX` was not supplied; an identified external fixture and unchanged assertions remain required under DCM-32 / DCM-PREVIEW-01 / DCM-47.
-Installer units: 26 passed, no failures/skips at `99f07c15`; UI-tooling syntax/adapter/fixture checks passed there. In-process installer engine PASS remains at `a49e6595`. None was rerun for DCM-16. All historical fixes are already applied.
-Actual UI workflows/reviewed images, final package/payload identity, packaged setup/uninstaller lifecycle in a disposable account/VM, Explorer interaction and user acceptance remain open. Do not publish host registry snapshots. Keep PR #1 draft; no merge or publication without remaining gates and approval.
+Full app baseline remains 351 passed / 0 failed / 1 skipped at `13f52cb0`. The external `TestRealGeneratedPPTXIntegration` needs its identified two-slide fixture through `DCM_REAL_PPTX` before DCM-32 / DCM-PREVIEW-01 / DCM-47. Installer units remain 26/26 at `99f07c15`; in-process installer lifecycle remains separately pinned to `a49e6595`. These suites were not rerun for DCM-17. Keep PR #1 draft; final artifacts, packaged installer lifecycle in a disposable account/VM, remaining UI/Explorer checks, visual findings and actual user acceptance remain open. No merge or publication.
