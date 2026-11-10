@@ -8,9 +8,9 @@
     "path": "qualification/completion-50.json",
     "step_count": 50,
     "completed_setup_steps": ["DCM-01", "DCM-02", "DCM-03", "DCM-04", "DCM-05"],
-    "completed_product_steps": ["DCM-06", "DCM-07", "DCM-08", "DCM-09", "DCM-10", "DCM-11", "DCM-12", "DCM-13", "DCM-14", "DCM-15", "DCM-16", "DCM-17"],
-    "next_step": "DCM-18",
-    "checkpoint": "qualification/2026-11-10-dcm17.md",
+    "completed_product_steps": ["DCM-06", "DCM-07", "DCM-08", "DCM-09", "DCM-10", "DCM-11", "DCM-12", "DCM-13", "DCM-14", "DCM-15", "DCM-16", "DCM-17", "DCM-18"],
+    "next_step": "DCM-19",
+    "checkpoint": "qualification/2026-11-10-dcm18.md",
     "rule": "The first five completed steps are setup/diagnostic work, not product acceptance. Preserve all original defect IDs and prior evidence."
   },
   "status_values": ["planned", "implemented", "tested", "fixed"],
@@ -32,7 +32,7 @@
     "archive_sha256": "64e1cb1666acc9a70aeeb9656b4f30ca26fc30ad142ea32e154cb7a63dc7b5aa",
     "native_regression_commit": "4619e0ef2bed51b7685c5f84d0fc0f87702bb1ca",
     "native_regression_result": "23 top-level app regressions: 23 passed, 0 failed, 0 skipped, exit 0, no timeout, source unchanged. DCM-12 adds invalid-template-package coverage; all three D4 parent tests and five nested cases passed. All earlier safety tests remain GREEN. Full app/installer/UI/package qualification remains open.",
-    "last_native_attempt": "443153a35c09a85d2438b8aca0aba6a983c41539 / 20261110-174648-a112f78b: ui-launch PASS, 12 recorded acceptance cases, two clean exit-0 launches/closes, source unchanged; all four actual screenshots separately reviewed. Only DCM-17 closed. Two visual findings remain open. No product implementation changes or full-suite reruns.",
+    "last_native_attempt": "a3e4c185dd00bf75222694db7a324b86de50bc86 / 20261110-181633-dfd65522: actual Browse ui-folder PASS, nine cases, six separately reviewed screenshots, spaced-path selection and return, Cancel preserves source, all three fixture hashes unchanged, exit 0, children drained, source unchanged. Failed capture attempt retained; unchanged retry passed. Only DCM-18 closed; no product implementation change.",
     "app_baseline_checkpoint": {"commit": "13f52cb0ed5e494bd838062c6b7e3fcca424f068", "report": "20261110-030347-e80c1e53", "count": 352, "passed": 351, "failed": 0, "skipped": ["TestRealGeneratedPPTXIntegration"], "exit_code": 0, "timed_out": false, "source_unchanged": true, "skip_disposition": "DCM_REAL_PPTX not set; not executed, not passed. External fixture remains required under DCM-32 / DCM-PREVIEW-01 / DCM-47."},
     "installer_unit_checkpoint": {"commit": "99f07c1559f3519e1d9ddcb06b2c28014168c55e", "result": "26 passed, 0 failed, 0 skipped", "report": "20261110-151249-eefc7658", "exit_code": 0, "timed_out": false, "source_unchanged": true},
     "installer_unit_previous_checkpoint": {"commit": "70e8f240a0228c8548562bb627db4213cbaf1d17", "result": "26 passed, 0 failed, 0 skipped", "report": "20261109-180724-83ef3b94"},
@@ -40,6 +40,7 @@
     "installer_engine_checkpoint": {"commit": "a49e65951b5be9d26dc7d74a4916ae0b1b54664d", "result": "PASS: full isolated lifecycle and receipt validation", "report": "20261109-181814-920da14f", "registry_override_reset": true, "private_registry_removed": true, "live_registry_unchanged": true},
     "ui_candidate_build_checkpoint": {"commit": "4eec87801ed31b64ed9d71d91005b81dfcade481", "report": "20261110-154145-94223282", "result": "PASS: dedicated source-bound app build", "app_sha256": "a10e368eef249dbb38b340c52cfc8e2c2cb583758d14f07d09778c5ab9ee98c5", "size_bytes": 7166464, "manifest_sha256": "1a512c36525f5fd0ec17f07ddcf4cd81fdf16bb99e3e53d6eff630766d375911", "exit_code": 0, "timed_out": false, "source_unchanged": true, "scope": "build only; exact checkout/receipt binding required before UI"},
     "ui_launch_checkpoint": {"commit": "443153a35c09a85d2438b8aca0aba6a983c41539", "report": "C:\\FlowverseReports\\dcm-quicksort-ui-launch-20261110-174648-a112f78b", "passed": true, "case_count": 12, "app_instances": 2, "clean_exit_codes": [0, 0], "source_unchanged": true, "reviewed_images": 4, "review_evidence": "qualification/evidence/dcm-17-native-summary.json", "raw_visual_reviewed": false, "open_visual_findings": ["DCM-UI-EMPTY-COPY-01", "DCM-UI-LABEL-01"], "build_receipt": "C:\\FlowverseReports\\dcm-quicksort-build-20261110-174601-4def7398\\receipt.json", "app_sha256": "a10e368eef249dbb38b340c52cfc8e2c2cb583758d14f07d09778c5ab9ee98c5"},
+    "ui_folder_checkpoint": {"commit": "a3e4c185dd00bf75222694db7a324b86de50bc86", "report": "C:\\FlowverseReports\\dcm-quicksort-ui-folder-20261110-181633-dfd65522", "passed": true, "case_count": 9, "reviewed_images": 6, "app_exit_code": 0, "source_unchanged": true, "build_receipt": "C:\\FlowverseReports\\dcm-quicksort-build-20261110-181432-f131c8f5\\receipt.json", "review_evidence": "qualification/evidence/dcm-18-native-summary.json"},
     "final_package_qualified": false,
     "user_acceptance": "not_recorded",
     "native_execution_blocker": {
@@ -79,7 +80,8 @@
     "dcm14_checkpoint": "qualification/2026-11-10-dcm14.md",
     "dcm15_checkpoint": "qualification/2026-11-10-dcm15.md",
     "dcm16_checkpoint": "qualification/2026-11-10-dcm16.md",
-    "dcm17_checkpoint": "qualification/2026-11-10-dcm17.md"
+    "dcm17_checkpoint": "qualification/2026-11-10-dcm17.md",
+    "dcm18_checkpoint": "qualification/2026-11-10-dcm18.md"
   },
   "items": [
     {
