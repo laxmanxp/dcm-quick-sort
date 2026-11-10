@@ -79,6 +79,8 @@ function Assert-Empty([string]$Name){
 }
 function Invoke-Vision([string]$Name,[string]$Body){
     Assert-Owned
+    # FlowUIVision expectations read the most recent explicit inspection.
+    $Body=$Body -replace '(?m)^expect ', "inspect main`nexpect "
     $header=@"
 target sut type=desktop app=dcm-quicksort
 surface main target=sut process="$([IO.Path]::GetFileName($exe))" title~="$version"
