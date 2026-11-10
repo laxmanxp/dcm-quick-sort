@@ -1,34 +1,28 @@
-# DCM v1.0.71 — resume after DCM-15
+# DCM v1.0.71 — resume after DCM-16
 
-Latest checkpoint: [DCM-15 installer units and UI tooling](2026-11-10-dcm15.md). Preserve all earlier checkpoints and source identities.
+Latest checkpoint: [DCM-16 source-bound build](2026-11-10-dcm16.md). Preserve earlier checkpoints and tested identities. DCM-01–16 are complete at their defined boundaries; only DCM-16 was newly closed. Five completed steps are setup/diagnostic work, not a product percentage.
 
-## Verified state
+## Verified candidate
 
-DCM-01–15 are complete at their stated boundaries. Only DCM-15 was closed in the latest retry; five completed steps are setup/diagnostic work, not a product percentage.
+Dedicated `build` passed at `4eec87801ed31b64ed9d71d91005b81dfcade481`: exit 0, no timeout, source unchanged; 215-file source manifest. App size 7,166,464 bytes; SHA-256 `a10e368eef249dbb38b340c52cfc8e2c2cb583758d14f07d09778c5ab9ee98c5`.
 
-Latest native-tested source: `99f07c1559f3519e1d9ddcb06b2c28014168c55e`. Fresh `ui-tooling` passed (seven parsed scripts, native adapter compiled, four disposable fixtures). Fresh `installer-unit` passed 26 tests, 0 failed, 0 skipped, exit 0, no timeout, source unchanged. No product, installer, test or runner code changed in this retry.
+Receipt: `C:\FlowverseReports\dcm-quicksort-build-20261110-154145-94223282\receipt.json`. No test suite, app UI or setup was executed in that build. The matching payload was staged, not packaged or installed.
 
-UI-tooling means syntax/compilation/fixture readiness, not actual window interaction, FlowUIVision runtime readiness, screenshot acceptance or user acceptance. Do not silently close DCM-16 based on the incidental build from installer-unit.
+## Next exact action — DCM-17
 
-Full app baseline remains 351 passed / 0 failed / 1 skipped at `13f52cb0ed5e494bd838062c6b7e3fcca424f068`. The external `TestRealGeneratedPPTXIntegration` was not executed because `DCM_REAL_PPTX` was not supplied. Supply an identified two-slide fixture and run unchanged assertions before DCM-32 / DCM-PREVIEW-01 / DCM-47 acceptance. Keep visible slide review separate.
+Check PR #1 for any refreshed exact build binding. Update through FlowDev. If the candidate's HEAD differs from a recorded receipt's commit, run the registered `build` selector again, read its complete receipt and use that exact `DCM_BUILD_RECEIPT`. Even documentation commits invalidate the strict current-checkout binding. Do not alter receipts or weaken identity checks. Record final binding in PR metadata when necessary rather than repeatedly invalidating it with tracking-only commits.
 
-Installer lifecycle remains the separately recorded in-process PASS at `a49e6595`; it was not rerun here and is not packaged setup/uninstaller E2E. The cleanup correction is already applied. Do not reapply historical patches.
+Verify launch with an empty source folder and with no selected item, responsiveness and clean close. Retain feature-labelled screenshots and review them separately. The existing `run-ui.ps1` lists basics/filters/rename/move/batch/pdf/previews, not a dedicated empty-state selector; inspect its coverage before using or extending it. A successful populated launch is not empty-state acceptance. New tooling, if needed, must be authored locally and committed before Lenovo validation. Do not silently close DCM-18 or later steps.
 
-## Next exact action — DCM-16
-
-Update Lenovo through FlowDev, then run `flowdev test dcm-quicksort build` at the new clean branch HEAD. Record the actual commit, source manifest, app SHA-256 and exact receipt path. This creates the candidate binding for visible UI tests; it does not certify them. Read `../tools/README.md` and `../tests/native/README.md` before UI workflows. Set `DCM_BUILD_RECEIPT` to the matching receipt, never an arbitrary newest binary. UI receipts must match the current checkout; metadata commits after a build may require a fresh binding/build.
-
-Do not silently close further steps. The next visible gate is DCM-17 launch/empty-state behavior; images must be inspected separately and retained with feature IDs.
-
-## Native workflow
+## Registered workflow
 
 Device: `Laxman_Lenovo`, `d18227f2-0b54-4b11-9026-56ac40305f02`.
 Candidate: `C:\FlowverseReports\dcm-quicksort-candidate`, branch `release/v1.0.71`.
-Set `FLOWDEV_WORKSPACE_ROOT=C:\FlowverseReports`, run from the candidate's `tools\flowdev-dcm`, using `C:\FlowverseReports\flowdev-standalone-validation\flowdev-test.exe`.
-Use update then one registered test selector at a time. Code locally, store in GitHub, validate on Lenovo. No remote source editing, host installation or unrelated cleanup.
+Set `FLOWDEV_WORKSPACE_ROOT=C:\FlowverseReports`; run from the candidate's `tools\flowdev-dcm` using `C:\FlowverseReports\flowdev-standalone-validation\flowdev-test.exe`.
+Use `flowdev update dcm-quicksort`, then one registered selector at a time. No remote source editing, host installation or unrelated cleanup. Read `../tools/README.md` and `../tests/native/README.md` before visible or packaging tests.
 
-Latest installer-unit report: `C:\FlowverseReports\dcm-quicksort-installer-unit-20261110-151249-eefc7658`.
-Latest UI-tooling report: `C:\FlowverseReports\dcm-quicksort-ui-tooling-20261110-151151-1e75a08f`.
-Compact evidence: `evidence/dcm-15-native-summary.json`.
+## Evidence and remaining gates
 
-UI workflows/reviewed screenshots, external PPTX integration, exact final package/payload, actual setup/uninstaller lifecycle in a disposable user/VM, Explorer interaction and user acceptance remain open. Do not publish host registry snapshots. Keep PR #1 draft; no merge or release without remaining gates and explicit approval.
+Full app baseline: 351 passed, 0 failed, 1 skipped at `13f52cb0`. `TestRealGeneratedPPTXIntegration` remains unexecuted because `DCM_REAL_PPTX` was not supplied; an identified external fixture and unchanged assertions remain required under DCM-32 / DCM-PREVIEW-01 / DCM-47.
+Installer units: 26 passed, no failures/skips at `99f07c15`; UI-tooling syntax/adapter/fixture checks passed there. In-process installer engine PASS remains at `a49e6595`. None was rerun for DCM-16. All historical fixes are already applied.
+Actual UI workflows/reviewed images, final package/payload identity, packaged setup/uninstaller lifecycle in a disposable account/VM, Explorer interaction and user acceptance remain open. Do not publish host registry snapshots. Keep PR #1 draft; no merge or publication without remaining gates and approval.
