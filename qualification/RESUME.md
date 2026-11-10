@@ -1,33 +1,34 @@
-# DCM v1.0.71 — resume after DCM-14
+# DCM v1.0.71 — resume after DCM-15
 
-Latest checkpoint: [DCM-14 full native baseline](2026-11-10-dcm14.md). Preserve all earlier source identities and failed evidence.
+Latest checkpoint: [DCM-15 installer units and UI tooling](2026-11-10-dcm15.md). Preserve all earlier checkpoints and source identities.
 
-## Current state
+## Verified state
 
-DCM-01–14 are complete at their defined boundaries, including five setup/diagnostic steps. Only DCM-14 was closed in this continuation.
+DCM-01–15 are complete at their stated boundaries. Only DCM-15 was closed in the latest retry; five completed steps are setup/diagnostic work, not a product percentage.
 
-Latest full-app tested source: `13f52cb0ed5e494bd838062c6b7e3fcca424f068`. `baseline`: **351 passed, 0 failed, 1 skipped; 352 top-level results**, exit 0, no timeout, source unchanged. Seven initial failures were test-fixture defects: unset Windows creation timestamps and CRLF/LF source comparisons. Both were reproduced in native diagnostic RED before test-only corrections. All original ordering and wiring expectations remain intact; application/installer implementation was unchanged.
+Latest native-tested source: `99f07c1559f3519e1d9ddcb06b2c28014168c55e`. Fresh `ui-tooling` passed (seven parsed scripts, native adapter compiled, four disposable fixtures). Fresh `installer-unit` passed 26 tests, 0 failed, 0 skipped, exit 0, no timeout, source unchanged. No product, installer, test or runner code changed in this retry.
 
-**Do not call this zero-skip acceptance.** `TestRealGeneratedPPTXIntegration` did not execute because `DCM_REAL_PPTX` was not set. It remains open under DCM-32 / DCM-PREVIEW-01 / DCM-47. Supply an identified external two-slide fixture through committed FlowDev tooling and run its unchanged assertions before PPTX/final-package qualification. Visible screenshots are separate.
+UI-tooling means syntax/compilation/fixture readiness, not actual window interaction, FlowUIVision runtime readiness, screenshot acceptance or user acceptance. Do not silently close DCM-16 based on the incidental build from installer-unit.
 
-## Next exact action
+Full app baseline remains 351 passed / 0 failed / 1 skipped at `13f52cb0ed5e494bd838062c6b7e3fcca424f068`. The external `TestRealGeneratedPPTXIntegration` was not executed because `DCM_REAL_PPTX` was not supplied. Supply an identified two-slide fixture and run unchanged assertions before DCM-32 / DCM-PREVIEW-01 / DCM-47 acceptance. Keep visible slide review separate.
 
-**DCM-15:** verify relevant installer source is unchanged before reusing its 26-test result, and run registered `ui-tooling` through FlowDev after update. Do not infer UI acceptance from source assertions or harness compilation. Then DCM-16 creates the exact source-bound UI build. Do not silently close later steps.
+Installer lifecycle remains the separately recorded in-process PASS at `a49e6595`; it was not rerun here and is not packaged setup/uninstaller E2E. The cleanup correction is already applied. Do not reapply historical patches.
+
+## Next exact action — DCM-16
+
+Update Lenovo through FlowDev, then run `flowdev test dcm-quicksort build` at the new clean branch HEAD. Record the actual commit, source manifest, app SHA-256 and exact receipt path. This creates the candidate binding for visible UI tests; it does not certify them. Read `../tools/README.md` and `../tests/native/README.md` before UI workflows. Set `DCM_BUILD_RECEIPT` to the matching receipt, never an arbitrary newest binary. UI receipts must match the current checkout; metadata commits after a build may require a fresh binding/build.
+
+Do not silently close further steps. The next visible gate is DCM-17 launch/empty-state behavior; images must be inspected separately and retained with feature IDs.
 
 ## Native workflow
 
-Device `Laxman_Lenovo`: `d18227f2-0b54-4b11-9026-56ac40305f02`.
-Checkout: `C:\FlowverseReports\dcm-quicksort-candidate`, branch `release/v1.0.71`.
-Set `FLOWDEV_WORKSPACE_ROOT=C:\FlowverseReports`; run from the checkout's `tools\flowdev-dcm`, using `C:\FlowverseReports\flowdev-standalone-validation\flowdev-test.exe`.
-Use `flowdev update dcm-quicksort` then one registered `flowdev test dcm-quicksort <selector>` at a time. Code locally; store in GitHub; validate on Lenovo. No remote source edits or host setup replacement.
+Device: `Laxman_Lenovo`, `d18227f2-0b54-4b11-9026-56ac40305f02`.
+Candidate: `C:\FlowverseReports\dcm-quicksort-candidate`, branch `release/v1.0.71`.
+Set `FLOWDEV_WORKSPACE_ROOT=C:\FlowverseReports`, run from the candidate's `tools\flowdev-dcm`, using `C:\FlowverseReports\flowdev-standalone-validation\flowdev-test.exe`.
+Use update then one registered test selector at a time. Code locally, store in GitHub, validate on Lenovo. No remote source editing, host installation or unrelated cleanup.
 
-Final app report: `C:\FlowverseReports\dcm-quicksort-baseline-20261110-030347-e80c1e53`.
-Initial failed full-app report: `C:\FlowverseReports\dcm-quicksort-baseline-20261110-025222-2c14b054`.
-Diagnostic RED report: `C:\FlowverseReports\dcm-quicksort-regressions-20261110-025903-c4ae5422`.
-Compact evidence: `evidence/dcm-14-native-summary.json`.
+Latest installer-unit report: `C:\FlowverseReports\dcm-quicksort-installer-unit-20261110-151249-eefc7658`.
+Latest UI-tooling report: `C:\FlowverseReports\dcm-quicksort-ui-tooling-20261110-151151-1e75a08f`.
+Compact evidence: `evidence/dcm-15-native-summary.json`.
 
-## Prior installer result and release boundary
-
-DCM-13 remains closed at the in-process engine boundary; `DCM-INSTALL-CLEANUP-01` is fixed. Installer units: 26 passed at `70e8f240a0228c8548562bb627db4213cbaf1d17`, report `C:\FlowverseReports\dcm-quicksort-installer-unit-20261109-180724-83ef3b94`. Isolated lifecycle plus receipt reader: 1 passed at `a49e65951b5be9d26dc7d74a4916ae0b1b54664d`, report `C:\FlowverseReports\dcm-quicksort-installer-integration-20261109-181814-920da14f`. Keep those identities, not the latest documentation revision. The test uses its own executable for uninstall self-copy; packaged executable E2E remains open.
-
-Both old move/recovery proposals and installer cleanup corrections are already applied. Read `../tools/README.md` and `../tests/native/README.md` before UI/package gates. Bind exact `DCM_BUILD_RECEIPT` / `DCM_PACKAGE_RECEIPT`; review images and user feedback separately. Actual packaged lifecycle and Explorer integration need a disposable Windows account/VM. Preserve raw host registry snapshots on Lenovo. No merge or publication before all remaining gates and explicit approval.
+UI workflows/reviewed screenshots, external PPTX integration, exact final package/payload, actual setup/uninstaller lifecycle in a disposable user/VM, Explorer interaction and user acceptance remain open. Do not publish host registry snapshots. Keep PR #1 draft; no merge or release without remaining gates and explicit approval.

@@ -8,9 +8,9 @@
     "path": "qualification/completion-50.json",
     "step_count": 50,
     "completed_setup_steps": ["DCM-01", "DCM-02", "DCM-03", "DCM-04", "DCM-05"],
-    "completed_product_steps": ["DCM-06", "DCM-07", "DCM-08", "DCM-09", "DCM-10", "DCM-11", "DCM-12", "DCM-13", "DCM-14"],
-    "next_step": "DCM-15",
-    "checkpoint": "qualification/2026-11-10-dcm14.md",
+    "completed_product_steps": ["DCM-06", "DCM-07", "DCM-08", "DCM-09", "DCM-10", "DCM-11", "DCM-12", "DCM-13", "DCM-14", "DCM-15"],
+    "next_step": "DCM-16",
+    "checkpoint": "qualification/2026-11-10-dcm15.md",
     "rule": "The first five completed steps are setup/diagnostic work, not product acceptance. Preserve all original defect IDs and prior evidence."
   },
   "status_values": ["planned", "implemented", "tested", "fixed"],
@@ -32,9 +32,11 @@
     "archive_sha256": "64e1cb1666acc9a70aeeb9656b4f30ca26fc30ad142ea32e154cb7a63dc7b5aa",
     "native_regression_commit": "4619e0ef2bed51b7685c5f84d0fc0f87702bb1ca",
     "native_regression_result": "23 top-level app regressions: 23 passed, 0 failed, 0 skipped, exit 0, no timeout, source unchanged. DCM-12 adds invalid-template-package coverage; all three D4 parent tests and five nested cases passed. All earlier safety tests remain GREEN. Full app/installer/UI/package qualification remains open.",
-    "last_native_attempt": "13f52cb0ed5e494bd838062c6b7e3fcca424f068 / 20261110-030347-e80c1e53: full baseline 351 passed / 0 failed / 1 external-fixture skip; 352 results, exit 0, no timeout, source unchanged. DCM-14 completed with explicit PPTX skip disposition; no UI or release acceptance.",
+    "last_native_attempt": "99f07c1559f3519e1d9ddcb06b2c28014168c55e: fresh ui-tooling PASS (20261110-151151-1e75a08f) and installer-unit 26 passed / 0 failed / 0 skipped (20261110-151249-eefc7658). Both FlowDev commands exited 0. Installer run had no timeout and source_unchanged=true. DCM-15 tooling boundary only; visible UI acceptance remains open.",
     "app_baseline_checkpoint": {"commit": "13f52cb0ed5e494bd838062c6b7e3fcca424f068", "report": "20261110-030347-e80c1e53", "count": 352, "passed": 351, "failed": 0, "skipped": ["TestRealGeneratedPPTXIntegration"], "exit_code": 0, "timed_out": false, "source_unchanged": true, "skip_disposition": "DCM_REAL_PPTX not set; not executed, not passed. External fixture remains required under DCM-32 / DCM-PREVIEW-01 / DCM-47."},
-    "installer_unit_checkpoint": {"commit": "70e8f240a0228c8548562bb627db4213cbaf1d17", "result": "26 passed, 0 failed, 0 skipped", "report": "20261109-180724-83ef3b94"},
+    "installer_unit_checkpoint": {"commit": "99f07c1559f3519e1d9ddcb06b2c28014168c55e", "result": "26 passed, 0 failed, 0 skipped", "report": "20261110-151249-eefc7658", "exit_code": 0, "timed_out": false, "source_unchanged": true},
+    "installer_unit_previous_checkpoint": {"commit": "70e8f240a0228c8548562bb627db4213cbaf1d17", "result": "26 passed, 0 failed, 0 skipped", "report": "20261109-180724-83ef3b94"},
+    "ui_tooling_checkpoint": {"commit": "99f07c1559f3519e1d9ddcb06b2c28014168c55e", "result": "PASS: seven scripts parsed, native adapter compiled, four disposable fixtures validated", "report": "20261110-151151-1e75a08f", "exit_code": 0, "scope": "tooling syntax and fixture construction only; no product UI launch"},
     "installer_engine_checkpoint": {"commit": "a49e65951b5be9d26dc7d74a4916ae0b1b54664d", "result": "PASS: full isolated lifecycle and receipt validation", "report": "20261109-181814-920da14f", "registry_override_reset": true, "private_registry_removed": true, "live_registry_unchanged": true},
     "final_package_qualified": false,
     "user_acceptance": "not_recorded",
@@ -72,7 +74,8 @@
     "dcm12_checkpoint": "qualification/2026-11-09-dcm12.md",
     "dcm13_checkpoint": "qualification/2026-11-09-dcm13.md",
     "dcm13_completion": "qualification/dcm13-complete.md",
-    "dcm14_checkpoint": "qualification/2026-11-10-dcm14.md"
+    "dcm14_checkpoint": "qualification/2026-11-10-dcm14.md",
+    "dcm15_checkpoint": "qualification/2026-11-10-dcm15.md"
   },
   "items": [
     {
