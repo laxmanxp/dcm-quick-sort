@@ -17,6 +17,7 @@
         "build": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "build"],
         "package": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "package"],
         "ui-tooling": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-tooling.ps1"],
+        "ui-launch": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-launch.ps1"],
         "ui-basics": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-ui.ps1", "-Suite", "basics"],
         "ui-filters": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-ui.ps1", "-Suite", "filters"],
         "ui-rename": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-ui.ps1", "-Suite", "rename"],
