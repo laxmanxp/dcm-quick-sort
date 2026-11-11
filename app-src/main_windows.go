@@ -1935,6 +1935,8 @@ func showTextPreview(path string) bool {
 	text, err := readTextPreview(path, defaultTextPreviewLimit)
 	if err != nil {
 		app.fallback = "Could not read this file as text.\n\n" + err.Error()
+		setText(app.statusLabel, "Text preview unavailable: "+err.Error())
+		updatePreviewZoomControls()
 		procInvalidateRect.Call(app.previewHwnd, 0, 1)
 		return false
 	}
@@ -4741,8 +4743,10 @@ func loadPreview(path string) {
 	if shouldUsePlainTextPreview(path) {
 		if showTextPreview(path) {
 			setText(app.statusLabel, "Plain-text preview: "+strings.ToUpper(strings.TrimPrefix(filepath.Ext(path), ".")))
-			return
 		}
+		// Preserve the specific text-read/encoding error; generic handler
+		// fallback must not overwrite it or retain a previous success status.
+		return
 	}
 	if readTextEnabled() {
 		showTextPreview(path)

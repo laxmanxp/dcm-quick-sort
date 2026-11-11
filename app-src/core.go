@@ -860,7 +860,10 @@ func readTextPreview(path string, limit int64) (string, error) {
 		data = data[:limit]
 	}
 
-	text := decodeTextBytes(data)
+	text, err := decodePreviewTextBytes(data, truncated)
+	if err != nil {
+		return "", err
+	}
 	text, suspicious := sanitizePreviewText(text)
 	if suspicious {
 		text = "[Binary/non-text bytes detected. Showing a safe text interpretation.]\n\n" + text
@@ -871,23 +874,40 @@ func readTextPreview(path string, limit int64) (string, error) {
 	return normalizePreviewNewlines(text), nil
 }
 
-func decodeTextBytes(data []byte) string {
+// Decode only the bounded preview prefix. A character cut by our byte limit
+// is omitted; a malformed sequence in the available prefix is reported, not
+// silently replaced. BOM-less legacy encodings and UTF-32 are not guessed.
+func decodePreviewTextBytes(data []byte, truncated bool) (string, error) {
+	if len(data) >= 4 && ((data[0] == 0xFF && data[1] == 0xFE && data[2] == 0 && data[3] == 0) ||
+		(data[0] == 0 && data[1] == 0 && data[2] == 0xFE && data[3] == 0xFF)) {
+		return "", fmt.Errorf("unsupported UTF-32 encoding; use UTF-8 or BOM-marked UTF-16")
+	}
 	if len(data) >= 2 && data[0] == 0xFF && data[1] == 0xFE {
-		return decodeUTF16(data[2:], true)
+		return decodePreviewUTF16(data[2:], true, truncated)
 	}
 	if len(data) >= 2 && data[0] == 0xFE && data[1] == 0xFF {
-		return decodeUTF16(data[2:], false)
+		return decodePreviewUTF16(data[2:], false, truncated)
 	}
 	if len(data) >= 3 && data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF {
 		data = data[3:]
 	}
-	if utf8.Valid(data) {
-		return string(data)
+	for i := 0; i < len(data); {
+		value, size := utf8.DecodeRune(data[i:])
+		if value == utf8.RuneError && size == 1 {
+			if truncated && !utf8.FullRune(data[i:]) {
+				return string(data[:i]), nil
+			}
+			return "", fmt.Errorf("unsupported or invalid text encoding; expected UTF-8 or BOM-marked UTF-16")
+		}
+		i += size
 	}
-	return strings.ToValidUTF8(string(data), "�")
+	return string(data), nil
 }
 
-func decodeUTF16(data []byte, littleEndian bool) string {
+func decodePreviewUTF16(data []byte, littleEndian, truncated bool) (string, error) {
+	if len(data)%2 != 0 && !truncated {
+		return "", fmt.Errorf("invalid UTF-16 encoding: incomplete code unit")
+	}
 	units := make([]uint16, 0, len(data)/2)
 	for i := 0; i+1 < len(data); i += 2 {
 		var u uint16
@@ -898,7 +918,22 @@ func decodeUTF16(data []byte, littleEndian bool) string {
 		}
 		units = append(units, u)
 	}
-	return string(utf16.Decode(units))
+	for i := 0; i < len(units); i++ {
+		u := units[i]
+		if u >= 0xD800 && u <= 0xDBFF {
+			if i+1 == len(units) && truncated {
+				units = units[:i]
+				break
+			}
+			if i+1 == len(units) || units[i+1] < 0xDC00 || units[i+1] > 0xDFFF {
+				return "", fmt.Errorf("invalid UTF-16 encoding: unpaired surrogate")
+			}
+			i++
+		} else if u >= 0xDC00 && u <= 0xDFFF {
+			return "", fmt.Errorf("invalid UTF-16 encoding: unpaired surrogate")
+		}
+	}
+	return string(utf16.Decode(units)), nil
 }
 
 func sanitizePreviewText(s string) (string, bool) {
