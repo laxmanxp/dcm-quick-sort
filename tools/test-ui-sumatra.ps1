@@ -19,13 +19,24 @@ function CheckSource {if((Git @('rev-parse','HEAD')) -ne $head -or (Git @('statu
 function Own {$app.Refresh();if($app.HasExited -or $app.Path -ne $exe -or $app.StartTime.ToUniversalTime().ToString('o') -ne $receipt.host_start){throw 'Owned app identity/liveness changed'};[DcmNative]::RequireOwned($hwnd,$app.Id)}
 function Wait([string]$Label,[scriptblock]$Check){$until=[DateTime]::UtcNow.AddSeconds(20);do{Own;if(& $Check){return};Start-Sleep -Milliseconds 100}while([DateTime]::UtcNow -lt $until);throw ('Deadline: '+$Label)}
 function Text([int]$id){return [DcmNative]::Text([DcmNative]::Control($hwnd,$app.Id,$id),$app.Id)}
-function SelectFile([string]$file){$null=[DcmNative]::SelectFiles($hwnd,$app.Id,1016,[string[]]@($file));$stem=[IO.Path]::GetFileNameWithoutExtension($file);Wait ('selection '+$file) {(Text 1005) -ceq $stem}}
+function SelectFile([string]$file){
+    $null=[DcmNative]::SelectFiles($hwnd,$app.Id,1016,[string[]]@($file));$stem=[IO.Path]::GetFileNameWithoutExtension($file)
+    try{Wait ('selection '+$file) {(Text 1005) -ceq $stem}}catch{
+        Json (Join-Path $lab 'selection-failure.json') ([ordered]@{expected=$stem;actual=(Text 1005);items=@([DcmNative]::ListItems($hwnd,$app.Id,1016));selected=@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016));embedded=[DcmSumatraProbe]::Find($hwnd,$app.Id)})
+        throw
+    }
+}
 function Shot([string]$name,[string]$color=''){
     Own;$area=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea;[DcmNative]::Restore($hwnd,$app.Id,$area.Left+8,$area.Top+8);Start-Sleep -Milliseconds 400
     $s=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'.png')),$false)
     $shots.Add([ordered]@{name=$name;path=$s.Path;sha256=(Hash $s.Path);teal=$s.TealSamples;orange=$s.OrangeSamples;visual_reviewed=$false})
-    if($color -eq 'teal' -and ($s.TealSamples -lt 1000 -or $s.OrangeSamples -gt 100)){throw 'Wrong visible PDF page: expected teal'}
-    if($color -eq 'orange' -and ($s.OrangeSamples -lt 1000 -or $s.TealSamples -gt 100)){throw 'Wrong visible PDF page: expected orange'}
+    if($color){
+        # Exclude the blue title bar/list highlights from the PDF pixel oracle.
+        $pixels=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'-content.png')),$true)
+        $shots.Add([ordered]@{name=$name+'-content';path=$pixels.Path;sha256=(Hash $pixels.Path);teal=$pixels.TealSamples;orange=$pixels.OrangeSamples;visual_reviewed=$false})
+        if($color -eq 'teal' -and ($pixels.TealSamples -lt 1000 -or $pixels.OrangeSamples -gt 100)){throw 'Wrong visible PDF page: expected teal'}
+        if($color -eq 'orange' -and ($pixels.OrangeSamples -lt 1000 -or $pixels.TealSamples -gt 100)){throw 'Wrong visible PDF page: expected orange'}
+    }
 }
 function Viewer {
     Wait 'embedded Sumatra child' { $null -ne [DcmSumatraProbe]::Find($hwnd,$app.Id) }

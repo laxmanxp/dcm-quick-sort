@@ -33,6 +33,7 @@ var (
 	spSetTimer         = user32.NewProc("SetTimer")
 	spKillTimer        = user32.NewProc("KillTimer")
 	spSetWindowPos     = user32.NewProc("SetWindowPos")
+	spShowWindowAsync  = user32.NewProc("ShowWindowAsync")
 )
 
 type sumatraBasicLimit struct {
@@ -218,7 +219,7 @@ func stopSumatraPreview() error {
 	}
 	spKillTimer.Call(app.hwnd, sumatraTimerID)
 	if sumatraOwnsWindow(v, v.child) {
-		procShowWindow.Call(v.child, 0)
+		spShowWindowAsync.Call(v.child, 0)
 		procPostMessageW.Call(v.child, WM_CLOSE, 0, 0)
 	}
 	r, _, _ := spWait.Call(v.process, 200)
