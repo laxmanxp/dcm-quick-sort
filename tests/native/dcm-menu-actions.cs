@@ -12,7 +12,7 @@ public static class DcmMenuActions {
     [StructLayout(LayoutKind.Sequential)] public struct MENUBARINFO { public uint Size; public RECT Rect; public IntPtr Menu,Window; public uint Flags; }
     [StructLayout(LayoutKind.Sequential)] public struct MOUSEINPUT { public int X,Y; public uint Data,Flags,Time; public UIntPtr Extra; }
     [StructLayout(LayoutKind.Explicit,Size=40)] public struct INPUT { [FieldOffset(0)] public uint Type; [FieldOffset(8)] public MOUSEINPUT Mouse; }
-    public sealed class Item { public int Position; public uint ID,State; public string Text; public bool Submenu; }
+    public sealed class Item { public int Position; public uint ID,State; public string Text; public bool Submenu; public string LogicalPoint,PhysicalPoint,InputMethod; }
     public sealed class Shot { public string Path; public int Width,Height; }
     [DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(IntPtr h,out uint pid);
     [DllImport("user32.dll",CharSet=CharSet.Unicode)] private static extern int GetClassName(IntPtr h,StringBuilder text,int size);
@@ -31,6 +31,9 @@ public static class DcmMenuActions {
     [DllImport("user32.dll")] private static extern uint SendInput(uint count,INPUT[] inputs,int size);
     [DllImport("user32.dll")] private static extern short GetAsyncKeyState(int key);
     [DllImport("user32.dll")] private static extern IntPtr SetThreadDpiAwarenessContext(IntPtr value);
+    [DllImport("user32.dll")] private static extern IntPtr GetWindowDpiAwarenessContext(IntPtr window);
+    [DllImport("user32.dll")] private static extern bool LogicalToPhysicalPointForPerMonitorDPI(IntPtr window,ref POINT point);
+    [DllImport("user32.dll")] private static extern int MenuItemFromPoint(IntPtr window,IntPtr menu,POINT point);
     private static IntPtr Require(IntPtr popup,int pid){
         uint actual;GetWindowThreadProcessId(popup,out actual);
         var text=new StringBuilder(128);GetClassName(popup,text,text.Capacity);
@@ -67,10 +70,16 @@ public static class DcmMenuActions {
             if(label=="Open"){if(choice!=null)throw new Exception("Ambiguous Open item");choice=item;}
         }
         if(choice==null || choice.Submenu || (choice.State & 3)!=0 || choice.ID==0xFFFFFFFF)throw new Exception("Exact enabled Open command unavailable; no command invoked");
-        IntPtr old=SetThreadDpiAwarenessContext((IntPtr)(-4));
+        IntPtr old=SetThreadDpiAwarenessContext(GetWindowDpiAwarenessContext(popup));
         try{
             RECT rect;if(!GetMenuItemRect(IntPtr.Zero,menu,(uint)choice.Position,out rect))throw new Exception("Cannot read Open geometry");
-            int x=rect.Left+(rect.Right-rect.Left)/2,y=rect.Top+(rect.Bottom-rect.Top)/2;
+            POINT logical=new POINT(rect.Left+(rect.Right-rect.Left)/2,rect.Top+(rect.Bottom-rect.Top)/2);
+            if(MenuItemFromPoint(popup,menu,logical)!=choice.Position)throw new Exception("Open item geometry/readback mismatch");
+            POINT physical=logical;
+            if(!LogicalToPhysicalPointForPerMonitorDPI(popup,ref physical))throw new Exception("Cannot convert menu coordinates to physical pixels");
+            SetThreadDpiAwarenessContext((IntPtr)(-4));
+            int x=physical.X,y=physical.Y;
+            choice.LogicalPoint=logical.X+","+logical.Y;choice.PhysicalPoint=x+","+y;choice.InputMethod="owned Open item hit-test and physical SendInput";
             foreach(int key in new int[]{1,2,4,16,17,18,91,92})if((GetAsyncKeyState(key)&0x8000)!=0)throw new Exception("User key/button held; no input sent");
             if(GetAncestor(WindowFromPoint(new POINT(x,y)),2)!=popup){RECT window;GetWindowRect(popup,out window);IntPtr at=WindowFromPoint(new POINT(x,y));var cls=new StringBuilder(128);GetClassName(at,cls,cls.Capacity);throw new Exception(String.Format("Open target is obscured: item=[{0},{1},{2},{3}], popup=[{4},{5},{6},{7}], point=({8},{9}), hitClass={10}, popup={11}, hitRoot={12}",rect.Left,rect.Top,rect.Right,rect.Bottom,window.Left,window.Top,window.Right,window.Bottom,x,y,cls,popup,GetAncestor(at,2)));}
             Require(popup,pid);
