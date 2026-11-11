@@ -37,10 +37,14 @@ Check-DcmFilter 'DCM-21-combined-intersection' "click clear`nselect category `"D
 Save-State 'DCM-21-combined-match';$null=Save-Shot 'DCM-21-combined-match'
 Check-DcmFilter 'DCM-21-combined-no-match' "type name `"no-dcm21-fixture-matches`"" @()
 Save-State 'DCM-21-filtered-empty';$null=Save-Shot 'DCM-21-filtered-empty'
+# Use the known valid disposable destination to isolate no-selection safety
+# from the separate invalid-destination validation dialog (DCM-38).
+Invoke-Fvs 'DCM-21-valid-disposable-destination' "type destination `"Accepted`"`ninspect main`nexpect destination text=`"Accepted`""
 # The hidden charlie fixture must not become a stale Rename or Move target.
 foreach($button in @(1006,1041,1007)){
     [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,$button)
-    Start-Sleep -Milliseconds 150
+    Start-Sleep -Milliseconds 300
+    Wait-For ('no-selection action settled '+$button) { @([DcmNative]::ListItems($script:hwnd,$script:app.Id,1016)).Count -eq 0 }
     Assert-Owned;Assert-Fixtures
     Assert-List ('DCM-21-no-selection-action-'+$button) @()
     if([DcmNative]::Text([DcmNative]::Control($script:hwnd,$script:app.Id,1005),$script:app.Id) -ne ''){throw 'No-selection action restored an actionable draft.'}
