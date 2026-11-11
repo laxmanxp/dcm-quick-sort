@@ -247,6 +247,7 @@ public static class DcmFolderEdit {
     Reload
     Assert-View 'DCM-25-move-target-is-B-not-A' $target @('04-bravo.txt') '04-bravo.txt' -Capture
     Select-PickerPath $inbox 'DCM-25-return-A'
+    Check-SourceView $inbox $aNames
     Select-File '02-shared.txt'
     Assert-View 'DCM-25-original-A-shared-unchanged' $inbox $aNames '02-shared.txt' -Capture
     # Simulate an unavailable source without deleting any of its remaining bytes.
