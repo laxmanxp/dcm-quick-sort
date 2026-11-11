@@ -243,6 +243,8 @@ public static class DcmFolderEdit {
     [DcmNative]::ClickAsync($hwnd,$app.Id,1041)
     Wait-For 'move B only' { (Test-Path -LiteralPath $moved) -and -not(Test-Path -LiteralPath $renamed) -and @([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 1 }
     Map-Fixture $renamed $moved
+    Check-Files
+    Reload
     Assert-View 'DCM-25-move-target-is-B-not-A' $target @('04-bravo.txt') '04-bravo.txt' -Capture
     Select-PickerPath $inbox 'DCM-25-return-A'
     Select-File '02-shared.txt'
