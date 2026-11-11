@@ -2,12 +2,24 @@
   "files": [
     {
       "path": "tools/test-ui-image.ps1",
-      "before_blob": "d6959a0d2355c55d0545d4048f1c1c7b05003227",
-      "after_sha256": "fc662b62b946d6508864864c6ec4b0097fcdf0d99dfb9f6cffc0bc36fe497958",
+      "before_blob": "b0c9b5ab2bc854948e52bfffde11385298a15379",
+      "after_sha256": "9915266d92d47bc45b5a9322444f4e4ad3edae29ca81041d80e6ea1d5324efd8",
       "replacements": [
         {
-          "old": "    if(-not @($snapshot | Where-Object {$_.Visible -and $_.Text.StartsWith('Image preview:')}).Count){throw 'Expected owned image renderer status.'}",
-          "new": "    $statusPrefix=if($Mode -eq 'manual'){'Image preview zoom: '+$Percent+'%'}elseif($Mode -eq 'width'){'Image preview: Fit Width'}else{'Image preview: Fit'}\n    if(-not @($snapshot | Where-Object {$_.Visible -and $_.Text.StartsWith($statusPrefix)}).Count){throw 'Expected owned image renderer status.'}"
+          "old": "    [DcmNative]::Restore($hwnd,$app.Id,$screen.Left+12,$screen.Top+12)\n    Start-Sleep -Milliseconds 300",
+          "new": "    if([DcmNative]::IsIconic($hwnd) -or -not [DcmNative]::IsWindowVisible($hwnd) -or -not $script:capturePositioned){\n        [DcmNative]::Restore($hwnd,$app.Id,$screen.Left+12,$screen.Top+12)\n        Wait-For 'owned capture window restored' { -not [DcmNative]::IsIconic($hwnd) -and [DcmNative]::IsWindowVisible($hwnd) }\n        $script:capturePositioned=$true\n    }\n    Start-Sleep -Milliseconds 300"
+        },
+        {
+          "old": "$app=$null;$hwnd=[IntPtr]::Zero;$owned=$null;$head='';$manifest=@();$expected=@{};$lock=$null",
+          "new": "$app=$null;$hwnd=[IntPtr]::Zero;$owned=$null;$head='';$manifest=@();$expected=@{};$lock=$null;$script:capturePositioned=$false"
+        },
+        {
+          "old": "    Invoke-Sort 'DCM-27-setup' 'Name'\n    foreach($f in $spec)",
+          "new": "    Invoke-Sort 'DCM-27-setup' 'Name'\n    # Exercise the failure boundary before long visual sequences.\n    foreach($f in @('11-empty.png','12-corrupt.jpg')){Select-Image $f;Assert-ImageError ('DCM-27-'+$f) $f;Check-Files}\n    foreach($f in $spec)"
+        },
+        {
+          "old": "    foreach($f in @('11-empty.png','12-corrupt.jpg')){Select-Image $f;Assert-ImageError ('DCM-27-'+$f) $f;Check-Files}\n    $lock=[IO.File]::Open",
+          "new": "    $lock=[IO.File]::Open"
         }
       ]
     }
