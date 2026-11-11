@@ -1,17 +1,13 @@
 {
   "files": [
     {
-      "path": "tools/test-ui-text.ps1",
-      "before_blob": "cc8492992d82afe7f62bc25afd5f31478645b029",
-      "after_sha256": "454fe077e23aaf2f14d393bbc3cd6f50bc775f508416eb2f616a07959cac2f32",
+      "path": "app-src/main_windows.go",
+      "before_blob": "b79cb4828d454dac61964a77173ca4b14586ddf5",
+      "after_sha256": "5baba1d837b92ba59496fe6ad7fd3e992ed327e4e8078920ed4d64c11592b4a5",
       "replacements": [
         {
-          "old": "    if($Tail){[DcmTextProbe]::ScrollEnd($hwnd,$app.Id,[IntPtr]$p.Handle)}",
-          "new": "    if($Tail){$cases[$cases.Count-1]['tail_first_visible_line']=[DcmTextProbe]::ScrollEnd($hwnd,$app.Id,[IntPtr]$p.Handle)}"
-        },
-        {
-          "old": "    Assert-Text 'DCM-26-explicit-read-as-text' $spec[14].want -Capture;Check-Files",
-          "new": "    Assert-Text 'DCM-26-explicit-read-as-text' $spec[14].want -Capture;Check-Files\n    if(@([DcmTextProbe]::Controls($hwnd,$app.Id) | Where-Object {$_.Visible -and $_.Class -eq 'Static' -and $_.Text -ceq 'Read as text: DCM26TEXT'}).Count -ne 1){throw 'DCM26_MANUAL_STATUS_STALE: explicit text retained an unrelated file-type status.'}"
+          "old": "\tif readTextEnabled() {\n\t\tshowTextPreview(path)\n\t\treturn\n\t}",
+          "new": "\tif readTextEnabled() {\n\t\tif showTextPreview(path) {\n\t\t\tsetText(app.statusLabel, \"Read as text: \"+strings.ToUpper(strings.TrimPrefix(filepath.Ext(path), \".\")))\n\t\t}\n\t\treturn\n\t}"
         }
       ]
     }
