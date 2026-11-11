@@ -4757,7 +4757,14 @@ func loadPreview(path string) {
 	if isPDFPath(path) && startPDFPreview(path) {
 		return
 	}
-	if isImage(path) && loadImage(path) {
+	if isImage(path) {
+		if err := loadImageWithError(path); err != nil {
+			app.fallback = "Could not preview this image.\n\n" + err.Error()
+			setText(app.statusLabel, "Image preview unavailable: "+err.Error())
+			updatePreviewZoomControls()
+			procInvalidateRect.Call(app.previewHwnd, 0, 1)
+			return
+		}
 		app.fallback = ""
 		app.previewFit = true
 		app.previewFitWidth = false
@@ -4807,43 +4814,51 @@ func loadPreview(path string) {
 }
 
 func loadImage(path string) bool {
+	// Retain the bool contract used by the owned PDF raster-loading path.
+	return loadImageWithError(path) == nil
+}
+
+func loadImageWithError(path string) error {
 	data, err := os.ReadFile(path)
-	if err != nil || len(data) == 0 {
-		return false
+	if err != nil {
+		return err
+	}
+	if len(data) == 0 {
+		return errors.New("empty image file")
 	}
 
-	// GdipLoadImageFromFile keeps the source file handle open for the lifetime
-	// of the GDI+ image. That made Quick Sort lock the very JPG it was trying
-	// to move. Load the bytes into an in-memory COM stream instead so previewing
-	// never owns a handle to the source file.
+	// Keep the decoder backed by an owned memory stream, never a source handle.
 	hglobal, _, _ := procGlobalAlloc.Call(GMEM_MOVEABLE, uintptr(len(data)))
 	if hglobal == 0 {
-		return false
+		return errors.New("could not allocate image memory")
 	}
 	mem, _, _ := procGlobalLock.Call(hglobal)
 	if mem == 0 {
 		procGlobalFree.Call(hglobal)
-		return false
+		return errors.New("could not access allocated image memory")
 	}
 	copy(unsafe.Slice((*byte)(unsafe.Pointer(mem)), len(data)), data)
 	procGlobalUnlock.Call(hglobal)
 
 	var stream *iUnknown
-	hr, _, _ := procCreateStreamOnHGlobal.Call(hglobal, 1, uintptr(unsafe.Pointer(&stream))) // stream owns/frees HGLOBAL
+	hr, _, _ := procCreateStreamOnHGlobal.Call(hglobal, 1, uintptr(unsafe.Pointer(&stream)))
 	if hresultFailed(hr) || stream == nil {
 		procGlobalFree.Call(hglobal)
-		return false
+		return fmt.Errorf("could not create image stream (HRESULT %#x)", hr)
 	}
 
 	var image uintptr
 	status, _, _ := procGdipLoadImageStream.Call(uintptr(unsafe.Pointer(stream)), uintptr(unsafe.Pointer(&image)))
 	if status != 0 || image == 0 {
+		if image != 0 {
+			procGdipDisposeImage.Call(image)
+		}
 		releaseUnknown(stream)
-		return false
+		return fmt.Errorf("image decoder could not load %q (GDI+ status %d)", filepath.Base(path), status)
 	}
 	app.image = image
 	app.imageStream = stream
-	return true
+	return nil
 }
 
 func unloadPreview() {
