@@ -107,7 +107,7 @@ function Assert-Text([string]$Name,[string]$Want,[switch]$Tail,[switch]$Capture)
         throw ('DCM26_TEXT_MISMATCH: '+$Name+' actual='+$actual)
     }
     $cases.Add([ordered]@{name=$Name;passed=$true;displayed_characters=$p.Text.Length;displayed_sha256=(String-Hash $p.Text);expected_sha256=(String-Hash $Want)})
-    if($Tail){[DcmTextProbe]::ScrollEnd($hwnd,$app.Id,[IntPtr]$p.Handle)}
+    if($Tail){$cases[$cases.Count-1]['tail_first_visible_line']=[DcmTextProbe]::ScrollEnd($hwnd,$app.Id,[IntPtr]$p.Handle)}
     if($Capture){Shot $Name}
 }
 function Assert-TextError([string]$Name,[string]$Reason){
@@ -220,6 +220,7 @@ try{
     [DcmNative]::ClickAsync($hwnd,$app.Id,1014)
     Wait-For 'explicit text preview' { $null -ne [DcmTextProbe]::Preview($hwnd,$app.Id) }
     Assert-Text 'DCM-26-explicit-read-as-text' $spec[14].want -Capture;Check-Files
+    if(@([DcmTextProbe]::Controls($hwnd,$app.Id) | Where-Object {$_.Visible -and $_.Class -eq 'Static' -and $_.Text -ceq 'Read as text: DCM26TEXT'}).Count -ne 1){throw 'DCM26_MANUAL_STATUS_STALE: explicit text retained an unrelated file-type status.'}
     Select-Text '01-plain.txt';Assert-Text 'DCM-26-final-recovery' $spec[0].want -Capture;Check-Files
     $receipt['fixture_hashes']=$expected;$receipt['preview_limit_bytes']=262144
     Check-Files;Stop-App;Check-Source
