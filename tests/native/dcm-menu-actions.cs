@@ -72,7 +72,7 @@ public static class DcmMenuActions {
             RECT rect;if(!GetMenuItemRect(IntPtr.Zero,menu,(uint)choice.Position,out rect))throw new Exception("Cannot read Open geometry");
             int x=rect.Left+(rect.Right-rect.Left)/2,y=rect.Top+(rect.Bottom-rect.Top)/2;
             foreach(int key in new int[]{1,2,4,16,17,18,91,92})if((GetAsyncKeyState(key)&0x8000)!=0)throw new Exception("User key/button held; no input sent");
-            if(GetAncestor(WindowFromPoint(new POINT(x,y)),2)!=popup)throw new Exception("Open target is obscured");
+            if(GetAncestor(WindowFromPoint(new POINT(x,y)),2)!=popup){RECT window;GetWindowRect(popup,out window);IntPtr at=WindowFromPoint(new POINT(x,y));var cls=new StringBuilder(128);GetClassName(at,cls,cls.Capacity);throw new Exception(String.Format("Open target is obscured: item=[{0},{1},{2},{3}], popup=[{4},{5},{6},{7}], point=({8},{9}), hitClass={10}, popup={11}, hitRoot={12}",rect.Left,rect.Top,rect.Right,rect.Bottom,window.Left,window.Top,window.Right,window.Bottom,x,y,cls,popup,GetAncestor(at,2)));}
             Require(popup,pid);
             if(!SetCursorPos(x,y))throw new Exception("Cannot position pointer on owned Open item");
             if(GetAncestor(WindowFromPoint(new POINT(x,y)),2)!=popup)throw new Exception("Open target ownership changed");
