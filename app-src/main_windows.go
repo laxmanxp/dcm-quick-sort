@@ -4237,6 +4237,11 @@ func nextFile() {
 		return
 	}
 	app.index++
+	// Next is single-file navigation: discard the old selection before
+	// showCurrent selects the new row (or leaves none at end of list).
+	app.updatingFileList = true
+	procSendMessageW.Call(app.fileList, LB_SETSEL, 0, ^uintptr(0))
+	app.updatingFileList = false
 	showCurrent(false)
 	focusFileList()
 }

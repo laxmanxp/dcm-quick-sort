@@ -229,25 +229,25 @@ try{
     Next;Next
     Assert-NoCurrent 'DCM-23-empty-next' @() 'No files remaining' -Capture
     Stop-App
-    foreach($name in @('01-alpha.txt','02-hidden.log','03-charlie.txt','04-delta.txt')){
+    foreach($name in @('01-alpha.txt','02-hidden.csv','03-charlie.txt','04-delta.txt')){
         $p=Join-Path $inbox $name
         $fixtureText[$name]='DCM-23 navigation fixture: '+$name+' | The selected row and preview must agree.'
         [IO.File]::WriteAllText($p,$fixtureText[$name],$utf8);$expected[$name]=Hash $p
     }
-    $all=[string[]]@('01-alpha.txt','02-hidden.log','03-charlie.txt','04-delta.txt')
+    $all=[string[]]@('01-alpha.txt','02-hidden.csv','03-charlie.txt','04-delta.txt')
     $filtered=[string[]]@('01-alpha.txt','03-charlie.txt','04-delta.txt')
     Start-App
     Invoke-Vision 'setup-sort' 'select sort "Name"'
     $null=[DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@('01-alpha.txt'))
     Assert-View 'DCM-23-first' $all '01-alpha.txt' -Capture
     Next
-    Assert-View 'DCM-23-next-adjacent' $all '02-hidden.log' -Capture
+    Assert-View 'DCM-23-next-adjacent' $all '02-hidden.csv' -Capture
     Key 0x26
     Assert-View 'DCM-23-up-previous' $all '01-alpha.txt'
     Key 0x26
     Assert-View 'DCM-23-up-at-first' $all '01-alpha.txt'
     Key 0x28
-    Assert-View 'DCM-23-down-adjacent' $all '02-hidden.log'
+    Assert-View 'DCM-23-down-adjacent' $all '02-hidden.csv'
     Key 0x23
     Assert-View 'DCM-23-end-key' $all '04-delta.txt'
     Key 0x28
