@@ -2,12 +2,12 @@
   "files": [
     {
       "path": "tools/test-ui-refresh.ps1",
-      "before_blob": "f4c70d4b38c0590eede9181baf9c99f1b32d0bfc",
-      "after_sha256": "b3c7fed105ee1da98bfbec098288e6e2b19e34fe3951a07c3e81876bedcbbdd1",
+      "before_blob": "8cb28ee971240361c189f15c07d9cce1b5f9e484",
+      "after_sha256": "18d546ca28392ed6e8dfb457bfcaa25f88179a613b7d8bafdaeae2249c5c7625",
       "replacements": [
         {
-          "old": "    Map-Fixture $renamed $moved\n    Assert-View 'DCM-25-move-target-is-B-not-A'",
-          "new": "    Map-Fixture $renamed $moved\n    Check-Files\n    Reload\n    Assert-View 'DCM-25-move-target-is-B-not-A'"
+          "old": "    Select-PickerPath $inbox 'DCM-25-return-A'\n    Select-File '02-shared.txt'",
+          "new": "    Select-PickerPath $inbox 'DCM-25-return-A'\n    Check-SourceView $inbox $aNames\n    Select-File '02-shared.txt'"
         }
       ]
     }
