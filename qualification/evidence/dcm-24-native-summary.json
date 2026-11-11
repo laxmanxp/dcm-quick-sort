@@ -1,0 +1,80 @@
+{
+  "schema": 1,
+  "feature": "DCM-24",
+  "status": "complete_at_defined_native_boundary",
+  "tested_commit": "aa6dceffa1485a1867e3748c9dbe8d1ec9ade359",
+  "product_fix_commit": "aa6dceffa1485a1867e3748c9dbe8d1ec9ade359",
+  "newly_completed_steps": ["DCM-24"],
+  "blocked_steps": ["DCM-19"],
+  "native_selection": {
+    "report": "C:\\FlowverseReports\\dcm-quicksort-ui-selection-20261111-124301-63c57d1b",
+    "passed": true,
+    "record_count": 16,
+    "behavior_records": 13,
+    "vision_setup_filter_records": 3,
+    "input_method": "guarded SendInput modifier/mouse events; not direct selection assignment or human user acceptance",
+    "input_event_sequences": 16,
+    "app_pid": 29336,
+    "app_exit_code": 0,
+    "children_drained": true,
+    "source_unchanged": true,
+    "moved": ["01-alpha.txt", "04-delta.txt"],
+    "untouched": ["02-bravo.csv", "03-charlie.txt", "05-echo.txt", "06-foxtrot.csv"],
+    "all_six_contents_preserved": true,
+    "cancel_preserved_selection_and_bytes": true
+  },
+  "baseline": {
+    "report": "20261111-124126-52bc061f",
+    "count": 359,
+    "passed": 358,
+    "failed": 0,
+    "skipped": ["TestRealGeneratedPPTXIntegration"],
+    "exit_code": 0,
+    "timed_out": false,
+    "source_unchanged": true,
+    "new_go_parent_tests": 1,
+    "new_policy_subtests": 10
+  },
+  "review": {
+    "raw_visual_flags_edited": false,
+    "images_opened": 7,
+    "images": [
+      {"name": "DCM-24-ctrl-nonadjacent", "sha256": "e9f7292c7b7f6464f4d39ff6aef38335e86056d6cf0bb5e116f84d2e9facbec9", "reviewed": true, "observation": "Alpha and Charlie selected; Charlie draft and preview."},
+      {"name": "DCM-24-ctrl-remove-to-single", "sha256": "0f07cbd2dbe423cf14d7df92b52b08e0ae4c11f2f2b93f4e32ad54789a2d0e77", "reviewed": true, "observation": "Only Charlie highlighted; draft and readable preview agree, Alpha may retain keyboard focus rectangle."},
+      {"name": "DCM-24-ctrl-remove-last", "sha256": "6156337c2f1aa1b77ddee46b6a44197975f453059a2426b3def03a19dc82755a", "reviewed": true, "observation": "No highlighted rows; empty draft and No file selected guidance."},
+      {"name": "DCM-24-shift-range", "sha256": "73bd16531cafd72d7d586a6d265b098fa9dcf83ba267620109af323b8464a15c", "reviewed": true, "observation": "Four contiguous rows selected; Move 4 label; Echo preview."},
+      {"name": "DCM-24-filtered-shift-visible-only", "sha256": "869c21edc323c868155c41842d764181d5448cef91a2188bf277f2bb7f2a185f", "reviewed": true, "observation": "Four TXT rows selected; both CSV fixtures excluded."},
+      {"name": "DCM-24-operation-set-before-confirm", "sha256": "7914674e0eeaa44ea0e3a7d4c9716959d954d1908fb32d51d45b3ac3b96b6d1b", "reviewed": true, "observation": "Exactly Alpha and Delta highlighted; Move 2 label."},
+      {"name": "DCM-24-exact-operation-set", "sha256": "a2d512d5ca1f2a222cf7f28edb2d4eb32a96c3e7b34ac613a8001d01363f878d", "reviewed": true, "observation": "Four untouched source rows; Processed contains Alpha and Delta; 2 of 2 moved status."}
+    ],
+    "open_visual_findings": ["DCM-UI-LABEL-01"],
+    "regression_images_separately_reviewed": false
+  },
+  "red": {
+    "commit": "f208e3ada8b2ff4b95ef55997caf751c0ce76d1b",
+    "report": "20261111-123543-ed7af16e",
+    "error": "DCM24_ACTIVE_SELECTION_MISMATCH: DCM-24-ctrl-remove-to-single selected 03-charlie.txt but draft=01-alpha",
+    "failure_image_sha256": "43d5d944245e138e419a9755b99fa7f38500d7993a3849a78f076a4af8d0b1eb",
+    "failure_image_reviewed": true,
+    "wrong_file_move_attempted": false
+  },
+  "regression_commands": {
+    "ui-navigation": "20261111-124402-832423cc",
+    "ui-sort": "20261111-124546-6419e53e",
+    "ui-launch": "20261111-124601-94d178b7",
+    "ui-filters": "20261111-124612-0456fa14",
+    "result": "all PASS at tested_commit; images not separately reviewed"
+  },
+  "retained_capture_failure": {"report": "20261111-124427-3965ec0c", "error": "Refusing minimized/hidden capture", "cause_of_window_state": "not established", "unchanged_retry": "passed"},
+  "build": {
+    "path": "C:\\FlowverseReports\\dcm-quicksort-build-20261111-124204-86887193\\receipt.json",
+    "sha256": "5dae162d0d1bb1d65187d09db820a8c9cc9c86619bbee79bd95e272b4dfddad1",
+    "app_sha256": "15e937e2cb81988a3cfb3a2ee1d4d6e266d2adcecdb992d08f899d4cc890005a"
+  },
+  "local_validation": {"focused_tests": "PASS", "windows_test_cross_compile": "PASS", "full_linux_suite": "FAIL in Windows-guarded move/recovery tests; not acceptance"},
+  "scope": "Representative same-volume two-file operation set; full Batch Move/Undo, all other operation routes and final package remain separate. Installer not rerun. No user documents or host registry/associations changed.",
+  "user_acceptance": "not_recorded",
+  "merged": false,
+  "published": false,
+  "next_step": "DCM-25"
+}
