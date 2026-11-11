@@ -141,7 +141,7 @@ try{
     $head=Git-Value @('rev-parse','HEAD')
     if($head -ne $build.commit){throw 'Build/current source identity mismatch.'}
     if((Hash $build.source_hash_manifest.path) -ne $build.source_hash_manifest.sha256){throw 'Build manifest hash changed.'}
-    $manifest=@(Get-Content -LiteralPath $build.source_hash_manifest.path -Raw -Encoding UTF8 | ConvertFrom-Json)
+    $manifest=Get-Content -LiteralPath $build.source_hash_manifest.path -Raw -Encoding UTF8 | ConvertFrom-Json
     if(-not $manifest.Count){throw 'Empty source manifest.'}
     Check-Source
     if((Hash $build.app_artifact.path) -ne $build.app_artifact.sha256){throw 'App hash changed.'}
