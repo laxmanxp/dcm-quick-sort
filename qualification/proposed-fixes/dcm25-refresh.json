@@ -2,12 +2,12 @@
   "files": [
     {
       "path": "tools/test-ui-refresh.ps1",
-      "before_blob": "9309b5e97fbd8d9f898628ebae2165affb8422fa",
-      "after_sha256": "19faa0f773ab9cba948aa9fb1d747389ef762b6bac110c84888b9262cec2d9ec",
+      "before_blob": "f4c70d4b38c0590eede9181baf9c99f1b32d0bfc",
+      "after_sha256": "b3c7fed105ee1da98bfbec098288e6e2b19e34fe3951a07c3e81876bedcbbdd1",
       "replacements": [
         {
-          "old": "wait main timeout=5s\nselect sort \"Name\"",
-          "new": "wait main timeout=5s\ninspect main\nselect sort \"Name\""
+          "old": "    Map-Fixture $renamed $moved\n    Assert-View 'DCM-25-move-target-is-B-not-A'",
+          "new": "    Map-Fixture $renamed $moved\n    Check-Files\n    Reload\n    Assert-View 'DCM-25-move-target-is-B-not-A'"
         }
       ]
     }
