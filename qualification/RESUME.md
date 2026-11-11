@@ -1,23 +1,22 @@
-# DCM v1.0.71 — resume after DCM-22
+# DCM v1.0.71 — resume after DCM-23
 
-Latest checkpoint: [DCM-22 sorting complete](2026-11-11-dcm22.md). Preserve all historical evidence and raw receipts.
+Latest checkpoint: [DCM-23 navigation](2026-11-11-dcm23.md); compact evidence: `evidence/dcm-23-native-summary.json`.
+Completed: DCM-01–18 and DCM-20–23. DCM-19 remains blocked. Only DCM-23 newly closed; five of the 22 completed checklist steps are setup/diagnostic work, not a product percentage.
 
-Completed: **DCM-01–18 and DCM-20–22**. DCM-19 remains blocked. Only DCM-22 newly closed; 21 checklist steps include five setup/diagnostic steps, not a completion percentage.
+## Verified current product
 
-## Latest verified evidence
+Tested fix: `996f67208c574a0821d1dda598ffb7e0f9c775b3`. Native RED at `b2a4e5ad` proved Next advanced the draft/preview while the old row remained selected. The fix clears the selection only inside explicit Next before the existing showCurrent synchronization. Shared multi-selection handling was not changed. Final fixture uses CSV instead of LOG to exercise a supported built-in text preview; assertions were retained.
 
-Sorting UI at `238404a3f49e87ad997de3ef90b0df9294ec2eb1`: nine cases, nine separately reviewed screenshots, six disposable files unchanged including creation/modification timestamps, empty destination/journal, normal exit 0, children drained and source unchanged. All four modes preserve single-file selection, draft, counter, heading and actual preview text for two selected files. Same-day and same-timestamp ties exercised; creation dates deliberately differ from modification dates.
+Fresh same-source baseline: 357 pass / 0 fail / 1 external-PPTX skip. Native `ui-navigation`: 22 cases pass, eight images inspected, two normal exit-0 closes, source/fixtures unchanged. `ui-sort` and `ui-launch` regression commands also passed; their new images were not separately reviewed in this checkpoint. Raw visual flags are not edited.
 
-Full baseline at `3803c1a1e243d8cc71e04cdc806cedee22e1408b`: **357 passed, 0 failed, 1 retained external-PPTX skip**. Only the test-harness manifest assignment changed afterward; no application, installer or Go-test changes. First harness attempt failed before launch; retain `20261111-035239-fe49533e`. Do not treat it as a product defect.
+Next past the final file retains the existing no-current state (list remains, no selection/draft, No file selected). Home recovers; Up/Down and filtered navigation are verified with owned queued key messages, not physical keyboard input. New selector: `ui-navigation`.
 
-Registered selector: `ui-sort`. Use `flowdev update dcm-quicksort`, `flowdev test dcm-quicksort build`, then `flowdev test dcm-quicksort ui-sort` with the current exact `DCM_BUILD_RECEIPT`. Last build receipt `C:\FlowverseReports\dcm-quicksort-build-20261111-035455-b98aca4f\receipt.json` matches `238404a3f49e87ad997de3ef90b0df9294ec2eb1` only; rebuild after metadata/source commits.
+## Next runnable step — DCM-24
 
-Sorting report `C:\FlowverseReports\dcm-quicksort-ui-sort-20261111-035630-12477290`; baseline `C:\FlowverseReports\dcm-quicksort-baseline-20261111-035026-33ce584f`. App SHA-256 `55fd13c689b55c09d6e464cd75735fbff4c2becf3e9c49a0c093e61e62f28f56`. Summary: `evidence/dcm-22-native-summary.json`.
+Verify actual Ctrl/Shift multi-selection and the exact intended operation set using disposable fixtures. Reuse native/FlowUIVision tooling; avoid claiming direct programmatic selection proves physical Ctrl/Shift behavior. Preserve single-file Next semantics and existing right-click scope. Do not close batch Move/Undo before their separate workflows.
 
-## Next exact step — DCM-23
+Code locally -> GitHub -> FlowDev update/test on Lenovo. No remote source editing. Candidate `C:\FlowverseReports\dcm-quicksort-candidate`; profile `tools\flowdev-dcm`; runner `C:\FlowverseReports\flowdev-standalone-validation\flowdev-test.exe`; workspace `C:\FlowverseReports`; device `d18227f2-0b54-4b11-9026-56ac40305f02`. One native UI run at a time.
 
-Inspect and test the existing file-navigation controls and keyboard behavior. Verify adjacent visible file, first/last boundaries, empty/no-match state, filename draft and preview consistency using disposable fixtures. Do not assume a Previous button exists or implement unrelated UI simply because the checklist uses that word; verify the actual supported previous-navigation route. Keep multi-selection DCM-24 separate.
+Build receipt `C:\FlowverseReports\dcm-quicksort-build-20261111-044044-be651436\receipt.json` matches ONLY `996f6720`; rebuild after later metadata/source changes. App SHA-256 `016da629bd77f57988eac7d2f162384d4c77583e052f4036e3e1581fe76e0fb0`.
 
-Code locally -> GitHub -> FlowDev update/test on Lenovo. Workspace `C:\FlowverseReports`, candidate `C:\FlowverseReports\dcm-quicksort-candidate`, profile `tools\flowdev-dcm`, runner `C:\FlowverseReports\flowdev-standalone-validation\flowdev-test.exe`, device `d18227f2-0b54-4b11-9026-56ac40305f02`. One native UI run at a time; no remote source editing.
-
-DCM-UI-LABEL-01 includes the clipped combined-sort value; still open. DCM-UI-EMPTY-COPY-01 retains its earlier fixed boundary. Diagnostic `DCM21_PROBE_EMPTY_DESTINATION` must remain unset during acceptance. DCM-19/isolation, external DCM_REAL_PPTX before DCM-32/47, remaining workflows/previews, final package/setup lifecycle and user acceptance remain pending. No host installation/registry substitution. Keep PR #1 draft; no merge/publication.
+Keep DCM-19/disposable Explorer isolation, DCM-UI-LABEL-01, external DCM_REAL_PPTX, remaining workflows/previews, final package and actual setup/uninstaller lifecycle, and user acceptance open. Leave DCM21_PROBE_EMPTY_DESTINATION unset during normal runs. Prior receipts and failures retain their source identities. PR #1 remains draft; no merge/publication without final gates and explicit approval.

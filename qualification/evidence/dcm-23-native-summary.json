@@ -1,0 +1,89 @@
+{
+  "schema": 1,
+  "feature": "DCM-23",
+  "date": "2026-11-11",
+  "tested_commit": "996f67208c574a0821d1dda598ffb7e0f9c775b3",
+  "product_fix_commit": "996f67208c574a0821d1dda598ffb7e0f9c775b3",
+  "feature_accepted": true,
+  "user_acceptance": "not_recorded",
+  "baseline": {
+    "commit": "996f67208c574a0821d1dda598ffb7e0f9c775b3",
+    "report": "C:\\FlowverseReports\\dcm-quicksort-baseline-20261111-044006-c8527279",
+    "count": 358,
+    "passed": 357,
+    "failed": 0,
+    "skipped": ["TestRealGeneratedPPTXIntegration"],
+    "exit_code": 0,
+    "timed_out": false,
+    "source_unchanged": true
+  },
+  "navigation": {
+    "commit": "996f67208c574a0821d1dda598ffb7e0f9c775b3",
+    "report": "C:\\FlowverseReports\\dcm-quicksort-ui-navigation-20261111-044215-b415f633",
+    "passed": true,
+    "case_count": 22,
+    "reviewed_images": 8,
+    "exit_codes": [0, 0],
+    "source_unchanged": true,
+    "fixture_names_and_bytes_unchanged": true,
+    "destination_empty": true,
+    "operation_journal_empty": true,
+    "children_drained": true,
+    "raw_visual_reviewed": false,
+    "input_scope": "Actual Next button via owned BM_CLICK; queued owned WM_KEYDOWN/WM_KEYUP for existing Up/Down/Home/End; not physical keyboard or every accessibility route."
+  },
+  "build": {
+    "receipt": "C:\\FlowverseReports\\dcm-quicksort-build-20261111-044044-be651436\\receipt.json",
+    "receipt_sha256": "213dd1579c3b958c83c63b8ce50a16f37ae456037f7251a99c144ad04d140adb",
+    "app_sha256": "016da629bd77f57988eac7d2f162384d4c77583e052f4036e3e1581fe76e0fb0",
+    "size": 7184896,
+    "manifest_files": 249,
+    "manifest_sha256": "de4de57b103388cc929db4da9766364e54692fa0bad5a9189d80ceba970b1203"
+  },
+  "additional_regressions": [
+    {"selector": "ui-sort", "report": "C:\\FlowverseReports\\dcm-quicksort-ui-sort-20261111-044312-f3bab4d7", "flowdev_exit_code": 0, "passed": true, "images_reviewed_in_this_checkpoint": false},
+    {"selector": "ui-launch", "report": "C:\\FlowverseReports\\dcm-quicksort-ui-launch-20261111-044332-d462c955", "flowdev_exit_code": 0, "passed": true, "images_reviewed_in_this_checkpoint": false}
+  ],
+  "red": {
+    "commit": "b2a4e5ad895b31f6d8be4d9110f9b2cd3d044912",
+    "report": "C:\\FlowverseReports\\dcm-quicksort-ui-navigation-20261111-043627-c228308f",
+    "error": "DCM23_SELECTION_MISMATCH: DCM-23-next-adjacent expected 02-hidden.log at 1; actual indexes 0",
+    "failure_image_reviewed": true,
+    "failure_image_sha256": "753ab0fc67a9b2c67a257c0ba076dac8fe96ac63805a47010fd017987d87f535",
+    "app_exit_codes": [0, 0],
+    "source_unchanged": true,
+    "note": "The stale highlighted row was reproduced independently of renderer behavior. Changed the other-extension fixture from LOG to supported text-preview CSV for the final visible-text checks; no assertions removed."
+  },
+  "visual_review": {
+    "reviewed": true,
+    "images": [
+      {"name": "DCM-23-empty-next", "path": "C:\\FlowverseReports\\dcm-quicksort-ui-navigation-20261111-044215-b415f633\\DCM-23-empty-next.png", "sha256": "f707f20c529a3740951ae10830bab38bf091b49dfd9afc57614c71e1ef7002e4"},
+      {"name": "DCM-23-first", "path": "C:\\FlowverseReports\\dcm-quicksort-ui-navigation-20261111-044215-b415f633\\DCM-23-first.png", "sha256": "1ec65ec618c976830e21b0dc36a3fa040d6d999efee4fc0fd1e786a730bb74c4"},
+      {"name": "DCM-23-next-adjacent", "path": "C:\\FlowverseReports\\dcm-quicksort-ui-navigation-20261111-044215-b415f633\\DCM-23-next-adjacent.png", "sha256": "e09437e750ca26af49607a95c3e5851878cd4a7437ea19ef916b3f90de11d7e8"},
+      {"name": "DCM-23-down-at-last", "path": "C:\\FlowverseReports\\dcm-quicksort-ui-navigation-20261111-044215-b415f633\\DCM-23-down-at-last.png", "sha256": "5ff754a7ca777514c6b7b69e8a1acbce32183463f7a93e3cf2fea59c5555a695"},
+      {"name": "DCM-23-next-beyond-last", "path": "C:\\FlowverseReports\\dcm-quicksort-ui-navigation-20261111-044215-b415f633\\DCM-23-next-beyond-last.png", "sha256": "79ac5878e8285c0bf736252ba0db78c7361c71d120dad55ce335f077b9906729"},
+      {"name": "DCM-23-filter-next-skips-hidden", "path": "C:\\FlowverseReports\\dcm-quicksort-ui-navigation-20261111-044215-b415f633\\DCM-23-filter-next-skips-hidden.png", "sha256": "202b36eed83e782e16b6c0e3318030080e2b4b45001b34b2c284344327da0a18"},
+      {"name": "DCM-23-filtered-empty-next", "path": "C:\\FlowverseReports\\dcm-quicksort-ui-navigation-20261111-044215-b415f633\\DCM-23-filtered-empty-next.png", "sha256": "1549b9bc214de78c31045475b3a904b6050996515d14282aa6325f6b6671059e"},
+      {"name": "DCM-23-clear-and-home", "path": "C:\\FlowverseReports\\dcm-quicksort-ui-navigation-20261111-044215-b415f633\\DCM-23-clear-and-home.png", "sha256": "58c775d9da72b5fbcbd399f034b3577e9866ee54823461120d29715d8fc9adb4"}
+    ],
+    "observations": [
+      "Next now highlights the same file shown in the draft/header/content.",
+      "At last-file Next, list remains but selection/draft/content are cleared; heading says No file selected.",
+      "Home restores selection. Filtered Next skips the excluded CSV. Clear Filters and Home restore alpha.",
+      "Existing clipped labels remain open. End-of-list FILES 0 is a selection/position display, not proof the physical folder is empty; consider its clarity in final layout review."
+    ],
+    "raw_receipts_edited": false
+  },
+  "preserved_gates": [
+    "DCM-19 / DCM-EXPLORER-ISOLATION-01",
+    "DCM-UI-LABEL-01",
+    "DCM_REAL_PPTX external integration",
+    "DCM-24 multiselection",
+    "Remaining preview/file operation workflows",
+    "Final package and packaged installer lifecycle",
+    "Actual user acceptance"
+  ],
+  "next_step": "DCM-24",
+  "merged": false,
+  "published": false
+}
