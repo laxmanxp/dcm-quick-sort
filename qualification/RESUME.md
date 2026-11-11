@@ -1,25 +1,23 @@
-# DCM v1.0.71 — resume after DCM-21
+# DCM v1.0.71 — resume after DCM-22
 
-Latest checkpoint: [DCM-21 filters complete](2026-11-11-dcm21.md). Preserve all historical source identities and raw receipts.
+Latest checkpoint: [DCM-22 sorting complete](2026-11-11-dcm22.md). Preserve all historical evidence and raw receipts.
 
-Completed: **DCM-01–18, DCM-20, DCM-21**. DCM-19 is still blocked. Only DCM-21 was newly closed; five completed steps are setup/diagnostic work, not a product percentage. `DCM-UI-EMPTY-COPY-01` is fixed at this UI boundary; `DCM-UI-LABEL-01` remains open.
+Completed: **DCM-01–18 and DCM-20–22**. DCM-19 remains blocked. Only DCM-22 newly closed; 21 checklist steps include five setup/diagnostic steps, not a completion percentage.
 
-## Latest verified results
+## Latest verified evidence
 
-Tested source: `a363333ede3243ead62ce11f5a22c8665205ffe5`. Fresh baseline: **357 passed, 0 failed, 1 retained external-PPTX skip** across 358 results. Fresh ui-filters: PASS with all fixtures/source unchanged and normal exit 0; six images inspected. Fresh ui-launch: 12 cases passed, two normal exit-0 closes, children drained/source unchanged; four images inspected. Raw visual flags were not edited; separate review is in `evidence/dcm-21-native-summary.json`.
+Sorting UI at `238404a3f49e87ad997de3ef90b0df9294ec2eb1`: nine cases, nine separately reviewed screenshots, six disposable files unchanged including creation/modification timestamps, empty destination/journal, normal exit 0, children drained and source unchanged. All four modes preserve single-file selection, draft, counter, heading and actual preview text for two selected files. Same-day and same-timestamp ties exercised; creation dates deliberately differ from modification dates.
 
-The previous Clear Filters interruption was reproduced separately as blank-destination validation after Move with no selected file. The body says `Choose an existing logical location inside the configured Vault.` then `logical address is empty`. `moveCurrent` validates destination before selection. The normal matrix seeds `Accepted` and retains dialog/file-safety guards. Diagnostic mode `DCM21_PROBE_EMPTY_DESTINATION=1` deliberately exits RED after capturing evidence and must be **unset during acceptance**. Do not count that run as passed or repeat it unnecessarily.
+Full baseline at `3803c1a1e243d8cc71e04cdc806cedee22e1408b`: **357 passed, 0 failed, 1 retained external-PPTX skip**. Only the test-harness manifest assignment changed afterward; no application, installer or Go-test changes. First harness attempt failed before launch; retain `20261111-035239-fe49533e`. Do not treat it as a product defect.
 
-The wording correction was already committed before this retry. Only test diagnostics changed in this retry. Three prior DCM-21 Go tests explain the increase from DCM-20's 354 passing tests to 357; no new Go tests were added in this retry.
+Registered selector: `ui-sort`. Use `flowdev update dcm-quicksort`, `flowdev test dcm-quicksort build`, then `flowdev test dcm-quicksort ui-sort` with the current exact `DCM_BUILD_RECEIPT`. Last build receipt `C:\FlowverseReports\dcm-quicksort-build-20261111-035455-b98aca4f\receipt.json` matches `238404a3f49e87ad997de3ef90b0df9294ec2eb1` only; rebuild after metadata/source commits.
 
-## Next exact runnable step — DCM-22
+Sorting report `C:\FlowverseReports\dcm-quicksort-ui-sort-20261111-035630-12477290`; baseline `C:\FlowverseReports\dcm-quicksort-baseline-20261111-035026-33ce584f`. App SHA-256 `55fd13c689b55c09d6e464cd75735fbff4c2becf3e9c49a0c093e61e62f28f56`. Summary: `evidence/dcm-22-native-summary.json`.
 
-Inspect the four existing sorting modes and their native tests. Reuse the owned FlowDev/native adapter/FlowUIVision harness with controlled creation timestamps and explicit expected ordering. Verify that file selection, draft and visible preview remain associated with the same intended file across sort changes. Do not confuse modification timestamps (Age filter) with Windows creation timestamps (Date Created sort). Do not close DCM-23 or any other step incidentally.
+## Next exact step — DCM-23
 
-Code locally, store on GitHub, then use FlowDev update/test on Lenovo; no remote source edits. Workspace `C:\FlowverseReports`, candidate `C:\FlowverseReports\dcm-quicksort-candidate`, profile directory `tools\flowdev-dcm`, runner `C:\FlowverseReports\flowdev-standalone-validation\flowdev-test.exe`, device `d18227f2-0b54-4b11-9026-56ac40305f02`. One native UI run at a time.
+Inspect and test the existing file-navigation controls and keyboard behavior. Verify adjacent visible file, first/last boundaries, empty/no-match state, filename draft and preview consistency using disposable fixtures. Do not assume a Previous button exists or implement unrelated UI simply because the checklist uses that word; verify the actual supported previous-navigation route. Keep multi-selection DCM-24 separate.
 
-Build receipt used: `C:\FlowverseReports\dcm-quicksort-build-20261111-025820-58006f2e\receipt.json`. It matches only `a363333ede3243ead62ce11f5a22c8665205ffe5`. After this documentation commit or any later revision, create a fresh matching build before UI use. App SHA-256 `55fd13c689b55c09d6e464cd75735fbff4c2becf3e9c49a0c093e61e62f28f56`.
+Code locally -> GitHub -> FlowDev update/test on Lenovo. Workspace `C:\FlowverseReports`, candidate `C:\FlowverseReports\dcm-quicksort-candidate`, profile `tools\flowdev-dcm`, runner `C:\FlowverseReports\flowdev-standalone-validation\flowdev-test.exe`, device `d18227f2-0b54-4b11-9026-56ac40305f02`. One native UI run at a time; no remote source editing.
 
-Reports: baseline `20261111-025742-6ba62701`; ui-filters `20261111-030030-c87ccf31`; ui-launch `20261111-030053-ac91402e`; diagnostic-only RED `20261111-025935-9589eb6f`. Full paths and hashes are in the checkpoint/evidence. Preserve original failed filter run `20261111-021101-c58e206d`; its old dialog body was not captured, so do not claim retroactive observation.
-
-DCM-19/`DCM-EXPLORER-ISOLATION-01`, clipping, external `DCM_REAL_PPTX`, remaining UI and preview workflows, final package, actual setup/uninstaller lifecycle and user acceptance remain pending. Installer evidence retains its earlier source identity; the in-process engine is not packaged E2E. No host registration/install as an isolation substitute. Keep PR #1 draft; no merge/publication without remaining gates and explicit approval.
+DCM-UI-LABEL-01 includes the clipped combined-sort value; still open. DCM-UI-EMPTY-COPY-01 retains its earlier fixed boundary. Diagnostic `DCM21_PROBE_EMPTY_DESTINATION` must remain unset during acceptance. DCM-19/isolation, external DCM_REAL_PPTX before DCM-32/47, remaining workflows/previews, final package/setup lifecycle and user acceptance remain pending. No host installation/registry substitution. Keep PR #1 draft; no merge/publication.
