@@ -1,25 +1,25 @@
-# DCM v1.0.71 — resume after DCM-24
+# DCM v1.0.71 — resume after DCM-25
 
-Latest accepted checkpoint: [DCM-24](dcm24-complete.md). Preserve the original interrupted-work report `2026-11-11-dcm24.md` and all earlier evidence.
+Latest checkpoint: [DCM-25 complete](dcm25-complete.md). Preserve all prior records, including DCM-24's interrupted-work report and each native RED.
 
-Completed: **DCM-01–18 and DCM-20–24**. Only DCM-24 newly closed. DCM-19 remains blocked. Twenty-three checklist steps include five setup/diagnostic steps, not a product percentage. User acceptance remains not recorded.
+Completed: **DCM-01–18 and DCM-20–25**. Only DCM-25 newly closed. DCM-19 remains blocked. The 24 completed checklist steps include five setup/diagnostic steps, not a product percentage. User acceptance remains unrecorded.
 
 ## Verified state
 
-Product/native-tested revision: `aa6dceffa1485a1867e3748c9dbe8d1ec9ade359`. Ctrl-deselection RED at f208e3ad showed Charlie selected with Alpha draft/preview. Fix reads actual selected indices, does not reset the native caret/range anchor during selection repaint, gives empty selection no current file, and makes Move consume the selected set. Do not reapply the old proposal.
+Product/native-tested revision: `1554c9b87bbb834b14d54b231eae4b4ece27b8d2`. Native RED at 03c9be04 proved failed-source Refresh retained old list/selection/draft/preview. The failed-read branch now clears cached targets, uses existing preview cleanup and shows Source unavailable with recovery guidance. No installer/preview engine change. Do not reapply the old proposal.
 
-Native ui-selection: 16 successful records (13 behavior and three FlowUIVision setup/filter records), seven screenshots separately reviewed, exact two-file move and Cancel verified, all six fixture contents preserved, normal exit 0, children drained/source unchanged. This uses guarded SendInput modifier/mouse events, not LB_SETSEL selection shortcuts or human user testing.
+Native ui-refresh: **23 successful records, nine separately reviewed images**, source/fixture-state integrity and normal exit 0 with children drained. Actual Browse switches between A, B and empty; same basenames with different contents remain distinct. Representative B-only Rename/Move leaves A intact. A controlled directory move/recovery checks unavailable-source safety. Harness creates/deletes/moves only declared disposable fixtures; these mutations are explicitly accounted for.
 
-Full native baseline: **358 passed, 0 failed, 1 skipped**, 359 results, no timeout. One new Go parent test has ten policy subtests. External `TestRealGeneratedPPTXIntegration` remains unexecuted without the identified DCM_REAL_PPTX fixture. Native navigation, sorting, launch and filters also pass at the same source; their new screenshots were not separately re-reviewed. Retain the initial sort capture failure and unchanged successful retry.
+Full baseline: **358 passed / 0 failed / 1 external-PPTX skip**, 359 Go results, exit 0, no timeout, source unchanged. No new Go tests; native UI regression added. Fresh ui-selection and ui-launch commands PASS; their new images were not separately reviewed. Preserve the three retained harness failures and actual product RED, documented in the checkpoint.
 
-## Next exact step — DCM-25
+## Next exact step — DCM-26
 
-Qualify Refresh and switching source folders so an old selected row, filename draft or operation target cannot leak into a different source. Reuse existing Browse/filter/selection harnesses with disposable fixtures; do not close other gates incidentally. Verify visible preview, exact source/destination bytes and normal shutdown. Keep Ctrl-deselection, native Shift anchors and explicit Next behavior intact.
+Inspect the advertised built-in/native text preview path, supported extensions, size limits and encoding behavior. Reuse source-bound FlowDev/native tooling with disposable fixtures, verify actual visible text and truthful empty/error/unsupported states, and inspect images before closing the step. Do not infer every text format from earlier TXT fixtures or expand preview scope silently. Keep selection/Next/Refresh safety intact.
 
-Code locally -> GitHub -> FlowDev update/test on Lenovo, serially. Candidate `C:\FlowverseReports\dcm-quicksort-candidate`, profile `tools\flowdev-dcm`, runner `C:\FlowverseReports\flowdev-standalone-validation\flowdev-test.exe`, workspace `C:\FlowverseReports`, device `d18227f2-0b54-4b11-9026-56ac40305f02`. No remote source edits.
+Code locally -> GitHub -> FlowDev update/test on Lenovo, serially. Candidate `C:\FlowverseReports\dcm-quicksort-candidate`, profile `tools\flowdev-dcm`, runner `C:\FlowverseReports\flowdev-standalone-validation\flowdev-test.exe`, workspace `C:\FlowverseReports`, device `d18227f2-0b54-4b11-9026-56ac40305f02`. No remote source editing. Check for another app's active UI test before using desktop input.
 
-Exact last build: `C:\FlowverseReports\dcm-quicksort-build-20261111-124204-86887193\receipt.json`, matches aa6dceff only. App SHA-256 `15e937e2cb81988a3cfb3a2ee1d4d6e266d2adcecdb992d08f899d4cc890005a`. Obtain a fresh source-matching build after this metadata commit; never edit receipt identities.
+Exact build receipt: `C:\FlowverseReports\dcm-quicksort-build-20261111-132602-da7ecfec\receipt.json` matches 1554c9b8 only. App SHA-256: `b6353d846a8c58c167032dc06a873e15e48273dbdbd68e67758877bd8b364466`. Obtain a fresh source-matching build after metadata/source changes; never edit old receipts.
 
-Evidence paths and hashes are in `dcm24-complete.md` and `evidence/dcm-24-native-summary.json`. Raw screenshot flags remain unchanged and small desktop-edge captures stay on Lenovo. Original interrupted build outcome remains unknown; no relevant active session or dec6385a receipt was found on recovery, and fresh runs were performed.
+Reports under `C:\FlowverseReports`: refresh `20261111-132617-5e4dccbb`; baseline `20261111-132539-4f1de17d`; selection regression `20261111-132717-40bc10d4`; launch regression `20261111-132739-cf097855`; product RED refresh `20261111-132238-b590b5c8`. Full paths and hashes are in `evidence/dcm-25-native-summary.json`.
 
-Keep DCM-19/disposable Explorer isolation, DCM-UI-LABEL-01, external PPTX, full Batch Move/Undo, remaining previews and workflows, final package and actual setup/uninstaller lifecycle open. Leave DCM21_PROBE_EMPTY_DESTINATION unset in normal qualification. PR #1 stays draft; no merge or publication without final gates and approval.
+Keep DCM-19/disposable Explorer isolation, DCM-UI-LABEL-01, identified DCM_REAL_PPTX, remaining previews/workflows, full Batch Move/Undo, final package and actual setup/uninstaller lifecycle open. Leave DCM21_PROBE_EMPTY_DESTINATION unset. Previous native results retain original source identities; Shell Cut/Delete remain outside DCM Undo. PR #1 stays draft; no merge/publication without remaining gates and approval.
