@@ -4155,7 +4155,16 @@ func reloadFilesWithFocus(focusName bool) {
 	}
 	files, err := listFilesInbox(app.sourceDir, selectedInboxFilter(), time.Now())
 	if err != nil {
+		// A failed refresh must not leave cached paths as actionable targets.
+		app.files = nil
+		app.index = -1
+		app.startupPreferredFile = ""
+		populateFileList()
+		showCurrent(false)
+		setText(app.currentLabel, "PREVIEW  ·  Source unavailable")
+		app.fallback = "Cannot read source folder: " + err.Error() + "\n\nRestore access or choose another folder, then Reload."
 		setText(app.statusLabel, "Cannot read source folder: "+err.Error())
+		procInvalidateRect.Call(app.previewHwnd, 0, 1)
 		return
 	}
 	app.files = files
