@@ -1,0 +1,15 @@
+{
+  "files": [
+    {
+      "path": "tools/test-ui-refresh.ps1",
+      "before_blob": "79f68cff13c7911ae8421d380bfd4cd0d4d60d93",
+      "after_sha256": "42b524ccbfa67f66c1790e0c0174e46499428744dc9d519fe90da777b72afa74",
+      "replacements": [
+        {
+          "old": "    Map-Fixture $old $renamed\n    $bNames=@('04-bravo.txt','B-renamed.txt')",
+          "new": "    Map-Fixture $old $renamed\n    Wait-For 'renamed row ready' { @([DcmNative]::ListItems($hwnd,$app.Id,1016)) -contains 'B-renamed.txt' }\n    Reload\n    $bNames=@('04-bravo.txt','B-renamed.txt')"
+        }
+      ]
+    }
+  ]
+}
