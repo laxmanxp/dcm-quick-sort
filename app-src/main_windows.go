@@ -3329,10 +3329,7 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 				acceptDestinationSuggestion()
 			case ID_FILE_LIST:
 				if !app.updatingFileList {
-					if idx, _, _ := procSendMessageW.Call(app.fileList, LB_GETCARETINDEX, 0, 0); idx != LB_ERR && int(idx) < len(app.files) {
-						app.index = int(idx)
-						showCurrent(false)
-					}
+					updateCurrentFromSourceSelection()
 				}
 			case ID_PROCESSED_LIST:
 				if !app.updatingProcessedList {
@@ -3695,30 +3692,10 @@ func fileListSelectionCount() int {
 }
 
 func selectedSourceFiles() []string {
-	if app.fileList == 0 || len(app.files) == 0 {
-		return nil
-	}
-	count := fileListSelectionCount()
-	if count <= 0 {
-		if current := currentFile(); current != "" {
-			return []string{current}
-		}
-		return nil
-	}
-	indexes := make([]int32, count)
-	got, _, _ := procSendMessageW.Call(app.fileList, LB_GETSELITEMS, uintptr(count), uintptr(unsafe.Pointer(&indexes[0])))
-	if got == LB_ERR || got == 0 {
-		if current := currentFile(); current != "" {
-			return []string{current}
-		}
-		return nil
-	}
-	selected := make([]string, 0, int(got))
-	for _, raw := range indexes[:int(got)] {
-		idx := int(raw)
-		if idx >= 0 && idx < len(app.files) {
-			selected = append(selected, app.files[idx])
-		}
+	indexes := selectedSourceIndexes()
+	selected := make([]string, 0, len(indexes))
+	for _, raw := range indexes {
+		selected = append(selected, app.files[int(raw)])
 	}
 	return selected
 }
@@ -4192,6 +4169,12 @@ func reloadFilesWithFocus(focusName bool) {
 }
 
 func showCurrent(focusName bool) {
+	showCurrentView(focusName, true)
+}
+
+// Native selection notifications must not move the caret/anchor or reselect
+// a row the user just Ctrl-deselected. Programmatic navigation still syncs.
+func showCurrentView(focusName, syncSelection bool) {
 	unloadPreview()
 	f := currentFile()
 	if f == "" {
@@ -4210,7 +4193,9 @@ func showCurrent(focusName bool) {
 	ext := filepath.Ext(base)
 	stem := strings.TrimSuffix(base, ext)
 	setText(app.currentLabel, "PREVIEW  ·  "+base)
-	syncFileListSelection()
+	if syncSelection {
+		syncFileListSelection()
+	}
 	selectionCount := fileListSelectionCount()
 	if selectionCount > 1 {
 		setText(app.countLabel, fmt.Sprintf("FILES  ·  %d selected  ·  %s", selectionCount, filePositionLabel(app.index, len(app.files))))
@@ -4457,14 +4442,15 @@ func moveCurrent() {
 		return
 	}
 	selected := selectedSourceFiles()
+	if len(selected) == 0 {
+		return
+	}
 	if len(selected) > 1 {
 		startBatchMove(selected, physicalDest, logicalDest)
 		return
 	}
-	src := currentFile()
-	if src == "" {
-		return
-	}
+	// Move consumes the actual selected set, never an unselected caret row.
+	src := selected[0]
 	app.destDir = logicalDest
 	setDestinationText(logicalDest)
 	currentName := strings.TrimSuffix(filepath.Base(src), filepath.Ext(src))
