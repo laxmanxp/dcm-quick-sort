@@ -96,7 +96,8 @@ expect sort text="$Mode"
 function Select-Text([string]$Name){
     Require-App
     $null=[DcmNative]::SelectFiles($hwnd,$app.Id,1016,[string[]]@($Name))
-    Wait-For ('text selection '+$Name) { (Text 1005) -ceq [IO.Path]::GetFileNameWithoutExtension($Name) }
+    $selectedStem=[IO.Path]::GetFileNameWithoutExtension($Name)
+    Wait-For ('text selection '+$Name) { (Text 1005) -ceq $selectedStem }
 }
 function Assert-Text([string]$Name,[string]$Want,[switch]$Tail,[switch]$Capture){
     Require-App
