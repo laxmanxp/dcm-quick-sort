@@ -234,6 +234,8 @@ public static class DcmFolderEdit {
     [DcmNative]::ClickAsync($hwnd,$app.Id,1006)
     Wait-For 'rename B only' { (Test-Path -LiteralPath $renamed) -and -not(Test-Path -LiteralPath $old) }
     Map-Fixture $old $renamed
+    Wait-For 'renamed row ready' { @([DcmNative]::ListItems($hwnd,$app.Id,1016)) -contains 'B-renamed.txt' }
+    Reload
     $bNames=@('04-bravo.txt','B-renamed.txt')
     Assert-View 'DCM-25-rename-target-is-B-not-A' $target $bNames 'B-renamed.txt' -Capture
     $moved=Join-Path $destination 'B-renamed.txt'
