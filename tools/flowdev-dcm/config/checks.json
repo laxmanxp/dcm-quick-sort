@@ -29,7 +29,8 @@
         "ui-folder": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-folder.ps1"],
         "explorer-isolation": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/check-explorer-isolation.ps1"],
         "ui-context": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-context.ps1"],
-        "ui-sort": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-sort.ps1"]
+        "ui-sort": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-sort.ps1"],
+        "ui-navigation": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-navigation.ps1"]
       }
     }
   }
