@@ -352,6 +352,7 @@ try {
         Invoke-Fvs 'sort-type' "select sort `"File Type`"`ninspect main"
         Assert-List 'file type sort' @('08-preview.pdf','01-alpha.txt','02-bravo.txt','03-charlie.txt') -Ordered
         Assert-Fixtures
+        if($Suite -eq 'filters'){. (Join-Path $repo 'tests\native\filter-matrix.ps1')}
     }
     if($Suite -in @('basics','rename')){
         Invoke-Fvs 'name-clean-spacing' "click clear`ntype name `"03-charlie`"`nwait_ready type=textbox target=newname text=`"03-charlie`" timeout=5s`ntype newname `"03   cleanup   test`"`nselect tool `"Clean spacing`"`nclick apply`ninspect main`nexpect newname text=`"03 cleanup test`""

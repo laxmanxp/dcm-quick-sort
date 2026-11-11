@@ -4196,10 +4196,11 @@ func showCurrent(focusName bool) {
 	f := currentFile()
 	if f == "" {
 		updateReadTextAvailability("")
-		setText(app.currentLabel, "PREVIEW  ·  No files remaining")
+		heading, hint := inboxEmptyState(selectedInboxFilter(), len(app.files))
+		setText(app.currentLabel, "PREVIEW  ·  "+heading)
 		setText(app.countLabel, "FILES  ·  0")
 		setText(app.nameEdit, "")
-		app.fallback = "Folder complete"
+		app.fallback = hint
 		refreshSuggestionForCurrent()
 		refreshFileFlowMetadataControls()
 		procInvalidateRect.Call(app.previewHwnd, 0, 1)

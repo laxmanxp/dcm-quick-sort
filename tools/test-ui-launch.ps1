@@ -71,7 +71,8 @@ function Assert-Empty([string]$Name){
     Wait-For $Name { @([DcmNative]::ListItems($script:hwnd,$script:app.Id,1016)).Count -eq 0 -and (Control-Text 1005) -eq '' }
     if(@([DcmNative]::SelectedIndexes($script:hwnd,$script:app.Id,1016)).Count){throw 'Empty list has selected items.'}
     $snapshot=[DcmNative]::Snapshot($script:hwnd,$script:app.Id)
-    if(-not @($snapshot | Where-Object {$_.Visible -and $_.Text -like '*No files remaining*'}).Count){throw 'Empty preview message missing.'}
+    $expectedHeading=if($expected.Count -eq 0){'No files remaining'}else{'No files match the current filters'}
+    if(-not @($snapshot | Where-Object {$_.Visible -and $_.Text.EndsWith($expectedHeading)}).Count){throw ('Empty preview message missing: '+$expectedHeading)}
     if(-not @($snapshot | Where-Object {$_.Visible -and $_.Text -match '^FILES\s*.+\s0$'}).Count){throw 'Zero-file count missing.'}
     foreach($control in @(1008,1048)){if([DcmNative]::IsWindowEnabled([DcmNative]::Control($script:hwnd,$script:app.Id,$control))){throw 'Undo enabled without history.'}}
     Assert-Files
