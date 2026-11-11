@@ -1,25 +1,17 @@
 {
   "files": [
     {
-      "path": "tools/test-ui-image.ps1",
-      "before_blob": "b0c9b5ab2bc854948e52bfffde11385298a15379",
-      "after_sha256": "9915266d92d47bc45b5a9322444f4e4ad3edae29ca81041d80e6ea1d5324efd8",
+      "path": "app-src/main_windows.go",
+      "before_blob": "22961913d19bc699b89d068bc334a1b412320c97",
+      "after_sha256": "0e5a81064d62e75a7f37d21d5766a7274a8c2d2259dc7f37ac8a29a7723fa46f",
       "replacements": [
         {
-          "old": "    [DcmNative]::Restore($hwnd,$app.Id,$screen.Left+12,$screen.Top+12)\n    Start-Sleep -Milliseconds 300",
-          "new": "    if([DcmNative]::IsIconic($hwnd) -or -not [DcmNative]::IsWindowVisible($hwnd) -or -not $script:capturePositioned){\n        [DcmNative]::Restore($hwnd,$app.Id,$screen.Left+12,$screen.Top+12)\n        Wait-For 'owned capture window restored' { -not [DcmNative]::IsIconic($hwnd) -and [DcmNative]::IsWindowVisible($hwnd) }\n        $script:capturePositioned=$true\n    }\n    Start-Sleep -Milliseconds 300"
+          "old": "\tif isImage(path) && loadImage(path) {",
+          "new": "\tif isImage(path) {\n\t\tif err := loadImageWithError(path); err != nil {\n\t\t\tapp.fallback = \"Could not preview this image.\\n\\n\" + err.Error()\n\t\t\tsetText(app.statusLabel, \"Image preview unavailable: \"+err.Error())\n\t\t\tupdatePreviewZoomControls()\n\t\t\tprocInvalidateRect.Call(app.previewHwnd, 0, 1)\n\t\t\treturn\n\t\t}"
         },
         {
-          "old": "$app=$null;$hwnd=[IntPtr]::Zero;$owned=$null;$head='';$manifest=@();$expected=@{};$lock=$null",
-          "new": "$app=$null;$hwnd=[IntPtr]::Zero;$owned=$null;$head='';$manifest=@();$expected=@{};$lock=$null;$script:capturePositioned=$false"
-        },
-        {
-          "old": "    Invoke-Sort 'DCM-27-setup' 'Name'\n    foreach($f in $spec)",
-          "new": "    Invoke-Sort 'DCM-27-setup' 'Name'\n    # Exercise the failure boundary before long visual sequences.\n    foreach($f in @('11-empty.png','12-corrupt.jpg')){Select-Image $f;Assert-ImageError ('DCM-27-'+$f) $f;Check-Files}\n    foreach($f in $spec)"
-        },
-        {
-          "old": "    foreach($f in @('11-empty.png','12-corrupt.jpg')){Select-Image $f;Assert-ImageError ('DCM-27-'+$f) $f;Check-Files}\n    $lock=[IO.File]::Open",
-          "new": "    $lock=[IO.File]::Open"
+          "old": "func loadImage(path string) bool {\n\tdata, err := os.ReadFile(path)\n\tif err != nil || len(data) == 0 {\n\t\treturn false\n\t}\n\n\t// GdipLoadImageFromFile keeps the source file handle open for the lifetime\n\t// of the GDI+ image. That made Quick Sort lock the very JPG it was trying\n\t// to move. Load the bytes into an in-memory COM stream instead so previewing\n\t// never owns a handle to the source file.\n\thglobal, _, _ := procGlobalAlloc.Call(GMEM_MOVEABLE, uintptr(len(data)))\n\tif hglobal == 0 {\n\t\treturn false\n\t}\n\tmem, _, _ := procGlobalLock.Call(hglobal)\n\tif mem == 0 {\n\t\tprocGlobalFree.Call(hglobal)\n\t\treturn false\n\t}\n\tcopy(unsafe.Slice((*byte)(unsafe.Pointer(mem)), len(data)), data)\n\tprocGlobalUnlock.Call(hglobal)\n\n\tvar stream *iUnknown\n\thr, _, _ := procCreateStreamOnHGlobal.Call(hglobal, 1, uintptr(unsafe.Pointer(&stream))) // stream owns/frees HGLOBAL\n\tif hresultFailed(hr) || stream == nil {\n\t\tprocGlobalFree.Call(hglobal)\n\t\treturn false\n\t}\n\n\tvar image uintptr\n\tstatus, _, _ := procGdipLoadImageStream.Call(uintptr(unsafe.Pointer(stream)), uintptr(unsafe.Pointer(&image)))\n\tif status != 0 || image == 0 {\n\t\treleaseUnknown(stream)\n\t\treturn false\n\t}\n\tapp.image = image\n\tapp.imageStream = stream\n\treturn true\n}\n",
+          "new": "func loadImage(path string) bool {\n\t// Retain the bool contract used by the owned PDF raster-loading path.\n\treturn loadImageWithError(path) == nil\n}\n\nfunc loadImageWithError(path string) error {\n\tdata, err := os.ReadFile(path)\n\tif err != nil {\n\t\treturn err\n\t}\n\tif len(data) == 0 {\n\t\treturn errors.New(\"empty image file\")\n\t}\n\n\t// Keep the decoder backed by an owned memory stream, never a source handle.\n\thglobal, _, _ := procGlobalAlloc.Call(GMEM_MOVEABLE, uintptr(len(data)))\n\tif hglobal == 0 {\n\t\treturn errors.New(\"could not allocate image memory\")\n\t}\n\tmem, _, _ := procGlobalLock.Call(hglobal)\n\tif mem == 0 {\n\t\tprocGlobalFree.Call(hglobal)\n\t\treturn errors.New(\"could not access allocated image memory\")\n\t}\n\tcopy(unsafe.Slice((*byte)(unsafe.Pointer(mem)), len(data)), data)\n\tprocGlobalUnlock.Call(hglobal)\n\n\tvar stream *iUnknown\n\thr, _, _ := procCreateStreamOnHGlobal.Call(hglobal, 1, uintptr(unsafe.Pointer(&stream)))\n\tif hresultFailed(hr) || stream == nil {\n\t\tprocGlobalFree.Call(hglobal)\n\t\treturn fmt.Errorf(\"could not create image stream (HRESULT %#x)\", hr)\n\t}\n\n\tvar image uintptr\n\tstatus, _, _ := procGdipLoadImageStream.Call(uintptr(unsafe.Pointer(stream)), uintptr(unsafe.Pointer(&image)))\n\tif status != 0 || image == 0 {\n\t\tif image != 0 {\n\t\t\tprocGdipDisposeImage.Call(image)\n\t\t}\n\t\treleaseUnknown(stream)\n\t\treturn fmt.Errorf(\"image decoder could not load %q (GDI+ status %d)\", filepath.Base(path), status)\n\t}\n\tapp.image = image\n\tapp.imageStream = stream\n\treturn nil\n}\n"
         }
       ]
     }
