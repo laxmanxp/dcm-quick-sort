@@ -32,7 +32,9 @@
         "ui-sort": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-sort.ps1"],
         "ui-navigation": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-navigation.ps1"],
         "ui-selection": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-selection.ps1"],
-        "ui-refresh": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-refresh.ps1"]
+        "ui-refresh": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-refresh.ps1"],
+        "text-unit": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "regressions", "-Run", "^TestDCM26"],
+        "ui-text": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-text.ps1"]
       }
     }
   }
