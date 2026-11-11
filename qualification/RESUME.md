@@ -1,25 +1,23 @@
-# DCM v1.0.71 — resume after DCM-25
+# DCM v1.0.71 — resume after DCM-26
 
-Latest checkpoint: [DCM-25 complete](dcm25-complete.md). Preserve all prior records, including DCM-24's interrupted-work report and each native RED.
-
-Completed: **DCM-01–18 and DCM-20–25**. Only DCM-25 newly closed. DCM-19 remains blocked. The 24 completed checklist steps include five setup/diagnostic steps, not a product percentage. User acceptance remains unrecorded.
+Latest accepted checkpoint: [DCM-26](dcm26-complete.md). Completed: **DCM-01–18 and DCM-20–26**; DCM-19 remains blocked. Only DCM-26 newly closed. The 25 checklist steps include five setup/diagnostic steps, not a product percentage. Human acceptance remains unrecorded.
 
 ## Verified state
 
-Product/native-tested revision: `1554c9b87bbb834b14d54b231eae4b4ece27b8d2`. Native RED at 03c9be04 proved failed-source Refresh retained old list/selection/draft/preview. The failed-read branch now clears cached targets, uses existing preview cleanup and shows Source unavailable with recovery guidance. No installer/preview engine change. Do not reapply the old proposal.
+Final tested source: `921f3616da39e8c67f27ba1d496eaaf3594526ad`. Native baseline **361 passed / 0 failed / 1 external-PPTX skip** across 362 parents; no timeout, source unchanged. Three new Go parents contain 31 nested encoding/limit/read-safety cases. Native ui-text passes 17 checks on 15 disposable fixtures; all 17 final images inspected, including visible cutoff notices and the current manual text status. Normal exit 0, children drained, source/fixture contents unchanged, no operation journal. Launch and Refresh commands also pass at the same revision; their new images were not separately reviewed.
 
-Native ui-refresh: **23 successful records, nine separately reviewed images**, source/fixture-state integrity and normal exit 0 with children drained. Actual Browse switches between A, B and empty; same basenames with different contents remain distinct. Representative B-only Rename/Move leaves A intact. A controlled directory move/recovery checks unavailable-source safety. Harness creates/deletes/moves only declared disposable fixtures; these mutations are explicitly accounted for.
+Core decoder now accepts valid UTF-8 and BOM-marked UTF-16LE/BE, refuses malformed/unsupported encodings instead of silently replacing bytes, and drops only incomplete characters cut by the 256-KiB preview bound. Read/encoding errors remain specific rather than falling through to generic missing-handler messaging. Explicit Read as text updates its own status. Automatic text routing remains TXT/MD/CSV; Markdown and CSV are literal text, not rich rendering. No legacy encoding guessing, UTF-32 support, installer or engine changes.
 
-Full baseline: **358 passed / 0 failed / 1 external-PPTX skip**, 359 Go results, exit 0, no timeout, source unchanged. No new Go tests; native UI regression added. Fresh ui-selection and ui-launch commands PASS; their new images were not separately reviewed. Preserve the three retained harness failures and actual product RED, documented in the checkpoint.
+Preserve all REDs/tooling failures in the report: native unit failures; locked-file misleading error; manual stale status; wait-variable shadowing; two capture-guard failures. The first 17-assertion pass was not final acceptance: image review exposed missing tail captures/manual status. The corrected test uses an actual end caret and first-visible-line check; all content/hash/ownership guards remain intact. Do not reapply historical proposals.
 
-## Next exact step — DCM-26
+## Next exact step — DCM-27
 
-Inspect the advertised built-in/native text preview path, supported extensions, size limits and encoding behavior. Reuse source-bound FlowDev/native tooling with disposable fixtures, verify actual visible text and truthful empty/error/unsupported states, and inspect images before closing the step. Do not infer every text format from earlier TXT fixtures or expand preview scope silently. Keep selection/Next/Refresh safety intact.
+Inspect the existing supported image-preview formats and qualify representative actual content plus existing sizing/navigation behavior. Use disposable known images and reviewed captures, not status-label-only assertions. Do not switch preview engines, add printing, or close other format gates incidentally.
 
-Code locally -> GitHub -> FlowDev update/test on Lenovo, serially. Candidate `C:\FlowverseReports\dcm-quicksort-candidate`, profile `tools\flowdev-dcm`, runner `C:\FlowverseReports\flowdev-standalone-validation\flowdev-test.exe`, workspace `C:\FlowverseReports`, device `d18227f2-0b54-4b11-9026-56ac40305f02`. No remote source editing. Check for another app's active UI test before using desktop input.
+Code locally -> GitHub -> FlowDev update/test on Lenovo, serially. Candidate `C:\FlowverseReports\dcm-quicksort-candidate`; profile `tools\flowdev-dcm`; runner `C:\FlowverseReports\flowdev-standalone-validation\flowdev-test.exe`; workspace `C:\FlowverseReports`; device `d18227f2-0b54-4b11-9026-56ac40305f02`. No remote source editing. Check active sessions before any native UI input.
 
-Exact build receipt: `C:\FlowverseReports\dcm-quicksort-build-20261111-132602-da7ecfec\receipt.json` matches 1554c9b8 only. App SHA-256: `b6353d846a8c58c167032dc06a873e15e48273dbdbd68e67758877bd8b364466`. Obtain a fresh source-matching build after metadata/source changes; never edit old receipts.
+Last build: `C:\FlowverseReports\dcm-quicksort-build-20261111-144207-01065b1a\receipt.json`, matches 921f3616 only. App hash `0522a02560bea2355c6d307eca807320836a51b4e9a8553470c8107b33f2523e`. Obtain a fresh source-matching build after this metadata commit or any later revision; never rewrite receipt identities.
 
-Reports under `C:\FlowverseReports`: refresh `20261111-132617-5e4dccbb`; baseline `20261111-132539-4f1de17d`; selection regression `20261111-132717-40bc10d4`; launch regression `20261111-132739-cf097855`; product RED refresh `20261111-132238-b590b5c8`. Full paths and hashes are in `evidence/dcm-25-native-summary.json`.
+Reports under C:\FlowverseReports: baseline `dcm-quicksort-baseline-20261111-144109-ae0c2e92`; text `dcm-quicksort-ui-text-20261111-144427-b716381b`; launch `dcm-quicksort-ui-launch-20261111-144456-9fa864b0`; refresh `dcm-quicksort-ui-refresh-20261111-144512-afa1b71e`. Separate review/hashes: `evidence/dcm-26-native-summary.json`. Raw visual flags remain unchanged; images stay on Lenovo because small desktop edges are visible.
 
-Keep DCM-19/disposable Explorer isolation, DCM-UI-LABEL-01, identified DCM_REAL_PPTX, remaining previews/workflows, full Batch Move/Undo, final package and actual setup/uninstaller lifecycle open. Leave DCM21_PROBE_EMPTY_DESTINATION unset. Previous native results retain original source identities; Shell Cut/Delete remain outside DCM Undo. PR #1 stays draft; no merge/publication without remaining gates and approval.
+Keep DCM-19/disposable Explorer isolation, DCM-UI-LABEL-01, identified external DCM_REAL_PPTX before DCM-32/47, remaining previews and file-operation workflows, full Batch Move/Undo, final package/setup lifecycle and actual user acceptance open. Leave DCM21_PROBE_EMPTY_DESTINATION unset in normal acceptance. PR #1 remains draft; no merge/publication without final gates and approval.
