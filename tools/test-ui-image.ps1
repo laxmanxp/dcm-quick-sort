@@ -13,7 +13,7 @@ $utf8=New-Object Text.UTF8Encoding($false)
 $cases=New-Object 'Collections.Generic.List[object]'
 $captures=New-Object 'Collections.Generic.List[object]'
 $receipt=[ordered]@{schema=1;feature='DCM-27';app='dcm-quicksort';report=$lab;started_utc=[DateTime]::UtcNow.ToString('o');passed=$false;visual_reviewed=$false;cases=$cases;captures=$captures}
-$app=$null;$hwnd=[IntPtr]::Zero;$owned=$null;$head='';$manifest=@();$expected=@{};$lock=$null
+$app=$null;$hwnd=[IntPtr]::Zero;$owned=$null;$head='';$manifest=@();$expected=@{};$lock=$null;$script:capturePositioned=$false
 Write-Output ('REPORT_ROOT='+$lab)
 function Write-Json([string]$Path,$Value){[IO.File]::WriteAllText($Path,($Value | ConvertTo-Json -Depth 30),$utf8)}
 function Hash([string]$Path){return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()}
@@ -52,7 +52,11 @@ function Check-Files {
 function Shot([string]$Name){
     Require-App
     $screen=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea
-    [DcmNative]::Restore($hwnd,$app.Id,$screen.Left+12,$screen.Top+12)
+    if([DcmNative]::IsIconic($hwnd) -or -not [DcmNative]::IsWindowVisible($hwnd) -or -not $script:capturePositioned){
+        [DcmNative]::Restore($hwnd,$app.Id,$screen.Left+12,$screen.Top+12)
+        Wait-For 'owned capture window restored' { -not [DcmNative]::IsIconic($hwnd) -and [DcmNative]::IsWindowVisible($hwnd) }
+        $script:capturePositioned=$true
+    }
     Start-Sleep -Milliseconds 300
     Write-Json (Join-Path $lab ($Name+'.controls.json')) ([DcmNative]::Snapshot($hwnd,$app.Id))
     $shot=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($Name+'.png')),$false)
@@ -208,6 +212,8 @@ try{
     if($hwnd -eq [IntPtr]::Zero){throw 'Main window deadline.'}
     Wait-For 'image fixtures ready' { @([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq $expected.Count }
     Invoke-Sort 'DCM-27-setup' 'Name'
+    # Exercise the failure boundary before long visual sequences.
+    foreach($f in @('11-empty.png','12-corrupt.jpg')){Select-Image $f;Assert-ImageError ('DCM-27-'+$f) $f;Check-Files}
     foreach($f in $spec){Select-Image $f.name;Assert-Image ('DCM-27-fit-'+$f.name) $f}
     Select-Image $spec[1].name;Size-Action 1047;Assert-Image 'DCM-27-portrait-fit-width-top' $spec[1] 'width'
     Size-Action 1021;Assert-Image 'DCM-27-100-percent' $spec[1] 'manual' 100
@@ -223,7 +229,6 @@ try{
     # Stream-backed preview must not keep a source-file handle open.
     $exclusive=[IO.File]::Open((Join-Path $inbox $spec[9].name),[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::None)
     $exclusive.Dispose();$cases.Add([ordered]@{name='DCM-27-preview-releases-source-handle';passed=$true})
-    foreach($f in @('11-empty.png','12-corrupt.jpg')){Select-Image $f;Assert-ImageError ('DCM-27-'+$f) $f;Check-Files}
     $lock=[IO.File]::Open((Join-Path $inbox $spec[0].name),[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::None)
     try{Select-Image $spec[0].name;Assert-ImageError 'DCM-27-sharing-violation' $spec[0].name}finally{$lock.Dispose();$lock=$null}
     Select-Image $spec[0].name;Assert-Image 'DCM-27-read-recovery' $spec[0]
