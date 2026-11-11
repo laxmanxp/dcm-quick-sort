@@ -126,6 +126,7 @@ control source surface=main id=1001 role=textbox
 control sort surface=main id=1045 role=combobox
 control destination surface=main id=1003 role=textbox
 wait main timeout=5s
+inspect main
 select sort "Name"
 type destination "Accepted"
 inspect main
