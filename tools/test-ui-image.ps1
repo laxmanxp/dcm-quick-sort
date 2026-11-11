@@ -105,7 +105,8 @@ function Assert-Image([string]$Case,$Spec,[string]$Mode='fit',[int]$Percent=100,
     if($selected.Count -ne 1 -or $items[$selected[0]] -cne $Spec.name -or (Text 1005) -cne [IO.Path]::GetFileNameWithoutExtension($Spec.name)){throw 'Image target/draft mismatch.'}
     $snapshot=@([DcmNative]::Snapshot($hwnd,$app.Id))
     if(-not @($snapshot | Where-Object {$_.Visible -and $_.Text.StartsWith('PREVIEW') -and $_.Text.EndsWith($Spec.name)}).Count){throw 'Image heading mismatch.'}
-    if(-not @($snapshot | Where-Object {$_.Visible -and $_.Text.StartsWith('Image preview:')}).Count){throw 'Expected owned image renderer status.'}
+    $statusPrefix=if($Mode -eq 'manual'){'Image preview zoom: '+$Percent+'%'}elseif($Mode -eq 'width'){'Image preview: Fit Width'}else{'Image preview: Fit'}
+    if(-not @($snapshot | Where-Object {$_.Visible -and $_.Text.StartsWith($statusPrefix)}).Count){throw 'Expected owned image renderer status.'}
     foreach($id in @(1020,1021,1022,1023,1047)){if(-not @($snapshot | Where-Object {$_.ID -eq $id -and $_.Enabled}).Count){throw 'Image sizing control disabled.'}}
     $shot=Shot $Case
     $preview=[DcmNative]::ChildByClass($hwnd,$app.Id,'QuickSortPreview')
