@@ -1,17 +1,33 @@
 {
   "files": [
     {
-      "path": "app-src/main_windows.go",
-      "before_blob": "121a7ca4d0bc5968fde09c9ed75905cede179d2c",
-      "after_sha256": "6beef14507de0f5e5d44b54e75d880e433dd7d4987f1aa4f7ee0104de801afd1",
+      "path": "tools/test-ui-sumatra.ps1",
+      "before_blob": "9b567b685d775d37ba1dfa9d117bbbf9483407de",
+      "after_sha256": "7f01f377eb08a52d237641ccde63d3bfa53c0ea51be53e3134e29ca3c87136db",
       "replacements": [
-        {"old":"\tif isPDFPath(path) && startPDFPreview(path) {","new":"\tif isPDFPath(path) && startSumatraPreview(path) {\n\t\treturn\n\t}\n\tif isPDFPath(path) && startPDFPreview(path) {"},
-        {"old":"func unloadPreview() {\n\tstopPDFPreview()","new":"func unloadPreview() {\n\tif err := stopSumatraPreview(); err != nil {\n\t\tsumatraError(err)\n\t}\n\tstopPDFPreview()"},
-        {"old":"func beginFileOperation(mode fileOperationMode, source, target string) {","new":"func beginFileOperation(mode fileOperationMode, source, target string) {\n\tif !releaseSumatraForOperation() {\n\t\treturn\n\t}"},
-        {"old":"\tremaining, rec, err := undoHistoryAt(app.history, idx)","new":"\tif !releaseSumatraForOperation() {\n\t\treturn\n\t}\n\tremaining, rec, err := undoHistoryAt(app.history, idx)"},
-        {"old":"\tremaining, undone, undoErr := undoHistoryBatch(app.history, batchID)","new":"\tif !releaseSumatraForOperation() {\n\t\treturn\n\t}\n\tremaining, undone, undoErr := undoHistoryBatch(app.history, batchID)"},
-        {"old":"\tcase WM_PDF_RENDER_DONE:\n","new":"\tcase 0x0113: // WM_TIMER: owned Sumatra startup/liveness, never a rendering wait.\n\t\tif wParam == sumatraTimerID {\n\t\t\tpollSumatraPreview()\n\t\t\treturn 0\n\t\t}\n\tcase WM_PDF_RENDER_DONE:\n"},
-        {"old":"func previewWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {\n\tswitch msg {\n\tcase WM_SIZE:\n","new":"func previewWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {\n\tswitch msg {\n\tcase WM_SIZE:\n\t\tresizeSumatraPreview()\n"}
+        {
+          "old": "function SelectFile([string]$file){$null=[DcmNative]::SelectFiles($hwnd,$app.Id,1016,[string[]]@($file));$stem=[IO.Path]::GetFileNameWithoutExtension($file);Wait ('selection '+$file) {(Text 1005) -ceq $stem}}",
+          "new": "function SelectFile([string]$file){\n    $null=[DcmNative]::SelectFiles($hwnd,$app.Id,1016,[string[]]@($file));$stem=[IO.Path]::GetFileNameWithoutExtension($file)\n    try{Wait ('selection '+$file) {(Text 1005) -ceq $stem}}catch{\n        Json (Join-Path $lab 'selection-failure.json') ([ordered]@{expected=$stem;actual=(Text 1005);items=@([DcmNative]::ListItems($hwnd,$app.Id,1016));selected=@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016));embedded=[DcmSumatraProbe]::Find($hwnd,$app.Id)})\n        throw\n    }\n}"
+        },
+        {
+          "old": "    if($color -eq 'teal' -and ($s.TealSamples -lt 1000 -or $s.OrangeSamples -gt 100)){throw 'Wrong visible PDF page: expected teal'}\n    if($color -eq 'orange' -and ($s.OrangeSamples -lt 1000 -or $s.TealSamples -gt 100)){throw 'Wrong visible PDF page: expected orange'}",
+          "new": "    if($color){\n        # Exclude the blue title bar/list highlights from the PDF pixel oracle.\n        $pixels=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'-content.png')),$true)\n        $shots.Add([ordered]@{name=$name+'-content';path=$pixels.Path;sha256=(Hash $pixels.Path);teal=$pixels.TealSamples;orange=$pixels.OrangeSamples;visual_reviewed=$false})\n        if($color -eq 'teal' -and ($pixels.TealSamples -lt 1000 -or $pixels.OrangeSamples -gt 100)){throw 'Wrong visible PDF page: expected teal'}\n        if($color -eq 'orange' -and ($pixels.OrangeSamples -lt 1000 -or $pixels.TealSamples -gt 100)){throw 'Wrong visible PDF page: expected orange'}\n    }"
+        }
+      ]
+    },
+    {
+      "path": "app-src/sumatra_preview_windows.go",
+      "before_blob": "f1d09990acb677d7c4d677fec838819e32de563f",
+      "after_sha256": "995b51b499253e984dc80443f6b2c269e416faace54730efad8b7770e0a3e14d",
+      "replacements": [
+        {
+          "old": "\tspSetWindowPos     = user32.NewProc(\"SetWindowPos\")",
+          "new": "\tspSetWindowPos     = user32.NewProc(\"SetWindowPos\")\n\tspShowWindowAsync  = user32.NewProc(\"ShowWindowAsync\")"
+        },
+        {
+          "old": "procShowWindow.Call(v.child, 0)",
+          "new": "spShowWindowAsync.Call(v.child, 0)"
+        }
       ]
     }
   ]
