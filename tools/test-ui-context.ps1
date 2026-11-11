@@ -12,7 +12,7 @@ $null=New-Item -ItemType Directory -Path $lab
 $utf8=New-Object Text.UTF8Encoding($false)
 $cases=New-Object 'Collections.Generic.List[object]'
 $captures=New-Object 'Collections.Generic.List[object]'
-$r=[ordered]@{schema=1;app='dcm-quicksort';feature='DCM-20';scope='native right-click popup/target regression only; external Open not yet exercised';report=$lab;started_utc=[DateTime]::UtcNow.ToString('o');passed=$false;feature_accepted=$false;external_open_tested=$false;visual_reviewed=$false;cases=$cases;captures=$captures}
+$r=[ordered]@{schema=1;app='dcm-quicksort';feature='DCM-20';scope='native right-click targeting, cancel, blank area and controlled default-handler Open; no user-document application claim';report=$lab;started_utc=[DateTime]::UtcNow.ToString('o');passed=$false;feature_accepted=$false;external_open_tested=$false;visual_reviewed=$false;cases=$cases;captures=$captures}
 $app=$null;$hwnd=[IntPtr]::Zero;$owned=$null;$manifest=@();$head='';$expected=@{}
 Write-Output ('REPORT_ROOT='+$lab)
 function Json([string]$Path,$Value){[IO.File]::WriteAllText($Path,($Value | ConvertTo-Json -Depth 25),$utf8)}
@@ -34,6 +34,17 @@ function Files-Unchanged {
     if(@(Get-ChildItem -LiteralPath $dest -Force).Count){throw 'Unexpected destination entry.'}
     $journal=Join-Path $config 'recovery\move-journal.jsonl'
     if((Test-Path -LiteralPath $journal) -and ([IO.File]::ReadAllText($journal)).Trim()){throw 'Right-click or Cancel appended a file-operation journal.'}
+}
+function Menu-Shot([string]$Name,[IntPtr]$Menu){
+    Owned
+    $shot=[DcmMenuActions]::Capture($Menu,$app.Id,(Join-Path $lab ($Name+'.png')))
+    $captures.Add([ordered]@{name=$Name;path=$shot.Path;sha256=(Hash $shot.Path);width=$shot.Width;height=$shot.Height;method='owned popup CopyFromScreen with occlusion checks';visual_reviewed=$false})
+    Json (Join-Path $lab ($Name+'.menu.json')) ([DcmMenuActions]::Items($Menu,$app.Id))
+}
+function Wait-Menu {
+    $until=[DateTime]::UtcNow.AddSeconds(5)
+    do{Owned;$found=@([DcmContextProbe]::Menus($app.Id));if($found.Count -eq 1){return [IntPtr]$found[0]};if($found.Count -gt 1){throw 'Unexpected multiple owned menu windows.'};Start-Sleep -Milliseconds 100}while([DateTime]::UtcNow -lt $until)
+    throw 'Owned menu did not appear.'
 }
 function Shot([string]$Name){
     Owned
@@ -70,6 +81,7 @@ public static class DcmContextProbe {
     [DllImport("user32.dll")] private static extern bool IsWindowVisible(IntPtr h);
     [DllImport("user32.dll",EntryPoint="SendMessageTimeoutW")] private static extern IntPtr RectMessage(IntPtr h,uint m,IntPtr w,ref RECT rect,uint flags,uint timeout,out IntPtr result);
     [DllImport("user32.dll")] private static extern bool PostMessage(IntPtr h,uint m,IntPtr w,IntPtr l);
+    [DllImport("user32.dll")] private static extern bool GetClientRect(IntPtr h,out RECT r);
     public static int[] RightClick(IntPtr list,int pid,int index) {
         uint actual;GetWindowThreadProcessId(list,out actual);if(actual!=(uint)pid)throw new Exception("List PID mismatch");
         var c=new StringBuilder(128);GetClassName(list,c,c.Capacity);if(c.ToString()!="ListBox")throw new Exception("Not a ListBox");
@@ -81,6 +93,14 @@ public static class DcmContextProbe {
         if(!PostMessage(list,0x0204,(IntPtr)2,point)||!PostMessage(list,0x0205,IntPtr.Zero,point))throw new Exception("Right-click message failed");
         return new int[]{x,y};
     }
+    public static void BlankArea(IntPtr list,int pid,int lastIndex) {
+        uint actual;GetWindowThreadProcessId(list,out actual);if(actual!=(uint)pid)throw new Exception("List PID mismatch");
+        RECT item=new RECT(),client;IntPtr result;
+        if(RectMessage(list,0x0198,(IntPtr)lastIndex,ref item,2,1500,out result)==IntPtr.Zero || result.ToInt64()<0 || !GetClientRect(list,out client))throw new Exception("Cannot read blank list geometry");
+        int x=8,y=item.Bottom+20;if(y>=client.Bottom-4)throw new Exception("No blank area for this fixture");
+        IntPtr point=(IntPtr)((y<<16)|x);
+        if(!PostMessage(list,0x0204,(IntPtr)2,point)||!PostMessage(list,0x0205,IntPtr.Zero,point))throw new Exception("Blank-area click failed");
+    }
     public static long[] Menus(int pid){
         var found=new List<long>();
         EnumWindows(delegate(IntPtr h,IntPtr p){uint actual;GetWindowThreadProcessId(h,out actual);if(actual==(uint)pid && IsWindowVisible(h)){var b=new StringBuilder(128);GetClassName(h,b,b.Capacity);if(b.ToString()=="#32768")found.Add(h.ToInt64());}return true;},IntPtr.Zero);
@@ -89,9 +109,21 @@ public static class DcmContextProbe {
     public static void Cancel(IntPtr root,int pid){uint actual;GetWindowThreadProcessId(root,out actual);if(actual!=(uint)pid)throw new Exception("Cancel PID mismatch");if(!PostMessage(root,0x001F,IntPtr.Zero,IntPtr.Zero))throw new Exception("Menu cancellation failed");}
 }
 '@
+    Add-Type -Path (Join-Path $repo 'tests\native\dcm-menu-actions.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
     $inbox=Join-Path $lab 'Context Inbox';$dest=Join-Path $lab 'Vault\Accepted';$local=Join-Path $lab 'Local';$roaming=Join-Path $lab 'Roaming';$config=Join-Path $roaming 'DCM-QuickSort';$temp=Join-Path $lab 'Temp'
     foreach($p in @($inbox,$dest,$local,$config,$temp)){ $null=New-Item -ItemType Directory -Path $p -Force }
     foreach($name in @('01-selected.txt','02-right-click target.txt')){ $p=Join-Path $inbox $name;[IO.File]::WriteAllText($p,('DCM-20 disposable fixture: '+$name),$utf8);$expected[$name]=Hash $p }
+    # The only executable test files are locally generated, audited marker writers.
+    # The Windows default .cmd Open handler is exercised; no association is changed.
+    if($lab -match '[%&!^]'){throw 'Lab path contains unsupported command-file metacharacters.'}
+    $openMarker=Join-Path $lab 'external-open.txt';$wrongMarker=Join-Path $lab 'wrong-open.txt'
+    $token='DCM20-'+[Guid]::NewGuid().ToString('N')
+    foreach($entry in @(@('03-wrong-open.cmd',$wrongMarker),@('04-external open.cmd',$openMarker))){
+        $path=Join-Path $inbox $entry[0]
+        $body="@echo off`r`n> `"$($entry[1])`" echo $token`r`nexit /b 0`r`n"
+        [IO.File]::WriteAllText($path,$body,[Text.Encoding]::ASCII);$expected[$entry[0]]=Hash $path
+    }
+    $r['external_open_contract']='Actual native Open on a disposable .cmd file writes a unique owned marker and exits; verifies default command-file handling, not all document associations.'
     Json (Join-Path $config 'settings.json') ([ordered]@{default_source=$inbox;vault_root=(Join-Path $lab 'Vault');pdf_default_view='fit-width'})
     [IO.File]::WriteAllText((Join-Path $config 'destinations.conf'),"Acceptance=Accepted`r`n",$utf8)
     $exe=Join-Path $lab ('DCM-QS-Context-'+[Guid]::NewGuid().ToString('N')+'.exe')
@@ -124,6 +156,7 @@ public static class DcmContextProbe {
     $r['selected_indexes_after_click']=@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016))
     if($menus.Count -eq 0){Shot 'DCM-20-no-context-menu';Files-Unchanged;throw 'DCM-20-MENU-01: no owned native context menu appeared after right-clicking the second file.'}
     if($menus.Count -ne 1){throw 'Unexpected multiple native menu windows.'}
+    Menu-Shot 'DCM-20-text-file-menu' ([IntPtr]$menus[0])
     $cases.Add([ordered]@{name='owned context menu appears';passed=$true})
     [DcmContextProbe]::Cancel($hwnd,$app.Id)
     $until=[DateTime]::UtcNow.AddSeconds(5)
@@ -132,6 +165,36 @@ public static class DcmContextProbe {
     if(([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016) -join ',') -ne [string]$targetIndex){throw 'Right-click menu did not target only the row under the pointer.'}
     Files-Unchanged;Shot 'DCM-20-after-menu-cancel'
     $cases.Add([ordered]@{name='right-click target and cancel preserve fixture bytes';passed=$true})
+    # Blank space must not act on the previously selected file.
+    $selectedBefore=[DcmNative]::SelectedIndexes($hwnd,$app.Id,1016) -join ','
+    [DcmContextProbe]::BlankArea($list,$app.Id,($items.Count-1))
+    Start-Sleep -Milliseconds 700
+    if(@([DcmContextProbe]::Menus($app.Id)).Count){throw 'Blank list area opened a stale-file context menu.'}
+    if(([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016) -join ',') -ne $selectedBefore){throw 'Blank-area click changed the file selection.'}
+    Files-Unchanged
+    $cases.Add([ordered]@{name='blank area does not open a stale-file menu';passed=$true})
+
+    # Invoke exactly Open on another row; never invoke Run as administrator.
+    $null=[DcmNative]::SelectFiles($hwnd,$app.Id,1016,[string[]]@('03-wrong-open.cmd'))
+    $openIndex=[Array]::IndexOf($items,'04-external open.cmd')
+    if($openIndex -lt 0){throw 'External Open fixture absent.'}
+    $null=[DcmContextProbe]::RightClick($list,$app.Id,$openIndex)
+    $menu=Wait-Menu
+    if(([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016) -join ',') -ne [string]$openIndex){throw 'External Open menu targets the old selection.'}
+    Menu-Shot 'DCM-20-external-open-menu' $menu
+    if((Test-Path -LiteralPath $openMarker) -or (Test-Path -LiteralPath $wrongMarker)){throw 'Marker appeared before Open was invoked.'}
+    $clicked=[DcmMenuActions]::ClickOpen($menu,$app.Id)
+    $r['invoked_menu_item']=$clicked
+    $until=[DateTime]::UtcNow.AddSeconds(15)
+    do{Owned;if(Test-Path -LiteralPath $openMarker){break};Start-Sleep -Milliseconds 100}while([DateTime]::UtcNow -lt $until)
+    if(-not(Test-Path -LiteralPath $openMarker) -or ([IO.File]::ReadAllText($openMarker)).Trim() -cne $token){throw 'External Open did not execute the intended fixture marker.'}
+    if(Test-Path -LiteralPath $wrongMarker){throw 'External Open executed the previously selected wrong file.'}
+    if(@([DcmContextProbe]::Menus($app.Id)).Count -or @([DcmNative]::Dialogs($hwnd,$app.Id)).Count){throw 'Unexpected menu/dialog after external Open.'}
+    Files-Unchanged
+    $r.external_open_tested=$true
+    $r['external_open_evidence']=[ordered]@{target='04-external open.cmd';previous_selection='03-wrong-open.cmd';marker=$openMarker;token=$token;marker_sha256=(Hash $openMarker);wrong_marker_absent=$true;association_changed=$false}
+    $cases.Add([ordered]@{name='native Open launches only the right-clicked default-handler fixture';passed=$true})
+    Shot 'DCM-20-after-external-open'
     $r.passed=$true
 }catch{$r['error']=$_.Exception.Message;$r['error_position']=$_.InvocationInfo.PositionMessage;Write-Output ('FAIL='+$_.Exception.Message)}
 finally{
