@@ -1,0 +1,18 @@
+{
+  "files": [
+    {
+      "path": "app-src/main_windows.go",
+      "before_blob": "121a7ca4d0bc5968fde09c9ed75905cede179d2c",
+      "after_sha256": "6beef14507de0f5e5d44b54e75d880e433dd7d4987f1aa4f7ee0104de801afd1",
+      "replacements": [
+        {"old":"\tif isPDFPath(path) && startPDFPreview(path) {","new":"\tif isPDFPath(path) && startSumatraPreview(path) {\n\t\treturn\n\t}\n\tif isPDFPath(path) && startPDFPreview(path) {"},
+        {"old":"func unloadPreview() {\n\tstopPDFPreview()","new":"func unloadPreview() {\n\tif err := stopSumatraPreview(); err != nil {\n\t\tsumatraError(err)\n\t}\n\tstopPDFPreview()"},
+        {"old":"func beginFileOperation(mode fileOperationMode, source, target string) {","new":"func beginFileOperation(mode fileOperationMode, source, target string) {\n\tif !releaseSumatraForOperation() {\n\t\treturn\n\t}"},
+        {"old":"\tremaining, rec, err := undoHistoryAt(app.history, idx)","new":"\tif !releaseSumatraForOperation() {\n\t\treturn\n\t}\n\tremaining, rec, err := undoHistoryAt(app.history, idx)"},
+        {"old":"\tremaining, undone, undoErr := undoHistoryBatch(app.history, batchID)","new":"\tif !releaseSumatraForOperation() {\n\t\treturn\n\t}\n\tremaining, undone, undoErr := undoHistoryBatch(app.history, batchID)"},
+        {"old":"\tcase WM_PDF_RENDER_DONE:\n","new":"\tcase 0x0113: // WM_TIMER: owned Sumatra startup/liveness, never a rendering wait.\n\t\tif wParam == sumatraTimerID {\n\t\t\tpollSumatraPreview()\n\t\t\treturn 0\n\t\t}\n\tcase WM_PDF_RENDER_DONE:\n"},
+        {"old":"func previewWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {\n\tswitch msg {\n\tcase WM_SIZE:\n","new":"func previewWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {\n\tswitch msg {\n\tcase WM_SIZE:\n\t\tresizeSumatraPreview()\n"}
+      ]
+    }
+  ]
+}
