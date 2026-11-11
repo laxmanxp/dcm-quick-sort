@@ -1,4 +1,4 @@
-# Refresh pinned source for DCM-27 local development.
+# Refresh pinned source for user-approved Sumatra provider integration.
 name: Export pinned DCM source for local review
 on:
   push:
