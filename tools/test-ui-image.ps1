@@ -12,7 +12,8 @@ $null=New-Item -ItemType Directory -Path $lab
 $utf8=New-Object Text.UTF8Encoding($false)
 $cases=New-Object 'Collections.Generic.List[object]'
 $captures=New-Object 'Collections.Generic.List[object]'
-$receipt=[ordered]@{schema=1;feature='DCM-27';app='dcm-quicksort';report=$lab;started_utc=[DateTime]::UtcNow.ToString('o');passed=$false;visual_reviewed=$false;cases=$cases;captures=$captures}
+$captureAttempts=New-Object 'Collections.Generic.List[object]'
+$receipt=[ordered]@{schema=1;feature='DCM-27';app='dcm-quicksort';report=$lab;started_utc=[DateTime]::UtcNow.ToString('o');passed=$false;visual_reviewed=$false;cases=$cases;captures=$captures;capture_attempts=$captureAttempts}
 $app=$null;$hwnd=[IntPtr]::Zero;$owned=$null;$head='';$manifest=@();$expected=@{};$lock=$null;$script:capturePositioned=$false
 Write-Output ('REPORT_ROOT='+$lab)
 function Write-Json([string]$Path,$Value){[IO.File]::WriteAllText($Path,($Value | ConvertTo-Json -Depth 30),$utf8)}
@@ -50,18 +51,33 @@ function Check-Files {
     if((Test-Path -LiteralPath $journal) -and ([IO.File]::ReadAllText($journal)).Trim()){throw 'Image preview appended a file operation.'}
 }
 function Shot([string]$Name){
-    Require-App
-    $screen=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea
-    if([DcmNative]::IsIconic($hwnd) -or -not [DcmNative]::IsWindowVisible($hwnd) -or -not $script:capturePositioned){
-        [DcmNative]::Restore($hwnd,$app.Id,$screen.Left+12,$screen.Top+12)
-        Wait-For 'owned capture window restored' { -not [DcmNative]::IsIconic($hwnd) -and [DcmNative]::IsWindowVisible($hwnd) }
-        $script:capturePositioned=$true
+    # Only transient minimization is retried, once. Every attempt remains recorded;
+    # a successful image still must pass the unmodified native capture guards.
+    for($attempt=1;$attempt -le 2;$attempt++){
+        Require-App
+        $path=Join-Path $lab ($Name+'-attempt-'+$attempt+'.png')
+        try{
+            $screen=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea
+            if([DcmNative]::IsIconic($hwnd) -or -not [DcmNative]::IsWindowVisible($hwnd) -or -not $script:capturePositioned){
+                [DcmNative]::Restore($hwnd,$app.Id,$screen.Left+12,$screen.Top+12)
+                Wait-For 'owned capture window restored' { -not [DcmNative]::IsIconic($hwnd) -and [DcmNative]::IsWindowVisible($hwnd) }
+                $script:capturePositioned=$true
+            }
+            Start-Sleep -Milliseconds 300
+            Write-Json (Join-Path $lab ($Name+'-attempt-'+$attempt+'.controls.json')) ([DcmNative]::Snapshot($hwnd,$app.Id))
+            $shot=[DcmNative]::Capture($hwnd,$app.Id,$path,$false)
+            $captureAttempts.Add([ordered]@{name=$Name;attempt=$attempt;passed=$true;path=$path;utc=[DateTime]::UtcNow.ToString('o')})
+            $captures.Add([ordered]@{feature='DCM-27';name=$Name;path=$shot.Path;sha256=(Hash $shot.Path);width=$shot.Width;height=$shot.Height;visual_reviewed=$false})
+            return $shot
+        }catch{
+            $message=$_.Exception.Message
+            $minimized=$message.Contains('minimized') -or $message.Contains('hidden capture')
+            $captureAttempts.Add([ordered]@{name=$Name;attempt=$attempt;passed=$false;error=$message;path=$path;file_exists=(Test-Path -LiteralPath $path);utc=[DateTime]::UtcNow.ToString('o');retry=($minimized -and $attempt -lt 2)})
+            if(-not $minimized -or $attempt -ge 2){throw}
+            $script:capturePositioned=$false
+        }
     }
-    Start-Sleep -Milliseconds 300
-    Write-Json (Join-Path $lab ($Name+'.controls.json')) ([DcmNative]::Snapshot($hwnd,$app.Id))
-    $shot=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($Name+'.png')),$false)
-    $captures.Add([ordered]@{feature='DCM-27';name=$Name;path=$shot.Path;sha256=(Hash $shot.Path);width=$shot.Width;height=$shot.Height;visual_reviewed=$false})
-    return $shot
+    throw 'No verified capture produced.'
 }
 function Invoke-Sort([string]$Name,[string]$Mode){
     Require-App
@@ -113,6 +129,9 @@ function Assert-Image([string]$Case,$Spec,[string]$Mode='fit',[int]$Percent=100,
     if(-not @($snapshot | Where-Object {$_.Visible -and $_.Text.StartsWith($statusPrefix)}).Count){throw 'Expected owned image renderer status.'}
     foreach($id in @(1020,1021,1022,1023,1047)){if(-not @($snapshot | Where-Object {$_.ID -eq $id -and $_.Enabled}).Count){throw 'Image sizing control disabled.'}}
     $shot=Shot $Case
+    Require-App
+    $afterItems=@([DcmNative]::ListItems($hwnd,$app.Id,1016));$afterSelected=@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016))
+    if($afterSelected.Count -ne 1 -or $afterItems[$afterSelected[0]] -cne $Spec.name -or (Text 1005) -cne [IO.Path]::GetFileNameWithoutExtension($Spec.name)){throw 'Image target changed during capture.'}
     $preview=[DcmNative]::ChildByClass($hwnd,$app.Id,'QuickSortPreview')
     $view=[DcmImageProbe]::Geometry($preview,$app.Id)
     $pixels=[DcmImageProbe]::Verify($shot.Path,$shot.Left,$shot.Top,$view,$Spec.w,$Spec.h,$Spec.variant,$Spec.alpha,$Mode,$Percent,$PanX,$PanY)
@@ -127,6 +146,8 @@ function Assert-ImageError([string]$Case,[string]$File){
     if($errors.Count -ne 1){throw ('DCM27_TRUTHFUL_ERROR_MISSING: '+$Case)}
     foreach($id in @(1020,1021,1022,1023,1047)){if(@($snapshot | Where-Object {$_.ID -eq $id -and $_.Enabled}).Count){throw 'Failed image retained enabled sizing controls.'}}
     $null=Shot $Case
+    $after=@([DcmNative]::Snapshot($hwnd,$app.Id))
+    if((Text 1005) -cne [IO.Path]::GetFileNameWithoutExtension($File) -or -not @($after | Where-Object {$_.Visible -and $_.Text -ceq $errors[0].Text}).Count){throw 'Image error state changed during capture.'}
     $cases.Add([ordered]@{name=$Case;file=$File;passed=$true;status=$errors[0].Text})
 }
 function Stop-App {
