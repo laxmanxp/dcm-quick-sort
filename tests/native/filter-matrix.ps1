@@ -37,6 +37,11 @@ Check-DcmFilter 'DCM-21-combined-intersection' "click clear`nselect category `"D
 Save-State 'DCM-21-combined-match';$null=Save-Shot 'DCM-21-combined-match'
 Check-DcmFilter 'DCM-21-combined-no-match' "type name `"no-dcm21-fixture-matches`"" @()
 Save-State 'DCM-21-filtered-empty';$null=Save-Shot 'DCM-21-filtered-empty'
+# Opt-in evidence probe reproduces the old missing-destination setup, then fails
+# deliberately. Normal qualification never acknowledges unexpected dialogs.
+if($env:DCM21_PROBE_EMPTY_DESTINATION -eq '1'){
+    . (Join-Path $repo 'tests\native\filter-empty-destination-probe.ps1')
+}
 # Use the known valid disposable destination to isolate no-selection safety
 # from the separate invalid-destination validation dialog (DCM-38).
 Invoke-Fvs 'DCM-21-valid-disposable-destination' "type destination `"Accepted`"`ninspect main`nexpect destination text=`"Accepted`""
