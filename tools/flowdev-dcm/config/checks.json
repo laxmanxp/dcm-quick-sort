@@ -34,7 +34,8 @@
         "ui-selection": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-selection.ps1"],
         "ui-refresh": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-refresh.ps1"],
         "text-unit": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "regressions", "-Run", "^TestDCM26"],
-        "ui-text": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-text.ps1"]
+        "ui-text": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-text.ps1"],
+        "ui-image": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-image.ps1"]
       }
     }
   }
