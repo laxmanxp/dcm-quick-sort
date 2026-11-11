@@ -3360,6 +3360,11 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 	case WM_BATCH_MOVE_NEXT:
 		advanceBatchMove()
 		return 0
+	case 0x0113: // WM_TIMER: owned Sumatra startup/liveness, never a rendering wait.
+		if wParam == sumatraTimerID {
+			pollSumatraPreview()
+			return 0
+		}
 	case WM_PDF_RENDER_DONE:
 		finishPDFRender()
 		return 0
@@ -3855,6 +3860,9 @@ func undoSelectedProcessed() {
 		return
 	}
 
+	if !releaseSumatraForOperation() {
+		return
+	}
 	remaining, rec, err := undoHistoryAt(app.history, idx)
 	if err != nil {
 		showError(err.Error())
@@ -3913,6 +3921,9 @@ func undoLatestBatch() {
 		return
 	}
 
+	if !releaseSumatraForOperation() {
+		return
+	}
 	remaining, undone, undoErr := undoHistoryBatch(app.history, batchID)
 	app.history = remaining
 	var reconciliationIssues []string
@@ -4310,6 +4321,9 @@ func removeSourceAfterAdvance(source, target string, expected sourceSnapshot) er
 }
 
 func beginFileOperation(mode fileOperationMode, source, target string) {
+	if !releaseSumatraForOperation() {
+		return
+	}
 	app.pendingFileOperation = mode
 	// Release the active preview before hashing, deleting, renaming or copying.
 	// Some third-party preview handlers keep sharing locks while loaded.
@@ -4754,6 +4768,9 @@ func loadPreview(path string) {
 		}
 		return
 	}
+	if isPDFPath(path) && startSumatraPreview(path) {
+		return
+	}
 	if isPDFPath(path) && startPDFPreview(path) {
 		return
 	}
@@ -4862,6 +4879,9 @@ func loadImageWithError(path string) error {
 }
 
 func unloadPreview() {
+	if err := stopSumatraPreview(); err != nil {
+		sumatraError(err)
+	}
 	stopPDFPreview()
 	hideTextPreview()
 	hideXLSXPreview()
@@ -4881,6 +4901,7 @@ func unloadPreview() {
 func previewWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 	switch msg {
 	case WM_SIZE:
+		resizeSumatraPreview()
 		resizePreviewHandler()
 		resizeTextPreview()
 		resizeXLSXPreview()
