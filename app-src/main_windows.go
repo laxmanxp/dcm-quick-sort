@@ -4749,7 +4749,9 @@ func loadPreview(path string) {
 		return
 	}
 	if readTextEnabled() {
-		showTextPreview(path)
+		if showTextPreview(path) {
+			setText(app.statusLabel, "Read as text: "+strings.ToUpper(strings.TrimPrefix(filepath.Ext(path), ".")))
+		}
 		return
 	}
 	if isPDFPath(path) && startPDFPreview(path) {
