@@ -1,23 +1,30 @@
-# DCM v1.0.71 — resume after DCM-26
+# DCM v1.0.71 — resume after DCM-27
 
-Latest accepted checkpoint: [DCM-26](dcm26-complete.md). Completed: **DCM-01–18 and DCM-20–26**; DCM-19 remains blocked. Only DCM-26 newly closed. The 25 checklist steps include five setup/diagnostic steps, not a product percentage. Human acceptance remains unrecorded.
+Latest accepted checkpoint: [DCM-27 image previews](dcm27-complete.md). Completed: **DCM-01–18 and DCM-20–27**; DCM-19 remains blocked. Only DCM-27 newly closed. The 26 checklist steps include five setup/diagnostic steps, not a product percentage. Human acceptance remains unrecorded.
 
 ## Verified state
 
-Final tested source: `921f3616da39e8c67f27ba1d496eaaf3594526ad`. Native baseline **361 passed / 0 failed / 1 external-PPTX skip** across 362 parents; no timeout, source unchanged. Three new Go parents contain 31 nested encoding/limit/read-safety cases. Native ui-text passes 17 checks on 15 disposable fixtures; all 17 final images inspected, including visible cutoff notices and the current manual text status. Normal exit 0, children drained, source/fixture contents unchanged, no operation journal. Launch and Refresh commands also pass at the same revision; their new images were not separately reviewed.
+Native-tested revision: `b92c9abdac87e7f9c937e51ca8e7023eae5e3417`. Image-error fix `4043f3e5` and the image tools were already committed by the interrupted attempt; this retry made no further product/test changes. Empty image previously showed a missing Windows handler and stale success footer; the fixed image loader retains specific errors and disables sizing controls. Existing GDI+ memory-stream loading and the PDF bool wrapper remain intact.
 
-Core decoder now accepts valid UTF-8 and BOM-marked UTF-16LE/BE, refuses malformed/unsupported encodings instead of silently replacing bytes, and drops only incomplete characters cut by the 256-KiB preview bound. Read/encoding errors remain specific rather than falling through to generic missing-handler messaging. Explicit Read as text updates its own status. Automatic text routing remains TXT/MD/CSV; Markdown and CSV are literal text, not rich rendering. No legacy encoding guessing, UTF-32 support, installer or engine changes.
+Fresh baseline: **362 passed / 0 failed / 1 retained external-PPTX skip** across 363 parent tests; exit 0, no timeout, source unchanged. Image workflow: 23 checks on 12 fixtures, 22 individually reviewed screenshots, normal exit 0, children drained and original bytes unchanged. All 22 captures succeeded on first attempt. Nineteen render cases verify actual screenshot pixels, plus three error states and source-handle release. Text and navigation regression commands also passed; their new images were not separately reviewed.
 
-Preserve all REDs/tooling failures in the report: native unit failures; locked-file misleading error; manual stale status; wait-variable shadowing; two capture-guard failures. The first 17-assertion pass was not final acceptance: image review exposed missing tail captures/manual status. The corrected test uses an actual end caret and first-visible-line check; all content/hash/ownership guards remain intact. Do not reapply historical proposals.
+See `dcm27-complete.md` and `evidence/dcm-27-native-summary.json` for exact runs, hashes, historical failures and scope. Static GIF/single-page TIFF only; no animation/multipage TIFF, general EXIF/color-profile, all DPI or human-input claim. Panning uses owned native messages.
 
-## Next exact step — DCM-27
+## Next exact step — DCM-28
 
-Inspect the existing supported image-preview formats and qualify representative actual content plus existing sizing/navigation behavior. Use disposable known images and reviewed captures, not status-label-only assertions. Do not switch preview engines, add printing, or close other format gates incidentally.
+Qualify a known multipage PDF through the actual candidate: verify each visible page and next/previous at first/last boundaries. Reuse the existing native tools and PDF path. Do not add printing or replace the renderer. DCM-29 zoom is separate. Obtain a fresh matching build receipt before UI input; no arbitrary newest binary or edited receipt identities.
 
-Code locally -> GitHub -> FlowDev update/test on Lenovo, serially. Candidate `C:\FlowverseReports\dcm-quicksort-candidate`; profile `tools\flowdev-dcm`; runner `C:\FlowverseReports\flowdev-standalone-validation\flowdev-test.exe`; workspace `C:\FlowverseReports`; device `d18227f2-0b54-4b11-9026-56ac40305f02`. No remote source editing. Check active sessions before any native UI input.
+## Canonical Lenovo workspace
 
-Last build: `C:\FlowverseReports\dcm-quicksort-build-20261111-144207-01065b1a\receipt.json`, matches 921f3616 only. App hash `0522a02560bea2355c6d307eca807320836a51b4e9a8553470c8107b33f2523e`. Obtain a fresh source-matching build after this metadata commit or any later revision; never rewrite receipt identities.
+Use **D:\FlowverseReportsRepo**. `C:\FlowverseReports` is a junction to it and FlowDev update through that alias returned `not a repository root`. Do not undo the user's relocation or mix aliases when binding source/build identity.
 
-Reports under C:\FlowverseReports: baseline `dcm-quicksort-baseline-20261111-144109-ae0c2e92`; text `dcm-quicksort-ui-text-20261111-144427-b716381b`; launch `dcm-quicksort-ui-launch-20261111-144456-9fa864b0`; refresh `dcm-quicksort-ui-refresh-20261111-144512-afa1b71e`. Separate review/hashes: `evidence/dcm-26-native-summary.json`. Raw visual flags remain unchanged; images stay on Lenovo because small desktop edges are visible.
+Candidate: `D:\FlowverseReportsRepo\dcm-quicksort-candidate`.
+Profile: candidate `tools\flowdev-dcm`.
+Runner: `D:\FlowverseReportsRepo\flowdev-standalone-validation\flowdev-test.exe`.
+Set `FLOWDEV_WORKSPACE_ROOT=D:\FlowverseReportsRepo` and `DCM_FLOWUIVISION_EXE=D:\FlowverseReportsRepo\dcm-flowuivision-20261103\FlowUIVision.exe`.
+Device: `d18227f2-0b54-4b11-9026-56ac40305f02` (Laxman_Lenovo).
+Code locally -> GitHub -> FlowDev update/test on Lenovo. Check active sessions before any native UI run; one UI test at a time. No remote source edits.
 
-Keep DCM-19/disposable Explorer isolation, DCM-UI-LABEL-01, identified external DCM_REAL_PPTX before DCM-32/47, remaining previews and file-operation workflows, full Batch Move/Undo, final package/setup lifecycle and actual user acceptance open. Leave DCM21_PROBE_EMPTY_DESTINATION unset in normal acceptance. PR #1 remains draft; no merge/publication without final gates and approval.
+Last successful build receipt: `D:\FlowverseReportsRepo\dcm-quicksort-build-20261111-180146-fc67e68b\receipt.json`, matching b92c9abd only. App SHA-256 `2f579ceba816c1f48853a688fe18ba0e48589f0877deaca3ca836dd47b25d5c2`. A later documentation commit also requires a fresh build for exact receipt binding.
+
+Keep DCM-19/disposable Explorer isolation, DCM-UI-LABEL-01, identified DCM_REAL_PPTX before DCM-32/47, remaining workflows/previews, final package/actual installer lifecycle and human acceptance open. Preserve historical C: receipt strings and all prior evidence. Leave DCM21_PROBE_EMPTY_DESTINATION unset. No merge/publication without final gates and approval.
