@@ -1,13 +1,33 @@
 {
+  "base_commit": "9c0b9154189b384085bd938cfea8e96003143528",
   "files": [
     {
-      "path": "tools/test-ui-text.ps1",
-      "before_blob": "a03668d00a9c968f6f7167dc715d9ee284cfa818",
-      "after_sha256": "8dba78dd6971a89df5335c169c85fba38f5db70d1feaeb03d17460cd09b0261a",
+      "path": "app-src/core.go",
+      "before_blob": "624385368d6358b7e3dd38bab1dcd8955b96cb2a",
+      "after_sha256": "89ddfd35f0784e304bb10b0252a66d48572be3d5f662d9e49ab689989043f659",
       "replacements": [
         {
-          "old": "    Wait-For ('text selection '+$Name) { (Text 1005) -ceq [IO.Path]::GetFileNameWithoutExtension($Name) }",
-          "new": "    $selectedStem=[IO.Path]::GetFileNameWithoutExtension($Name)\n    Wait-For ('text selection '+$Name) { (Text 1005) -ceq $selectedStem }"
+          "old": "text := decodeTextBytes(data)",
+          "new": "text, err := decodePreviewTextBytes(data, truncated)\n\tif err != nil {\n\t\treturn \"\", err\n\t}"
+        },
+        {
+          "old": "func decodeTextBytes(data []byte) string {\n\tif len(data) >= 2 && data[0] == 0xFF && data[1] == 0xFE {\n\t\treturn decodeUTF16(data[2:], true)\n\t}\n\tif len(data) >= 2 && data[0] == 0xFE && data[1] == 0xFF {\n\t\treturn decodeUTF16(data[2:], false)\n\t}\n\tif len(data) >= 3 && data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF {\n\t\tdata = data[3:]\n\t}\n\tif utf8.Valid(data) {\n\t\treturn string(data)\n\t}\n\treturn strings.ToValidUTF8(string(data), \"�\")\n}\n\nfunc decodeUTF16(data []byte, littleEndian bool) string {\n\tunits := make([]uint16, 0, len(data)/2)\n\tfor i := 0; i+1 < len(data); i += 2 {\n\t\tvar u uint16\n\t\tif littleEndian {\n\t\t\tu = uint16(data[i]) | uint16(data[i+1])<<8\n\t\t} else {\n\t\t\tu = uint16(data[i])<<8 | uint16(data[i+1])\n\t\t}\n\t\tunits = append(units, u)\n\t}\n\treturn string(utf16.Decode(units))\n}\n\n",
+          "new": "// Decode only the bounded preview prefix. A character cut by our byte limit\n// is omitted; a malformed sequence in the available prefix is reported, not\n// silently replaced. BOM-less legacy encodings and UTF-32 are not guessed.\nfunc decodePreviewTextBytes(data []byte, truncated bool) (string, error) {\n\tif len(data) >= 4 && ((data[0] == 0xFF && data[1] == 0xFE && data[2] == 0 && data[3] == 0) ||\n\t\t(data[0] == 0 && data[1] == 0 && data[2] == 0xFE && data[3] == 0xFF)) {\n\t\treturn \"\", fmt.Errorf(\"unsupported UTF-32 encoding; use UTF-8 or BOM-marked UTF-16\")\n\t}\n\tif len(data) >= 2 && data[0] == 0xFF && data[1] == 0xFE {\n\t\treturn decodePreviewUTF16(data[2:], true, truncated)\n\t}\n\tif len(data) >= 2 && data[0] == 0xFE && data[1] == 0xFF {\n\t\treturn decodePreviewUTF16(data[2:], false, truncated)\n\t}\n\tif len(data) >= 3 && data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF {\n\t\tdata = data[3:]\n\t}\n\tfor i := 0; i < len(data); {\n\t\tvalue, size := utf8.DecodeRune(data[i:])\n\t\tif value == utf8.RuneError && size == 1 {\n\t\t\tif truncated && !utf8.FullRune(data[i:]) {\n\t\t\t\treturn string(data[:i]), nil\n\t\t\t}\n\t\t\treturn \"\", fmt.Errorf(\"unsupported or invalid text encoding; expected UTF-8 or BOM-marked UTF-16\")\n\t\t}\n\t\ti += size\n\t}\n\treturn string(data), nil\n}\n\nfunc decodePreviewUTF16(data []byte, littleEndian, truncated bool) (string, error) {\n\tif len(data)%2 != 0 && !truncated {\n\t\treturn \"\", fmt.Errorf(\"invalid UTF-16 encoding: incomplete code unit\")\n\t}\n\tunits := make([]uint16, 0, len(data)/2)\n\tfor i := 0; i+1 < len(data); i += 2 {\n\t\tvar u uint16\n\t\tif littleEndian {\n\t\t\tu = uint16(data[i]) | uint16(data[i+1])<<8\n\t\t} else {\n\t\t\tu = uint16(data[i])<<8 | uint16(data[i+1])\n\t\t}\n\t\tunits = append(units, u)\n\t}\n\tfor i := 0; i < len(units); i++ {\n\t\tu := units[i]\n\t\tif u >= 0xD800 && u <= 0xDBFF {\n\t\t\tif i+1 == len(units) && truncated {\n\t\t\t\tunits = units[:i]\n\t\t\t\tbreak\n\t\t\t}\n\t\t\tif i+1 == len(units) || units[i+1] < 0xDC00 || units[i+1] > 0xDFFF {\n\t\t\t\treturn \"\", fmt.Errorf(\"invalid UTF-16 encoding: unpaired surrogate\")\n\t\t\t}\n\t\t\ti++\n\t\t} else if u >= 0xDC00 && u <= 0xDFFF {\n\t\t\treturn \"\", fmt.Errorf(\"invalid UTF-16 encoding: unpaired surrogate\")\n\t\t}\n\t}\n\treturn string(utf16.Decode(units)), nil\n}\n\n"
+        }
+      ]
+    },
+    {
+      "path": "app-src/main_windows.go",
+      "before_blob": "55e7f3475f2951fe402569bdab7d38c58fa8e2ea",
+      "after_sha256": "0f2082c8a6f26e65d0f82b42cb5621f2758feac83e1a4a71d1495872977c9fe1",
+      "replacements": [
+        {
+          "old": "\t\tapp.fallback = \"Could not read this file as text.\\n\\n\" + err.Error()\n\t\tprocInvalidateRect.Call(app.previewHwnd, 0, 1)",
+          "new": "\t\tapp.fallback = \"Could not read this file as text.\\n\\n\" + err.Error()\n\t\tsetText(app.statusLabel, \"Text preview unavailable: \"+err.Error())\n\t\tupdatePreviewZoomControls()\n\t\tprocInvalidateRect.Call(app.previewHwnd, 0, 1)"
+        },
+        {
+          "old": "\tif shouldUsePlainTextPreview(path) {\n\t\tif showTextPreview(path) {\n\t\t\tsetText(app.statusLabel, \"Plain-text preview: \"+strings.ToUpper(strings.TrimPrefix(filepath.Ext(path), \".\")))\n\t\t\treturn\n\t\t}\n\t}\n",
+          "new": "\tif shouldUsePlainTextPreview(path) {\n\t\tif showTextPreview(path) {\n\t\t\tsetText(app.statusLabel, \"Plain-text preview: \"+strings.ToUpper(strings.TrimPrefix(filepath.Ext(path), \".\")))\n\t\t}\n\t\t// Preserve the specific text-read/encoding error; generic handler\n\t\t// fallback must not overwrite it or retain a previous success status.\n\t\treturn\n\t}\n"
         }
       ]
     }
