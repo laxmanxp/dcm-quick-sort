@@ -1,3 +1,4 @@
+# Refresh pinned source for DCM-26 local development.
 name: Export pinned DCM source for local review
 on:
   push:
