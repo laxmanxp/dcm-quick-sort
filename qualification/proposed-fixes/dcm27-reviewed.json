@@ -1,0 +1,15 @@
+{
+  "files": [
+    {
+      "path": "tools/test-ui-image.ps1",
+      "before_blob": "d6959a0d2355c55d0545d4048f1c1c7b05003227",
+      "after_sha256": "fc662b62b946d6508864864c6ec4b0097fcdf0d99dfb9f6cffc0bc36fe497958",
+      "replacements": [
+        {
+          "old": "    if(-not @($snapshot | Where-Object {$_.Visible -and $_.Text.StartsWith('Image preview:')}).Count){throw 'Expected owned image renderer status.'}",
+          "new": "    $statusPrefix=if($Mode -eq 'manual'){'Image preview zoom: '+$Percent+'%'}elseif($Mode -eq 'width'){'Image preview: Fit Width'}else{'Image preview: Fit'}\n    if(-not @($snapshot | Where-Object {$_.Visible -and $_.Text.StartsWith($statusPrefix)}).Count){throw 'Expected owned image renderer status.'}"
+        }
+      ]
+    }
+  ]
+}
