@@ -1,0 +1,15 @@
+{
+  "files": [
+    {
+      "path": "tools/test-ui-text.ps1",
+      "before_blob": "a03668d00a9c968f6f7167dc715d9ee284cfa818",
+      "after_sha256": "8dba78dd6971a89df5335c169c85fba38f5db70d1feaeb03d17460cd09b0261a",
+      "replacements": [
+        {
+          "old": "    Wait-For ('text selection '+$Name) { (Text 1005) -ceq [IO.Path]::GetFileNameWithoutExtension($Name) }",
+          "new": "    $selectedStem=[IO.Path]::GetFileNameWithoutExtension($Name)\n    Wait-For ('text selection '+$Name) { (Text 1005) -ceq $selectedStem }"
+        }
+      ]
+    }
+  ]
+}
