@@ -1,0 +1,219 @@
+{
+  "schema": 1,
+  "feature": "DCM-20",
+  "checkpoint_date": "2026-11-11",
+  "completion": "complete_at_recorded_scope",
+  "newly_completed_steps": [
+    "DCM-20"
+  ],
+  "blocked_steps": [
+    "DCM-19"
+  ],
+  "product_fix_commit": "ded8595377d4cf187a07624b3a869cdd05494fb7",
+  "native_ui_tested_commit": "fa696e12dddacefcc243941f770e3599bd8ab2ff",
+  "red": {
+    "commit": "56819705d34a3ce0016ae624d81d91c94ab0f943",
+    "report": "C:\\FlowverseReports\\dcm-quicksort-ui-context-20261111-004545-e99ac6ad",
+    "error": "DCM-20-MENU-01: no owned native context menu appeared after right-clicking the second file.",
+    "menu_handles": [],
+    "clicked_fixture": "02-right-click target.txt",
+    "clicked_index": 0,
+    "selection_after_click": [
+      1
+    ],
+    "fixtures_unchanged": true,
+    "app_exit_code": 0,
+    "source_unchanged": true,
+    "reviewed_images": 2
+  },
+  "baseline": {
+    "commit": "ded8595377d4cf187a07624b3a869cdd05494fb7",
+    "report": "C:\\FlowverseReports\\dcm-quicksort-baseline-20261111-005651-f0924008",
+    "count": 355,
+    "passed": 354,
+    "failed": 0,
+    "skipped": [
+      "TestRealGeneratedPPTXIntegration"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "source_unchanged": true,
+    "manifest_files": 229,
+    "manifest_sha256": "68f7920a8cd4fef85e682172242a05540338e28a4505f701e08f86ab63377df3",
+    "finished_utc": "2026-11-11T00:57:19.4513929Z",
+    "new_unit_tests": [
+      "TestContextMenuRejectsInvalidTargets",
+      "TestContextMenuCancelIsNotAnOpenCommand",
+      "TestContextMenuInvokeABI"
+    ],
+    "skip_disposition": "External DCM_REAL_PPTX fixture still required under DCM-32/47; not executed or passed."
+  },
+  "build": {
+    "commit": "fa696e12dddacefcc243941f770e3599bd8ab2ff",
+    "receipt": "C:\\FlowverseReports\\dcm-quicksort-build-20261111-011606-8eb3acc9\\receipt.json",
+    "receipt_sha256": "a6a70bbaffec55822c294220bdd5740b1407a70a6f1ecd2ec84febc690a073f7",
+    "app_sha256": "500bbda9dfe4f5798cff838c182305f3f4c874d12ac5fbd3ee2737b45e9f715c",
+    "size_bytes": 7182848,
+    "manifest_files": 230,
+    "manifest_sha256": "43a07528c4931e169d9fecbe3959af8f1421a6c7aa1e9bd4dab5363c5b491b76",
+    "exit_code": 0,
+    "source_unchanged": true
+  },
+  "ui_context": {
+    "commit": "fa696e12dddacefcc243941f770e3599bd8ab2ff",
+    "report": "C:\\FlowverseReports\\dcm-quicksort-ui-context-20261111-011755-9e356a18",
+    "passed": true,
+    "case_count": 4,
+    "exit_code": 0,
+    "app_pid": 11968,
+    "app_exit_code": 0,
+    "children_drained": true,
+    "fixtures_unchanged": true,
+    "source_unchanged": true,
+    "external_open_tested": true,
+    "raw_feature_accepted": false,
+    "raw_visual_reviewed": false,
+    "started_utc": "2026-11-11T01:17:55.2965380Z",
+    "finished_utc": "2026-11-11T01:18:05.0836055Z"
+  },
+  "external_open": {
+    "method": "Actual physical click on the exact enabled ordinary Open item in the owned native popup",
+    "item_id": 103,
+    "item_position": 0,
+    "logical_point": [
+      176,
+      232
+    ],
+    "physical_point": [
+      220,
+      290
+    ],
+    "previous_selection": "03-wrong-open.cmd",
+    "target": "04-external open.cmd",
+    "marker_sha256": "55468eaf2a04a3eea0ef64102ae062ac09b1563ce87dd298c163b7400d3aaf69",
+    "unique_token": "DCM20-4db1f217211d4bf49c0fd88a97d3d7b2",
+    "wrong_marker_absent": true,
+    "association_changed": false,
+    "scope": "Harmless locally generated .cmd default-handler fixture only. No certification of Word/Excel/PDF or every document association."
+  },
+  "fixture_hashes": {
+    "01-selected.txt": "c6f7c137c6f5b97cab9f94c449e875a1294bb761c15ec768d22b654077abe797",
+    "02-right-click target.txt": "93f352c06ed6f67b4e970e57182ef9c5f8220ab376afdc568067c440b6e98008",
+    "03-wrong-open.cmd": "bc0b806ad9832448b0db0d7f591951d7db1be1c6784e7c9167fa6a812cc17de4",
+    "04-external open.cmd": "8f6bf75ad48f6d56e2e21962c1d5e77f2130e54c17bebb392a321b6d6d0484ee"
+  },
+  "ui_launch_regression": {
+    "commit": "fa696e12dddacefcc243941f770e3599bd8ab2ff",
+    "report": "C:\\FlowverseReports\\dcm-quicksort-ui-launch-20261111-011912-47783da7",
+    "passed": true,
+    "case_count": 12,
+    "app_pids": [
+      16296,
+      10160
+    ],
+    "exit_codes": [
+      0,
+      0
+    ],
+    "children_drained": true,
+    "source_unchanged": true,
+    "reviewed_images": 4,
+    "finished_utc": "2026-11-11T01:19:23.2150296Z"
+  },
+  "visual_review": {
+    "performed": true,
+    "raw_receipts_modified": false,
+    "context_images": [
+      {
+        "name": "DCM-20-before-right-click",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-context-20261111-011755-9e356a18\\DCM-20-before-right-click.png",
+        "sha256": "3268a63703eae666b8dd73dded8df0909e5dd3516a69484446f537e4ad68b9f5",
+        "review": "Initial selection and readable preview identify 01-selected.txt; four disposable files are visible."
+      },
+      {
+        "name": "DCM-20-text-file-menu",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-context-20261111-011755-9e356a18\\DCM-20-text-file-menu.png",
+        "sha256": "67a07f10239f2509f9d58dffb3738b05f3cb75afeb896d8165a219de0e8b735b",
+        "review": "Readable actual Windows Shell popup: Open/Open with, Cut, Copy, Properties and installed extensions are visible. Presence is not command-by-command acceptance."
+      },
+      {
+        "name": "DCM-20-after-menu-cancel",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-context-20261111-011755-9e356a18\\DCM-20-after-menu-cancel.png",
+        "sha256": "6f37596584ee3b237ea194e416f8d4b7151c87f4b1c26683bf30d97b9a447a44",
+        "review": "The clicked 02-right-click target.txt is now selected and previewed; popup is closed."
+      },
+      {
+        "name": "DCM-20-external-open-menu",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-context-20261111-011755-9e356a18\\DCM-20-external-open-menu.png",
+        "sha256": "1f8f7f78037753b49e0c2166720edd756e8eaa5aa53f3ef676ff06b76889a178",
+        "review": "The command-file popup visibly includes ordinary Open distinct from Run as administrator; only Open was invoked."
+      },
+      {
+        "name": "DCM-20-after-external-open",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-context-20261111-011755-9e356a18\\DCM-20-after-external-open.png",
+        "sha256": "eb9e8fc90cd18817dfc4c1f96b9d700e7b066ad3c98c53f8a374ae022be47948",
+        "review": "04-external open.cmd remains selected; readable harmless marker-writer content and all four source files remain visible."
+      }
+    ],
+    "launch_images": [
+      {
+        "name": "DCM-17-empty-launch",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-launch-20261111-011912-47783da7\\DCM-17-empty-launch.png",
+        "sha256": "f38678f6c4b1ea2faff8ffdd9e4810eaff006e2dfcd238348b96d9870c4bdee8",
+        "reviewed": true
+      },
+      {
+        "name": "DCM-17-empty-after-actions",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-launch-20261111-011912-47783da7\\DCM-17-empty-after-actions.png",
+        "sha256": "f6bb301892d32427bb0c32c4b7b31ce1dc4b8706c9d061ca4f54d85de94a666a",
+        "reviewed": true
+      },
+      {
+        "name": "DCM-17-no-selection",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-launch-20261111-011912-47783da7\\DCM-17-no-selection.png",
+        "sha256": "3340e81e719b50f738da2086c376faf4bd5eecdb0bb594666ae824e613d7cfeb",
+        "reviewed": true
+      },
+      {
+        "name": "DCM-17-restored-selection",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-launch-20261111-011912-47783da7\\DCM-17-restored-selection.png",
+        "sha256": "569bea15ab1aa0be89656bda29acc4e969b81e5da008be24e4869349c8d481c8",
+        "reviewed": true
+      }
+    ],
+    "findings_retained": [
+      "DCM-UI-LABEL-01",
+      "DCM-UI-EMPTY-COPY-01"
+    ]
+  },
+  "harness_failures_retained": [
+    {
+      "commit": "803bf84bb2d608ec074fb2b5f3b444562d9fa8f3",
+      "report": "C:\\FlowverseReports\\dcm-quicksort-ui-context-20261111-010737-60cec8a2",
+      "error": "Open target is obscured",
+      "input_sent": false
+    },
+    {
+      "commit": "2068ec90af3f320a3eedb9143ff8899a4f3d3cf7",
+      "report": "C:\\FlowverseReports\\dcm-quicksort-ui-context-20261111-011336-7952b8d8",
+      "error": "Logical item [48,221,305,243] versus physical popup [56,273,385,901]; original point hit a Static control",
+      "input_sent": false
+    }
+  ],
+  "boundaries": {
+    "single_file_menu": true,
+    "bulk_shell_actions_tested": false,
+    "keyboard_menu_tested": false,
+    "all_menu_commands_tested": false,
+    "shell_file_mutations_in_dcm_undo": false,
+    "app_owned_printing_added": false,
+    "host_registry_changed": false,
+    "host_installation": false,
+    "installer_suite_rerun": false,
+    "packaged_release_qualified": false,
+    "user_acceptance": "not_recorded",
+    "merged": false,
+    "published": false
+  },
+  "evidence_kind": "Transcription and separate review of inspected native reports, not a replacement raw receipt."
+}
