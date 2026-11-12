@@ -3892,7 +3892,10 @@ func undoSelectedProcessed() {
 		nextSelection = len(app.history) - 1
 	}
 	populateProcessedList(nextSelection)
-	if filepath.Clean(filepath.Dir(rec.From)) == filepath.Clean(app.sourceDir) {
+	// Undo changes both directories: refresh even when viewing the moved file
+	// in its destination, where it has just been removed.
+	if filepath.Clean(filepath.Dir(rec.From)) == filepath.Clean(app.sourceDir) ||
+		filepath.Clean(filepath.Dir(rec.To)) == filepath.Clean(app.sourceDir) {
 		reloadFiles()
 	}
 	if journalErr != nil {
