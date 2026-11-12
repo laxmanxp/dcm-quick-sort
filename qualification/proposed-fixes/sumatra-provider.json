@@ -1,75 +1,20 @@
 {
   "files": [
     {
-      "path": "app-src/main_windows.go",
-      "before_blob": "6207819ec4e54dfb2163622b4e3f89237a5f9bc8",
-      "after_sha256": "835e2121106dd5aee68ffcce5a514d9946c3d8cbcf9087f0ab8855237f2ac5ef",
+      "path": "tools/test-ui-sumatra-undo.ps1",
+      "before_blob": "5cb0ee52d82e03f8cce801d952b2be67cf8357ba",
+      "after_sha256": "4affba815853ad455be088dbe1d9c12448fd286a539de9c4db81d744963d9662",
       "replacements": [
-        {
-          "old": "\tprocGetWindowTextLengthW = user32.NewProc(\"GetWindowTextLengthW\")\n\tprocSendMessageW         = user32.NewProc(\"SendMessageW\")\n\tprocMoveWindow           = user32.NewProc(\"MoveWindow\")\n\tprocGetClientRect        = user32.NewProc(\"GetClientRect\")\n\tprocGetWindowRect        = user32.NewProc(\"GetWindowRect\")\n\tprocBeginPaint           = user32.NewProc(\"BeginPaint\")\n",
-          "new": "\tprocGetWindowTextLengthW = user32.NewProc(\"GetWindowTextLengthW\")\n\tprocSendMessageW         = user32.NewProc(\"SendMessageW\")\n\tprocMoveWindow           = user32.NewProc(\"MoveWindow\")\n\tprocRedrawWindow         = user32.NewProc(\"RedrawWindow\")\n\tprocGetClientRect        = user32.NewProc(\"GetClientRect\")\n\tprocGetWindowRect        = user32.NewProc(\"GetWindowRect\")\n\tprocBeginPaint           = user32.NewProc(\"BeginPaint\")\n"
-        },
-        {
-          "old": "\t}\n\tlistW := int32(220)\n\tprocessedW := int32(260)\n\tgap := int32(10)\n\tpreviewX := int32(20) + listW + gap\n\tprocessedX := w - 20 - processedW\n",
-          "new": "\t}\n\tlistW := int32(220)\n\tprocessedW := int32(260)\n\tif sumatraView != nil && sumatraView.child != 0 {\n\t\tlistW, processedW = sumatraSidebarWidths(w)\n\t}\n\tgap := int32(10)\n\tpreviewX := int32(20) + listW + gap\n\tprocessedX := w - 20 - processedW\n"
-        },
-        {
-          "old": "\tprocMoveWindow.Call(app.statusLabel, 20, uintptr(by+43), uintptr(w-40), 20, 1)\n\tprocMoveWindow.Call(app.keyboardHintLabel, 20, uintptr(by+64), uintptr(w-40), 18, 1)\n\tprocMoveWindow.Call(app.destSuggestionList, uintptr(pathX), uintptr(destY+31), uintptr(pathW), 140, 1)\n}\n\nfunc populateFileList() {\n",
-          "new": "\tprocMoveWindow.Call(app.statusLabel, 20, uintptr(by+43), uintptr(w-40), 20, 1)\n\tprocMoveWindow.Call(app.keyboardHintLabel, 20, uintptr(by+64), uintptr(w-40), 18, 1)\n\tprocMoveWindow.Call(app.destSuggestionList, uintptr(pathX), uintptr(destY+31), uintptr(pathW), 140, 1)\n\t// Moving overlapping child controls can leave copied pixels in a sibling or\n\t// transparent label. Invalidate the completed layout, including child frames.\n\t// Queue repaint only: never synchronously wait on the foreign PDF renderer.\n\tprocRedrawWindow.Call(hwnd, 0, 0, 0x0001|0x0004|0x0080)\n}\n\nfunc populateFileList() {\n"
-        }
+        {"old":"    $null=[DcmNative]::SelectFiles($hwnd,$app.Id,1016,[string[]]@($file));$stem=[IO.Path]::GetFileNameWithoutExtension($file)","new":"    $items=[DcmNative]::ListItems($hwnd,$app.Id,1016);$index=[Array]::IndexOf($items,$file)\n    if($index -lt 0){throw 'Selected fixture not listed'}\n    [DcmUndoInput]::Select($hwnd,$app.Id,$index);$stem=[IO.Path]::GetFileNameWithoutExtension($file)"},
+        {"old":"try{Wait ('selection '+$file) {(Text 1005) -ceq $stem}}catch{","new":"try{Wait ('selection '+$file) {(Text 1005) -ceq $stem -and (@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016)) -join ',') -eq [string]$index}}catch{"},
+        {"old":"    . (Join-Path $repo 'tests/native/new-fixtures.ps1');","new":"    Add-Type -Path (Join-Path $repo 'tests/native/dcm-undo-input.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')\n    . (Join-Path $repo 'tests/native/new-fixtures.ps1');"}
       ]
     },
     {
-      "path": "app-src/sumatra_policy.go",
-      "before_blob": "6e908a771c9d15cbd4b246d90145a429f49906f0",
-      "after_sha256": "b9342d8e5cbdbdd8c84b0ddbefcf74794cea8069cbb0cdcb4efe12889a02e143",
-      "replacements": [
-        {
-          "old": "\t}\n\treturn (toolbarHeight - height) / 2, true\n}\n",
-          "new": "\t}\n\treturn (toolbarHeight - height) / 2, true\n}\n\n// Reserve the pinned viewer toolbar's normal preview width when the host is\n// narrowed. Borrow evenly from the two side panels, never below their readable\n// minima. This does not change the fixed-size window style or PDF restrictions.\nfunc sumatraSidebarWidths(clientWidth int32) (int32, int32) {\n\tconst desiredPreview, marginsAndGaps = int32(724), int32(60)\n\tconst minList, minProcessed = int32(160), int32(200)\n\tif clientWidth <= desiredPreview+marginsAndGaps+minList+minProcessed {\n\t\treturn minList, minProcessed\n\t}\n\tavailable := clientWidth - desiredPreview - marginsAndGaps\n\tif available >= 480 {\n\t\treturn 220, 260\n\t}\n\treduction := 480 - available\n\treturn 220 - (reduction+1)/2, 260 - reduction/2\n}\n"
-        }
-      ]
-    },
-    {
-      "path": "app-src/sumatra_policy_test.go",
-      "before_blob": "1884ea940d00eb8ac10f21f759ceade1695351e5",
-      "after_sha256": "9247168dfbf5ee8ab21ef5d3baf0f895e23b668103f73d6893aaa3297d73a6fe",
-      "replacements": [
-        {
-          "old": "\t\t})\n\t}\n}\n",
-          "new": "\t\t})\n\t}\n}\n\nfunc TestSumatraSidebarWidthsReserveToolbar(t *testing.T) {\n\tfor _, tc := range []struct{ width, list, processed int32 }{\n\t\t{1600, 220, 260}, {1264, 220, 260}, {1200, 188, 228}, {1201, 188, 229},\n\t\t{1174, 175, 215}, {1144, 160, 200}, {1136, 160, 200}, {0, 160, 200}, {-1, 160, 200},\n\t} {\n\t\tlist, processed := sumatraSidebarWidths(tc.width)\n\t\tif list != tc.list || processed != tc.processed {\n\t\t\tt.Errorf(\"width %d: (%d,%d), want (%d,%d)\", tc.width, list, processed, tc.list, tc.processed)\n\t\t}\n\t}\n\tfor width := int32(1144); width <= 2000; width++ {\n\t\tlist, processed := sumatraSidebarWidths(width)\n\t\tif list < 160 || list > 220 || processed < 200 || processed > 260 || width-60-list-processed < 724 {\n\t\t\tt.Fatalf(\"invalid layout width=%d left=%d right=%d\", width, list, processed)\n\t\t}\n\t}\n}\n"
-        }
-      ]
-    },
-    {
-      "path": "app-src/sumatra_preview_windows.go",
-      "before_blob": "aaf17dc3d2f22014acdb84496538df51a36d7ad5",
-      "after_sha256": "259f7e567995dad3720d0932fc1c06f3eec93b46cd1a547ad659711c4bda43c6",
-      "replacements": [
-        {
-          "old": "\tif v.child == 0 {\n\t\tspEnumChildren.Call(app.previewHwnd, sumatraFindChild, 0)\n\t\tif v.child != 0 {\n\t\t\tresizeSumatraPreview()\n\t\t\tapp.fallback = \"\"\n\t\t\tsetText(app.statusLabel, \"Sumatra PDF preview · restricted · use viewer navigation/zoom\")\n",
-          "new": "\tif v.child == 0 {\n\t\tspEnumChildren.Call(app.previewHwnd, sumatraFindChild, 0)\n\t\tif v.child != 0 {\n\t\t\tlayoutUI(app.hwnd)\n\t\t\tresizeSumatraPreview()\n\t\t\tapp.fallback = \"\"\n\t\t\tsetText(app.statusLabel, \"Sumatra PDF preview · restricted · use viewer navigation/zoom\")\n"
-        },
-        {
-          "old": "\tspClose.Call(v.job)\n\tsumatraView = nil\n\tupdatePreviewZoomControls()\n\t// Only the exact session directory created by MkdirTemp belongs to this viewer.\n\t_ = os.RemoveAll(v.profile)\n\treturn nil\n",
-          "new": "\tspClose.Call(v.job)\n\tsumatraView = nil\n\tupdatePreviewZoomControls()\n\tlayoutUI(app.hwnd)\n\t// Only the exact session directory created by MkdirTemp belongs to this viewer.\n\t_ = os.RemoveAll(v.profile)\n\treturn nil\n"
-        }
-      ]
-    },
-    {
-      "path": "tests/native/dcm-sumatra-probe.cs",
-      "before_blob": "fd704569854696937390920ef03a5b72840b9a49",
-      "after_sha256": "ba0d5b52b809eade26d445110e67f2493f4657a52412fd8f7bdbc3cbd63b8898",
-      "replacements": [
-        {
-          "old": "    public sealed class AccessibleButton { public int Child,State,X,Y,Width,Height;public string Name; }\n    public static AccessibleButton[] ToolbarButtons(IntPtr host,int hostPID,int expectedPID){\n        var l=Layout(host,hostPID,expectedPID);RequireToolbar(l);\n        object obj;Guid iid=new Guid(\"618736e0-3c3d-11cf-810c-00aa00389b71\");\n        if(AccessibleObjectFromWindow((IntPtr)l.Window,0xfffffffc,ref iid,out obj)!=0||obj==null)throw new Exception(\"Toolbar accessibility unavailable\");\n        IntPtr old=SetThreadDpiAwarenessContext((IntPtr)(-4));\n        try{\n            var a=(Accessibility.IAccessible)obj;var buttons=new List<AccessibleButton>();int count=a.accChildCount;\n            if(count<1||count>64)throw new Exception(\"Toolbar accessibility bounds\");\n            var children=new object[count];int obtained;\n",
-          "new": "    public sealed class AccessibleButton { public int Child,State,X,Y,Width,Height;public string Name; }\n    public static AccessibleButton[] ToolbarButtons(IntPtr host,int hostPID,int expectedPID){\n        var l=Layout(host,hostPID,expectedPID);RequireToolbar(l);\n        object obj=null;\n        // Establish the physical-coordinate context before creating the proxy.\n        IntPtr old=SetThreadDpiAwarenessContext((IntPtr)(-4));\n        try{\n            Guid iid=new Guid(\"618736e0-3c3d-11cf-810c-00aa00389b71\");\n            if(AccessibleObjectFromWindow((IntPtr)l.Window,0xfffffffc,ref iid,out obj)!=0||obj==null)throw new Exception(\"Toolbar accessibility unavailable\");\n            var a=(Accessibility.IAccessible)obj;var buttons=new List<AccessibleButton>();int count=a.accChildCount;\n            if(count<1||count>64)throw new Exception(\"Toolbar accessibility bounds\");\n            var children=new object[count];int obtained;\n"
-        },
-        {
-          "old": "                }\n            }finally{foreach(object child in children){if(child!=null&&Marshal.IsComObject(child))Marshal.ReleaseComObject(child);}}\n            return buttons.ToArray();\n        }finally{SetThreadDpiAwarenessContext(old);Marshal.ReleaseComObject(obj);}\n    }\n    public static void InvokeToolbar(IntPtr host,int hostPID,int expectedPID,string prefix){\n        if(prefix!=\"Next Page\"&&prefix!=\"Previous Page\"&&prefix!=\"Zoom In\"&&prefix!=\"Zoom Out\"&&prefix!=\"Fit a Single Page\"&&prefix!=\"Fit Width and Show Pages Continuously\")throw new Exception(\"Toolbar action not allowed\");\n",
-          "new": "                }\n            }finally{foreach(object child in children){if(child!=null&&Marshal.IsComObject(child))Marshal.ReleaseComObject(child);}}\n            return buttons.ToArray();\n        }finally{if(obj!=null&&Marshal.IsComObject(obj))Marshal.ReleaseComObject(obj);SetThreadDpiAwarenessContext(old);}\n    }\n    public static void InvokeToolbar(IntPtr host,int hostPID,int expectedPID,string prefix){\n        if(prefix!=\"Next Page\"&&prefix!=\"Previous Page\"&&prefix!=\"Zoom In\"&&prefix!=\"Zoom Out\"&&prefix!=\"Fit a Single Page\"&&prefix!=\"Fit Width and Show Pages Continuously\")throw new Exception(\"Toolbar action not allowed\");\n"
-        }
-      ]
+      "path":"app-src/sumatra_release_guard_windows_test.go",
+      "before_blob":"cacde332deced58b4e4a20e7e67dd3b25ba1b5fc",
+      "after_sha256":"a9c5a32c2663b838e168aa76283d359c4a2752fdb5832bb12767d0cd7732521e",
+      "replacements":[{"old":"\t\t\t\tapp = appState{index: -1, history: []MoveRecord{rec}}","new":"\t\t\t\tapp = appState{index: -1, history: []MoveRecord{rec}}\n\t\t\t\thidden := createControl(\"STATIC\", \"\", 0, 0, 0, 200, 100, 0, 0)\n\t\t\t\tif hidden == 0 {\n\t\t\t\t\tt.Fatal(\"hidden fixture window unavailable\")\n\t\t\t\t}\n\t\t\t\tdefer user32.NewProc(\"DestroyWindow\").Call(hidden)\n\t\t\t\tapp.hwnd, app.previewHwnd = hidden, hidden"}]
     }
   ]
 }
