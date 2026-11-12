@@ -147,6 +147,12 @@ try{
     SelectFile '10-damaged.pdf';Gone $v;Start-Sleep -Milliseconds 2200
     $p=Observe '03-damaged';Shot '03-damaged'
     if((Status) -like 'Sumatra PDF preview*'){$issues.Add('DAMAGED_PDF_HOST_CLAIMS_READY: header-valid damaged file has no rendered page')}
+    elseif((Status) -notlike 'Sumatra preview unavailable*'){$issues.Add('DAMAGED_PDF_NO_TRUTHFUL_HOST_STATE')}
+    else{
+        $errorControls=@($observations[$observations.Count-1].embedded_controls|Where-Object {$_.Visible -and $_.Text -like '*Error loading*10-damaged.pdf*'})
+        if($errorControls.Count -ne 1){throw 'Native decoder error not established'}
+        AddPass 'damaged-PDF-native-error-and-host-no-page-state'
+    }
     TextRecovery;ExclusiveAll;AddPass 'text-and-file-release-recover-after-damaged-PDF'
     [DcmNative]::RemoveTopmost($hwnd,$app.Id)
     SelectFile '12-protected.pdf';Start-Sleep -Milliseconds 1500;$p=Observe '04-password'
@@ -165,11 +171,16 @@ try{
         $receipt['password_wait']=[ordered]@{wait_ms=17000;prompt_remains=($alivePrompt -ne 0);host_status=(Status)}
         if($alivePrompt -eq 0){$issues.Add('PASSWORD_PROMPT_LOST_TO_STARTUP_DEADLINE')}else{[DcmPdfErrorProbe]::Password($alivePrompt,$after.Id,'',$true);AddPass 'password-prompt-survives-user-entry-wait'}
         Start-Sleep -Milliseconds 400
-        TextRecovery;ExclusiveAll;Shot '05-password-cancelled-to-text';AddPass 'password-prompt-cancel-and-text-recovery'
+        TextRecovery;ExclusiveAll;Shot '05-password-cancelled-to-text'
+        if($alivePrompt -ne 0){AddPass 'password-prompt-cancel-and-text-recovery'}
         [DcmNative]::RemoveTopmost($hwnd,$app.Id)
         SelectFile '12-protected.pdf';Start-Sleep -Milliseconds 1500;$p=PrivateViewer
         if(-not $p){throw 'No private password viewer on retry'};$dialog=[DcmPdfErrorProbe]::PasswordDialog($p.Id)
         if($dialog -eq 0){throw 'Password dialog not returned on retry'}
+        [DcmPdfErrorProbe]::Password($dialog,$p.Id,'wrong-fixture-password',$false);Start-Sleep -Milliseconds 500
+        $dialog=[DcmPdfErrorProbe]::PasswordDialog($p.Id)
+        if($dialog -eq 0 -or $null -ne [DcmSumatraProbe]::Find($hwnd,$app.Id)){throw 'Wrong password unexpectedly opened document'}
+        AddPass 'wrong-password-refused-with-prompt-retained'
         [DcmPdfErrorProbe]::Password($dialog,$p.Id,$protected.password,$false)
         $v=Viewer $protectedPath;Shot '06-password-unlocked' 'orange';AddPass 'known-fixture-password-renders-correct-content'
         TextRecovery;ExclusiveAll;AddPass 'decrypted-viewer-releases-file'

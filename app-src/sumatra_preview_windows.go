@@ -53,6 +53,7 @@ type sumatraSession struct {
 	process, job, child uintptr
 	pid                 uint32
 	profile, path       string
+	status              string
 	deadline            time.Time
 }
 
@@ -185,12 +186,19 @@ func pollSumatraPreview() {
 		return
 	}
 	if v.child == 0 {
+		if sumatraWaitingForPassword(v) {
+			// Human entry is not a stuck renderer: retain the normal deadline
+			// after the prompt closes, but do not time out an active prompt.
+			v.deadline = time.Now().Add(15 * time.Second)
+			updateSumatraStatus(v, "Sumatra password required: enter the password in the viewer dialog, cancel, or select another file.")
+			return
+		}
 		spEnumChildren.Call(app.previewHwnd, sumatraFindChild, 0)
 		if v.child != 0 {
 			layoutUI(app.hwnd)
 			resizeSumatraPreview()
 			app.fallback = ""
-			setText(app.statusLabel, "Sumatra PDF preview · restricted · use viewer navigation/zoom")
+			updateSumatraStatus(v, sumatraCurrentDocumentStatus(v))
 			updatePreviewZoomControls()
 			procInvalidateRect.Call(app.previewHwnd, 0, 1)
 		} else if time.Now().After(v.deadline) {
@@ -200,6 +208,7 @@ func pollSumatraPreview() {
 	}
 	if sumatraView == v && v.child != 0 {
 		repairSumatraToolbar(v)
+		updateSumatraStatus(v, sumatraCurrentDocumentStatus(v))
 	}
 }
 func resizeSumatraPreview() {

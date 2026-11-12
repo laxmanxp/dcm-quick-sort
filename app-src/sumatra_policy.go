@@ -114,6 +114,19 @@ func validateSumatraDocument(path string) (string, error) {
 	return path, nil
 }
 
+// Attachment proves that a viewer exists, not that it loaded a document. Page
+// labels may be non-numeric (e.g. roman numerals), so preserve those labels.
+func sumatraDocumentStatus(known bool, label string) string {
+	if !known {
+		return "Sumatra PDF viewer: checking document state; see viewer for details."
+	}
+	label = strings.TrimSpace(label)
+	if label == "" || label == "0" {
+		return "Sumatra preview unavailable: no PDF page loaded; see the viewer message or select another file."
+	}
+	return "Sumatra PDF preview · restricted · use viewer navigation/zoom"
+}
+
 // Only vertical clipping of a fully sized toolbar child is repaired. Unknown or
 // oversized geometry is left alone; the acceptance probe must still reject it.
 func sumatraToolbarChildY(top, height, toolbarHeight int32) (int32, bool) {
