@@ -73,6 +73,7 @@ public static class DcmSumatraProbe {
     }
 
     [DllImport("oleacc.dll")] static extern int AccessibleObjectFromWindow(IntPtr hwnd,uint id,ref Guid iid,[MarshalAs(UnmanagedType.Interface)] out object obj);
+    [DllImport("oleacc.dll")] static extern int AccessibleChildren(Accessibility.IAccessible parent,int start,int count,[Out,MarshalAs(UnmanagedType.LPArray,SizeParamIndex=2)] object[] children,out int obtained);
     public sealed class AccessibleButton { public int Child,State,X,Y,Width,Height;public string Name; }
     public static AccessibleButton[] ToolbarButtons(IntPtr host,int hostPID,int expectedPID){
         var l=Layout(host,hostPID,expectedPID);RequireToolbar(l);
@@ -82,7 +83,16 @@ public static class DcmSumatraProbe {
         try{
             var a=(Accessibility.IAccessible)obj;var buttons=new List<AccessibleButton>();int count=a.accChildCount;
             if(count<1||count>64)throw new Exception("Toolbar accessibility bounds");
-            for(int i=1;i<=count;i++){int x,y,w,h;a.accLocation(out x,out y,out w,out h,i);buttons.Add(new AccessibleButton{Child=i,State=Convert.ToInt32(a.get_accState(i)),Name=a.get_accName(i)??"",X=x,Y=y,Width=w,Height=h});}
+            var children=new object[count];int obtained;
+            int hr=AccessibleChildren(a,0,count,children,out obtained);if(hr<0||obtained<1||obtained>count)throw new Exception("Toolbar child enumeration failed");
+            try{
+                foreach(object child in children){
+                    if(!(child is int))continue;int id=(int)child;string name=a.get_accName(id)??"";if(name.Length==0)continue;
+                    int state=Convert.ToInt32(a.get_accState(id));int x=0,y=0,w=0,h=0;
+                    if((state&0x8000)==0)a.accLocation(out x,out y,out w,out h,id);
+                    buttons.Add(new AccessibleButton{Child=id,State=state,Name=name,X=x,Y=y,Width=w,Height=h});
+                }
+            }finally{foreach(object child in children){if(child!=null&&Marshal.IsComObject(child))Marshal.ReleaseComObject(child);}}
             return buttons.ToArray();
         }finally{SetThreadDpiAwarenessContext(old);Marshal.ReleaseComObject(obj);}
     }
