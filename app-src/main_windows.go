@@ -284,6 +284,7 @@ var (
 	procGetWindowTextLengthW = user32.NewProc("GetWindowTextLengthW")
 	procSendMessageW         = user32.NewProc("SendMessageW")
 	procMoveWindow           = user32.NewProc("MoveWindow")
+	procRedrawWindow         = user32.NewProc("RedrawWindow")
 	procGetClientRect        = user32.NewProc("GetClientRect")
 	procGetWindowRect        = user32.NewProc("GetWindowRect")
 	procBeginPaint           = user32.NewProc("BeginPaint")
@@ -3534,6 +3535,9 @@ func layoutUI(hwnd uintptr) {
 	}
 	listW := int32(220)
 	processedW := int32(260)
+	if sumatraView != nil && sumatraView.child != 0 {
+		listW, processedW = sumatraSidebarWidths(w)
+	}
 	gap := int32(10)
 	previewX := int32(20) + listW + gap
 	processedX := w - 20 - processedW
@@ -3672,6 +3676,10 @@ func layoutUI(hwnd uintptr) {
 	procMoveWindow.Call(app.statusLabel, 20, uintptr(by+43), uintptr(w-40), 20, 1)
 	procMoveWindow.Call(app.keyboardHintLabel, 20, uintptr(by+64), uintptr(w-40), 18, 1)
 	procMoveWindow.Call(app.destSuggestionList, uintptr(pathX), uintptr(destY+31), uintptr(pathW), 140, 1)
+	// Moving overlapping child controls can leave copied pixels in a sibling or
+	// transparent label. Invalidate the completed layout, including child frames.
+	// Queue repaint only: never synchronously wait on the foreign PDF renderer.
+	procRedrawWindow.Call(hwnd, 0, 0, 0x0001|0x0004|0x0080)
 }
 
 func populateFileList() {

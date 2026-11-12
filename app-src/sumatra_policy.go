@@ -125,3 +125,20 @@ func sumatraToolbarChildY(top, height, toolbarHeight int32) (int32, bool) {
 	}
 	return (toolbarHeight - height) / 2, true
 }
+
+// Reserve the pinned viewer toolbar's normal preview width when the host is
+// narrowed. Borrow evenly from the two side panels, never below their readable
+// minima. This does not change the fixed-size window style or PDF restrictions.
+func sumatraSidebarWidths(clientWidth int32) (int32, int32) {
+	const desiredPreview, marginsAndGaps = int32(724), int32(60)
+	const minList, minProcessed = int32(160), int32(200)
+	if clientWidth <= desiredPreview+marginsAndGaps+minList+minProcessed {
+		return minList, minProcessed
+	}
+	available := clientWidth - desiredPreview - marginsAndGaps
+	if available >= 480 {
+		return 220, 260
+	}
+	reduction := 480 - available
+	return 220 - (reduction+1)/2, 260 - reduction/2
+}

@@ -106,3 +106,21 @@ func TestSumatraToolbarClippingPolicy(t *testing.T) {
 		})
 	}
 }
+
+func TestSumatraSidebarWidthsReserveToolbar(t *testing.T) {
+	for _, tc := range []struct{ width, list, processed int32 }{
+		{1600, 220, 260}, {1264, 220, 260}, {1200, 188, 228}, {1201, 188, 229},
+		{1174, 175, 215}, {1144, 160, 200}, {1136, 160, 200}, {0, 160, 200}, {-1, 160, 200},
+	} {
+		list, processed := sumatraSidebarWidths(tc.width)
+		if list != tc.list || processed != tc.processed {
+			t.Errorf("width %d: (%d,%d), want (%d,%d)", tc.width, list, processed, tc.list, tc.processed)
+		}
+	}
+	for width := int32(1144); width <= 2000; width++ {
+		list, processed := sumatraSidebarWidths(width)
+		if list < 160 || list > 220 || processed < 200 || processed > 260 || width-60-list-processed < 724 {
+			t.Fatalf("invalid layout width=%d left=%d right=%d", width, list, processed)
+		}
+	}
+}

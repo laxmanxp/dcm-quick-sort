@@ -187,6 +187,7 @@ func pollSumatraPreview() {
 	if v.child == 0 {
 		spEnumChildren.Call(app.previewHwnd, sumatraFindChild, 0)
 		if v.child != 0 {
+			layoutUI(app.hwnd)
 			resizeSumatraPreview()
 			app.fallback = ""
 			setText(app.statusLabel, "Sumatra PDF preview · restricted · use viewer navigation/zoom")
@@ -240,6 +241,7 @@ func stopSumatraPreview() error {
 	spClose.Call(v.job)
 	sumatraView = nil
 	updatePreviewZoomControls()
+	layoutUI(app.hwnd)
 	// Only the exact session directory created by MkdirTemp belongs to this viewer.
 	_ = os.RemoveAll(v.profile)
 	return nil

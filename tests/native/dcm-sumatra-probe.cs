@@ -78,10 +78,12 @@ public static class DcmSumatraProbe {
     public sealed class AccessibleButton { public int Child,State,X,Y,Width,Height;public string Name; }
     public static AccessibleButton[] ToolbarButtons(IntPtr host,int hostPID,int expectedPID){
         var l=Layout(host,hostPID,expectedPID);RequireToolbar(l);
-        object obj;Guid iid=new Guid("618736e0-3c3d-11cf-810c-00aa00389b71");
-        if(AccessibleObjectFromWindow((IntPtr)l.Window,0xfffffffc,ref iid,out obj)!=0||obj==null)throw new Exception("Toolbar accessibility unavailable");
+        object obj=null;
+        // Establish the physical-coordinate context before creating the proxy.
         IntPtr old=SetThreadDpiAwarenessContext((IntPtr)(-4));
         try{
+            Guid iid=new Guid("618736e0-3c3d-11cf-810c-00aa00389b71");
+            if(AccessibleObjectFromWindow((IntPtr)l.Window,0xfffffffc,ref iid,out obj)!=0||obj==null)throw new Exception("Toolbar accessibility unavailable");
             var a=(Accessibility.IAccessible)obj;var buttons=new List<AccessibleButton>();int count=a.accChildCount;
             if(count<1||count>64)throw new Exception("Toolbar accessibility bounds");
             var children=new object[count];int obtained;
@@ -95,7 +97,7 @@ public static class DcmSumatraProbe {
                 }
             }finally{foreach(object child in children){if(child!=null&&Marshal.IsComObject(child))Marshal.ReleaseComObject(child);}}
             return buttons.ToArray();
-        }finally{SetThreadDpiAwarenessContext(old);Marshal.ReleaseComObject(obj);}
+        }finally{if(obj!=null&&Marshal.IsComObject(obj))Marshal.ReleaseComObject(obj);SetThreadDpiAwarenessContext(old);}
     }
     public static void InvokeToolbar(IntPtr host,int hostPID,int expectedPID,string prefix){
         if(prefix!="Next Page"&&prefix!="Previous Page"&&prefix!="Zoom In"&&prefix!="Zoom Out"&&prefix!="Fit a Single Page"&&prefix!="Fit Width and Show Pages Continuously")throw new Exception("Toolbar action not allowed");
