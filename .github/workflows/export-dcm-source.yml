@@ -1,4 +1,4 @@
-# Refresh pinned source for concise PDF error copy and capture-obstruction diagnostics.
+# Refresh pinned source for intermittent layout completion and paint-order diagnosis.
 name: Export pinned DCM source for local review
 on:
   push:
