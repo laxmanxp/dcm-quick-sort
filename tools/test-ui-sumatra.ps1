@@ -24,6 +24,13 @@ function Own {$app.Refresh();if($app.HasExited -or $app.Path -ne $exe -or $app.S
 function Wait([string]$Label,[scriptblock]$Check){$until=[DateTime]::UtcNow.AddSeconds(20);do{Own;if(& $Check){return};Start-Sleep -Milliseconds 100}while([DateTime]::UtcNow -lt $until);throw ('Deadline: '+$Label)}
 function Text([int]$id){return [DcmNative]::Text([DcmNative]::Control($hwnd,$app.Id,$id),$app.Id)}
 function SelectFile([string]$file){
+    if($ResizeTiming){
+        $items=[DcmNative]::ListItems($hwnd,$app.Id,1016);$index=[Array]::IndexOf($items,$file)
+        if($index -lt 0){throw 'Selected fixture not listed'}
+        [DcmUndoInput]::Select($hwnd,$app.Id,$index);$stem=[IO.Path]::GetFileNameWithoutExtension($file)
+        Wait ('selection '+$file) {([DcmUndoInput]::TryText($hwnd,$app.Id,1005)) -ceq $stem -and (@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016)) -join ',') -eq [string]$index}
+        return
+    }
     $null=[DcmNative]::SelectFiles($hwnd,$app.Id,1016,[string[]]@($file));$stem=[IO.Path]::GetFileNameWithoutExtension($file)
     try{Wait ('selection '+$file) {(Text 1005) -ceq $stem}}catch{
         Json (Join-Path $lab 'selection-failure.json') ([ordered]@{expected=$stem;actual=(Text 1005);items=@([DcmNative]::ListItems($hwnd,$app.Id,1016));selected=@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016));embedded=[DcmSumatraProbe]::Find($hwnd,$app.Id)})
@@ -96,7 +103,7 @@ try{
     Add-Type -AssemblyName System.Drawing;Add-Type -AssemblyName System.Windows.Forms
     Add-Type -Path (Join-Path $repo 'tests/native/dcm-native.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
     Add-Type -Path (Join-Path $repo 'tests/native/dcm-sumatra-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','Accessibility.dll','System.Drawing.dll')
-    if($ResizeTiming){Add-Type -Path (Join-Path $repo 'tests/native/dcm-layout-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')}
+    if($ResizeTiming){Add-Type -Path (Join-Path $repo 'tests/native/dcm-layout-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll');Add-Type -Path (Join-Path $repo 'tests/native/dcm-undo-input.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')}
     . (Join-Path $repo 'tests/native/new-fixtures.ps1');$fixture=New-DcmFixtures $lab
     $original=Join-Path $fixture.inbox '08-preview.pdf';$pdfHash=Hash $original
     $otherHashes=@{};Get-ChildItem -LiteralPath $fixture.inbox -Filter '*.txt' | ForEach-Object {$otherHashes[$_.Name]=Hash $_.FullName}
