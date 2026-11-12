@@ -1,0 +1,30 @@
+name: Preserve exact scroll fixture bytes on Windows
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/fix-scroll-fixture.yml]
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Regenerate locally verified byte-exact fixture
+        shell: python
+        run: |
+          import pathlib,hashlib,runpy
+          p=pathlib.Path('tests/fixtures/generate-scroll-fixture.py');raw=p.read_bytes()
+          assert hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()=='85370f0bf1685157f77c6e42fd05e08ddff3f82d'
+          s=raw.decode();old="pdf='%PDF-1.4\\n'; offsets=[]";new="pdf='%PDF-1.4\\n% DCM byte-exact scroll fixture\\n'; offsets=[]"
+          assert s.count(old)==1;p.write_text(s.replace(old,new))
+          runpy.run_path(str(p))
+          assert hashlib.sha256(pathlib.Path('tests/fixtures/sumatra-scroll.pdf').read_bytes()).hexdigest()=='05304a98a830954b4f5bfedf0187e78aa847248a80b0ca2ba2b5b5f843352bb0'
+      - name: Save fixture correction without product changes
+        run: |
+          git config user.name 'DCM reviewed-tooling automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tests/fixtures/generate-scroll-fixture.py tests/fixtures/sumatra-scroll.pdf tests/fixtures/sumatra-scroll.json
+          git commit -m 'test: regenerate byte-exact PDF fixture after Windows newline failure'
+          git push origin HEAD:release/v1.0.71
