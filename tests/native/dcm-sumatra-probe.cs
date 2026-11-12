@@ -2,6 +2,7 @@
 // immediately inside QuickSortPreview is accepted; no unrelated windows touched.
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
 public static class DcmSumatraProbe {
@@ -122,5 +123,62 @@ public static class DcmSumatraProbe {
         OwnHost(host,pid);if(width<1000||width>1500||height<650||height>900)throw new Exception("Test size outside bounds");
         IntPtr old=SetThreadDpiAwarenessContext(GetWindowDpiAwarenessContext(host));
         try{if(!SetWindowPos(host,IntPtr.Zero,0,0,width,height,0x4016))throw new Exception("Owned resize failed");}finally{SetThreadDpiAwarenessContext(old);}
+    }
+
+    // Read-only full-toolbar coverage: unlike Layout, this includes Aa and icons.
+    public sealed class ButtonCoverage { public int Visible; public string[] Names,Clipped; public bool Passed; }
+    public static ButtonCoverage MeasureButtons(IntPtr host,int hostPID,int expectedPID){
+        var v=Find(host,hostPID);if(v==null||v.PID!=expectedPID)throw new Exception("Viewer identity mismatch");
+        var l=Layout(host,hostPID,expectedPID);RequireToolbar(l);
+        var buttons=ToolbarButtons(host,hostPID,expectedPID);
+        var names=new List<string>();var clipped=new List<string>();
+        IntPtr old=SetThreadDpiAwarenessContext((IntPtr)(-4));
+        try{
+            RECT t,f;if(!GetWindowRect((IntPtr)l.Window,out t)||!GetWindowRect((IntPtr)v.Window,out f))throw new Exception("Toolbar/frame bounds unavailable");
+            int left=Math.Max(t.L,f.L),top=Math.Max(t.T,f.T),right=Math.Min(t.R,f.R),bottom=Math.Min(t.B,f.B);
+            foreach(var b in buttons){
+                if((b.State&0x8000)!=0)continue; // invisible, e.g. denied Print/Open
+                names.Add(b.Name);
+                if(b.Width<=0||b.Height<=0||b.X<left||b.Y<top||b.X+b.Width>right||b.Y+b.Height>bottom||(b.State&0x10000)!=0)clipped.Add(b.Name);
+            }
+        }finally{SetThreadDpiAwarenessContext(old);}
+        if(names.Count<8)throw new Exception("Insufficient visible toolbar controls");
+        return new ButtonCoverage{Visible=names.Count,Names=names.ToArray(),Clipped=clipped.ToArray(),Passed=clipped.Count==0};
+    }
+    [StructLayout(LayoutKind.Sequential)] public struct POINT { public int X,Y; }
+    [DllImport("user32.dll")] static extern bool ClientToScreen(IntPtr h,ref POINT p);
+    public sealed class BackgroundCoverage { public int Samples,BadPixels,Masks;public RECT Client;public POINT[] FirstBad; public bool Passed; }
+    // Inspect the captured host's bare client background only. Current visible
+    // direct-child rectangles (including the whole foreign-viewer container)
+    // are excluded. No repaint, input, memory reading, or process modification.
+    public static BackgroundCoverage MeasureBackground(IntPtr host,int pid,string path,int captureLeft,int captureTop){
+        OwnHost(host,pid);IntPtr old=SetThreadDpiAwarenessContext((IntPtr)(-4));
+        try{
+            RECT c;if(!GetClientRect(host,out c))throw new Exception("Host client unavailable");
+            var a=new POINT{X=0,Y=0};var b=new POINT{X=c.R,Y=c.B};
+            if(!ClientToScreen(host,ref a)||!ClientToScreen(host,ref b))throw new Exception("Host coordinate conversion failed");
+            c=new RECT{L=a.X,T=a.Y,R=b.X,B=b.Y};
+            var masks=new List<RECT>();
+            EnumChildWindows(host,delegate(IntPtr h,IntPtr ignored){
+                if(GetParent(h)!=host||!IsWindowVisible(h))return true;
+                OwnHost(h,pid);RECT r;if(!GetWindowRect(h,out r))throw new Exception("Control rectangle unavailable");
+                if(r.R>r.L&&r.B>r.T)masks.Add(new RECT{L=r.L-4,T=r.T-4,R=r.R+4,B=r.B+4});return true;
+            },IntPtr.Zero);
+            if(masks.Count<20)throw new Exception("Insufficient host-control masks");
+            var result=new BackgroundCoverage{Client=c,Masks=masks.Count};var first=new List<POINT>();
+            using(var image=new Bitmap(path)){
+                if(c.L<captureLeft||c.T<captureTop||c.R>captureLeft+image.Width||c.B>captureTop+image.Height)throw new Exception("Host client escaped capture");
+                for(int y=c.T+4;y<c.B-4;y+=2)for(int x=c.L+4;x<c.R-4;x+=2){
+                    bool covered=false;foreach(var r in masks){if(x>=r.L&&x<r.R&&y>=r.T&&y<r.B){covered=true;break;}}if(covered)continue;
+                    Color actual=image.GetPixel(x-captureLeft,y-captureTop);result.Samples++;
+                    // Pinned host brush colorWindowBG = rgb(245,247,250).
+                    if(Math.Abs(actual.R-245)>3||Math.Abs(actual.G-247)>3||Math.Abs(actual.B-250)>3){
+                        result.BadPixels++;if(first.Count<16)first.Add(new POINT{X=x-c.L,Y=y-c.T});
+                    }
+                }
+            }
+            if(result.Samples<1000)throw new Exception("Insufficient bare-background samples");
+            result.FirstBad=first.ToArray();result.Passed=result.BadPixels==0;return result;
+        }finally{SetThreadDpiAwarenessContext(old);}
     }
 }

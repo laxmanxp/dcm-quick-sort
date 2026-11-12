@@ -10,6 +10,10 @@ $null=New-Item -ItemType Directory -Path $lab
 $utf8=New-Object Text.UTF8Encoding($false)
 $cases=New-Object 'Collections.Generic.List[object]';$shots=New-Object 'Collections.Generic.List[object]';$viewers=New-Object 'Collections.Generic.List[object]'
 $receipt=[ordered]@{schema=1;feature='DCM-SUMATRA-01';passed=$false;report=$lab;cases=$cases;captures=$shots;viewers=$viewers;visual_reviewed=$false}
+$layoutFailures=New-Object 'Collections.Generic.List[string]'
+$layoutChecks=New-Object 'Collections.Generic.List[object]'
+$receipt['resize_layout_checks']=$layoutChecks
+$script:toolbarNames=$null
 $app=$null;$hwnd=[IntPtr]::Zero;$head='';$manifest=@();$fixture=$null
 Write-Output ('REPORT_ROOT='+$lab)
 function Hash([string]$p){return (Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash.ToLowerInvariant()}
@@ -30,6 +34,20 @@ function Shot([string]$name,[string]$color=''){
     Own;$area=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea;[DcmNative]::Restore($hwnd,$app.Id,$area.Left+8,$area.Top+8);Start-Sleep -Milliseconds 400
     $s=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'.png')),$false)
     $shots.Add([ordered]@{name=$name;path=$s.Path;sha256=(Hash $s.Path);teal=$s.TealSamples;orange=$s.OrangeSamples;visual_reviewed=$false})
+    if($name -in @('01-embedded-first-page','04j-resized-smaller','04k-resize-restored','06-moved-and-text-restored')){
+        $background=[DcmSumatraProbe]::MeasureBackground($hwnd,$app.Id,$s.Path,$s.Left,$s.Top)
+        $buttons=$null
+        if($color){
+            $buttons=[DcmSumatraProbe]::MeasureButtons($hwnd,$app.Id,$v.pid)
+            $names=@($buttons.Names|Sort-Object)
+            if($null -eq $script:toolbarNames){$script:toolbarNames=$names}
+            elseif(($names -join '|') -cne ($script:toolbarNames -join '|')){throw 'Visible toolbar commands changed during resize'}
+            if(-not $buttons.Passed){$layoutFailures.Add('SUMATRA_BUTTON_CLIPPED '+$name+': '+($buttons.Clipped -join ', '))}
+        }
+        $layoutChecks.Add([ordered]@{name=$name;background=$background;toolbar=$buttons})
+        Json (Join-Path $lab ($name+'-host-layout.json')) $layoutChecks[$layoutChecks.Count-1]
+        if(-not $background.Passed){$layoutFailures.Add('HOST_RESIZE_STALE_PIXELS '+$name+': '+$background.BadPixels)}
+    }
     if($color){
         $layout=[DcmSumatraProbe]::Layout($hwnd,$app.Id,$v.pid)
         Json (Join-Path $lab ($name+'-layout.json')) $layout
@@ -68,7 +86,7 @@ try{
     $receipt['runtime_sha256']=Hash $runtimeExe;$receipt['policy_sha256']=Hash (Join-Path $runtimeDir 'sumatrapdfrestrict.ini')
     Add-Type -AssemblyName System.Drawing;Add-Type -AssemblyName System.Windows.Forms
     Add-Type -Path (Join-Path $repo 'tests/native/dcm-native.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
-    Add-Type -Path (Join-Path $repo 'tests/native/dcm-sumatra-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','Accessibility.dll')
+    Add-Type -Path (Join-Path $repo 'tests/native/dcm-sumatra-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','Accessibility.dll','System.Drawing.dll')
     . (Join-Path $repo 'tests/native/new-fixtures.ps1');$fixture=New-DcmFixtures $lab
     $original=Join-Path $fixture.inbox '08-preview.pdf';$pdfHash=Hash $original
     $otherHashes=@{};Get-ChildItem -LiteralPath $fixture.inbox -Filter '*.txt' | ForEach-Object {$otherHashes[$_.Name]=Hash $_.FullName}
@@ -129,7 +147,11 @@ try{
     [DcmNative]::CloseAsync($hwnd,$app.Id);if(-not $app.WaitForExit(15000) -or $app.ExitCode -ne 0){throw 'App did not close normally'}
     $receipt['exit_code']=$app.ExitCode;$app.Dispose();$app=$null
     foreach($v in $viewers){$p=Get-Process -Id $v.pid -ErrorAction SilentlyContinue;if($p -and $p.StartTime.ToUniversalTime().ToString('o') -eq $v.start){throw 'Orphaned owned Sumatra process'}}
-    CheckSource;$receipt['source_unchanged']=$true;$receipt['fixtures_preserved']=$true;$receipt.passed=$true
+    CheckSource;$receipt['source_unchanged']=$true;$receipt['fixtures_preserved']=$true
+    if($layoutFailures.Count){throw ($layoutFailures -join '; ')}
+    AddPass 'all-visible-toolbar-buttons-contained'
+    AddPass 'host-background-clean-before-and-after-resize'
+    $receipt.passed=$true
 }catch{$receipt['error']=$_.Exception.Message;Write-Output ('FAIL='+$_.Exception.Message);if($app -and -not $app.HasExited){try{Shot 'failure'}catch{$receipt['capture_error']=$_.Exception.Message}}}
 finally{
     if($app){try{Own;[DcmNative]::CloseAsync($hwnd,$app.Id);if(-not $app.WaitForExit(15000)){throw 'Owned app cleanup timeout'};$receipt.passed=$false;$receipt['cleanup_exit']=$app.ExitCode}catch{$receipt.passed=$false;$receipt['cleanup_error']=$_.Exception.Message}}
