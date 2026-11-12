@@ -126,15 +126,15 @@ public static class DcmSumatraProbe {
     }
 
     // Read-only full-toolbar coverage: unlike Layout, this includes Aa and icons.
-    public sealed class ButtonCoverage { public int Visible; public string[] Names,Clipped; public bool Passed; }
+    public sealed class ButtonCoverage { public int Visible; public string[] Names,Clipped; public bool Passed; public RECT Toolbar,Frame; public AccessibleButton[] Buttons; }
     public static ButtonCoverage MeasureButtons(IntPtr host,int hostPID,int expectedPID){
         var v=Find(host,hostPID);if(v==null||v.PID!=expectedPID)throw new Exception("Viewer identity mismatch");
         var l=Layout(host,hostPID,expectedPID);RequireToolbar(l);
         var buttons=ToolbarButtons(host,hostPID,expectedPID);
-        var names=new List<string>();var clipped=new List<string>();
+        var names=new List<string>();var clipped=new List<string>();RECT t,f;
         IntPtr old=SetThreadDpiAwarenessContext((IntPtr)(-4));
         try{
-            RECT t,f;if(!GetWindowRect((IntPtr)l.Window,out t)||!GetWindowRect((IntPtr)v.Window,out f))throw new Exception("Toolbar/frame bounds unavailable");
+            if(!GetWindowRect((IntPtr)l.Window,out t)||!GetWindowRect((IntPtr)v.Window,out f))throw new Exception("Toolbar/frame bounds unavailable");
             int left=Math.Max(t.L,f.L),top=Math.Max(t.T,f.T),right=Math.Min(t.R,f.R),bottom=Math.Min(t.B,f.B);
             foreach(var b in buttons){
                 if((b.State&0x8000)!=0)continue; // invisible, e.g. denied Print/Open
@@ -143,7 +143,7 @@ public static class DcmSumatraProbe {
             }
         }finally{SetThreadDpiAwarenessContext(old);}
         if(names.Count<8)throw new Exception("Insufficient visible toolbar controls");
-        return new ButtonCoverage{Visible=names.Count,Names=names.ToArray(),Clipped=clipped.ToArray(),Passed=clipped.Count==0};
+        return new ButtonCoverage{Visible=names.Count,Names=names.ToArray(),Clipped=clipped.ToArray(),Passed=clipped.Count==0,Toolbar=t,Frame=f,Buttons=buttons};
     }
     [StructLayout(LayoutKind.Sequential)] public struct POINT { public int X,Y; }
     [DllImport("user32.dll")] static extern bool ClientToScreen(IntPtr h,ref POINT p);
@@ -179,6 +179,42 @@ public static class DcmSumatraProbe {
             }
             if(result.Samples<1000)throw new Exception("Insufficient bare-background samples");
             result.FirstBad=first.ToArray();result.Passed=result.BadPixels==0;return result;
+        }finally{SetThreadDpiAwarenessContext(old);}
+    }
+
+    [DllImport("user32.dll")] static extern bool RedrawWindow(IntPtr h,IntPtr rect,IntPtr region,uint flags);
+    public static void PaintReference(IntPtr host,int pid){
+        OwnHost(host,pid);
+        // Diagnostic reference only, AFTER the unassisted screenshot. No
+        // synchronous cross-process update and no document/control changes.
+        if(!RedrawWindow(host,IntPtr.Zero,IntPtr.Zero,0x0085))throw new Exception("Reference repaint request failed");
+    }
+    public sealed class PaintDifference { public int Samples,ChangedPixels;public POINT[] FirstChanged;public bool Passed; }
+    public static PaintDifference CompareHostPaint(IntPtr host,int pid,string raw,string reference,int captureLeft,int captureTop){
+        OwnHost(host,pid);IntPtr old=SetThreadDpiAwarenessContext((IntPtr)(-4));
+        try{
+            RECT c;if(!GetClientRect(host,out c))throw new Exception("Host client unavailable");
+            var a=new POINT{X=0,Y=0};var b=new POINT{X=c.R,Y=c.B};
+            if(!ClientToScreen(host,ref a)||!ClientToScreen(host,ref b))throw new Exception("Host coordinate conversion failed");
+            var masks=new List<RECT>();
+            EnumChildWindows(host,delegate(IntPtr h,IntPtr ignored){
+                if(GetParent(h)!=host||!IsWindowVisible(h))return true;
+                OwnHost(h,pid);string cls=Class(h);
+                if(cls!="QuickSortPreview"&&cls!="Edit"&&cls!="ComboBox"&&cls!="ListBox"&&cls!="SysTreeView32")return true;
+                RECT m;if(!GetWindowRect(h,out m))throw new Exception("Mask geometry unavailable");
+                masks.Add(new RECT{L=m.L-4,T=m.T-4,R=m.R+4,B=m.B+4});return true;
+            },IntPtr.Zero);
+            var result=new PaintDifference();var first=new List<POINT>();
+            using(var x=new Bitmap(raw))using(var y=new Bitmap(reference)){
+                if(x.Size!=y.Size||a.X<captureLeft||a.Y<captureTop||b.X>captureLeft+x.Width||b.Y>captureTop+x.Height)throw new Exception("Reference capture geometry changed");
+                for(int py=a.Y+4;py<b.Y-4;py+=2)for(int px=a.X+4;px<b.X-4;px+=2){
+                    bool covered=false;foreach(var m in masks){if(px>=m.L&&px<m.R&&py>=m.T&&py<m.B){covered=true;break;}}if(covered)continue;
+                    Color before=x.GetPixel(px-captureLeft,py-captureTop),after=y.GetPixel(px-captureLeft,py-captureTop);result.Samples++;
+                    if(Math.Abs(before.R-after.R)>3||Math.Abs(before.G-after.G)>3||Math.Abs(before.B-after.B)>3){result.ChangedPixels++;if(first.Count<16)first.Add(new POINT{X=px-a.X,Y=py-a.Y});}
+                }
+            }
+            if(result.Samples<1000)throw new Exception("Insufficient host repaint samples");
+            result.FirstChanged=first.ToArray();result.Passed=result.ChangedPixels==0;return result;
         }finally{SetThreadDpiAwarenessContext(old);}
     }
 }

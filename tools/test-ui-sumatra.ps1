@@ -44,7 +44,16 @@ function Shot([string]$name,[string]$color=''){
             elseif(($names -join '|') -cne ($script:toolbarNames -join '|')){throw 'Visible toolbar commands changed during resize'}
             if(-not $buttons.Passed){$layoutFailures.Add('SUMATRA_BUTTON_CLIPPED '+$name+': '+($buttons.Clipped -join ', '))}
         }
-        $layoutChecks.Add([ordered]@{name=$name;background=$background;toolbar=$buttons})
+        $paint=$null
+        if($name -in @('01-embedded-first-page','04k-resize-restored','07-restored','07-repeat-restored')){
+            [DcmSumatraProbe]::PaintReference($hwnd,$app.Id);Start-Sleep -Milliseconds 500
+            $reference=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'-repaint-reference.png')),$false)
+            if($reference.Left -ne $s.Left -or $reference.Top -ne $s.Top){throw 'Reference position changed'}
+            $shots.Add([ordered]@{name=$name+'-repaint-reference';path=$reference.Path;sha256=(Hash $reference.Path);visual_reviewed=$false;diagnostic_reference=$true})
+            $paint=[DcmSumatraProbe]::CompareHostPaint($hwnd,$app.Id,$s.Path,$reference.Path,$s.Left,$s.Top)
+            if(-not $paint.Passed){$layoutFailures.Add('HOST_REPAINT_DIFFERENCE '+$name+': '+$paint.ChangedPixels)}
+        }
+        $layoutChecks.Add([ordered]@{name=$name;background=$background;toolbar=$buttons;paint=$paint})
         Json (Join-Path $lab ($name+'-host-layout.json')) $layoutChecks[$layoutChecks.Count-1]
         if(-not $background.Passed){$layoutFailures.Add('HOST_RESIZE_STALE_PIXELS '+$name+': '+$background.BadPixels)}
     }
