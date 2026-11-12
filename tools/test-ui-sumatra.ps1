@@ -98,6 +98,17 @@ try{
     [DcmSumatraProbe]::InvokeToolbar($hwnd,$app.Id,$v.pid,'Zoom Out');Start-Sleep -Milliseconds 500;Shot '04e-zoom-out' 'teal'
     if($script:lastContent.TealSamples -ge $inSamples*0.97){throw 'SUMATRA_ZOOM_DID_NOT_REDUCE_CONTENT'};AddPass 'viewer-zoom-out-visible-content'
     [DcmSumatraProbe]::InvokeToolbar($hwnd,$app.Id,$v.pid,'Fit a Single Page');Start-Sleep -Milliseconds 500;Shot '04f-fit-page' 'teal';AddPass 'viewer-fit-page-visible-content'
+    [DcmSumatraProbe]::Command($hwnd,$app.Id,$v.pid,275);Start-Sleep -Milliseconds 500;Shot '04g-actual-size-100' 'teal';AddPass 'viewer-100-percent-visible-content'
+    [DcmSumatraProbe]::Command($hwnd,$app.Id,$v.pid,276);Start-Sleep -Milliseconds 500;Shot '04h-fit-width' 'teal';AddPass 'viewer-fit-width-visible-content'
+    [DcmSumatraProbe]::Command($hwnd,$app.Id,$v.pid,274);Start-Sleep -Milliseconds 500;Shot '04i-fit-page-reset' 'teal'
+    $originalBounds=[DcmSumatraProbe]::HostBounds($hwnd,$app.Id);$originalW=$originalBounds.R-$originalBounds.L;$originalH=$originalBounds.B-$originalBounds.T
+    [DcmSumatraProbe]::ResizeHost($hwnd,$app.Id,$originalW-64,$originalH-64);Start-Sleep -Milliseconds 700
+    $smaller=[DcmSumatraProbe]::HostBounds($hwnd,$app.Id)
+    if(($smaller.R-$smaller.L) -ge $originalW -or ($smaller.B-$smaller.T) -ge $originalH){throw 'Owned resize not observed'}
+    [DcmSumatraProbe]::CheckGeometry($hwnd,$app.Id,$v.pid);Shot '04j-resized-smaller' 'teal';AddPass 'viewer-resize-smaller-contained'
+    [DcmSumatraProbe]::ResizeHost($hwnd,$app.Id,$originalW,$originalH);Start-Sleep -Milliseconds 700
+    [DcmSumatraProbe]::CheckGeometry($hwnd,$app.Id,$v.pid);Shot '04k-resize-restored' 'teal';AddPass 'viewer-resize-restored-contained'
+    Json (Join-Path $lab 'resize-evidence.json') ([ordered]@{before=$originalBounds;smaller=$smaller;restored=[DcmSumatraProbe]::HostBounds($hwnd,$app.Id)})
     [DcmSumatraProbe]::Command($hwnd,$app.Id,$v.pid,201);Start-Sleep -Milliseconds 400
     if(@([DcmNative]::Dialogs([IntPtr]$v.hwnd,$v.pid)).Count){throw 'Restricted viewer opened a file dialog'}
     Shot '05-open-command-disabled' 'teal';AddPass 'alternate-open-disabled'

@@ -32,7 +32,7 @@ public static class DcmSumatraProbe {
         }return true;},IntPtr.Zero);return result;
     }
     public static void Command(IntPtr host,int hostPID,int expectedPID,int command){
-        if(command!=201 && command!=208 && command!=259 && command!=260 && command!=261 && command!=262 && command!=274)throw new Exception("Command not in test allowlist");
+        if(command!=201 && command!=208 && command!=259 && command!=260 && command!=261 && command!=262 && command!=274 && command!=275 && command!=276)throw new Exception("Command not in test allowlist");
         var v=Find(host,hostPID);if(v==null||v.PID!=expectedPID)throw new Exception("Viewer identity mismatch");
         if(!PostMessage((IntPtr)v.Window,0x111,(IntPtr)command,IntPtr.Zero))throw new Exception("Owned command failed");
     }
@@ -110,5 +110,17 @@ public static class DcmSumatraProbe {
             if(SendText((IntPtr)item.Window,12,IntPtr.Zero,page.ToString(),2,2000,out r)==IntPtr.Zero)throw new Exception("Page text timeout");
             if(!PostMessage((IntPtr)item.Window,0x102,(IntPtr)13,IntPtr.Zero))throw new Exception("Page Enter failed");return;
         }throw new Exception("No numeric page input");
+    }
+
+    [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr h,IntPtr after,int x,int y,int w,int height,uint flags);
+    [DllImport("user32.dll")] static extern IntPtr GetWindowDpiAwarenessContext(IntPtr h);
+    public static RECT HostBounds(IntPtr host,int pid){
+        OwnHost(host,pid);IntPtr old=SetThreadDpiAwarenessContext(GetWindowDpiAwarenessContext(host));
+        try{RECT r;if(!GetWindowRect(host,out r))throw new Exception("Host bounds missing");return r;}finally{SetThreadDpiAwarenessContext(old);}
+    }
+    public static void ResizeHost(IntPtr host,int pid,int width,int height){
+        OwnHost(host,pid);if(width<1000||width>1500||height<650||height>900)throw new Exception("Test size outside bounds");
+        IntPtr old=SetThreadDpiAwarenessContext(GetWindowDpiAwarenessContext(host));
+        try{if(!SetWindowPos(host,IntPtr.Zero,0,0,width,height,0x4016))throw new Exception("Owned resize failed");}finally{SetThreadDpiAwarenessContext(old);}
     }
 }
