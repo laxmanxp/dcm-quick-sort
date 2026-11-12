@@ -163,4 +163,18 @@ func TestSumatraDependencyErrorsAreConcise(t *testing.T) {
 			}
 		})
 	}
+	for _, tc := range []struct {
+		name, reason string
+		cause        error
+	}{
+		{"permission", " access was denied. Check file permissions, then Reload.", &os.PathError{Op: "open", Path: "private-install-path", Err: os.ErrPermission}},
+		{"other read failure", " could not be read. Check the approved private viewer, then Reload.", errors.New("unbounded internal failure details")},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := newSumatraDependencyError("SumatraPDF.exe", tc.cause)
+			if err.Error() != "SumatraPDF.exe"+tc.reason || !errors.Is(err, tc.cause) {
+				t.Fatalf("lost classification/cause: %v", err)
+			}
+		})
+	}
 }

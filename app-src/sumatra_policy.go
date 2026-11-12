@@ -41,6 +41,29 @@ func sumatraArguments(parent uintptr, document, profile string) ([]string, error
 	return []string{"-restrict", "-appdata", profile, "-view", "single page", "-zoom", "fit page", "-plugin", strconv.FormatUint(uint64(parent), 10), document}, nil
 }
 
+// Keep actionable display text independent of an arbitrarily long install path.
+// Unwrap retains the full OS cause/path for diagnostics and errors.Is/As.
+type sumatraDependencyError struct {
+	message string
+	cause   error
+}
+
+func (e *sumatraDependencyError) Error() string { return e.message }
+func (e *sumatraDependencyError) Unwrap() error { return e.cause }
+
+func newSumatraDependencyError(component string, cause error) error {
+	reason := " could not be read."
+	action := " Check the approved private viewer, then Reload."
+	if errors.Is(cause, os.ErrNotExist) {
+		reason = " is missing."
+		action = " Restore the approved private viewer, then Reload."
+	} else if errors.Is(cause, os.ErrPermission) {
+		reason = " access was denied."
+		action = " Check file permissions, then Reload."
+	}
+	return &sumatraDependencyError{message: component + reason + action, cause: cause}
+}
+
 // No PATH search or user's installed viewer: require a pinned private runtime.
 func validateSumatraRuntime(path string) (string, error) {
 	if path == "" || !filepath.IsAbs(path) {
@@ -48,7 +71,7 @@ func validateSumatraRuntime(path string) (string, error) {
 	}
 	st, err := os.Lstat(path)
 	if err != nil {
-		return "", err
+		return "", newSumatraDependencyError("SumatraPDF.exe", err)
 	}
 	if !st.Mode().IsRegular() {
 		return "", errors.New("Sumatra runtime must be a regular file")
@@ -56,26 +79,26 @@ func validateSumatraRuntime(path string) (string, error) {
 	policy := filepath.Join(filepath.Dir(path), "sumatrapdfrestrict.ini")
 	st, err = os.Lstat(policy)
 	if err != nil {
-		return "", err
+		return "", newSumatraDependencyError("sumatrapdfrestrict.ini", err)
 	}
 	if !st.Mode().IsRegular() || st.Size() != int64(len(sumatraPreviewPolicy)) {
 		return "", errors.New("exact no-write/no-print Sumatra policy required")
 	}
 	data, err := os.ReadFile(policy)
 	if err != nil {
-		return "", err
+		return "", newSumatraDependencyError("sumatrapdfrestrict.ini", err)
 	}
 	if !bytes.Equal(data, []byte(sumatraPreviewPolicy)) {
 		return "", errors.New("Sumatra restriction policy differs from the approved policy")
 	}
 	f, err := os.Open(path)
 	if err != nil {
-		return "", err
+		return "", newSumatraDependencyError("SumatraPDF.exe", err)
 	}
 	defer f.Close()
 	h := sha256.New()
 	if _, err = io.Copy(h, f); err != nil {
-		return "", err
+		return "", newSumatraDependencyError("SumatraPDF.exe", err)
 	}
 	if hex.EncodeToString(h.Sum(nil)) != sumatraRuntimeSHA256 {
 		return "", errors.New("Sumatra runtime hash is not the pinned unmodified 3.6.1 executable")

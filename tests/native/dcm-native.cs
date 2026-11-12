@@ -158,8 +158,14 @@ public static class DcmNative {
             int width=r.Right-r.Left,height=r.Bottom-r.Top;
             if(width<300 || height<150 || width>6000 || height>4000)throw new Exception("Invalid owned window rectangle");
             foreach(double fx in new double[]{0.1,0.5,0.9})foreach(double fy in new double[]{0.15,0.5,0.85}){
-                IntPtr at=WindowFromPoint(new POINT(r.Left+(int)(width*fx),r.Top+(int)(height*fy)));
-                if(GetAncestor(at,2)!=root)throw new Exception("Refusing occluded/offscreen capture");
+                int sampleX=r.Left+(int)(width*fx),sampleY=r.Top+(int)(height*fy);
+                IntPtr at=WindowFromPoint(new POINT(sampleX,sampleY));
+                IntPtr actualRoot=GetAncestor(at,2);
+                if(actualRoot!=root){
+                    // Diagnostics only: preserve the guard, never read another app's title/text.
+                    uint actualPID;GetWindowThreadProcessId(actualRoot,out actualPID);
+                    throw new Exception(String.Format("Refusing occluded/offscreen capture: point=({0},{1}); expected_root={2}; actual_root={3}; actual_pid={4}; class={5}; bounds=({6},{7},{8},{9})",sampleX,sampleY,root.ToInt64(),actualRoot.ToInt64(),actualPID,ClassName(actualRoot),r.Left,r.Top,r.Right,r.Bottom));
+                }
             }
             if(previewOnly){IntPtr preview=ChildByClass(root,pid,"QuickSortPreview");if(!GetWindowRect(preview,out r))throw new Exception("No preview rectangle");r.Top+=40;r.Left+=3;r.Right-=3;r.Bottom-=3;width=r.Right-r.Left;height=r.Bottom-r.Top;}
             var result=new CaptureInfo{Path=path,Left=r.Left,Top=r.Top,Width=width,Height=height};
