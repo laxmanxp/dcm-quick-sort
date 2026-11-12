@@ -10,6 +10,7 @@ $null=New-Item -ItemType Directory -Path $lab
 $utf8=New-Object Text.UTF8Encoding($false)
 $cases=New-Object 'Collections.Generic.List[object]';$shots=New-Object 'Collections.Generic.List[object]';$viewers=New-Object 'Collections.Generic.List[object]'
 $receipt=[ordered]@{schema=1;feature='DCM-SUMATRA-UNDO-01';passed=$false;report=$lab;cases=$cases;captures=$shots;viewers=$viewers;visual_reviewed=$false}
+$selectionTimes=New-Object 'Collections.Generic.List[object]';$receipt['selection_readiness']=$selectionTimes
 $app=$null;$hwnd=[IntPtr]::Zero;$head='';$manifest=@();$fixture=$null
 Write-Output ('REPORT_ROOT='+$lab)
 function Hash([string]$p){return (Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash.ToLowerInvariant()}
@@ -22,8 +23,8 @@ function Text([int]$id){return [DcmNative]::Text([DcmNative]::Control($hwnd,$app
 function SelectFile([string]$file){
     $items=[DcmNative]::ListItems($hwnd,$app.Id,1016);$index=[Array]::IndexOf($items,$file)
     if($index -lt 0){throw 'Selected fixture not listed'}
-    [DcmUndoInput]::Select($hwnd,$app.Id,$index);$stem=[IO.Path]::GetFileNameWithoutExtension($file)
-    try{Wait ('selection '+$file) {(Text 1005) -ceq $stem -and (@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016)) -join ',') -eq [string]$index}}catch{
+    $clock=[Diagnostics.Stopwatch]::StartNew();[DcmUndoInput]::Select($hwnd,$app.Id,$index);$stem=[IO.Path]::GetFileNameWithoutExtension($file)
+    try{Wait ('selection '+$file) {([DcmUndoInput]::TryText($hwnd,$app.Id,1005)) -ceq $stem -and (@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016)) -join ',') -eq [string]$index};$clock.Stop();$selectionTimes.Add([ordered]@{file=$file;milliseconds=$clock.ElapsedMilliseconds})}catch{
         Json (Join-Path $lab 'selection-failure.json') ([ordered]@{expected=$stem;actual=(Text 1005);items=@([DcmNative]::ListItems($hwnd,$app.Id,1016));selected=@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016));embedded=[DcmSumatraProbe]::Find($hwnd,$app.Id)})
         throw
     }
