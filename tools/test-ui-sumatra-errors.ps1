@@ -77,6 +77,8 @@ function TextRecovery {
 function Observe([string]$name){
     $p=PrivateViewer;$items=@();if($p){$items=@([DcmPdfErrorProbe]::Windows($p.Id))}
     $o=[ordered]@{name=$name;status=(Status);draft=(Text 1005);viewer_pid=$(if($p){$p.Id}else{0});windows=$items}
+    $embedded=[DcmSumatraProbe]::Find($hwnd,$app.Id)
+    if($embedded){$o['embedded_controls']=@([DcmNative]::Snapshot([IntPtr]$embedded.Window,$embedded.PID))}
     $observations.Add($o);Json (Join-Path $lab ($name+'-windows.json')) $o
     return $p
 }
@@ -146,16 +148,25 @@ try{
     $p=Observe '03-damaged';Shot '03-damaged'
     if((Status) -like 'Sumatra PDF preview*'){$issues.Add('DAMAGED_PDF_HOST_CLAIMS_READY: header-valid damaged file has no rendered page')}
     TextRecovery;ExclusiveAll;AddPass 'text-and-file-release-recover-after-damaged-PDF'
+    [DcmNative]::RemoveTopmost($hwnd,$app.Id)
     SelectFile '12-protected.pdf';Start-Sleep -Milliseconds 1500;$p=Observe '04-password'
     $dialog=if($p){[DcmPdfErrorProbe]::PasswordDialog($p.Id)}else{0}
     if($dialog -eq 0){
         Shot '04-password-no-prompt';$issues.Add('PASSWORD_PROMPT_NOT_VISIBLE');TextRecovery
     }else{
         # Only the verified disposable viewer and known generated fixture are accessed.
+        # Earlier host captures made QuickSort topmost; restore only the owned modal for its capture.
+        [DcmNative]::Restore([IntPtr]$dialog,$p.Id,100,120);Start-Sleep -Milliseconds 250
         $s=[DcmNative]::Capture([IntPtr]$dialog,$p.Id,(Join-Path $lab '04-password-prompt.png'),$false)
         $shots.Add([ordered]@{name='04-password-prompt';path=$s.Path;sha256=(Hash $s.Path);visual_reviewed=$false})
-        [DcmPdfErrorProbe]::Password($dialog,$p.Id,'',$true);Start-Sleep -Milliseconds 400
+        # A user must not lose the password prompt to the 15-second startup deadline.
+        Start-Sleep -Milliseconds 17000
+        $after=PrivateViewer;$alivePrompt=if($after){[DcmPdfErrorProbe]::PasswordDialog($after.Id)}else{0}
+        $receipt['password_wait']=[ordered]@{wait_ms=17000;prompt_remains=($alivePrompt -ne 0);host_status=(Status)}
+        if($alivePrompt -eq 0){$issues.Add('PASSWORD_PROMPT_LOST_TO_STARTUP_DEADLINE')}else{[DcmPdfErrorProbe]::Password($alivePrompt,$after.Id,'',$true);AddPass 'password-prompt-survives-user-entry-wait'}
+        Start-Sleep -Milliseconds 400
         TextRecovery;ExclusiveAll;Shot '05-password-cancelled-to-text';AddPass 'password-prompt-cancel-and-text-recovery'
+        [DcmNative]::RemoveTopmost($hwnd,$app.Id)
         SelectFile '12-protected.pdf';Start-Sleep -Milliseconds 1500;$p=PrivateViewer
         if(-not $p){throw 'No private password viewer on retry'};$dialog=[DcmPdfErrorProbe]::PasswordDialog($p.Id)
         if($dialog -eq 0){throw 'Password dialog not returned on retry'}
