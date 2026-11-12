@@ -1,13 +1,12 @@
 {
-  "files": [
-    {
-      "path":"app-src/main_windows.go",
-      "before_blob":"161cc4ec755573afd0c97a28b273f79155ee32e0",
-      "after_sha256":"dcc9f513680e7b76c2c89282d86f1e6c7e41f5cfb93119e356005b455ad5bfd7",
-      "replacements":[{
-        "old":"\tpopulateProcessedList(nextSelection)\n\tif filepath.Clean(filepath.Dir(rec.From)) == filepath.Clean(app.sourceDir) {\n\t\treloadFiles()\n\t}",
-        "new":"\tpopulateProcessedList(nextSelection)\n\t// Undo changes both directories: refresh even when viewing the moved file\n\t// in its destination, where it has just been removed.\n\tif filepath.Clean(filepath.Dir(rec.From)) == filepath.Clean(app.sourceDir) ||\n\t\tfilepath.Clean(filepath.Dir(rec.To)) == filepath.Clean(app.sourceDir) {\n\t\treloadFiles()\n\t}"
-      }]
-    }
-  ]
+  "files":[{
+    "path":"tools/test-ui-sumatra-undo.ps1",
+    "before_blob":"55bd4e6a39596776b4da8f6680fba2bc1c41c7a5",
+    "after_sha256":"d8b2cdb7c753634ca5df7caab91f89a99ac960fa126a74f38bed9cfb449d1376",
+    "replacements":[
+      {"old":"    [DcmUndoInput]::Select($hwnd,$app.Id,$index);$stem=[IO.Path]::GetFileNameWithoutExtension($file)","new":"    $clock=[Diagnostics.Stopwatch]::StartNew();[DcmUndoInput]::Select($hwnd,$app.Id,$index);$stem=[IO.Path]::GetFileNameWithoutExtension($file)"},
+      {"old":"    try{Wait ('selection '+$file) {(Text 1005) -ceq $stem -and (@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016)) -join ',') -eq [string]$index}}catch{","new":"    try{Wait ('selection '+$file) {([DcmUndoInput]::TryText($hwnd,$app.Id,1005)) -ceq $stem -and (@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016)) -join ',') -eq [string]$index};$clock.Stop();$selectionTimes.Add([ordered]@{file=$file;milliseconds=$clock.ElapsedMilliseconds})}catch{"},
+      {"old":"$app=$null;$hwnd=[IntPtr]::Zero;$head='';$manifest=@();$fixture=$null","new":"$selectionTimes=New-Object 'Collections.Generic.List[object]';$receipt['selection_readiness']=$selectionTimes\n$app=$null;$hwnd=[IntPtr]::Zero;$head='';$manifest=@();$fixture=$null"}
+    ]
+  }]
 }
