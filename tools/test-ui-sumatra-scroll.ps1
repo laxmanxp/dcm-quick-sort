@@ -122,12 +122,18 @@ try{
         [DcmSumatraProbe]::SetPage($hwnd,$app.Id,$viewer.pid,1)
         Wait 'page one' {([DcmScrollProbe]::State($hwnd,$app.Id,$viewer.pid)).PageNumber -eq 1}
         [DcmSumatraProbe]::Command($hwnd,$app.Id,$viewer.pid,$mode.command);Start-Sleep -Milliseconds 400
+        $horizontalBefore=[DcmScrollProbe]::State($hwnd,$app.Id,$viewer.pid)
+        [DcmScrollProbe]::ScrollLeft($hwnd,$app.Id,$viewer.pid)
+        Wait 'left margin visible' {$hs=[DcmScrollProbe]::State($hwnd,$app.Id,$viewer.pid);$hs.HorizontalPosition -eq $hs.HorizontalMinimum}
+        $receipt[$mode.name+'-horizontal']=[ordered]@{before=$horizontalBefore;after=[DcmScrollProbe]::State($hwnd,$app.Id,$viewer.pid)}
         ScrollTo 0;Shot ($mode.name+'-01-top') $spec.regions[0];AddPass ($mode.name+'-page-one-top-readable')
         ScrollTo 0.5;Shot ($mode.name+'-02-middle') $spec.regions[1];AddPass ($mode.name+'-page-one-middle-readable')
         ScrollTo 1;Shot ($mode.name+'-03-bottom') $spec.regions[2];AddPass ($mode.name+'-page-one-bottom-readable')
         ScrollTo 0;Shot ($mode.name+'-04-back-to-top') $spec.regions[0];AddPass ($mode.name+'-reverse-scroll-restores-top')
         [DcmSumatraProbe]::SetPage($hwnd,$app.Id,$viewer.pid,2)
         Wait 'page two' {([DcmScrollProbe]::State($hwnd,$app.Id,$viewer.pid)).PageNumber -eq 2}
+        [DcmScrollProbe]::ScrollLeft($hwnd,$app.Id,$viewer.pid)
+        Wait 'page two left margin' {$hs=[DcmScrollProbe]::State($hwnd,$app.Id,$viewer.pid);$hs.HorizontalPosition -eq $hs.HorizontalMinimum}
         ScrollTo 0;Shot ($mode.name+'-05-page-two-top') $spec.regions[3];AddPass ($mode.name+'-page-two-top-distinct-content')
         ScrollTo 1;Shot ($mode.name+'-06-page-two-bottom') $spec.regions[5];AddPass ($mode.name+'-page-two-bottom-distinct-content')
     }

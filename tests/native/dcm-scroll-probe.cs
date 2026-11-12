@@ -36,7 +36,7 @@ public static class DcmScrollProbe {
         },IntPtr.Zero);
         if(result==IntPtr.Zero)throw new Exception("No owned visible PDF canvas");return result;
     }
-    public sealed class ScrollState {public long Canvas;public int Minimum,Maximum,Position,Limit,PageNumber;public uint Viewport;}
+    public sealed class ScrollState {public long Canvas;public int Minimum,Maximum,Position,Limit,PageNumber,HorizontalPosition,HorizontalMinimum,HorizontalLimit;public uint Viewport;}
     public static ScrollState State(IntPtr host,int hostPID,int viewerPID){
         IntPtr canvas=Canvas(host,hostPID,viewerPID),frame=GetParent(canvas);var si=new SCROLLINFO{cbSize=(uint)Marshal.SizeOf(typeof(SCROLLINFO)),fMask=0x17};
         if(!GetScrollInfo(canvas,1,ref si))throw new Exception("Cannot read vertical scrollbar");
@@ -45,11 +45,15 @@ public static class DcmScrollProbe {
             if(p!=(uint)viewerPID||Class(h)!="Edit"||Class(GetParent(h))!="ToolbarWindow32"||(Style(h,-16).ToInt64()&0x2000)==0)return true;
             var b=new StringBuilder(32);IntPtr r;if(Read(h,13,(IntPtr)b.Capacity,b,2,300,out r)==IntPtr.Zero||!int.TryParse(b.ToString(),out page))throw new Exception("Page number unavailable");return true;
         },IntPtr.Zero);
-        return new ScrollState{Canvas=canvas.ToInt64(),Minimum=si.nMin,Maximum=si.nMax,Position=si.nPos,Viewport=si.nPage,Limit=si.nMax-Math.Max((int)si.nPage-1,0),PageNumber=page};
+        var hi=new SCROLLINFO{cbSize=(uint)Marshal.SizeOf(typeof(SCROLLINFO)),fMask=0x17};GetScrollInfo(canvas,0,ref hi);
+        return new ScrollState{Canvas=canvas.ToInt64(),Minimum=si.nMin,Maximum=si.nMax,Position=si.nPos,Viewport=si.nPage,Limit=si.nMax-Math.Max((int)si.nPage-1,0),PageNumber=page,HorizontalPosition=hi.nPos,HorizontalMinimum=hi.nMin,HorizontalLimit=Math.Max(hi.nMin,hi.nMax-Math.Max((int)hi.nPage-1,0))};
     }
     public static void Scroll(IntPtr host,int hostPID,int viewerPID,int command){
         if(command!=0&&command!=1&&command!=2&&command!=3&&command!=6&&command!=7)throw new Exception("Scroll command outside allowlist");
         if(!PostMessage(Canvas(host,hostPID,viewerPID),0x115,(IntPtr)command,IntPtr.Zero))throw new Exception("Could not post owned scroll request");
+    }
+    public static void ScrollLeft(IntPtr host,int hostPID,int viewerPID){
+        if(!PostMessage(Canvas(host,hostPID,viewerPID),0x114,(IntPtr)6,IntPtr.Zero))throw new Exception("Could not post owned horizontal scroll request");
     }
     public sealed class InkEvidence {public int MarkerPixels,MarkerX,MarkerY,MarkerWidth,MarkerHeight,CanvasWidth,CanvasHeight,TextInkPixels,TextInkRows;public bool MarkerFullyVisible;}
     // Region colours locate a known fixture text block; ink corroborates rendered
