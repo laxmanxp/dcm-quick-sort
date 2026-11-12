@@ -1,20 +1,13 @@
 {
   "files": [
     {
-      "path": "tools/test-ui-sumatra-undo.ps1",
-      "before_blob": "5cb0ee52d82e03f8cce801d952b2be67cf8357ba",
-      "after_sha256": "4affba815853ad455be088dbe1d9c12448fd286a539de9c4db81d744963d9662",
-      "replacements": [
-        {"old":"    $null=[DcmNative]::SelectFiles($hwnd,$app.Id,1016,[string[]]@($file));$stem=[IO.Path]::GetFileNameWithoutExtension($file)","new":"    $items=[DcmNative]::ListItems($hwnd,$app.Id,1016);$index=[Array]::IndexOf($items,$file)\n    if($index -lt 0){throw 'Selected fixture not listed'}\n    [DcmUndoInput]::Select($hwnd,$app.Id,$index);$stem=[IO.Path]::GetFileNameWithoutExtension($file)"},
-        {"old":"try{Wait ('selection '+$file) {(Text 1005) -ceq $stem}}catch{","new":"try{Wait ('selection '+$file) {(Text 1005) -ceq $stem -and (@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016)) -join ',') -eq [string]$index}}catch{"},
-        {"old":"    . (Join-Path $repo 'tests/native/new-fixtures.ps1');","new":"    Add-Type -Path (Join-Path $repo 'tests/native/dcm-undo-input.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')\n    . (Join-Path $repo 'tests/native/new-fixtures.ps1');"}
-      ]
-    },
-    {
-      "path":"app-src/sumatra_release_guard_windows_test.go",
-      "before_blob":"cacde332deced58b4e4a20e7e67dd3b25ba1b5fc",
-      "after_sha256":"a9c5a32c2663b838e168aa76283d359c4a2752fdb5832bb12767d0cd7732521e",
-      "replacements":[{"old":"\t\t\t\tapp = appState{index: -1, history: []MoveRecord{rec}}","new":"\t\t\t\tapp = appState{index: -1, history: []MoveRecord{rec}}\n\t\t\t\thidden := createControl(\"STATIC\", \"\", 0, 0, 0, 200, 100, 0, 0)\n\t\t\t\tif hidden == 0 {\n\t\t\t\t\tt.Fatal(\"hidden fixture window unavailable\")\n\t\t\t\t}\n\t\t\t\tdefer user32.NewProc(\"DestroyWindow\").Call(hidden)\n\t\t\t\tapp.hwnd, app.previewHwnd = hidden, hidden"}]
+      "path":"app-src/main_windows.go",
+      "before_blob":"161cc4ec755573afd0c97a28b273f79155ee32e0",
+      "after_sha256":"dcc9f513680e7b76c2c89282d86f1e6c7e41f5cfb93119e356005b455ad5bfd7",
+      "replacements":[{
+        "old":"\tpopulateProcessedList(nextSelection)\n\tif filepath.Clean(filepath.Dir(rec.From)) == filepath.Clean(app.sourceDir) {\n\t\treloadFiles()\n\t}",
+        "new":"\tpopulateProcessedList(nextSelection)\n\t// Undo changes both directories: refresh even when viewing the moved file\n\t// in its destination, where it has just been removed.\n\tif filepath.Clean(filepath.Dir(rec.From)) == filepath.Clean(app.sourceDir) ||\n\t\tfilepath.Clean(filepath.Dir(rec.To)) == filepath.Clean(app.sourceDir) {\n\t\treloadFiles()\n\t}"
+      }]
     }
   ]
 }
