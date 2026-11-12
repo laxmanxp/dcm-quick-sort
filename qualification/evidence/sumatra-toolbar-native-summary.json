@@ -1,0 +1,90 @@
+{
+  "schema": 1,
+  "feature": "DCM-SUMATRA-UI-01",
+  "date_ist": "2026-11-12",
+  "tested_commit": "c53f85263963886b1038dbd8933dd3883481aabd",
+  "implementation_changes_in_retry": false,
+  "numbered_steps_closed": [],
+  "status": "top_clipping_corrected_navigation_zoom_checks_pass_new_layout_findings_open",
+  "build": {
+    "report": "dcm-quicksort-build-20261112-040215-6858b471",
+    "receipt_sha256": "94e5052e26ab7f2906d6d4017329bd8bd53512e965b4cd2f35f06892d9ed609f",
+    "app_sha256": "2b0f4e8cfe9e54909e63cf327b89dbb448ed92acfa194ea3a12f1e0ccba4ae89",
+    "size_bytes": 7229952,
+    "manifest_files": 301,
+    "manifest_sha256": "55825569addc8c733ea658d95b5e9ec3ff52a619164501951f92ec577a336bde"
+  },
+  "runtime_sha256": "719f689b34f47be8ca105ce8484948474dafde0e106bab599e4a89326070c3d0",
+  "policy_sha256": "f82ee9c3ff09da529f67f2ee73ab716dd53678d0f52b00ddcffc9d6dc0a908aa",
+  "report_root": "D:\\FlowverseReportsRepo",
+  "runs": [
+    {
+      "report": "dcm-quicksort-ui-sumatra-20261112-040237-691adf62",
+      "receipt_sha256": "0bf2a1eba2ca7ef9829a98662cf764ad004e5bcd7541815619ed239c2a9ac596",
+      "passed": true,
+      "cases": 19,
+      "exit_code": 0,
+      "source_unchanged": true,
+      "fixtures_preserved": true,
+      "full_images_reviewed": 17,
+      "content_crops_automated_only": 16
+    },
+    {
+      "report": "dcm-quicksort-ui-sumatra-20261112-040536-5300276f",
+      "receipt_sha256": "c0fc67602165ed9f5a3c44a422bc9a0a0566c2d7aa4f387173aba05140a8b161",
+      "passed": true,
+      "cases": 19,
+      "exit_code": 0,
+      "source_unchanged": true,
+      "fixtures_preserved": true,
+      "images_separately_reviewed": false
+    }
+  ],
+  "baseline": {
+    "report": "dcm-quicksort-baseline-20261112-040352-443135c7",
+    "receipt_sha256": "57869e26d704b5a65775ca53d3986470fbbb9281aa3aec6a893dd2ada9fcfc4d",
+    "count": 367,
+    "passed": 366,
+    "failed": 0,
+    "skipped": ["TestRealGeneratedPPTXIntegration"],
+    "exit_code": 0,
+    "timed_out": false,
+    "source_unchanged": true
+  },
+  "regressions": [
+    {"selector": "ui-text", "report": "dcm-quicksort-ui-text-20261112-040435-99bf630e", "receipt_sha256": "8e418d9d053fa4ee4f09655179a9195ce52c9b78eec0f1353b8548ef3b1defbc", "passed": true, "cases": 17, "images_reviewed": false},
+    {"selector": "ui-image", "report": "dcm-quicksort-ui-image-20261112-040504-1eb23a4f", "receipt_sha256": "b60a3b5029ae3cd79e2edb697874f8d0d2b330813b74cd6c07ce8749d6148213", "passed": true, "cases": 23, "images_reviewed": false}
+  ],
+  "clipping_red": {"commit": "8666752a23b25b23296cc1f0447a0b0ae153ed8d", "report": "dcm-quicksort-ui-sumatra-20261112-021413-eff1b1a5", "error": "SUMATRA_TOOLBAR_CLIPPED", "page_y": -13, "page_height": 25, "toolbar_height": 43, "page_background_y": -17},
+  "clipping_green": {"page_y": 8, "page_height": 25, "toolbar_height": 43, "page_background_y": 5, "inspected_edit_static_children": 7, "all_inside": true},
+  "resize": {"host_coordinate_context": "host DPI-awareness context", "before": [1280, 820], "smaller": [1216, 756], "restored": [1280, 820], "frame_containment_passed": true, "overall_visual_acceptance": false},
+  "visual_review": {
+    "raw_flags_changed": false,
+    "capture_sha256": {
+      "01-embedded-first-page": "4ddd443507e70279bda16666ef7d41878a8f950f69607315a2f8b51d67f7f945",
+      "01b-first-boundary": "9d1e6e1150ee6e43ed932b5f2b69e3f36f3b267f5d91b836b1d8a64968fd58dd",
+      "02-next-page": "315cbe7e70253cb81d2385fc0b5301497eca8341b5216cfc3bf2e9fcc1dc413d",
+      "03-last-boundary": "315cbe7e70253cb81d2385fc0b5301497eca8341b5216cfc3bf2e9fcc1dc413d",
+      "04-previous-page": "9d1e6e1150ee6e43ed932b5f2b69e3f36f3b267f5d91b836b1d8a64968fd58dd",
+      "04b-page-field-two": "315cbe7e70253cb81d2385fc0b5301497eca8341b5216cfc3bf2e9fcc1dc413d",
+      "04c-page-field-one": "9d1e6e1150ee6e43ed932b5f2b69e3f36f3b267f5d91b836b1d8a64968fd58dd",
+      "04d-zoom-in": "dfa642c3a160fc24be3aaeebd3f3c5fef15dfc35bd3488625a02c9bcc864173d",
+      "04e-zoom-out": "4ddd443507e70279bda16666ef7d41878a8f950f69607315a2f8b51d67f7f945",
+      "04f-fit-page": "9d1e6e1150ee6e43ed932b5f2b69e3f36f3b267f5d91b836b1d8a64968fd58dd",
+      "04g-actual-size-100": "7c8c978c038c90b0670185ea260b63de55e8bdb264232d25aa457529286d3a07",
+      "04h-fit-width": "f49969e574b2caa2f02fcfc3ed5eae5c4a93cbbaae39f3994b564a04585877e6",
+      "04i-fit-page-reset": "4ddd443507e70279bda16666ef7d41878a8f950f69607315a2f8b51d67f7f945",
+      "04j-resized-smaller": "08c9870a684aacbba424f24ad869c41d7dc64a6a0a0f477f04daabb6c6c61eb5",
+      "04k-resize-restored": "857a8aa08c1eb6fd29c9b2102420848ba692487e7084e4e3c94ca2ab8095ba1c",
+      "05-open-command-disabled": "857a8aa08c1eb6fd29c9b2102420848ba692487e7084e4e3c94ca2ab8095ba1c",
+      "06-moved-and-text-restored": "3947ded05b19c7290ed4a68d3f31326d06f134a4fb102679e281953c6f655766"
+    },
+    "new_findings": ["DCM-SUMATRA-UI-02", "DCM-UI-RESIZE-01"],
+    "not_claimed": ["all toolbar buttons geometrically contained at narrow width", "scroll-to-text at 100 percent/Fit Width", "all DPI sizes", "physical human input"]
+  },
+  "pending": ["DCM-SUMATRA-UI-02", "DCM-UI-RESIZE-01", "rapid switching/cancellation/error and password cases", "Undo/release-timeout/active-PDF close", "DCM-28/29 final provider acceptance", "default runtime packaging/distribution", "DCM-19", "external PPTX", "human acceptance"],
+  "default_provider_changed": false,
+  "printing_enabled": false,
+  "merged": false,
+  "published": false
+}

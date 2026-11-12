@@ -1,32 +1,30 @@
-# DCM v1.0.71 — optional Sumatra provider, stage 1
+# DCM QuickSort — Sumatra toolbar retry verified; full PDF acceptance still pending
 
-Latest work: [Sumatra first native milestone](2026-11-12-sumatra-stage1.md).
-Last completed numbered checkpoint remains DCM-27. Completed DCM-01–18 and DCM-20–27; DCM-19 blocked; DCM-28/29 pending. No numbered step closed here. User explicitly approved this focused optional PDF-provider integration. Do not resume the separate LibreOffice pane-divider work.
+Latest checkpoint: [toolbar/navigation/zoom retry](2026-11-12-sumatra-toolbar.md).
+Tested source `c53f85263963886b1038dbd8933dd3883481aabd`.
 
-## Verified state
+Completed numbered steps remain DCM-01–18 and DCM-20–27 (26 including five setup steps). No numbered closure in this retry. DCM-19 remains blocked; DCM-28 and DCM-29 remain pending. Do not restart the other LibreOffice divider project.
 
-Native-tested source `b05024332f018b544f7d1e704c5e017fac66f364`. Full native baseline **365 pass / 0 fail / 1 retained external-PPTX skip**, 366 parents, exit 0, no timeout. Three new policy/argument/document-preflight tests. The existing Windows.Data.Pdf provider remains default; Sumatra is explicitly opt-in through DCM_PDF_PROVIDER=sumatra and a pinned absolute DCM_SUMATRA_EXE.
+## Verified
 
-Sumatra ui-sumatra stage 1 passes eight checks: owned restricted embedded viewer, two actual pages, last-page boundary, Previous, internal Open blocked, switch-to-text/exclusive file release, representative tracked Rename/Move with bytes intact. Six full images/five content crops reviewed. App normal exit 0; all three recorded owned viewer processes exited. Fresh default-provider ui-text (17) and ui-image (23) pass; their new images not separately reviewed. Raw screenshot flags remain unchanged.
+Recovered the already-committed toolbar correction and expanded UI test, then freshly ran FlowDev update/tooling/build. Two unchanged-source Sumatra runs each pass 19 checks; all 17 full-window images from the first run reviewed. Its 16 pixel crops were automatically checked, not separately inspected. Original top clipping is measured RED (page Y=-13) to GREEN (Y=8); redundant host sizing controls hide for Sumatra and return on text. Runtime and strict deny-print/deny-write policy are unchanged.
 
-**Open visual blocker DCM-SUMATRA-UI-01:** page label/input clipped at toolbar top; redundant disabled QuickSort sizing controls remain above the embedded viewer. Keep PrinterAccess=0 and DiskAccess=0; do not enable printing for geometry. Do not make Sumatra default or call DCM-28 complete.
+Actual accessible toolbar Next/Previous/Zoom and page-entry tests pass, with both boundaries, 100%/Fit modes and two-size containment checks. Native baseline 366 pass / 0 fail / 1 retained external-PPTX skip; text17/image23 regressions pass. Second Sumatra and regression images not separately reviewed. No further product/test implementation changes were made in the retry.
 
-## Exact next work
+## Next exact work
 
-Inspect and reproduce toolbar geometry under the strict no-print policy, add a focused failing UI assertion, and correct it without weakening policy or ownership guards. Then finish page-boundary/control and zoom/resize qualification, rapid switching/cancellation, failure states, Undo and release failure/active-PDF close. Missing runtime/corrupt/password paths and abnormal exit are not yet native-qualified. Maintain old provider for comparison. Packaging/distribution review DCM-SUMATRA-DISTRIBUTION-01 stays open; no binary has been bundled or published.
+**DCM-UI-RESIZE-01:** resizing back leaves old host button/footer fragments. **DCM-SUMATRA-UI-02:** smaller window clips far-right Aa toolbar control. Add focused failing assertions, make the smallest correction and requalify full-window images. The Edit/Static geometry check does not validate every toolbar button. Keep original page-number correction in place; do not enable printing or weaken ownership/policy checks. General DCM-UI-LABEL-01 remains open.
 
-The first no-provider RED is `dcm-quicksort-ui-sumatra-20261111-232240-30170f6f`. First implemented run at185ba410 timed out selecting 08-preview.pdf and capture was occluded; cause not established. Passing final run followed added diagnostics and asynchronous child-hide change; do not retrospectively claim that caused the earlier timeout. Revalidate repeatability.
+Then qualify rapid PDF/text/PDF switching, cancellation, failed/locked/password PDFs, Undo/release-timeout refusal and active-PDF host close. Current 19 checks do not cover these. At100%/FitWidth the viewport showed a magnified colored area; scroll/text visibility at those zooms remains unqualified. Sumatra stays opt-in; Windows.Data.Pdf remains default. Do not close DCM-28/29 or switch defaults merely because this focused run passes.
 
-## Workflow and evidence
+## Execution and identity
 
-Code locally -> GitHub -> FlowDev update/test on Lenovo, serially. Canonical workspace `D:\FlowverseReportsRepo`; candidate `D:\FlowverseReportsRepo\dcm-quicksort-candidate`; profile `tools\flowdev-dcm`; runner `D:\FlowverseReportsRepo\flowdev-standalone-validation\flowdev-test.exe`. Device `d18227f2-0b54-4b11-9026-56ac40305f02`. C:\FlowverseReports is an alias; use D: paths. No remote source edits.
+Code locally -> GitHub -> FlowDev update/test on Lenovo, one UI run at a time. Workspace D:\FlowverseReportsRepo; candidate dcm-quicksort-candidate; profile tools\flowdev-dcm; runner D:\FlowverseReportsRepo\flowdev-standalone-validation\flowdev-test.exe. Device d18227f2-0b54-4b11-9026-56ac40305f02. No remote source edits.
 
-`ui-sumatra` requires DCM_SUMATRA_SOURCE_EXE pointing to the existing prototype runtime `D:\Flowverse\sumatra-preview-prototype\runtime\sumatra-3.6.1\SumatraPDF-3.6.1-64.exe`; it copies it into the private test lab and writes its own policy. Do not edit the prototype runtime/policy or interact with the unrelated LibreOffice session. Runtime hash719f689b34f47be8ca105ce8484948474dafde0e106bab599e4a89326070c3d0.
+ui-sumatra needs DCM_SUMATRA_SOURCE_EXE=D:\Flowverse\sumatra-preview-prototype\runtime\sumatra-3.6.1\SumatraPDF-3.6.1-64.exe; it creates a private copy and policy. Do not alter the prototype/user runtime.
 
-Last exact build receipt: `D:\FlowverseReportsRepo\dcm-quicksort-build-20261111-233847-d6a39720\receipt.json`, matches b0502433 only. App hash6e0da23dbd7bf67d5610e9e82b7859df851690b11caeeb38c23284e61323d984. Rebuild after any later source/metadata commit; never rewrite receipts.
+Build receipt dcm-quicksort-build-20261112-040215-6858b471\receipt.json matches c53f8526 only. App hash2b0f4e8cfe9e54909e63cf327b89dbb448ed92acfa194ea3a12f1e0ccba4ae89. Rebuild after any metadata/source commit.
 
-Native GREEN: `dcm-quicksort-ui-sumatra-20261111-233859-93834514`; baseline `dcm-quicksort-baseline-20261111-234138-747a8dff`; text `dcm-quicksort-ui-text-20261111-234201-8b3fe3f2`; image `dcm-quicksort-ui-image-20261111-234218-04fe2476`, all under D:\FlowverseReportsRepo. Separate evidence and hashes: `evidence/sumatra-stage1-native-summary.json`.
+Reports under D:\FlowverseReportsRepo: reviewed Sumatra dcm-quicksort-ui-sumatra-20261112-040237-691adf62; repeated Sumatra 20261112-040536-5300276f; baseline dcm-quicksort-baseline-20261112-040352-443135c7; text dcm-quicksort-ui-text-20261112-040435-99bf630e; image dcm-quicksort-ui-image-20261112-040504-1eb23a4f. Exact hashes in evidence/sumatra-toolbar-native-summary.json.
 
-The general native Snapshot helper rejects foreign child PIDs; use the bounded Sumatra-specific inspector for cross-process children rather than relaxing the global guard. Pixel comparison must use content crops, not blue title/list chrome. Ownership/capture/content assertions remain mandatory.
-
-Keep prior DCM-19, layout, external DCM_REAL_PPTX, full operations/Undo, final installer/package and human acceptance gates. PR #1 stays draft, no merge/publication. Preserve all original issue IDs, source identities and historical evidence.
+Keep all original checkpoints, failed runs, DCM-19, external DCM_REAL_PPTX, distribution/package/installer and user gates. Keep PR #1 draft; no merge or publication.

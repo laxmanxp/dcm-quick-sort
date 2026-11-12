@@ -1,0 +1,32 @@
+name: Record verified Sumatra toolbar retry
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/record-sumatra-toolbar.yml]
+permissions:
+  contents: write
+concurrency:
+  group: dcm-release-metadata
+  cancel-in-progress: false
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - name: Apply locally tested guarded metadata change
+        run: |
+          git diff --exit-code c53f85263963886b1038dbd8933dd3883481aabd -- app-src installer-src tools tests
+          python qualification/record-sumatra-toolbar.py
+          echo 'ea202f4aaaa02e650bd725bc3433996a3690bb7f7f7aded25ac89647d0d5e3c0  todo.json' | sha256sum -c -
+          echo 'dc13531081b2602830d869bc72de540aa1fd2da9e2f2feeaab25a7163668712b  qualification/completion-50.json' | sha256sum -c -
+      - name: Record metadata only without force or release
+        run: |
+          git config user.name 'DCM checkpoint automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add todo.json qualification/completion-50.json
+          git commit -m 'test: record toolbar retry and preserve open PDF layout gates'
+          git push origin HEAD:release/v1.0.71
