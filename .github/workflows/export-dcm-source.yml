@@ -1,4 +1,4 @@
-# Refresh pinned source for user-approved Sumatra provider integration.
+# Refresh pinned source for Sumatra toolbar geometry and navigation qualification.
 name: Export pinned DCM source for local review
 on:
   push:
