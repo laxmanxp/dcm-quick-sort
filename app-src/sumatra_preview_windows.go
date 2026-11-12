@@ -190,11 +190,15 @@ func pollSumatraPreview() {
 			resizeSumatraPreview()
 			app.fallback = ""
 			setText(app.statusLabel, "Sumatra PDF preview · restricted · use viewer navigation/zoom")
+			updatePreviewZoomControls()
 			procInvalidateRect.Call(app.previewHwnd, 0, 1)
 		} else if time.Now().After(v.deadline) {
 			_ = stopSumatraPreview()
 			sumatraError(errors.New("Sumatra did not attach within the startup deadline"))
 		}
+	}
+	if sumatraView == v && v.child != 0 {
+		repairSumatraToolbar(v)
 	}
 }
 func resizeSumatraPreview() {
@@ -235,10 +239,98 @@ func stopSumatraPreview() error {
 	spClose.Call(v.process)
 	spClose.Call(v.job)
 	sumatraView = nil
+	updatePreviewZoomControls()
 	// Only the exact session directory created by MkdirTemp belongs to this viewer.
 	_ = os.RemoveAll(v.profile)
 	return nil
 }
+
+// The pinned 3.6.1 toolbar lays out page fields relative to a hidden Print button.
+// Repair only clipped direct Edit/Static children of our own viewer's toolbar.
+// This is a host-side geometry compatibility fix, not a runtime/policy change.
+type sumatraToolbarQuery struct {
+	viewer  *sumatraSession
+	toolbar uintptr
+}
+
+var spGetClass = user32.NewProc("GetClassNameW")
+var spScreenToClient = user32.NewProc("ScreenToClient")
+var spGetWindowDPIContext = user32.NewProc("GetWindowDpiAwarenessContext")
+var spSetThreadDPIContext = user32.NewProc("SetThreadDpiAwarenessContext")
+
+func sumatraClass(hwnd uintptr) string {
+	var name [128]uint16
+	n, _, _ := spGetClass.Call(hwnd, uintptr(unsafe.Pointer(&name[0])), uintptr(len(name)))
+	if n == 0 {
+		return ""
+	}
+	return syscall.UTF16ToString(name[:])
+}
+func sumatraHasPID(hwnd uintptr, pid uint32) bool {
+	var actual uint32
+	spGetPID.Call(hwnd, uintptr(unsafe.Pointer(&actual)))
+	return actual == pid
+}
+
+var sumatraFindToolbar = syscall.NewCallback(func(hwnd, context uintptr) uintptr {
+	q := (*sumatraToolbarQuery)(unsafe.Pointer(context))
+	if sumatraHasPID(hwnd, q.viewer.pid) && sumatraClass(hwnd) == "ToolbarWindow32" {
+		q.toolbar = hwnd
+		return 0
+	}
+	return 1
+})
+var sumatraRepairToolbarChild = syscall.NewCallback(func(hwnd, context uintptr) uintptr {
+	q := (*sumatraToolbarQuery)(unsafe.Pointer(context))
+	parent, _, _ := procGetParent.Call(hwnd)
+	if parent != q.toolbar || !sumatraHasPID(hwnd, q.viewer.pid) {
+		return 1
+	}
+	visible, _, _ := procIsWindowVisible.Call(hwnd)
+	class := sumatraClass(hwnd)
+	if visible == 0 || (class != "Edit" && class != "Static") {
+		return 1
+	}
+	var toolbar, child RECT
+	if ok, _, _ := procGetClientRect.Call(q.toolbar, uintptr(unsafe.Pointer(&toolbar))); ok == 0 {
+		return 1
+	}
+	if ok, _, _ := procGetWindowRect.Call(hwnd, uintptr(unsafe.Pointer(&child))); ok == 0 {
+		return 1
+	}
+	point := POINT{X: child.Left, Y: child.Top}
+	if ok, _, _ := spScreenToClient.Call(q.toolbar, uintptr(unsafe.Pointer(&point))); ok == 0 {
+		return 1
+	}
+	width, height := child.Right-child.Left, child.Bottom-child.Top
+	if width <= 0 || point.X < 0 || width > toolbar.Right || point.X > toolbar.Right-width {
+		return 1
+	}
+	y, move := sumatraToolbarChildY(point.Y, height, toolbar.Bottom)
+	if move && sumatraView == q.viewer && sumatraOwnsWindow(q.viewer, q.viewer.child) {
+		// Async and no-size/no-activate/no-z-order: only this child's y changes.
+		spSetWindowPos.Call(hwnd, 0, uintptr(point.X), uintptr(y), 0, 0, 0x4000|0x0001|0x0010|0x0004)
+	}
+	return 1
+})
+
+func repairSumatraToolbar(v *sumatraSession) {
+	if v == nil || !sumatraOwnsWindow(v, v.child) {
+		return
+	}
+	q := &sumatraToolbarQuery{viewer: v}
+	spEnumChildren.Call(v.child, sumatraFindToolbar, uintptr(unsafe.Pointer(q)))
+	if q.toolbar != 0 {
+		context, _, _ := spGetWindowDPIContext.Call(q.toolbar)
+		previous, _, _ := spSetThreadDPIContext.Call(context)
+		if previous != 0 {
+			defer spSetThreadDPIContext.Call(previous)
+			spEnumChildren.Call(q.toolbar, sumatraRepairToolbarChild, uintptr(unsafe.Pointer(q)))
+		}
+	}
+	runtime.KeepAlive(q)
+}
+
 func releaseSumatraForOperation() bool {
 	if err := stopSumatraPreview(); err != nil {
 		sumatraError(err)

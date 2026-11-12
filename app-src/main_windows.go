@@ -5070,6 +5070,16 @@ func previewSupportsFitWidth() bool {
 }
 
 func updatePreviewZoomControls() {
+	// The embedded viewer supplies its own controls. Restore ours on unload.
+	show := uintptr(5) // SW_SHOW
+	if sumatraView != nil {
+		show = 0 // SW_HIDE
+	}
+	for _, hwnd := range []uintptr{app.zoomOutBtn, app.zoom100Btn, app.zoomInBtn, app.zoomFitBtn, app.zoomFitWidthBtn} {
+		if hwnd != 0 {
+			procShowWindow.Call(hwnd, show)
+		}
+	}
 	zoomEnabled := uintptr(0)
 	fitEnabled := uintptr(0)
 	fitWidthEnabled := uintptr(0)

@@ -113,3 +113,15 @@ func validateSumatraDocument(path string) (string, error) {
 	}
 	return path, nil
 }
+
+// Only vertical clipping of a fully sized toolbar child is repaired. Unknown or
+// oversized geometry is left alone; the acceptance probe must still reject it.
+func sumatraToolbarChildY(top, height, toolbarHeight int32) (int32, bool) {
+	if height <= 0 || toolbarHeight <= 0 || toolbarHeight > 512 || height > toolbarHeight {
+		return top, false
+	}
+	if top >= 0 && top <= toolbarHeight-height {
+		return top, false
+	}
+	return (toolbarHeight - height) / 2, true
+}

@@ -84,3 +84,25 @@ func TestSumatraDocumentValidationIsReadOnly(t *testing.T) {
 		t.Fatal("source changed")
 	}
 }
+
+func TestSumatraToolbarClippingPolicy(t *testing.T) {
+	for _, tc := range []struct {
+		name               string
+		y, h, parent, want int32
+		move               bool
+	}{
+		{"page edit", -13, 25, 43, 9, true}, {"page border", -17, 33, 43, 5, true},
+		{"valid find edit", 6, 25, 43, 6, false}, {"bottom clip", 30, 25, 43, 9, true},
+		{"top edge", 0, 25, 43, 0, false}, {"bottom edge", 18, 25, 43, 18, false},
+		{"full height", 0, 43, 43, 0, false}, {"empty", -1, 0, 43, -1, false},
+		{"oversized", -13, 50, 43, -13, false}, {"invalid parent", -13, 25, 0, -13, false},
+		{"unknown toolbar", -13, 25, 800, -13, false}, {"scaled", -26, 50, 86, 18, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			y, move := sumatraToolbarChildY(tc.y, tc.h, tc.parent)
+			if y != tc.want || move != tc.move {
+				t.Fatalf("got (%d,%v), want (%d,%v)", y, move, tc.want, tc.move)
+			}
+		})
+	}
+}
