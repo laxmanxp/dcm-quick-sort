@@ -1,4 +1,4 @@
-# Refresh pinned source for Sumatra switching, cancellation and shutdown qualification.
+# Refresh pinned source for damaged/password PDFs and missing-runtime qualification.
 name: Export pinned DCM source for local review
 on:
   push:
