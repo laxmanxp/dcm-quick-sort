@@ -36,6 +36,7 @@ function Shot([string]$name,[string]$color=''){
         [DcmSumatraProbe]::RequireToolbar($layout)
         # Exclude the blue title bar/list highlights from the PDF pixel oracle.
         $pixels=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'-content.png')),$true)
+        $script:lastContent=$pixels
         $shots.Add([ordered]@{name=$name+'-content';path=$pixels.Path;sha256=(Hash $pixels.Path);teal=$pixels.TealSamples;orange=$pixels.OrangeSamples;visual_reviewed=$false})
         if($color -eq 'teal' -and ($pixels.TealSamples -lt 1000 -or $pixels.OrangeSamples -gt 100)){throw 'Wrong visible PDF page: expected teal'}
         if($color -eq 'orange' -and ($pixels.OrangeSamples -lt 1000 -or $pixels.TealSamples -gt 100)){throw 'Wrong visible PDF page: expected orange'}
@@ -67,7 +68,7 @@ try{
     $receipt['runtime_sha256']=Hash $runtimeExe;$receipt['policy_sha256']=Hash (Join-Path $runtimeDir 'sumatrapdfrestrict.ini')
     Add-Type -AssemblyName System.Drawing;Add-Type -AssemblyName System.Windows.Forms
     Add-Type -Path (Join-Path $repo 'tests/native/dcm-native.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
-    Add-Type -Path (Join-Path $repo 'tests/native/dcm-sumatra-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')
+    Add-Type -Path (Join-Path $repo 'tests/native/dcm-sumatra-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','Accessibility.dll')
     . (Join-Path $repo 'tests/native/new-fixtures.ps1');$fixture=New-DcmFixtures $lab
     $original=Join-Path $fixture.inbox '08-preview.pdf';$pdfHash=Hash $original
     $otherHashes=@{};Get-ChildItem -LiteralPath $fixture.inbox -Filter '*.txt' | ForEach-Object {$otherHashes[$_.Name]=Hash $_.FullName}
@@ -83,13 +84,26 @@ try{
     Wait 'fixture list' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 4}
     [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1003,'Accepted')
     SelectFile '08-preview.pdf';$v=Viewer;Start-Sleep -Milliseconds 800;Shot '01-embedded-first-page' 'teal';AddPass 'embedded-owned-restricted-first-page'
-    [DcmSumatraProbe]::Command($hwnd,$app.Id,$v.pid,259);Start-Sleep -Milliseconds 600;Shot '02-next-page' 'orange';AddPass 'next-page-visible-content'
+    Json (Join-Path $lab 'toolbar-accessibility.json') ([DcmSumatraProbe]::ToolbarButtons($hwnd,$app.Id,$v.pid))
+    [DcmSumatraProbe]::Command($hwnd,$app.Id,$v.pid,260);Start-Sleep -Milliseconds 400;Shot '01b-first-boundary' 'teal';AddPass 'first-page-boundary'
+    [DcmSumatraProbe]::InvokeToolbar($hwnd,$app.Id,$v.pid,'Next Page');Start-Sleep -Milliseconds 600;Shot '02-next-page' 'orange';AddPass 'next-page-visible-content'
     [DcmSumatraProbe]::Command($hwnd,$app.Id,$v.pid,259);Start-Sleep -Milliseconds 300;Shot '03-last-boundary' 'orange';AddPass 'last-page-boundary'
-    [DcmSumatraProbe]::Command($hwnd,$app.Id,$v.pid,260);Start-Sleep -Milliseconds 400;Shot '04-previous-page' 'teal';AddPass 'previous-page-visible-content'
+    [DcmSumatraProbe]::InvokeToolbar($hwnd,$app.Id,$v.pid,'Previous Page');Start-Sleep -Milliseconds 400;Shot '04-previous-page' 'teal';AddPass 'previous-page-visible-content'
+    [DcmSumatraProbe]::SetPage($hwnd,$app.Id,$v.pid,2);Start-Sleep -Milliseconds 500;Shot '04b-page-field-two' 'orange';AddPass 'page-field-enter-two'
+    [DcmSumatraProbe]::SetPage($hwnd,$app.Id,$v.pid,1);Start-Sleep -Milliseconds 500;Shot '04c-page-field-one' 'teal';AddPass 'page-field-enter-one'
+    $baseSamples=$script:lastContent.TealSamples
+    [DcmSumatraProbe]::InvokeToolbar($hwnd,$app.Id,$v.pid,'Zoom In');Start-Sleep -Milliseconds 500;Shot '04d-zoom-in' 'teal'
+    $inSamples=$script:lastContent.TealSamples
+    if($inSamples -le $baseSamples*1.03){throw 'SUMATRA_ZOOM_DID_NOT_ENLARGE_CONTENT'};AddPass 'viewer-zoom-in-visible-content'
+    [DcmSumatraProbe]::InvokeToolbar($hwnd,$app.Id,$v.pid,'Zoom Out');Start-Sleep -Milliseconds 500;Shot '04e-zoom-out' 'teal'
+    if($script:lastContent.TealSamples -ge $inSamples*0.97){throw 'SUMATRA_ZOOM_DID_NOT_REDUCE_CONTENT'};AddPass 'viewer-zoom-out-visible-content'
+    [DcmSumatraProbe]::InvokeToolbar($hwnd,$app.Id,$v.pid,'Fit a Single Page');Start-Sleep -Milliseconds 500;Shot '04f-fit-page' 'teal';AddPass 'viewer-fit-page-visible-content'
     [DcmSumatraProbe]::Command($hwnd,$app.Id,$v.pid,201);Start-Sleep -Milliseconds 400
     if(@([DcmNative]::Dialogs([IntPtr]$v.hwnd,$v.pid)).Count){throw 'Restricted viewer opened a file dialog'}
     Shot '05-open-command-disabled' 'teal';AddPass 'alternate-open-disabled'
     SelectFile '01-alpha.txt';Gone $v
+    foreach($id in @(1020,1021,1022,1023,1047)){if(-not ([DcmNative]::Snapshot($hwnd,$app.Id)|Where-Object {$_.ID -eq $id -and $_.Visible})){throw 'Host preview controls not restored'}}
+    AddPass 'host-controls-restored-on-text'
     $h=[IO.File]::Open($original,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::None);$h.Dispose();AddPass 'switch-to-text-releases-PDF'
     SelectFile '08-preview.pdf';$v=Viewer
     [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1005,'sumatra-renamed');[DcmNative]::ClickAsync($hwnd,$app.Id,1006)

@@ -71,4 +71,34 @@ public static class DcmSumatraProbe {
         if(!layout.PageFieldFound)throw new Exception("SUMATRA_PAGE_FIELD_MISSING");
         if(!layout.AllInside)throw new Exception("SUMATRA_TOOLBAR_CLIPPED: visible edit/label is outside toolbar bounds");
     }
+
+    [DllImport("oleacc.dll")] static extern int AccessibleObjectFromWindow(IntPtr hwnd,uint id,ref Guid iid,[MarshalAs(UnmanagedType.Interface)] out object obj);
+    public sealed class AccessibleButton { public int Child,State,X,Y,Width,Height;public string Name; }
+    public static AccessibleButton[] ToolbarButtons(IntPtr host,int hostPID,int expectedPID){
+        var l=Layout(host,hostPID,expectedPID);RequireToolbar(l);
+        object obj;Guid iid=new Guid("618736e0-3c3d-11cf-810c-00aa00389b71");
+        if(AccessibleObjectFromWindow((IntPtr)l.Window,0xfffffffc,ref iid,out obj)!=0||obj==null)throw new Exception("Toolbar accessibility unavailable");
+        IntPtr old=SetThreadDpiAwarenessContext((IntPtr)(-4));
+        try{
+            var a=(Accessibility.IAccessible)obj;var buttons=new List<AccessibleButton>();int count=a.accChildCount;
+            if(count<1||count>64)throw new Exception("Toolbar accessibility bounds");
+            for(int i=1;i<=count;i++){int x,y,w,h;a.accLocation(out x,out y,out w,out h,i);buttons.Add(new AccessibleButton{Child=i,State=Convert.ToInt32(a.get_accState(i)),Name=a.get_accName(i)??"",X=x,Y=y,Width=w,Height=h});}
+            return buttons.ToArray();
+        }finally{SetThreadDpiAwarenessContext(old);Marshal.ReleaseComObject(obj);}
+    }
+    public static void InvokeToolbar(IntPtr host,int hostPID,int expectedPID,string prefix){
+        if(prefix!="Next Page"&&prefix!="Previous Page"&&prefix!="Zoom In"&&prefix!="Zoom Out"&&prefix!="Fit a Single Page"&&prefix!="Fit Width and Show Pages Continuously")throw new Exception("Toolbar action not allowed");
+        AccessibleButton found=null;foreach(var b in ToolbarButtons(host,hostPID,expectedPID)){if(b.Name.StartsWith(prefix,StringComparison.Ordinal)){if(found!=null)throw new Exception("Ambiguous toolbar action");found=b;}}
+        if(found==null||(found.State&0x8001)!=0||found.Width<=0||found.Height<=0)throw new Exception("Toolbar action not available: "+prefix);
+        var l=Layout(host,hostPID,expectedPID);RequireToolbar(l);object obj;Guid iid=new Guid("618736e0-3c3d-11cf-810c-00aa00389b71");
+        if(AccessibleObjectFromWindow((IntPtr)l.Window,0xfffffffc,ref iid,out obj)!=0)throw new Exception("Toolbar accessibility changed");
+        try{var a=(Accessibility.IAccessible)obj;if(!(a.get_accName(found.Child)??"").StartsWith(prefix,StringComparison.Ordinal))throw new Exception("Toolbar target changed");a.accDoDefaultAction(found.Child);}finally{Marshal.ReleaseComObject(obj);}
+    }
+    public static void SetPage(IntPtr host,int hostPID,int expectedPID,int page){
+        if(page<1||page>2)throw new Exception("Fixture page outside bounds");var l=Layout(host,hostPID,expectedPID);RequireToolbar(l);
+        foreach(var item in l.Items){if(!item.Numeric)continue;IntPtr r;
+            if(SendText((IntPtr)item.Window,12,IntPtr.Zero,page.ToString(),2,2000,out r)==IntPtr.Zero)throw new Exception("Page text timeout");
+            if(!PostMessage((IntPtr)item.Window,0x102,(IntPtr)13,IntPtr.Zero))throw new Exception("Page Enter failed");return;
+        }throw new Exception("No numeric page input");
+    }
 }
