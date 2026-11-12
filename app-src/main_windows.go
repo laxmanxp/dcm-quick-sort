@@ -3146,14 +3146,25 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 			setText(app.statusLabel, "Select a file or processed transaction. F5 reloads the source; Ctrl+\\ fits the preview.")
 		}
 		return 0
+	case wmLayoutTraceFence:
+		layoutTraceFence(hwnd, wParam)
+		return 0
+	case WM_PAINT:
+		recordLayoutTrace(hwnd, "paint-enter", 0)
+		r, _, _ := procDefWindowProcW.Call(hwnd, uintptr(msg), wParam, lParam)
+		recordLayoutTrace(hwnd, "paint-exit", 0)
+		return r
 	case WM_SIZE:
+		recordLayoutTrace(hwnd, "size-enter", 0)
 		layoutUI(hwnd)
 		resizePreviewHandler()
 		resizeTextPreview()
 		resizeXLSXPreview()
 		layoutPDFPreviewControls()
+		recordLayoutTrace(hwnd, "size-exit", 0)
 		return 0
 	case WM_ERASEBKGND:
+		recordLayoutTrace(hwnd, "erase", 0)
 		if app.brushWindow != 0 {
 			var rc RECT
 			procGetClientRect.Call(hwnd, uintptr(unsafe.Pointer(&rc)))
@@ -3517,6 +3528,8 @@ func createUI(hwnd uintptr) {
 }
 
 func layoutUI(hwnd uintptr) {
+	beginLayoutTrace(hwnd)
+	defer endLayoutTrace(hwnd)
 	var rc RECT
 	procGetClientRect.Call(hwnd, uintptr(unsafe.Pointer(&rc)))
 	w := rc.Right - rc.Left
@@ -5782,6 +5795,7 @@ func initGDIPlus() bool {
 }
 
 func main() {
+	defer flushLayoutTrace()
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	procCoInitializeEx.Call(0, COINIT_APARTMENTTHREADED)

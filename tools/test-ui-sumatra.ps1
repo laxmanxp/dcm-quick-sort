@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,[string]$Runtime=$env:DCM_SUMATRA_SOURCE_EXE)
+param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,[string]$Runtime=$env:DCM_SUMATRA_SOURCE_EXE,[switch]$ResizeTiming)
 # User-approved optional provider walking skeleton; only isolated fixtures/runtime.
 $ErrorActionPreference='Stop'
 Set-StrictMode -Version Latest
@@ -96,6 +96,7 @@ try{
     Add-Type -AssemblyName System.Drawing;Add-Type -AssemblyName System.Windows.Forms
     Add-Type -Path (Join-Path $repo 'tests/native/dcm-native.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
     Add-Type -Path (Join-Path $repo 'tests/native/dcm-sumatra-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','Accessibility.dll','System.Drawing.dll')
+    if($ResizeTiming){Add-Type -Path (Join-Path $repo 'tests/native/dcm-layout-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')}
     . (Join-Path $repo 'tests/native/new-fixtures.ps1');$fixture=New-DcmFixtures $lab
     $original=Join-Path $fixture.inbox '08-preview.pdf';$pdfHash=Hash $original
     $otherHashes=@{};Get-ChildItem -LiteralPath $fixture.inbox -Filter '*.txt' | ForEach-Object {$otherHashes[$_.Name]=Hash $_.FullName}
@@ -103,6 +104,7 @@ try{
     $psi=New-Object Diagnostics.ProcessStartInfo;$psi.FileName=$exe;$psi.Arguments='"'+(Join-Path $fixture.inbox '01-alpha.txt')+'"';$psi.UseShellExecute=$false;$psi.WorkingDirectory=$lab
     $psi.EnvironmentVariables['LOCALAPPDATA']=$fixture.local;$psi.EnvironmentVariables['APPDATA']=$fixture.roaming
     $psi.EnvironmentVariables['TEMP']=$lab;$psi.EnvironmentVariables['TMP']=$lab
+    if($ResizeTiming){$psi.EnvironmentVariables['DCM_LAYOUT_TRACE']='1';$receipt['trace_path']=Join-Path $lab 'dcm-layout-trace.json'}
     $psi.EnvironmentVariables['DCM_PDF_PROVIDER']='sumatra';$psi.EnvironmentVariables['DCM_SUMATRA_EXE']=$runtimeExe
     $psi.EnvironmentVariables['DCM_QUICKSORT_BACKUP_DIR']=Join-Path $lab 'backups'
     $app=New-Object Diagnostics.Process;$app.StartInfo=$psi;if(-not $app.Start()){throw 'App start failed'}
@@ -146,6 +148,34 @@ try{
         [DcmSumatraProbe]::ResizeHost($hwnd,$app.Id,$originalW,$originalH);Start-Sleep -Milliseconds 120
     }
     Start-Sleep -Milliseconds 700;[DcmSumatraProbe]::CheckGeometry($hwnd,$app.Id,$v.pid);Shot '07-repeat-restored' 'teal';AddPass 'viewer-repeated-resize-contained'
+    if($ResizeTiming){
+        $timing=New-Object 'Collections.Generic.List[object]';$receipt['layout_timing']=$timing
+        for($burst=0;$burst -lt 8;$burst++){
+            for($cycle=0;$cycle -lt 3;$cycle++){
+                [DcmSumatraProbe]::ResizeHost($hwnd,$app.Id,$originalW-64,$originalH-64)
+                [DcmSumatraProbe]::ResizeHost($hwnd,$app.Id,$originalW,$originalH)
+            }
+            $fence=[DcmLayoutProbe]::Fence($hwnd,$app.Id,100+$burst)
+            Start-Sleep -Milliseconds 700
+            $name=('timing-{0:d2}' -f $burst)
+            $pre=[DcmLayoutProbe]::Observe($hwnd,$app.Id)
+            $s=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'-raw.png')),$false)
+            $shots.Add([ordered]@{name=$name+'-raw';path=$s.Path;sha256=(Hash $s.Path);visual_reviewed=$false})
+            # Observe whether it settles on its own BEFORE any diagnostic redraw.
+            Start-Sleep -Milliseconds 250
+            $natural=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'-natural.png')),$false)
+            $shots.Add([ordered]@{name=$name+'-natural';path=$natural.Path;sha256=(Hash $natural.Path);visual_reviewed=$false})
+            $post=[DcmLayoutProbe]::Observe($hwnd,$app.Id)
+            [DcmSumatraProbe]::PaintReference($hwnd,$app.Id);Start-Sleep -Milliseconds 500
+            $ref=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'-reference.png')),$false)
+            $shots.Add([ordered]@{name=$name+'-reference';path=$ref.Path;sha256=(Hash $ref.Path);visual_reviewed=$false;diagnostic_reference=$true})
+            $first=[DcmSumatraProbe]::CompareHostPaint($hwnd,$app.Id,$s.Path,$ref.Path,$s.Left,$s.Top)
+            $settled=[DcmSumatraProbe]::CompareHostPaint($hwnd,$app.Id,$natural.Path,$ref.Path,$natural.Left,$natural.Top)
+            $timing.Add([ordered]@{name=$name;fence=$fence;before=$pre;after_natural=$post;raw_difference=$first;natural_difference=$settled})
+            Json (Join-Path $lab 'layout-timing.json') $timing
+            if(-not $first.Passed -or -not $settled.Passed){$layoutFailures.Add('TIMED_HOST_REPAINT '+$name+': raw='+$first.ChangedPixels+' natural='+$settled.ChangedPixels)}
+        }
+    }
     [DcmSumatraProbe]::Command($hwnd,$app.Id,$v.pid,201);Start-Sleep -Milliseconds 400
     if(@([DcmNative]::Dialogs([IntPtr]$v.hwnd,$v.pid)).Count){throw 'Restricted viewer opened a file dialog'}
     Shot '05-open-command-disabled' 'teal';AddPass 'alternate-open-disabled'
