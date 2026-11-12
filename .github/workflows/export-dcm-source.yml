@@ -1,4 +1,4 @@
-# Refresh pinned source for Sumatra toolbar geometry and navigation qualification.
+# Refresh pinned source for narrow-toolbar overflow and resize repaint qualification.
 name: Export pinned DCM source for local review
 on:
   push:
