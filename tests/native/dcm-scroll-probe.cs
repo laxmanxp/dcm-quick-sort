@@ -68,7 +68,12 @@ public static class DcmScrollProbe {
                 if(ox<0||oy<0||ox+r.R>image.Width||oy+r.B>image.Height)throw new Exception("Canvas escaped source screenshot");
                 for(int y=2;y<r.B-2;y+=2)for(int x=2;x<r.R-2;x+=2){var c=image.GetPixel(ox+x,oy+y);if(Math.Abs(c.R-red)<=8&&Math.Abs(c.G-green)<=8&&Math.Abs(c.B-blue)<=8){e.MarkerPixels++;minX=Math.Min(minX,x);maxX=Math.Max(maxX,x);minY=Math.Min(minY,y);maxY=Math.Max(maxY,y);}}
                 if(maxX<minX)return e;
-                e.MarkerX=minX;e.MarkerY=minY;e.MarkerWidth=maxX-minX+2;e.MarkerHeight=maxY-minY+2;
+                // Refine sampled marker boundaries pixel by pixel. A two-pixel
+                // grid can undercount a narrow bar and falsely reject its aspect.
+                int sl=Math.Max(1,minX-3),sr=Math.Min(r.R-2,maxX+3),st=Math.Max(1,minY-3),sb=Math.Min(r.B-2,maxY+3);
+                minX=r.R;minY=r.B;maxX=-1;maxY=-1;
+                for(int y=st;y<=sb;y++)for(int x=sl;x<=sr;x++){var c=image.GetPixel(ox+x,oy+y);if(Math.Abs(c.R-red)<=8&&Math.Abs(c.G-green)<=8&&Math.Abs(c.B-blue)<=8){minX=Math.Min(minX,x);maxX=Math.Max(maxX,x);minY=Math.Min(minY,y);maxY=Math.Max(maxY,y);}}
+                e.MarkerX=minX;e.MarkerY=minY;e.MarkerWidth=maxX-minX+1;e.MarkerHeight=maxY-minY+1;
                 double ratio=(double)e.MarkerHeight/e.MarkerWidth;e.MarkerFullyVisible=minY>=10&&maxY<r.B-10&&ratio>2.9&&ratio<3.8;
                 int x1=maxX+Math.Max(3,e.MarkerWidth/3),x2=Math.Min(r.R-3,minX+33*e.MarkerWidth),y1=Math.Max(1,minY-3),y2=Math.Min(r.B-2,maxY+3);
                 for(int y=y1;y<y2;y++){int row=0;for(int x=x1;x<x2;x++){var c=image.GetPixel(ox+x,oy+y);if(c.R<100&&c.G<100&&c.B<100)row++;}e.TextInkPixels+=row;if(row>=5)e.TextInkRows++;}
