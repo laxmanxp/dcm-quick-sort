@@ -34,7 +34,7 @@ function Shot([string]$name,[string]$color=''){
     Own;$area=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea;[DcmNative]::Restore($hwnd,$app.Id,$area.Left+8,$area.Top+8);Start-Sleep -Milliseconds 400
     $s=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'.png')),$false)
     $shots.Add([ordered]@{name=$name;path=$s.Path;sha256=(Hash $s.Path);teal=$s.TealSamples;orange=$s.OrangeSamples;visual_reviewed=$false})
-    if($name -in @('01-embedded-first-page','04j-resized-smaller','04k-resize-restored','06-moved-and-text-restored')){
+    if($name -in @('01-embedded-first-page','04j-resized-smaller','04k-resize-restored','07-narrower','07-restored','07-repeat-restored','06-moved-and-text-restored')){
         $background=[DcmSumatraProbe]::MeasureBackground($hwnd,$app.Id,$s.Path,$s.Left,$s.Top)
         $buttons=$null
         if($color){
@@ -127,6 +127,16 @@ try{
     [DcmSumatraProbe]::ResizeHost($hwnd,$app.Id,$originalW,$originalH);Start-Sleep -Milliseconds 700
     [DcmSumatraProbe]::CheckGeometry($hwnd,$app.Id,$v.pid);Shot '04k-resize-restored' 'teal';AddPass 'viewer-resize-restored-contained'
     Json (Join-Path $lab 'resize-evidence.json') ([ordered]@{before=$originalBounds;smaller=$smaller;restored=[DcmSumatraProbe]::HostBounds($hwnd,$app.Id)})
+    # Additional width and repeated resize cycle, without forcing a repaint.
+    [DcmSumatraProbe]::ResizeHost($hwnd,$app.Id,$originalW-128,$originalH-64);Start-Sleep -Milliseconds 700
+    [DcmSumatraProbe]::CheckGeometry($hwnd,$app.Id,$v.pid);Shot '07-narrower' 'teal';AddPass 'viewer-narrower-size-contained'
+    [DcmSumatraProbe]::ResizeHost($hwnd,$app.Id,$originalW,$originalH);Start-Sleep -Milliseconds 700
+    Shot '07-restored' 'teal'
+    for($cycle=0;$cycle -lt 3;$cycle++){
+        [DcmSumatraProbe]::ResizeHost($hwnd,$app.Id,$originalW-64,$originalH-64);Start-Sleep -Milliseconds 120
+        [DcmSumatraProbe]::ResizeHost($hwnd,$app.Id,$originalW,$originalH);Start-Sleep -Milliseconds 120
+    }
+    Start-Sleep -Milliseconds 700;[DcmSumatraProbe]::CheckGeometry($hwnd,$app.Id,$v.pid);Shot '07-repeat-restored' 'teal';AddPass 'viewer-repeated-resize-contained'
     [DcmSumatraProbe]::Command($hwnd,$app.Id,$v.pid,201);Start-Sleep -Milliseconds 400
     if(@([DcmNative]::Dialogs([IntPtr]$v.hwnd,$v.pid)).Count){throw 'Restricted viewer opened a file dialog'}
     Shot '05-open-command-disabled' 'teal';AddPass 'alternate-open-disabled'
