@@ -3570,12 +3570,12 @@ func layoutUI(hwnd uintptr) {
 	if sourcePathW < 180 {
 		sourcePathW = 180
 	}
-	procMoveWindow.Call(app.sourceAliasCombo, 85, 13, uintptr(aliasWTop), 240, 1)
-	procMoveWindow.Call(app.sourceEdit, uintptr(sourcePathX), 14, uintptr(sourcePathW), 25, 1)
-	procMoveWindow.Call(app.sourceBtn, uintptr(sourceBrowseX), 13, uintptr(sourceBrowseW), 27, 1)
-	procMoveWindow.Call(app.recoveryBtn, uintptr(recoveryX), 13, uintptr(recoveryW), 27, 1)
-	procMoveWindow.Call(app.reloadBtn, uintptr(reloadX), 13, uintptr(reloadW), 27, 1)
-	procMoveWindow.Call(app.sourceSuggestionList, uintptr(sourcePathX), 43, uintptr(sourcePathW), 140, 1)
+	procMoveWindow.Call(app.sourceAliasCombo, 85, 13, uintptr(aliasWTop), 240, 0)
+	procMoveWindow.Call(app.sourceEdit, uintptr(sourcePathX), 14, uintptr(sourcePathW), 25, 0)
+	procMoveWindow.Call(app.sourceBtn, uintptr(sourceBrowseX), 13, uintptr(sourceBrowseW), 27, 0)
+	procMoveWindow.Call(app.recoveryBtn, uintptr(recoveryX), 13, uintptr(recoveryW), 27, 0)
+	procMoveWindow.Call(app.reloadBtn, uintptr(reloadX), 13, uintptr(reloadW), 27, 0)
+	procMoveWindow.Call(app.sourceSuggestionList, uintptr(sourcePathX), 43, uintptr(sourcePathW), 140, 0)
 	openFolderW := int32(110)
 	openFolderX := w - 20 - openFolderW
 	nameFilterX := int32(85)
@@ -3583,22 +3583,22 @@ func layoutUI(hwnd uintptr) {
 	if nameFilterW < 220 {
 		nameFilterW = 220
 	}
-	procMoveWindow.Call(app.filterNameEdit, uintptr(nameFilterX), 49, uintptr(nameFilterW), 25, 1)
-	procMoveWindow.Call(app.openFolderBtn, uintptr(openFolderX), 48, uintptr(openFolderW), 27, 1)
-	procMoveWindow.Call(app.categoryCombo, 85, 82, 165, 260, 1)
-	procMoveWindow.Call(app.extensionCombo, 340, 82, 150, 320, 1)
-	procMoveWindow.Call(app.filterAgeCombo, 545, 82, 135, 220, 1)
-	procMoveWindow.Call(app.filterSizeCombo, 735, 82, 135, 220, 1)
+	procMoveWindow.Call(app.filterNameEdit, uintptr(nameFilterX), 49, uintptr(nameFilterW), 25, 0)
+	procMoveWindow.Call(app.openFolderBtn, uintptr(openFolderX), 48, uintptr(openFolderW), 27, 0)
+	procMoveWindow.Call(app.categoryCombo, 85, 82, 165, 260, 0)
+	procMoveWindow.Call(app.extensionCombo, 340, 82, 150, 320, 0)
+	procMoveWindow.Call(app.filterAgeCombo, 545, 82, 135, 220, 0)
+	procMoveWindow.Call(app.filterSizeCombo, 735, 82, 135, 220, 0)
 	clearW := int32(105)
 	clearX := w - 20 - clearW
 	sortW := int32(190)
 	sortComboX := clearX - 8 - sortW
 	sortLabelW := int32(50)
 	sortLabelX := sortComboX - 5 - sortLabelW
-	procMoveWindow.Call(app.filterSortLabel, uintptr(sortLabelX), 87, uintptr(sortLabelW), 20, 1)
-	procMoveWindow.Call(app.filterSortCombo, uintptr(sortComboX), 82, uintptr(sortW), 220, 1)
-	procMoveWindow.Call(app.filterClearBtn, uintptr(clearX), 81, uintptr(clearW), 28, 1)
-	procMoveWindow.Call(app.countLabel, 20, 120, uintptr(listW), 24, 1)
+	procMoveWindow.Call(app.filterSortLabel, uintptr(sortLabelX), 87, uintptr(sortLabelW), 20, 0)
+	procMoveWindow.Call(app.filterSortCombo, uintptr(sortComboX), 82, uintptr(sortW), 220, 0)
+	procMoveWindow.Call(app.filterClearBtn, uintptr(clearX), 81, uintptr(clearW), 28, 0)
+	procMoveWindow.Call(app.countLabel, 20, 120, uintptr(listW), 24, 0)
 	zoomGap := int32(4)
 	zoomOutW, zoom100W, zoomInW, zoomFitW, zoomFitWidthW := int32(34), int32(56), int32(34), int32(44), int32(54)
 	zoomToolbarW := zoomOutW + zoom100W + zoomInW + zoomFitW + zoomFitWidthW + 4*zoomGap
@@ -3609,33 +3609,33 @@ func layoutUI(hwnd uintptr) {
 	if currentLabelW < 90 {
 		currentLabelW = 90
 	}
-	procMoveWindow.Call(app.currentLabel, uintptr(previewX), 120, uintptr(currentLabelW), 24, 1)
-	procMoveWindow.Call(app.readTextCheck, uintptr(readTextX), 116, uintptr(readTextW), 27, 1)
-	procMoveWindow.Call(app.zoomOutBtn, uintptr(zoomX), 116, uintptr(zoomOutW), 27, 1)
+	procMoveWindow.Call(app.currentLabel, uintptr(previewX), 120, uintptr(currentLabelW), 24, 0)
+	procMoveWindow.Call(app.readTextCheck, uintptr(readTextX), 116, uintptr(readTextW), 27, 0)
+	procMoveWindow.Call(app.zoomOutBtn, uintptr(zoomX), 116, uintptr(zoomOutW), 27, 0)
 	zoomX += zoomOutW + zoomGap
-	procMoveWindow.Call(app.zoom100Btn, uintptr(zoomX), 116, uintptr(zoom100W), 27, 1)
+	procMoveWindow.Call(app.zoom100Btn, uintptr(zoomX), 116, uintptr(zoom100W), 27, 0)
 	zoomX += zoom100W + zoomGap
-	procMoveWindow.Call(app.zoomInBtn, uintptr(zoomX), 116, uintptr(zoomInW), 27, 1)
+	procMoveWindow.Call(app.zoomInBtn, uintptr(zoomX), 116, uintptr(zoomInW), 27, 0)
 	zoomX += zoomInW + zoomGap
-	procMoveWindow.Call(app.zoomFitBtn, uintptr(zoomX), 116, uintptr(zoomFitW), 27, 1)
+	procMoveWindow.Call(app.zoomFitBtn, uintptr(zoomX), 116, uintptr(zoomFitW), 27, 0)
 	zoomX += zoomFitW + zoomGap
-	procMoveWindow.Call(app.zoomFitWidthBtn, uintptr(zoomX), 116, uintptr(zoomFitWidthW), 27, 1)
+	procMoveWindow.Call(app.zoomFitWidthBtn, uintptr(zoomX), 116, uintptr(zoomFitWidthW), 27, 0)
 	undoW := int32(68)
 	undoBatchW := int32(88)
 	headerGap := int32(4)
 	titleW := processedW - undoBatchW - undoW - (2 * headerGap)
-	procMoveWindow.Call(app.processedTitleLabel, uintptr(processedX), 120, uintptr(titleW), 24, 1)
-	procMoveWindow.Call(app.undoBatchBtn, uintptr(processedX+titleW+headerGap), 116, uintptr(undoBatchW), 27, 1)
-	procMoveWindow.Call(app.undoBtn, uintptr(processedX+processedW-undoW), 116, uintptr(undoW), 27, 1)
-	procMoveWindow.Call(app.fileList, 20, 148, uintptr(listW), uintptr(previewH), 1)
-	procMoveWindow.Call(app.previewHwnd, uintptr(previewX), 148, uintptr(previewW), uintptr(previewH), 1)
-	procMoveWindow.Call(app.processedSearchEdit, uintptr(processedX), 148, uintptr(processedW), 25, 1)
+	procMoveWindow.Call(app.processedTitleLabel, uintptr(processedX), 120, uintptr(titleW), 24, 0)
+	procMoveWindow.Call(app.undoBatchBtn, uintptr(processedX+titleW+headerGap), 116, uintptr(undoBatchW), 27, 0)
+	procMoveWindow.Call(app.undoBtn, uintptr(processedX+processedW-undoW), 116, uintptr(undoW), 27, 0)
+	procMoveWindow.Call(app.fileList, 20, 148, uintptr(listW), uintptr(previewH), 0)
+	procMoveWindow.Call(app.previewHwnd, uintptr(previewX), 148, uintptr(previewW), uintptr(previewH), 0)
+	procMoveWindow.Call(app.processedSearchEdit, uintptr(processedX), 148, uintptr(processedW), 25, 0)
 	processedListY := int32(181)
 	processedListH := previewH - (processedListY - 148)
 	if processedListH < 120 {
 		processedListH = 120
 	}
-	procMoveWindow.Call(app.processedList, uintptr(processedX), uintptr(processedListY), uintptr(processedW), uintptr(processedListH), 1)
+	procMoveWindow.Call(app.processedList, uintptr(processedX), uintptr(processedListY), uintptr(processedW), uintptr(processedListH), 0)
 	y := int32(158) + previewH
 	// Keep the lower form on a single alignment grid. Labels and controls move
 	// together so DPI/window changes cannot make rows drift independently.
@@ -3643,7 +3643,7 @@ func layoutUI(hwnd uintptr) {
 	labelW := int32(70)
 	fieldX := labelX + labelW + 5
 	rowH := int32(28)
-	procMoveWindow.Call(app.nameLabel, uintptr(labelX), uintptr(y+4), uintptr(labelW), 20, 1)
+	procMoveWindow.Call(app.nameLabel, uintptr(labelX), uintptr(y+4), uintptr(labelW), 20, 0)
 	renameApplyW := int32(110)
 	renameComboW := int32(165)
 	renameLabelW := int32(35)
@@ -3655,10 +3655,10 @@ func layoutUI(hwnd uintptr) {
 	if nameW < 220 {
 		nameW = 220
 	}
-	procMoveWindow.Call(app.nameEdit, uintptr(fieldX), uintptr(y), uintptr(nameW), uintptr(rowH), 1)
-	procMoveWindow.Call(app.renameToolLabel, uintptr(renameLabelX), uintptr(y+4), uintptr(renameLabelW), 20, 1)
-	procMoveWindow.Call(app.renameToolCombo, uintptr(renameComboX), uintptr(y), uintptr(renameComboW), 220, 1)
-	procMoveWindow.Call(app.renameToolBtn, uintptr(renameApplyX), uintptr(y-1), uintptr(renameApplyW), 29, 1)
+	procMoveWindow.Call(app.nameEdit, uintptr(fieldX), uintptr(y), uintptr(nameW), uintptr(rowH), 0)
+	procMoveWindow.Call(app.renameToolLabel, uintptr(renameLabelX), uintptr(y+4), uintptr(renameLabelW), 20, 0)
+	procMoveWindow.Call(app.renameToolCombo, uintptr(renameComboX), uintptr(y), uintptr(renameComboW), 220, 0)
+	procMoveWindow.Call(app.renameToolBtn, uintptr(renameApplyX), uintptr(y-1), uintptr(renameApplyW), 29, 0)
 
 	destY := y + 38
 	aliasW := int32(185)
@@ -3674,25 +3674,25 @@ func layoutUI(hwnd uintptr) {
 	if pathW < 180 {
 		pathW = 180
 	}
-	procMoveWindow.Call(app.destinationLabel, uintptr(labelX), uintptr(destY+4), uintptr(labelW), 20, 1)
-	procMoveWindow.Call(app.destAliasCombo, uintptr(fieldX), uintptr(destY), uintptr(aliasW), 260, 1)
-	procMoveWindow.Call(app.pathLabel, uintptr(pathLabelX), uintptr(destY+4), uintptr(pathLabelW), 20, 1)
-	procMoveWindow.Call(app.destEdit, uintptr(pathX), uintptr(destY), uintptr(pathW), uintptr(rowH), 1)
-	procMoveWindow.Call(app.destBtn, uintptr(browseX), uintptr(destY-1), uintptr(browseW), 29, 1)
-	procMoveWindow.Call(app.destOpenBtn, uintptr(openDestX), uintptr(destY-1), uintptr(openDestW), 29, 1)
+	procMoveWindow.Call(app.destinationLabel, uintptr(labelX), uintptr(destY+4), uintptr(labelW), 20, 0)
+	procMoveWindow.Call(app.destAliasCombo, uintptr(fieldX), uintptr(destY), uintptr(aliasW), 260, 0)
+	procMoveWindow.Call(app.pathLabel, uintptr(pathLabelX), uintptr(destY+4), uintptr(pathLabelW), 20, 0)
+	procMoveWindow.Call(app.destEdit, uintptr(pathX), uintptr(destY), uintptr(pathW), uintptr(rowH), 0)
+	procMoveWindow.Call(app.destBtn, uintptr(browseX), uintptr(destY-1), uintptr(browseW), 29, 0)
+	procMoveWindow.Call(app.destOpenBtn, uintptr(openDestX), uintptr(destY-1), uintptr(openDestW), 29, 0)
 	by := y + 85
-	procMoveWindow.Call(app.renameBtn, 20, uintptr(by), 90, 34, 1)
-	procMoveWindow.Call(app.moveBtn, 120, uintptr(by), 145, 34, 1)
-	procMoveWindow.Call(app.nextBtn, 275, uintptr(by), 80, 34, 1)
-	procMoveWindow.Call(app.openBtn, 365, uintptr(by), 80, 34, 1)
-	procMoveWindow.Call(app.fileFlowBtn, 455, uintptr(by), 170, 34, 1)
-	procMoveWindow.Call(app.statusLabel, 20, uintptr(by+43), uintptr(w-40), 20, 1)
-	procMoveWindow.Call(app.keyboardHintLabel, 20, uintptr(by+64), uintptr(w-40), 18, 1)
-	procMoveWindow.Call(app.destSuggestionList, uintptr(pathX), uintptr(destY+31), uintptr(pathW), 140, 1)
-	// Moving overlapping child controls can leave copied pixels in a sibling or
-	// transparent label. Invalidate the completed layout, including child frames.
+	procMoveWindow.Call(app.renameBtn, 20, uintptr(by), 90, 34, 0)
+	procMoveWindow.Call(app.moveBtn, 120, uintptr(by), 145, 34, 0)
+	procMoveWindow.Call(app.nextBtn, 275, uintptr(by), 80, 34, 0)
+	procMoveWindow.Call(app.openBtn, 365, uintptr(by), 80, 34, 0)
+	procMoveWindow.Call(app.fileFlowBtn, 455, uintptr(by), 170, 34, 0)
+	procMoveWindow.Call(app.statusLabel, 20, uintptr(by+43), uintptr(w-40), 20, 0)
+	procMoveWindow.Call(app.keyboardHintLabel, 20, uintptr(by+64), uintptr(w-40), 18, 0)
+	procMoveWindow.Call(app.destSuggestionList, uintptr(pathX), uintptr(destY+31), uintptr(pathW), 140, 0)
+	// Reposition the whole layout without 49 intermediate synchronous repaints.
+	// Invalidate client/non-client areas once after the final geometry is set.
 	// Queue repaint only: never synchronously wait on the foreign PDF renderer.
-	procRedrawWindow.Call(hwnd, 0, 0, 0x0001|0x0004|0x0080)
+	procRedrawWindow.Call(hwnd, 0, 0, 0x0001|0x0004|0x0080|0x0400)
 }
 
 func populateFileList() {
