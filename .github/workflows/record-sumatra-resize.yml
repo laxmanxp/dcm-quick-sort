@@ -1,0 +1,32 @@
+name: Record verified Sumatra resize corrections
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/record-sumatra-resize.yml]
+permissions:
+  contents: write
+concurrency:
+  group: dcm-release-metadata
+  cancel-in-progress: false
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - name: Apply locally validated metadata transformation
+        run: |
+          git diff --exit-code 24ff2f243db4c5d8d29b8d64ce81b07c11112efe -- app-src installer-src tools tests
+          python qualification/record-sumatra-resize.py
+          echo '9c1168853f5fb09b6b21ec1df78e0679b70bc1744718956ce256b0599b1ad732  todo.json' | sha256sum -c -
+          echo '641ce3dd701719896b7dde1a5f6f0a426830d7e7e0f08a80e417c5d093d2a87d  qualification/completion-50.json' | sha256sum -c -
+      - name: Commit metadata without force, merge or release
+        run: |
+          git config user.name 'DCM reviewed-checkpoint automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add todo.json qualification/completion-50.json
+          git commit -m 'test: record bounded Sumatra resize fixes and remaining provider gates'
+          git push origin HEAD:release/v1.0.71
