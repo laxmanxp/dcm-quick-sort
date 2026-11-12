@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -122,5 +123,44 @@ func TestSumatraSidebarWidthsReserveToolbar(t *testing.T) {
 		if list < 160 || list > 220 || processed < 200 || processed > 260 || width-60-list-processed < 724 {
 			t.Fatalf("invalid layout width=%d left=%d right=%d", width, list, processed)
 		}
+	}
+}
+
+// Display text must stay short without destroying the underlying OS error.
+func TestSumatraDependencyErrorsAreConcise(t *testing.T) {
+	for _, policyMissing := range []bool{false, true} {
+		name := "runtime"
+		component := "SumatraPDF.exe"
+		if policyMissing {
+			name = "policy"
+			component = "sumatrapdfrestrict.ini"
+		}
+		t.Run(name, func(t *testing.T) {
+			root := filepath.Join(t.TempDir(), strings.Repeat("long-private-path-", 7))
+			if err := os.MkdirAll(root, 0700); err != nil {
+				t.Fatal(err)
+			}
+			exe := filepath.Join(root, "SumatraPDF.exe")
+			if policyMissing {
+				if err := os.WriteFile(exe, []byte("untrusted fixture; never executed"), 0600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			_, err := validateSumatraRuntime(exe)
+			want := component + " is missing. Restore the approved private viewer, then Reload."
+			if err == nil || err.Error() != want {
+				t.Fatalf("message=%v; want %q", err, want)
+			}
+			if !errors.Is(err, os.ErrNotExist) {
+				t.Fatal("missing-file cause lost")
+			}
+			var detail *os.PathError
+			if !errors.As(err, &detail) || !strings.HasPrefix(detail.Path, root) {
+				t.Fatal("original diagnostic path lost")
+			}
+			if strings.Contains(err.Error(), root) || len(err.Error()) > 120 {
+				t.Fatal("display exposes/clips a technical path")
+			}
+		})
 	}
 }

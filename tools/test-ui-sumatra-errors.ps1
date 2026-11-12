@@ -140,7 +140,11 @@ try{
     TextRecovery;AddPass 'text-works-with-missing-runtime'
     SelectFile '08-preview.pdf';Wait 'missing-runtime error' {(Status) -like 'Sumatra preview unavailable*'};NoViewer
     if(-not (Status).Contains('SumatraPDF.exe')){throw 'Missing runtime not identified'}
-    Shot '01-runtime-missing';AddPass 'missing-runtime-truthful-error-without-viewer'
+    Shot '01-runtime-missing'
+    $runtimeMessage=Status;$receipt['runtime_error_status']=$runtimeMessage
+    $expectedMessage='Sumatra preview unavailable: SumatraPDF.exe is missing. Restore the approved private viewer, then Reload.'
+    if($runtimeMessage -cne $expectedMessage -or $runtimeMessage.Contains($runtimeDir) -or $runtimeMessage.Length -gt 150){throw 'RUNTIME_ERROR_COPY_NOT_CONCISE'}
+    AddPass 'missing-runtime-truthful-error-without-viewer'
     TextRecovery;AddPass 'text-recovers-after-missing-runtime'
     Move-Item -LiteralPath $runtimeStash -Destination $runtimeExe
     SelectFile '08-preview.pdf';$v=Viewer $original;Shot '02-runtime-restored' 'teal';AddPass 'restored-runtime-recovers-correct-PDF'
