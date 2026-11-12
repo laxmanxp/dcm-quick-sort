@@ -1,31 +1,27 @@
-# QuickSort — resize corrections verified; optional PDF qualification continues
+# QuickSort — bounded Sumatra lifecycle verified; remaining provider checks
 
-Latest work: [Sumatra resize corrections](2026-11-12-sumatra-resize.md).
-Tested source: `24ff2f243db4c5d8d29b8d64ce81b07c11112efe`.
-Completed numbered steps remain DCM-01–18 and DCM-20–27. DCM-19 blocked; DCM-28/29 pending. No numbered step closed here. Human acceptance not recorded.
+Latest: [switching, cancellation and shutdown](2026-11-12-sumatra-lifecycle.md).
+Tested source `deb8373dbb52c44d963f20fce49b9ea074f7d59e`. Application unchanged from `24ff2f24`.
+No numbered closure: DCM-01–18 and DCM-20–27 complete; DCM-19 blocked; DCM-28/29 pending. Keep Sumatra optional and old Windows.Data.Pdf default. Manual acceptance unrecorded.
 
-## Verified state
+## Completed this pass
 
-Two native ui-sumatra runs passed 23 checks each at the same source/build. All 20 unassisted full-window images from the first run reviewed. Its 19 content crops/four explicit-repaint diagnostic references and the second run's images were not separately visually reviewed. Full native baseline 367 passed / 0 failed / 1 retained external-PPTX skip (368 parents); text17/image23/launch12 commands pass. Their new images were not separately reviewed.
+New `ui-sumatra-lifecycle` passed 11 acceptance records twice. Each run has 40 native selections, ten abandons all observed while the host reported loading, four attached A-B-text cycles, truthful empty/invalid-header errors and recovery, and normal close with an active PDF. No private viewer process/session directory remains; both PDFs permit exclusive read access; seven fixture names/bytes and empty operation journal preserved. Recorded close times 393/374 ms are observations, not guarantees.
 
-DCM-UI-RESIZE-01 fixed at tested sizes: before correction, raw restored screenshots differed from explicit repaint references by 2426/2171/2426 sampled pixels. After correction, all four comparisons are zero across 107276 sampled host points, repeated twice. Product queues invalidate/erase/all-children after layout; diagnostic reference repaint still occurs AFTER unassisted captures. Never count a reference-repaired screenshot as product proof.
+All seven full-window images plus three content crops of the first run were inspected. The repeat and regression images were not separately reviewed. Baseline is freshly 367 pass / 0 fail / 1 external-PPTX skip; existing ui-sumatra 23 records also passed. Only test tooling was added; no new product defect or repair claimed. General layout issues stay open.
 
-DCM-SUMATRA-UI-02 fixed at the three tested outer host sizes 1280x820, 1216x756, 1152x756: bounded side-panel widths preserve the viewer toolbar including Aa. Original widths return after viewer release. Runtime, strict policy and fixed-window style unchanged. This is not a new user-resize feature or all-DPI qualification.
+## Next exact scope
 
-Keep DCM-UI-LABEL-01 open: smaller filter Size/Sort controls overlap and the narrowed Processed header is further compressed. Do not call the whole UI visually approved. MSAA button rectangles underreported earlier clipping; the geometry assertion is supplementary, not a substitute for actual screenshots. Improve coordinate conversion before trusting it as the sole overflow detector.
-
-## Next exact work
-
-Continue the optional provider lifecycle: rapid PDF/text/PDF selection, cancellation/error recovery, release failure refusal, Undo, and closing while a PDF is still active. Keep scroll-to-readable-text at100%/FitWidth and general label layout open. Do not switch the default or close DCM-28/29 merely because two ordinary runs pass. Packaging/distribution and user acceptance remain separate. No unrelated LibreOffice work, printing or association/registry modifications.
+Qualify individual Undo while a PDF is active/reopened, then safely exercise viewer failure and release-refusal, valid-header corrupt/password-file handling and missing runtime. Retain readable text after scrolling at 100%/FitWidth and end-user provider/setup/distribution work. Do not rerun already accepted ordinary switching as a substitute for these missing paths. Cancellation here means changing the selected file while loading, not a dedicated Cancel button or every decoder phase. Do not switch the default or close DCM-28/29 until the remaining acceptance is explicitly resolved.
 
 ## Workflow
 
-Code locally -> GitHub -> FlowDev update/build/test on Lenovo, serially. Canonical workspace `D:\FlowverseReportsRepo`; candidate `D:\FlowverseReportsRepo\dcm-quicksort-candidate`; cwd profile `tools\flowdev-dcm`; runner `D:\FlowverseReportsRepo\flowdev-standalone-validation\flowdev-test.exe`. Device `d18227f2-0b54-4b11-9026-56ac40305f02`. No remote source edits; leave unrelated interactive LibreOffice session untouched.
+Author locally -> GitHub -> FlowDev update/build/test on Lenovo, one native suite at a time. Workspace `D:\FlowverseReportsRepo`, checkout `D:\FlowverseReportsRepo\dcm-quicksort-candidate`, profile `tools\flowdev-dcm`, runner `D:\FlowverseReportsRepo\flowdev-standalone-validation\flowdev-test.exe`. Device `d18227f2-0b54-4b11-9026-56ac40305f02`. No remote source edits. Leave the separate LibreOffice interactive session untouched.
 
-`ui-sumatra` requires a fresh exact DCM_BUILD_RECEIPT and DCM_SUMATRA_SOURCE_EXE=`D:\Flowverse\sumatra-preview-prototype\runtime\sumatra-3.6.1\SumatraPDF-3.6.1-64.exe`; it creates its own private runtime/policy copy. Sumatra remains opt-in, old Windows.Data.Pdf default. Runtime SHA719f689b34f47be8ca105ce8484948474dafde0e106bab599e4a89326070c3d0; policy SHA f82ee9c3ff09da529f67f2ee73ab716dd53678d0f52b00ddcffc9d6dc0a908aa.
+Both `ui-sumatra` and `ui-sumatra-lifecycle` require exact DCM_BUILD_RECEIPT plus DCM_SUMATRA_SOURCE_EXE=`D:\Flowverse\sumatra-preview-prototype\runtime\sumatra-3.6.1\SumatraPDF-3.6.1-64.exe`. Each harness makes a private runtime/policy copy; no global associations/settings. Do not relax the pin or no-print/no-write policy.
 
-Last build `D:\FlowverseReportsRepo\dcm-quicksort-build-20261112-081855-7f0de675\receipt.json` matches24ff2f24 only. App SHA a2bd4063a063431b8267a0ff50ed9157caea74ef3b965b391a6adc08d393a463. Rebuild after metadata/source changes; never rewrite source identities in old receipts.
+Build `D:\FlowverseReportsRepo\dcm-quicksort-build-20261112-093555-d16a9c40\receipt.json` matches deb8373d only. App SHA `a2bd4063a063431b8267a0ff50ed9157caea74ef3b965b391a6adc08d393a463`, unchanged. Refresh build after metadata/source commits; never rewrite historical receipts.
 
-Reports under D:\FlowverseReportsRepo: reviewed GREEN `dcm-quicksort-ui-sumatra-20261112-081912-e85ac86f`; repeat `dcm-quicksort-ui-sumatra-20261112-082224-ce406ad4`; baseline `dcm-quicksort-baseline-20261112-082052-d55bc2d2`. Separate review/hashes: `evidence/sumatra-resize-native-summary.json`.
+Reports under D:\FlowverseReportsRepo: reviewed lifecycle `dcm-quicksort-ui-sumatra-lifecycle-20261112-093613-56838102`, repeat `dcm-quicksort-ui-sumatra-lifecycle-20261112-093758-712f52cb`, baseline `dcm-quicksort-baseline-20261112-093728-3abdf19f`, existing regression `dcm-quicksort-ui-sumatra-20261112-093827-5a51793c`. Separate receipt/image review: `evidence/sumatra-lifecycle-native-summary.json`.
 
-Preserve RED `dcm-quicksort-ui-sumatra-20261112-081214-0ceefaba` at1b5cadca and the earlier insufficient-detector PASS atb0201f9b. Its preceding geometry failure080144-ddb5f6ae remains unexplained; do not invent a cause. Local undefined-function compilation failure is not native behavior evidence. All older issues/evidence remain intact. Keep DCM-19, DCM_REAL_PPTX, full operations/Undo, runtime distribution, installer/package and manual acceptance open. PR #1 stays draft; no merge/publication.
+Preserve original resize reports/failures, capture guards, scoped native ownership and all earlier IDs. DCM-UI-LABEL-01 remains open, including Size/Sort and Processed crowding. MSAA toolbar coordinates alone do not prove containment. Retain DCM-19, DCM_REAL_PPTX, batch/Undo/release-failure, distribution, installer/package and human acceptance gates. PR #1 draft, no merge/publication.
