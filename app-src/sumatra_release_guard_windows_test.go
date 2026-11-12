@@ -50,6 +50,12 @@ func TestSumatraReleaseFailurePreservesOperations(t *testing.T) {
 					t.Fatal(err)
 				}
 				app = appState{index: -1, history: []MoveRecord{rec}}
+				hidden := createControl("STATIC", "", 0, 0, 0, 200, 100, 0, 0)
+				if hidden == 0 {
+					t.Fatal("hidden fixture window unavailable")
+				}
+				defer user32.NewProc("DestroyWindow").Call(hidden)
+				app.hwnd, app.previewHwnd = hidden, hidden
 				v := &sumatraSession{profile: filepath.Join(root, "owned-profile")}
 				if err = os.Mkdir(v.profile, 0700); err != nil {
 					t.Fatal(err)

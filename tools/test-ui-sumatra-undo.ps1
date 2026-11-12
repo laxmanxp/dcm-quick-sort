@@ -20,8 +20,10 @@ function Own {$app.Refresh();if($app.HasExited -or $app.Path -ne $exe -or $app.S
 function Wait([string]$Label,[scriptblock]$Check){$until=[DateTime]::UtcNow.AddSeconds(20);do{Own;if(@([DcmNative]::Dialogs($hwnd,$app.Id)).Count){throw ('Unexpected owned dialog: '+$Label)};if(& $Check){return};Start-Sleep -Milliseconds 100}while([DateTime]::UtcNow -lt $until);throw ('Deadline: '+$Label)}
 function Text([int]$id){return [DcmNative]::Text([DcmNative]::Control($hwnd,$app.Id,$id),$app.Id)}
 function SelectFile([string]$file){
-    $null=[DcmNative]::SelectFiles($hwnd,$app.Id,1016,[string[]]@($file));$stem=[IO.Path]::GetFileNameWithoutExtension($file)
-    try{Wait ('selection '+$file) {(Text 1005) -ceq $stem}}catch{
+    $items=[DcmNative]::ListItems($hwnd,$app.Id,1016);$index=[Array]::IndexOf($items,$file)
+    if($index -lt 0){throw 'Selected fixture not listed'}
+    [DcmUndoInput]::Select($hwnd,$app.Id,$index);$stem=[IO.Path]::GetFileNameWithoutExtension($file)
+    try{Wait ('selection '+$file) {(Text 1005) -ceq $stem -and (@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016)) -join ',') -eq [string]$index}}catch{
         Json (Join-Path $lab 'selection-failure.json') ([ordered]@{expected=$stem;actual=(Text 1005);items=@([DcmNative]::ListItems($hwnd,$app.Id,1016));selected=@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016));embedded=[DcmSumatraProbe]::Find($hwnd,$app.Id)})
         throw
     }
@@ -89,6 +91,7 @@ try{
     Add-Type -Path (Join-Path $repo 'tests/native/dcm-native.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
     Add-Type -Path (Join-Path $repo 'tests/native/dcm-sumatra-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','Accessibility.dll','System.Drawing.dll')
     Add-Type -Path (Join-Path $repo 'tests/native/dcm-lifecycle-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')
+    Add-Type -Path (Join-Path $repo 'tests/native/dcm-undo-input.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')
     . (Join-Path $repo 'tests/native/new-fixtures.ps1');$fixture=New-DcmFixtures $lab
     $original=Join-Path $fixture.inbox '08-preview.pdf';$pdfHash=Hash $original
     $journal=Join-Path $fixture.config 'recovery\move-journal.jsonl'
