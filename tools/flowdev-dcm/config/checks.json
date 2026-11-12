@@ -36,6 +36,7 @@
         "text-unit": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "regressions", "-Run", "^TestDCM26"],
         "ui-text": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-text.ps1"],
         "ui-sumatra-lifecycle": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-sumatra-lifecycle.ps1"],
+        "ui-sumatra-undo": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-sumatra-undo.ps1"],
         "ui-sumatra": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-sumatra.ps1"],
         "ui-image": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-image.ps1"]
       }
