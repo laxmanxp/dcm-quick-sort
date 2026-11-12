@@ -157,12 +157,13 @@ try{
     Start-Sleep -Milliseconds 700;[DcmSumatraProbe]::CheckGeometry($hwnd,$app.Id,$v.pid);Shot '07-repeat-restored' 'teal';AddPass 'viewer-repeated-resize-contained'
     if($ResizeTiming){
         $timing=New-Object 'Collections.Generic.List[object]';$receipt['layout_timing']=$timing
-        for($burst=0;$burst -lt 8;$burst++){
+        for($burst=0;$burst -lt 12;$burst++){
             for($cycle=0;$cycle -lt 3;$cycle++){
-                [DcmSumatraProbe]::ResizeHost($hwnd,$app.Id,$originalW-64,$originalH-64)
-                [DcmSumatraProbe]::ResizeHost($hwnd,$app.Id,$originalW,$originalH)
+                [DcmSumatraProbe]::ResizeHost($hwnd,$app.Id,$originalW-64,$originalH-64);Start-Sleep -Milliseconds 120
+                [DcmSumatraProbe]::ResizeHost($hwnd,$app.Id,$originalW,$originalH);Start-Sleep -Milliseconds 120
             }
-            $fence=[DcmLayoutProbe]::Fence($hwnd,$app.Id,100+$burst)
+            # Preserve the original fixed-wait capture order: the queue fence
+            # follows both unassisted captures, rather than making them settle.
             Start-Sleep -Milliseconds 700
             $name=('timing-{0:d2}' -f $burst)
             $pre=[DcmLayoutProbe]::Observe($hwnd,$app.Id)
@@ -173,6 +174,7 @@ try{
             $natural=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'-natural.png')),$false)
             $shots.Add([ordered]@{name=$name+'-natural';path=$natural.Path;sha256=(Hash $natural.Path);visual_reviewed=$false})
             $post=[DcmLayoutProbe]::Observe($hwnd,$app.Id)
+            $fence=[DcmLayoutProbe]::Fence($hwnd,$app.Id,100+$burst)
             [DcmSumatraProbe]::PaintReference($hwnd,$app.Id);Start-Sleep -Milliseconds 500
             $ref=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'-reference.png')),$false)
             $shots.Add([ordered]@{name=$name+'-reference';path=$ref.Path;sha256=(Hash $ref.Path);visual_reviewed=$false;diagnostic_reference=$true})
