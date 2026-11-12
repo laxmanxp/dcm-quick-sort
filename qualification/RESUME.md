@@ -1,31 +1,35 @@
-# QuickSort — queued resize/paint work corrected; remaining PDF qualification
+# QuickSort — readable PDF scrolling verified; next startup responsiveness
 
-Latest: [resize timing diagnosis and correction](2026-11-12-sumatra-resize-timing.md).
-Tested source/product `02e6efb39f08c5cfa29da4787cd4f41bf71b642a`.
-No numbered closure: DCM-01–18 and DCM-20–27 complete; DCM-19 blocked; DCM-28/29 pending. Sumatra stays optional and Windows.Data.Pdf default. No printing/merge/publication.
+Latest: [readable scrolling](2026-11-13-sumatra-scroll.md), 13 November 2026 IST (native receipts 12 November UTC).
+Native-tested source `401b44521ed36c835c04f39ffcd79ef6f3ee79af`; application remains `02e6efb39f08c5cfa29da4787cd4f41bf71b642a`.
+No application or installer change in this pass. Sumatra stays optional, Windows.Data.Pdf default. No numbered closure: DCM01–18 and20–27 complete at their recorded boundaries;19 blocked;28/29 pending broader provider acceptance. Human acceptance unrecorded.
 
-## Current verified result
+## Verified here
 
-The fixed-wait diagnostic reproduced an unfinished queued resize at c15bf4a6: a partial smaller raw screenshot, then a clean unassisted restored screenshot identical to its later diagnostic redraw reference. The final six layout calls took214–361ms each. No nesting above one was observed. This narrows the reproduced failure to queued layout completion, not a permanent paint defect requiring forced redraw. Do not assume every older occlusion/minimization shares that cause.
+New FlowDev `ui-sumatra-scroll` passes14 records in two consecutive runs. All12 first-run full-window captures inspected for actual expected headings/digits, not just colours. At100% and FitWidth: page1 top/middle/bottom/reverse, page2 distinct top/bottom; native offsets/page number, complete marker plus dark glyph pixels corroborate images. Switching to text releases the PDF; normal close0, source five-file set/bytes unchanged, destination/journal empty, private viewer/profile cleanup and exclusive access pass.
 
-Product now moves49 controls without immediate per-control repaint, then queues invalidation/erase/all-children/frame repaint once at completed geometry. Same diagnostic harness SHAfe3a07f02f8a14caf1fe12ff148b9f7056727db9d794475c215c8a83a8299a07 passes twice:23 existing behavior records plus12 bursts, six size requests/burst, all24 raw/natural comparisons zero per run. Marker is AFTER raw/natural captures; timing/guards unchanged betweenRED/GREEN. First corrected trace91 layout calls, mean86.4ms/max174.5ms versus RED63calls mean141.7/max361.1ms: observations, not a benchmark.
+This uses one generated two-page PDF and native scroll messages. FitWidth is zoom in single-page display mode, not continuous scrolling or wheel/touch/human acceptance. At100% horizontal overflow is normal; real horizontal scrolling reveals left markers. Long title may extend past viewport and transient zoom notice may cover title, not tested text blocks. No semantic OCR claim.
 
-18 first-GREEN images inspected (all12 burst raw, initial/narrow/ordinary repeat/final text and last natural/reference), plus3 decisiveRED images. Not all79 captures, repeat or regression images reviewed. Raw flags unchanged. DCM-UI-RESIZE-01 fixed only for the reproduced path/tested matrix; general labels and historical uncertainty remain.
-
-Fresh baseline370 pass/0fail/1 external-PPTX skip. Ordinary ui-sumatra23 with trace disabled; launch12/text17/image23 pass. No new Go parent tests. Source/fixture safety and normal exit checked. Earlier startup deadline attempt preserved; diagnostic selection only reuses existing async helper, not a startup performance fix.
+Fresh baseline370/0/1 (371 parents); retained external PPTX skip. Existing `ui-sumatra-resize-timing` passes23 behavior records plus12 bursts,24 sampled raw/natural comparisons all zero. Repeat and resize images not separately reviewed. Product hash unchanged. Added fixture/tooling only; three retained new-harness failures were byte-conversion, incomplete horizontal positioning and coarse marker measurement, not invented product repairs.
 
 ## Next exact scope
 
-Qualify readable document content after scrolling at100% and FitWidth. Retain DCM-SUMATRA-STARTUP-01 and remaining native damaged-path banner/host-label layout work. Do not redo fixed error/Undo workflows instead of missing scroll/startup qualification. No default switch or DCM-28/29 closure until remaining provider acceptance is resolved.
+Measure first-PDF startup costs and host responsiveness under cold/warm conditions (`DCM-SUMATRA-STARTUP-01`). Preserve exact readiness and file-operation safeguards; do not call posted test input or increased timeouts a product speed fix. Keep readable-scroll and fixed-wait resize regressions. Also retain native damaged-file long-path banner, Size/Sort and Processed labels, DCM19 isolation, DCM_REAL_PPTX, remaining operations/path/release cases, managed runtime/distribution, installer/package and user acceptance. Do not switch the default or silently close28/29.
 
-## Workflow and diagnostic use
+## Execution
 
-Code locally -> GitHub -> FlowDev update/build/test on Lenovo. Workspace D:\FlowverseReportsRepo; checkout dcm-quicksort-candidate; profile tools\flowdev-dcm; runner D:\FlowverseReportsRepo\flowdev-standalone-validation\flowdev-test.exe. Device d18227f2-0b54-4b11-9026-56ac40305f02. One DCM UI suite at a time; leave unrelated work untouched. No remote source edits.
+Author locally -> GitHub -> FlowDev update/build/test on Lenovo, serial native UI suites. Workspace `D:\FlowverseReportsRepo`; checkout `D:\FlowverseReportsRepo\dcm-quicksort-candidate`; profile `tools\flowdev-dcm`; runner `D:\FlowverseReportsRepo\flowdev-standalone-validation\flowdev-test.exe`. Device `d18227f2-0b54-4b11-9026-56ac40305f02`. No remote source edits or unrelated-window changes.
 
-New selector ui-sumatra-resize-timing invokes the ordinary Sumatra harness with -ResizeTiming. Trace uses DCM_LAYOUT_TRACE=1 only in that child, writes numeric in-memory ring to private TEMP/dcm-layout-trace.json at shutdown. Ordinary launches do not enable it. Trace ring8192; inspect total before assuming all events retained. New tests/native/dcm-layout-probe.cs only observes owned control geometry/update regions and posts a no-paint marker.
+Runtime source `D:\Flowverse\sumatra-preview-prototype\runtime\sumatra-3.6.1\SumatraPDF-3.6.1-64.exe`, passed as DCM_SUMATRA_SOURCE_EXE. Each harness copies it into its own lab and writes the exact restricted policy. Keep checksum/no-write/no-print restrictions and native ownership/capture guards.
 
-DCM_SUMATRA_SOURCE_EXE remains D:\Flowverse\sumatra-preview-prototype\runtime\sumatra-3.6.1\SumatraPDF-3.6.1-64.exe. Runtime/policy pin unchanged. Exact build D:\FlowverseReportsRepo\dcm-quicksort-build-20261112-161742-8ecbe7d7\receipt.json matches02e6efb3 only. App SHAa02164f61a1334389649179f246a5b17a56a69771f334404b75962a212a2b1bc. Refresh build after metadata/source changes; never relabel receipts.
+`ui-sumatra-scroll` requires current DCM_BUILD_RECEIPT. Last matching receipt `D:\FlowverseReportsRepo\dcm-quicksort-build-20261112-221301-00846739\receipt.json` matches401b4452 only. Rebuild after tracker/source commits; never relabel old receipts. App hash `a02164f61a1334389649179f246a5b17a56a69771f334404b75962a212a2b1bc`.
 
-Reports under workspace: REDui-sumatra-20261112-161007-7ff511c9; GREEN161805-7fe5f40e; repeat162103-83d13e18; ordinary162232-be320fb8; baseline161936-784532bc. All use dcm-quicksort- prefix. Full names/hashes/review in evidence/sumatra-resize-timing-summary.json. Original715cd61d32,603-pixel failure and all old source identities remain preserved.
+Fixture `tests/fixtures/sumatra-scroll.pdf` is -text in .gitattributes. Hash05304a98a830954b4f5bfedf0187e78aa847248a80b0ca2ba2b5b5f843352bb0,6214bytes. Do not remove binary attribute or normalize fixture at runtime. Generator and reference metadata committed. Pixel-edge refinement preserves original thresholds; exact headings still require separate image review.
 
-Keep DCM-19, DCM_REAL_PPTX, distribution/installer, operation/path variants, general labels and human acceptance open. No installed-working-copy or association changes. PR#1 draft.
+## Reports under D:\FlowverseReportsRepo
+
+Reviewed scroll `dcm-quicksort-ui-sumatra-scroll-20261112-221314-11122de8`; repeat221502-8c982330.
+Baseline `dcm-quicksort-baseline-20261112-221419-946fd6f9`.
+Resize regression `dcm-quicksort-ui-sumatra-20261112-221534-1f047660`.
+Evidence: `evidence/sumatra-scroll-native-summary.json`.
+Preserve scroll failures215621-6975d64b,220123-9e07d43f,220753-ab49aefd and all previous source-specific evidence. Raw review flags stay unchanged; summaries record actual image inspection. PR#1 stays draft; no merge/publication.
