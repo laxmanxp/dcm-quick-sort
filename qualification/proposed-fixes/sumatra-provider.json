@@ -1,34 +1,16 @@
 {
   "files": [
     {
-      "path": "tools/test-ui-sumatra.ps1",
-      "before_blob": "9b567b685d775d37ba1dfa9d117bbbf9483407de",
-      "after_sha256": "7f01f377eb08a52d237641ccde63d3bfa53c0ea51be53e3134e29ca3c87136db",
-      "replacements": [
-        {
-          "old": "function SelectFile([string]$file){$null=[DcmNative]::SelectFiles($hwnd,$app.Id,1016,[string[]]@($file));$stem=[IO.Path]::GetFileNameWithoutExtension($file);Wait ('selection '+$file) {(Text 1005) -ceq $stem}}",
-          "new": "function SelectFile([string]$file){\n    $null=[DcmNative]::SelectFiles($hwnd,$app.Id,1016,[string[]]@($file));$stem=[IO.Path]::GetFileNameWithoutExtension($file)\n    try{Wait ('selection '+$file) {(Text 1005) -ceq $stem}}catch{\n        Json (Join-Path $lab 'selection-failure.json') ([ordered]@{expected=$stem;actual=(Text 1005);items=@([DcmNative]::ListItems($hwnd,$app.Id,1016));selected=@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016));embedded=[DcmSumatraProbe]::Find($hwnd,$app.Id)})\n        throw\n    }\n}"
-        },
-        {
-          "old": "    if($color -eq 'teal' -and ($s.TealSamples -lt 1000 -or $s.OrangeSamples -gt 100)){throw 'Wrong visible PDF page: expected teal'}\n    if($color -eq 'orange' -and ($s.OrangeSamples -lt 1000 -or $s.TealSamples -gt 100)){throw 'Wrong visible PDF page: expected orange'}",
-          "new": "    if($color){\n        # Exclude the blue title bar/list highlights from the PDF pixel oracle.\n        $pixels=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'-content.png')),$true)\n        $shots.Add([ordered]@{name=$name+'-content';path=$pixels.Path;sha256=(Hash $pixels.Path);teal=$pixels.TealSamples;orange=$pixels.OrangeSamples;visual_reviewed=$false})\n        if($color -eq 'teal' -and ($pixels.TealSamples -lt 1000 -or $pixels.OrangeSamples -gt 100)){throw 'Wrong visible PDF page: expected teal'}\n        if($color -eq 'orange' -and ($pixels.OrangeSamples -lt 1000 -or $pixels.TealSamples -gt 100)){throw 'Wrong visible PDF page: expected orange'}\n    }"
-        }
-      ]
+      "path": "tests/native/dcm-sumatra-probe.cs",
+      "before_blob": "8848baa613719babd9b32fa804ed77dfa683b7ae",
+      "after_sha256": "dbc3d390df867bf74e47fe73bd0340f594439c4444c42066e09ec15bd37b4acf",
+      "replacements": [{"old":"    }\n}\n","new":"    }\n\n    [DllImport(\"user32.dll\")] static extern bool IsWindowVisible(IntPtr h);\n    [DllImport(\"user32.dll\",EntryPoint=\"GetWindowLongPtrW\")] static extern IntPtr GetStyle(IntPtr h,int index);\n    [DllImport(\"user32.dll\",EntryPoint=\"SendMessageTimeoutW\")] static extern IntPtr SendValue(IntPtr h,uint m,IntPtr w,IntPtr l,uint flags,uint ms,out IntPtr result);\n    public sealed class ToolbarItem { public long Window; public string Class; public int X,Y,Width,Height; public bool Numeric,Inside; }\n    public sealed class ToolbarLayout { public long Window; public int Width,Height; public ToolbarItem[] Items; public bool PageFieldFound,AllInside; }\n    public static ToolbarLayout Layout(IntPtr host,int hostPID,int expectedPID){\n        var v=Find(host,hostPID);if(v==null||v.PID!=expectedPID)throw new Exception(\"Viewer identity mismatch\");\n        IntPtr toolbar=IntPtr.Zero;\n        EnumChildWindows((IntPtr)v.Window,delegate(IntPtr h,IntPtr ignored){uint p;GetWindowThreadProcessId(h,out p);if(p==(uint)expectedPID&&Class(h)==\"ToolbarWindow32\"&&IsWindowVisible(h)){if(toolbar!=IntPtr.Zero)throw new Exception(\"Multiple viewer toolbars\");toolbar=h;}return true;},IntPtr.Zero);\n        if(toolbar==IntPtr.Zero)throw new Exception(\"Viewer toolbar absent\");\n        IntPtr old=SetThreadDpiAwarenessContext((IntPtr)(-4));\n        try{\n            RECT t;if(!GetWindowRect(toolbar,out t))throw new Exception(\"Toolbar bounds unavailable\");\n            var list=new List<ToolbarItem>();var result=new ToolbarLayout{Window=toolbar.ToInt64(),Width=t.R-t.L,Height=t.B-t.T,AllInside=true};\n            EnumChildWindows(toolbar,delegate(IntPtr h,IntPtr ignored){\n                uint p;GetWindowThreadProcessId(h,out p);string c=Class(h);\n                if(p!=(uint)expectedPID||GetParent(h)!=toolbar||!IsWindowVisible(h)||(c!=\"Edit\"&&c!=\"Static\"))return true;\n                RECT b;if(!GetWindowRect(h,out b))throw new Exception(\"Child bounds unavailable\");if(b.R<=b.L||b.B<=b.T)return true;\n                bool numeric=c==\"Edit\"&&(GetStyle(h,-16).ToInt64()&0x2000)!=0;\n                bool inside=b.T>=t.T&&b.B<=t.B&&b.L>=t.L&&b.R<=t.R;\n                list.Add(new ToolbarItem{Window=h.ToInt64(),Class=c,X=b.L-t.L,Y=b.T-t.T,Width=b.R-b.L,Height=b.B-b.T,Numeric=numeric,Inside=inside});\n                result.PageFieldFound|=numeric;result.AllInside&=inside;return true;\n            },IntPtr.Zero);result.Items=list.ToArray();return result;\n        }finally{SetThreadDpiAwarenessContext(old);}\n    }\n    public static void RequireToolbar(ToolbarLayout layout){\n        if(!layout.PageFieldFound)throw new Exception(\"SUMATRA_PAGE_FIELD_MISSING\");\n        if(!layout.AllInside)throw new Exception(\"SUMATRA_TOOLBAR_CLIPPED: visible edit/label is outside toolbar bounds\");\n    }\n}\n"}]
     },
     {
-      "path": "app-src/sumatra_preview_windows.go",
-      "before_blob": "f1d09990acb677d7c4d677fec838819e32de563f",
-      "after_sha256": "995b51b499253e984dc80443f6b2c269e416faace54730efad8b7770e0a3e14d",
-      "replacements": [
-        {
-          "old": "\tspSetWindowPos     = user32.NewProc(\"SetWindowPos\")",
-          "new": "\tspSetWindowPos     = user32.NewProc(\"SetWindowPos\")\n\tspShowWindowAsync  = user32.NewProc(\"ShowWindowAsync\")"
-        },
-        {
-          "old": "procShowWindow.Call(v.child, 0)",
-          "new": "spShowWindowAsync.Call(v.child, 0)"
-        }
-      ]
+      "path": "tools/test-ui-sumatra.ps1",
+      "before_blob": "fc149f22cf3a229a9e46b9ad4955d256fa31e5ae",
+      "after_sha256": "dd02f0c3e750ee9592bfb0b3ba8150cb3a0529dab9c2a701955d42a3eaee2990",
+      "replacements": [{"old":"    if($color){\n        # Exclude","new":"    if($color){\n        $layout=[DcmSumatraProbe]::Layout($hwnd,$app.Id,$v.pid)\n        Json (Join-Path $lab ($name+'-layout.json')) $layout\n        [DcmSumatraProbe]::RequireToolbar($layout)\n        # Exclude"}]
     }
   ]
 }
