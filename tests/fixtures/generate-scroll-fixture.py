@@ -29,7 +29,7 @@ objects=['<< /Type /Catalog /Pages 2 0 R >>','<< /Type /Pages /Kids [3 0 R 4 0 R
          '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 1000] /Resources << /Font << /F1 5 0 R >> >> /Contents 7 0 R >>',
          '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>']
 objects += [f'<< /Length {len(s.encode("ascii"))} >>\nstream\n{s}\nendstream' for s in streams]
-pdf='%PDF-1.4\n'; offsets=[]
+pdf='%PDF-1.4\n% DCM byte-exact scroll fixture\n'; offsets=[]
 for n,obj in enumerate(objects,1):
     offsets.append(len(pdf.encode('ascii')));pdf+=f'{n} 0 obj\n{obj}\nendobj\n'
 xref=len(pdf.encode('ascii'));pdf+='xref\n0 8\n0000000000 65535 f \n'
