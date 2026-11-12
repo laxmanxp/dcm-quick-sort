@@ -41,4 +41,34 @@ public static class DcmSumatraProbe {
         IntPtr panel=Panel(host,hostPID);
         IntPtr old=SetThreadDpiAwarenessContext((IntPtr)(-4));try{RECT p,c;GetWindowRect(panel,out p);GetWindowRect((IntPtr)v.Window,out c);if(c.L<p.L||c.T<p.T||c.R>p.R||c.B>p.B||c.R-c.L<200||c.B-c.T<100)throw new Exception("Embedded viewer escaped preview bounds");}finally{SetThreadDpiAwarenessContext(old);}
     }
+
+    [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr h);
+    [DllImport("user32.dll",EntryPoint="GetWindowLongPtrW")] static extern IntPtr GetStyle(IntPtr h,int index);
+    [DllImport("user32.dll",EntryPoint="SendMessageTimeoutW")] static extern IntPtr SendValue(IntPtr h,uint m,IntPtr w,IntPtr l,uint flags,uint ms,out IntPtr result);
+    public sealed class ToolbarItem { public long Window; public string Class; public int X,Y,Width,Height; public bool Numeric,Inside; }
+    public sealed class ToolbarLayout { public long Window; public int Width,Height; public ToolbarItem[] Items; public bool PageFieldFound,AllInside; }
+    public static ToolbarLayout Layout(IntPtr host,int hostPID,int expectedPID){
+        var v=Find(host,hostPID);if(v==null||v.PID!=expectedPID)throw new Exception("Viewer identity mismatch");
+        IntPtr toolbar=IntPtr.Zero;
+        EnumChildWindows((IntPtr)v.Window,delegate(IntPtr h,IntPtr ignored){uint p;GetWindowThreadProcessId(h,out p);if(p==(uint)expectedPID&&Class(h)=="ToolbarWindow32"&&IsWindowVisible(h)){if(toolbar!=IntPtr.Zero)throw new Exception("Multiple viewer toolbars");toolbar=h;}return true;},IntPtr.Zero);
+        if(toolbar==IntPtr.Zero)throw new Exception("Viewer toolbar absent");
+        IntPtr old=SetThreadDpiAwarenessContext((IntPtr)(-4));
+        try{
+            RECT t;if(!GetWindowRect(toolbar,out t))throw new Exception("Toolbar bounds unavailable");
+            var list=new List<ToolbarItem>();var result=new ToolbarLayout{Window=toolbar.ToInt64(),Width=t.R-t.L,Height=t.B-t.T,AllInside=true};
+            EnumChildWindows(toolbar,delegate(IntPtr h,IntPtr ignored){
+                uint p;GetWindowThreadProcessId(h,out p);string c=Class(h);
+                if(p!=(uint)expectedPID||GetParent(h)!=toolbar||!IsWindowVisible(h)||(c!="Edit"&&c!="Static"))return true;
+                RECT b;if(!GetWindowRect(h,out b))throw new Exception("Child bounds unavailable");if(b.R<=b.L||b.B<=b.T)return true;
+                bool numeric=c=="Edit"&&(GetStyle(h,-16).ToInt64()&0x2000)!=0;
+                bool inside=b.T>=t.T&&b.B<=t.B&&b.L>=t.L&&b.R<=t.R;
+                list.Add(new ToolbarItem{Window=h.ToInt64(),Class=c,X=b.L-t.L,Y=b.T-t.T,Width=b.R-b.L,Height=b.B-b.T,Numeric=numeric,Inside=inside});
+                result.PageFieldFound|=numeric;result.AllInside&=inside;return true;
+            },IntPtr.Zero);result.Items=list.ToArray();return result;
+        }finally{SetThreadDpiAwarenessContext(old);}
+    }
+    public static void RequireToolbar(ToolbarLayout layout){
+        if(!layout.PageFieldFound)throw new Exception("SUMATRA_PAGE_FIELD_MISSING");
+        if(!layout.AllInside)throw new Exception("SUMATRA_TOOLBAR_CLIPPED: visible edit/label is outside toolbar bounds");
+    }
 }

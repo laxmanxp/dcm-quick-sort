@@ -31,6 +31,9 @@ function Shot([string]$name,[string]$color=''){
     $s=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'.png')),$false)
     $shots.Add([ordered]@{name=$name;path=$s.Path;sha256=(Hash $s.Path);teal=$s.TealSamples;orange=$s.OrangeSamples;visual_reviewed=$false})
     if($color){
+        $layout=[DcmSumatraProbe]::Layout($hwnd,$app.Id,$v.pid)
+        Json (Join-Path $lab ($name+'-layout.json')) $layout
+        [DcmSumatraProbe]::RequireToolbar($layout)
         # Exclude the blue title bar/list highlights from the PDF pixel oracle.
         $pixels=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'-content.png')),$true)
         $shots.Add([ordered]@{name=$name+'-content';path=$pixels.Path;sha256=(Hash $pixels.Path);teal=$pixels.TealSamples;orange=$pixels.OrangeSamples;visual_reviewed=$false})
