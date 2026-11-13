@@ -1,27 +1,29 @@
-# QuickSort — async startup implemented; speculative transition optimization removed
+# DCM QuickSort — async preparation retained; unsafe layout optimization reverted
 
-13 November 2026. The current application source restores the fully exercised async implementation at `4c1c32d668955a2073ac496d0f3d31e5fe1cdf43`. Only the redundant-layout optimization was removed, not the worker/cancellation implementation. Additional test-only visibility/geometry diagnostics are retained. No native run is yet claimed against this rollback/checkpoint revision; rebuild before further qualification.
+Latest report: [asynchronous startup](2026-11-13-sumatra-async-startup.md).
+Full native UI matrix:4c1c32d668955a2073ac496d0f3d31e5fe1cdf43.
+Restored/build-verified source:4e07b99b313027794c05a6bf280208513d869c34.
 
-## Implemented and exercised
+## State
 
-Validation and suspended process creation now run in a single preparation worker. UI-thread adoption resumes only the still-current request. Cancellation disposes late results; pending file operations refuse until cleanup; normal close keeps the message loop alive until the worker drains. Creation-time job assignment and exact runtime/policy checks remain in place. The new portable ownership tests, Windows pending-operation/close tests, and existing release-refusal tests pass.
+Document/runtime validation and suspended creation run off the UI thread. One worker/latest queued request; cancelled results disposed; creation-time owned job; UI-only adoption/resume; pending operations refuse and normal Close waits responsively for cleanup. Hash/policy restrictions unchanged. Native baseline372/0/1; startup2x4,pending-close3,lifecycle11,Undo9,errors12,scroll14,resize23+12bursts passed at4c1c32d.
 
-At0bdfce87 the first-open queued UI delay was172ms versus the earlier1497–1758ms. The UI start handler returned in0.6–1.9ms while process creation still took1.52s on the first open. However two repeated opens measured275/321ms queue delay, so the provisional250ms responsiveness target remains open. Do not claim a universal performance pass or cold-boot benchmark.
+Two later startup runs: first queue45.7/59.1ms, all eight46–105ms; first ready1.62–1.73s. Earlier async repeat delays275/321ms remain evidence: broader250ms target is still open. This is not cold-boot/cache or isolated performance qualification.
 
-At4c1c32d the full native baseline and startup(two runs), close-while-loading, lifecycle, Undo, errors, scrolling and resize-timing commands completed successfully. Startup command PASS means measurement/safety integrity; inspect its separate responsiveness_accepted field. No completed checklist step changes.
+Only one representative first-run startup screenshot was directly opened; its other three full-window images are byte-identical, not independently inspected. Regression/repeat images not separately reviewed. Raw review flags unchanged.
 
-## Failed optimization and exact rollback
+## Rollback must remain
 
-948ff3f5 skipped a full host layout at unchanged sidebar widths. Its startup verification first failed a minimized-window capture and then containment. Added diagnostics at8e510e2e reproduced actual containment failure with a visible, non-minimized host: panel(333,259,1238,792), viewer(334,260,1463,923). The scaling discrepancy is an observation, not an established root cause. Report: `D:\FlowverseReportsRepo\dcm-quicksort-ui-sumatra-startup-20261113-021713-2ce5391a`.
+Skipping full layout at unchanged sidebar widths caused real visible containment failure at8e510e2e: parent333,259,1238,792; viewer334,260,1463,923; not minimized. Do not infer a complete DPI root cause. At4e07b99b restored exact viewer blob3b7041b3115ecbebd0c0f247f8a6e52d05aad93c from4c1c32d and removed sumatra_transition_windows.go. No startup worker code was reverted.
 
-Restore `app-src/sumatra_preview_windows.go` to exact blob3b7041b3115ecbebd0c0f247f8a6e52d05aad93c from4c1c32d; remove unused sumatra_transition_windows.go. The original full transition layout remains. Local race tests and Windows cross-compilation pass after rollback. Keep failed receipts and diagnostic changes. Do not reintroduce the optimization merely to obtain faster timing.
+Rollback build `D:\FlowverseReportsRepo\dcm-quicksort-build-20261113-022343-3455c053\receipt.json` passed and matches tested app byte-for-byte:6f09034154c40fca5737797cd5e341f6817d301b3bfc6e3375fe0bea0930916a,7311360bytes. Full UI matrix was not rerun after rollback; do not relabel old receipts. Detailed evidence: evidence/sumatra-async-startup-summary.json.
 
 ## Next bounded work
 
-First rebuild and revalidate the restored application revision. Then profile the remaining attachment/layout response delay without changing containment, capture or timing assertions. The asynchronous process-creation correction and the remaining250ms target are separate outcomes. No further optimization was accepted in this checkpoint.
+Keep original full transition layout. Profile remaining attachment/layout response under shared load without skipping required geometry or loosening guards. The worker correction is implemented; broader response/release acceptance is not. Rebuild after metadata/source commits, then use existing startup, pending-close,lifecycle,Undo,error,scroll and resize selectors as needed. No fresh unrelated UI cycle just to obtain more green receipts.
 
-## Execution
+## Workflow
 
-Code locally -> GitHub -> FlowDev update/build/test on Lenovo. Device d18227f2-0b54-4b11-9026-56ac40305f02. Workspace D:\FlowverseReportsRepo; candidate dcm-quicksort-candidate; profile tools\flowdev-dcm; runner D:\FlowverseReportsRepo\flowdev-standalone-validation\flowdev-test.exe. Runtime source D:\Flowverse\sumatra-preview-prototype\runtime\sumatra-3.6.1\SumatraPDF-3.6.1-64.exe. One DCM UI suite at a time; unrelated LibreOffice interactive session was observed and not modified. Do not claim it caused the failures.
+Code locally -> GitHub -> FlowDev update/build/test on Lenovo. Device d18227f2-0b54-4b11-9026-56ac40305f02. Workspace D:\FlowverseReportsRepo; candidate dcm-quicksort-candidate; profile tools\flowdev-dcm; runner D:\FlowverseReportsRepo\flowdev-standalone-validation\flowdev-test.exe. Original runtime D:\Flowverse\sumatra-preview-prototype\runtime\sumatra-3.6.1\SumatraPDF-3.6.1-64.exe. One native DCM UI suite at a time. No remote source edits or unrelated-process changes.
 
-Keep Sumatra optional, Windows.Data.Pdf default, runtime/no-print/no-write pins unchanged. DCM01–18 and20–27 remain complete;19 blocked;28/29 pending. General layout/error-banner, external PPTX, packaging/distribution and actual user acceptance remain open. PR#1 stays draft; no merge, publication, installation or association changes.
+DCM01–18 and20–27 retain completion;19 blocked;28/29 pending. Sumatra optional, Windows.Data.Pdf default. Keep layout/error-banner, externalPPTX, remaining operations/path variants, distribution/package and manual acceptance open. PR#1 draft; no installation/associations/printing/merge/publication.
