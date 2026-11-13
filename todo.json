@@ -356,12 +356,12 @@
         "DCM-31"
       ],
       "acceptance": "Diagnose the first-open clipped Excel viewport using synchronized DPI-context geometry and unforced adjacent images; resolve the observed sizing cause and verify first open, text recovery and reopen through the exact-source registered workflow. Do not claim a longer wait or reopening is a product fix.",
-      "native_test": "At3d3af0fc, run225846-094bf40a passes6 rawrecords but02-native-workbook.png has white right/bottom bands and missing sheet tabs;06-native-workbook-reopened.png fills the pane. All4 images reviewed. Preserved source/workbook bytes and normal host exit0.",
+      "native_test": "At3d3af0fc, run225846-094bf40a passes6 rawrecords but02-native-workbook.png has white right/bottom bands and missing sheet tabs;06-native-workbook-reopened.png fills the pane. All4 images reviewed. Preserved source/workbook bytes and normal host exit0. Diagnostic atb437ba2a run231011-787600e7 retains12 images/24pairedobservations; first/reopen clipping persists beforeRestore and after5.43s withhostSequence2Depth0Pendingfalse. PMv2 paneclient902x487, outerEXCEL9723x390, innerEXCEL7903x488. Rootcauseinsideinitializationnotfullyproven; requireboundsRED beforefix.",
       "evidence_refs": [
         "qualification/dcm31-preview-sizing.md",
         "qualification/evidence/dcm-31-initial-summary.json"
       ],
-      "resolution_state": "open_diagnostic_pending"
+      "resolution_state": "persistent_mismatch_diagnosed; native_bounds_RED_next"
     }
   ]
 }

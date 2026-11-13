@@ -47,6 +47,13 @@ filesystem evidence, screenshots and cleanup outcome. No installed DCM files cha
   Both routes check text recovery, source bytes, exclusive file access after
   switching, normal host close and exact build/source identity. Raw
   `feature_accepted` remains false until independent image review is recorded.
+  For the installed Excel route, `-RequireNativeBounds` checks both observed
+  `EXCEL9` and `EXCEL7` viewport rectangles against the owned pane in a PMv2
+  observer context (four-pixel border/rounding tolerance). The workflow preserves
+  captures, text recovery and normal close before reporting a bounds failure.
+  This geometry assertion does not establish actual cell readability. Other
+  native providers require explicit adapter qualification; fallback cell checks
+  remain separate.
   The related `xlsx-unit` selector runs focused XLSX/Open XML units. Damaged,
   protected and interrupted files remain DCM-34; broad lifecycle is DCM-35.
 - `ui-xlsx-layout`: diagnostic version of the same bounded workflow. It retains

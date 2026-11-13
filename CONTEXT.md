@@ -18,9 +18,12 @@ Open XML units each passed 24/0/0; tooling and exact native build passed. The
 registered `ui-xlsx` run passed six machine records, but all four images were
 reviewed and the first Excel view occupies only about 80% of its pane in both
 axes. Reopening fills the pane; that is not a proven repair. `DCM-XLSX-SIZE-01`
-is open under DCM-31. Next run `ui-xlsx-layout` with a fresh exact build to collect
-paired DPI-context geometry and natural adjacent captures; do not force redraw
-or treat a longer wait as a fix. See [the sizing checkpoint](qualification/dcm31-preview-sizing.md).
+is open under DCM-31. Diagnostic source `b437ba2a` confirms the clip before Restore
+and over five seconds afterward, with idle host layout. The Excel outer viewport
+is 723x390 physical screen units while the pane client is 902x487; the inner view
+is already 903x488. The new registered `ui-xlsx` bounds assertion must first
+produce RED on unchanged production source, then qualify the smallest fix.
+See [the sizing checkpoint](qualification/dcm31-preview-sizing.md).
 
 DCM-30's fresh registered Lenovo run at production source
 `8eb1470a891ea3454f1738d58191fdb90284ab42` passed seven native records. All five

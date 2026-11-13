@@ -92,6 +92,33 @@ describe setting and updating the preview area. Its
 states that window rectangles are DPI-virtualized. These contracts guide the
 diagnostic; they do not prove the cause of this particular frame.
 
+## Bounded diagnostic result
+
+The registered `ui-xlsx-layout` run
+`dcm-quicksort-ui-xlsx-20261113-231011-787600e7` at `b437ba2a6604bce82090d1b7f24ca9b0cb2851bb`
+retained twelve images and 24 paired geometry observations. Production bytes are
+unchanged. Initial and reopened views remain clipped before Restore, in the raw
+frame and after natural adjacent captures. The initial raw pre-capture observation
+is 23:10:22.9657292 UTC; the last natural post-capture observation is
+23:10:28.3989448 UTC, approximately 5.43 seconds later. This is not explained by a
+brief capture immediately before the viewer settled.
+
+In the PMv2 observer context, the owned pane client is 902x487, the Excel outer
+`EXCEL9` window is 723x390 and its `EXCEL7` child is 903x488. The host-context
+measurements are 722x390, 578x312 and 722x390 respectively. Host sequence remains 2,
+depth 0 and host pending-paint false in the inspected paired observations. All
+three windows report DPI 96 / DPI-unaware. The outer viewer therefore clips an
+otherwise larger inner view. These measurements identify the sizing mismatch;
+they do not prove every internal Excel initialization cause.
+
+The registered `ui-xlsx` and `ui-xlsx-layout` selectors now require a geometry
+assertion for the observed installed Excel route: both native viewport windows
+must match the pane client dimensions within four pixels, with the expected
+parent relationship and border-aligned origin. The gate retains capture,
+recovery and normal-close evidence before reporting failure. Cell readability
+still requires separate image review. Establish this new assertion's native RED
+before changing production initialization. No numbered step closes here.
+
 ## Coverage limits and durable material
 
 The fallback parser/grid has focused unit coverage for blank/sparse sheets,

@@ -2,7 +2,8 @@
 param(
  [string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,
  [string]$Workbook='D:\FlowverseReportsRepo\dcm-flowuivision-20261103\inbox\06-orders.xlsx',
- [switch]$ObserveNativeLayout
+ [switch]$ObserveNativeLayout,
+ [switch]$RequireNativeBounds
 )
 # DCM-31: natural installed-handler/fallback selection; no registration changes.
 # Native cells require separate image review. Fallback sheet/cell readback is asserted.
@@ -16,6 +17,8 @@ $null=New-Item -ItemType Directory $lab;$utf8=New-Object Text.UTF8Encoding($fals
 $cases=New-Object 'Collections.Generic.List[object]';$shots=New-Object 'Collections.Generic.List[object]'
 $receipt=[ordered]@{schema=1;feature='DCM-31';report=$lab;started_utc=[DateTime]::UtcNow.ToString('o');passed=$false;feature_accepted=$false;cases=$cases;captures=$shots;visual_review_required=$true;user_test='not_recorded';provider='not_observed'}
 $receipt['native_layout_diagnostic']=[bool]$ObserveNativeLayout
+$receipt['native_bounds_required']=[bool]$RequireNativeBounds
+if($RequireNativeBounds){$receipt['native_bounds_checks']=New-Object 'Collections.Generic.List[object]'}
 if($ObserveNativeLayout){$receipt['layout_observations']=New-Object 'Collections.Generic.List[object]'}
 $app=$null;$hwnd=[IntPtr]::Zero;$owned=$null;$head='';$manifest=@();$fixture=$null;$expected=@{};$exe=''
 $workbookHash='5059729f4390ecd2e169bb2d1eb850c768532ebbb24b9733e87b82b012d6d24f'
@@ -47,8 +50,33 @@ function CaptureFrame([string]$name){
  $s=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'.png')),$false)
  ObserveLayout ($name+'-after-capture')
  $shots.Add([ordered]@{name=$name;path=$s.Path;sha256=(Hash $s.Path);visual_reviewed=$false})
+ if($RequireNativeBounds -and ((HostCaptions) -ccontains 'Windows preview: XLSX')){CheckNativeBounds $name}
 }
 function Shot([string]$name){Own;$screen=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea;[DcmNative]::Restore($hwnd,$app.Id,$screen.Left+8,$screen.Top+8);Start-Sleep -Milliseconds 300;CaptureFrame $name}
+function CheckNativeBounds([string]$name){
+ Own;$geometry=[DcmPreviewGeometry]::Observe($hwnd,$app.Id)
+ $path=Join-Path $lab ($name+'.bounds.json');Json $path $geometry
+ $contexts=@($geometry.Contexts|Where-Object {$_.CallerContextLabel -eq 'per_monitor_aware_v2_requested_minus4'})
+ if($contexts.Count -ne 1){throw 'Native bounds observer context missing'}
+ $windows=@($contexts[0].Windows|Where-Object {$_.Available -and $_.Visible})
+ $panes=@($windows|Where-Object {$_.Role -eq 'owned_preview_pane'})
+ if($panes.Count -ne 1 -or -not $panes[0].ClientRectAvailable -or -not $panes[0].WindowRectAvailable){throw 'Native bounds pane unavailable'}
+ $pane=$panes[0];$width=$pane.ClientRect.Right-$pane.ClientRect.Left;$height=$pane.ClientRect.Bottom-$pane.ClientRect.Top
+ $outer=@($windows|Where-Object {$_.Class -eq 'EXCEL9' -and $_.Parent -eq $geometry.PreviewPane})
+ $inner=@($windows|Where-Object {$_.Class -eq 'EXCEL7'})
+ $ok=$width -gt 0 -and $height -gt 0 -and $outer.Count -eq 1 -and $inner.Count -eq 1
+ if($ok){$ok=$inner[0].Parent -eq $outer[0].Handle}
+ $observed=@()
+ foreach($window in @($outer)+@($inner)){
+  $rect=$window.WindowRect;$w=$rect.Right-$rect.Left;$h=$rect.Bottom-$rect.Top
+  $fits=$window.WindowRectAvailable -and [Math]::Abs($w-$width) -le 4 -and [Math]::Abs($h-$height) -le 4 -and [Math]::Abs($rect.Left-$pane.WindowRect.Left) -le 4 -and [Math]::Abs($rect.Top-$pane.WindowRect.Top) -le 4
+  $ok=$ok -and $fits
+  $observed+=[ordered]@{class=$window.Class;pid=$window.PID;window=$window.Handle;width=$w;height=$h;left=$rect.Left;top=$rect.Top;fits=$fits}
+ }
+ # Keep every frame and the recovery/close flow before failing the gate. This
+ # asserts viewport geometry, not cells, Excel fidelity or screenshot readability.
+ $receipt.native_bounds_checks.Add([ordered]@{capture=$name;passed=[bool]$ok;scope='Installed Excel EXCEL9/EXCEL7 viewport in PMv2 observer coordinates';expected_client_width=$width;expected_client_height=$height;tolerance_pixels=4;windows=$observed;observation_path=$path;sha256=(Hash $path);observed_utc=$geometry.StartedUtc})
+}
 function Record([string]$name,$detail){$cases.Add([ordered]@{name=$name;passed=$true;detail=$detail});Files}
 function SelectFile([string]$name){$items=@([DcmNative]::ListItems($hwnd,$app.Id,1016));$index=[Array]::IndexOf($items,$name);if($index -lt 0){throw 'Missing fixture in list'};[DcmUndoInput]::Select($hwnd,$app.Id,$index);$stem=[IO.Path]::GetFileNameWithoutExtension($name);Wait ('selection '+$name) {([DcmUndoInput]::TryText($hwnd,$app.Id,1005)) -ceq $stem};$selected=@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016));if($selected.Count -ne 1 -or $selected[0] -ne $index){throw 'Selected fixture index mismatch'}}
 function HostCaptions {return @([DcmDocxProbe]::HostStatics($hwnd,$app.Id)|ForEach-Object {[DcmNative]::Text([IntPtr]$_,$app.Id)})}
@@ -127,8 +155,10 @@ try {
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-native.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-undo-input.cs')
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-xlsx-input.cs')
- if($ObserveNativeLayout){
+ if($ObserveNativeLayout -or $RequireNativeBounds){
   Add-Type -Path (Join-Path $repo 'tests/native/dcm-preview-geometry.cs')
+ }
+ if($ObserveNativeLayout){
   Add-Type -Path (Join-Path $repo 'tests/native/dcm-layout-probe.cs')
  }
  Add-Type -AssemblyName UIAutomationClient;Add-Type -AssemblyName UIAutomationTypes;Add-Type -AssemblyName WindowsBase
@@ -179,7 +209,13 @@ try {
  if($ObserveNativeLayout){$receipt['host_layout_trace_sha256']=Hash $receipt.host_layout_trace}
  if((Hash $Workbook) -ne $workbookHash -or (Hash $exe) -ne $build.app_artifact.sha256){throw 'Original workbook/app changed'}
  if($cases.Count -lt 5 -or $shots.Count -lt 4){throw 'Incomplete XLSX qualification records/captures'}
- Record '07-normal-close-and-original-bytes' $null;$receipt['source_unchanged']=$true;$receipt['fixtures_preserved']=$true;$receipt['journal_empty']=$true;$receipt.passed=$true
+ Record '07-normal-close-and-original-bytes' $null;$receipt['source_unchanged']=$true;$receipt['fixtures_preserved']=$true;$receipt['journal_empty']=$true
+ if($RequireNativeBounds -and $native){
+  if($receipt.native_bounds_checks.Count -lt 2){throw 'Native bounds checks incomplete'}
+  $bad=@($receipt.native_bounds_checks|Where-Object {-not $_.passed})
+  if($bad.Count){throw ('DCM31_XLSX_NATIVE_BOUNDS: Excel viewport does not fill the preview pane in '+(($bad|ForEach-Object {$_.capture}) -join ', '))}
+ }
+ $receipt.passed=$true
 }catch{
  $receipt['error']=$_.Exception.Message;$receipt['error_position']=$_.InvocationInfo.PositionMessage;Write-Output ('FAIL='+$_.Exception.Message)
  if($app){try{Own;Json (Join-Path $lab 'failure-preview-windows.json') @([DcmDocxProbe]::Snapshot($hwnd,$app.Id));$receipt['failure_host_captions']=HostCaptions}catch{$receipt['diagnostic_error']=$_.Exception.Message};try{Shot 'failure'}catch{$receipt['capture_error']=$_.Exception.Message}}
