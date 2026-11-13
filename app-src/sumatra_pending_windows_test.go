@@ -16,8 +16,6 @@ import (
 // no artificial-delay switch. These tests exercise the real operation guard and
 // close policy while the resource worker has not yet returned.
 func TestSumatraPendingStartupGuards(t *testing.T) {
-	runtime.LockOSThread()
-	defer runtime.UnlockOSThread()
 	oldApp, oldView := app, sumatraView
 	oldPending, oldQueued, oldRetired, oldClosing := sumatraPending, sumatraQueued, sumatraRetired, sumatraClosing
 	defer func() {
@@ -30,6 +28,8 @@ func TestSumatraPendingStartupGuards(t *testing.T) {
 	}()
 	for _, operation := range []string{"rename", "move", "close"} {
 		t.Run(operation, func(t *testing.T) {
+			runtime.LockOSThread()
+			defer runtime.UnlockOSThread()
 			app = appState{}
 			sumatraView = nil
 			sumatraQueued = nil
@@ -46,7 +46,9 @@ func TestSumatraPendingStartupGuards(t *testing.T) {
 			sumatraPending = newPreparedResource(func(context.Context) (*sumatraSession, error) { <-gate; return &sumatraSession{}, nil }, func(*sumatraSession) error { close(disposed); return nil })
 			root := t.TempDir()
 			src, dst := filepath.Join(root, "source.pdf"), filepath.Join(root, "target.pdf")
-			os.WriteFile(src, []byte("original bytes"), 0600)
+			if err := os.WriteFile(src, []byte("original bytes"), 0600); err != nil {
+				t.Fatal(err)
+			}
 			if operation == "close" {
 				if closeSumatraPreview() {
 					t.Fatal("close admitted before cleanup")

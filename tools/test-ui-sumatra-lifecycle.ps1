@@ -154,11 +154,15 @@ try {
         $null=SelectFile '01-alpha.txt';Gone $b;TextReady
     }
     AddPass 'four-attached-PDF-PDF-text-cycles-preserve-targets-and-release'
-    $null=SelectFile '10-empty.pdf';EmptyViewer
+    $null=SelectFile '10-empty.pdf'
+    Wait 'empty PDF validation result' {(Status) -like 'Sumatra preview unavailable:*nonempty regular file*'}
+    EmptyViewer
     if((Status) -notlike 'Sumatra preview unavailable:*nonempty regular file*'){throw 'Empty PDF error missing.'}
     Shot '05-empty-PDF-error';AddPass 'empty-PDF-truthful-error-no-viewer'
     $null=SelectFile '01-alpha.txt';TextReady;AddPass 'text-recovery-after-empty-PDF'
-    $null=SelectFile '11-invalid.pdf';EmptyViewer
+    $null=SelectFile '11-invalid.pdf'
+    Wait 'invalid PDF validation result' {(Status) -like 'Sumatra preview unavailable:*no PDF header*'}
+    EmptyViewer
     if((Status) -notlike 'Sumatra preview unavailable:*no PDF header*'){throw 'Invalid PDF error missing.'}
     Shot '06-invalid-PDF-error';AddPass 'invalid-header-truthful-error-no-viewer'
     $null=SelectFile '09-second.pdf';$last=Viewer '09-second.pdf';Shot '07-valid-PDF-recovery-before-close' 'orange';AddPass 'valid-PDF-recovery-after-invalid-header'
