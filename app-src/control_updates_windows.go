@@ -45,7 +45,7 @@ func layoutComboAlreadyMatches(hwnd, x, y, width, height uintptr) bool {
 		return false
 	}
 	exStyle, _, _ := spGetWindowStyle.Call(parent, ^uintptr(19)) // GWL_EXSTYLE
-	if exStyle&0x00400000 != 0 { // WS_EX_LAYOUTRTL: do not guess mirrored coordinates
+	if exStyle&0x00400000 != 0 {                                 // WS_EX_LAYOUTRTL: do not guess mirrored coordinates
 		return false
 	}
 	opened, _, _ := procSendMessageW.Call(hwnd, 0x0157, 0, 0) // CB_GETDROPPEDSTATE
@@ -92,7 +92,7 @@ func setPreviewControlEnabled(hwnd uintptr, enabled bool) bool {
 		return false
 	}
 	style, _, _ := spGetWindowStyle.Call(hwnd, ^uintptr(15)) // GWL_STYLE
-	if style != 0 && (style&0x08000000 == 0) == enabled { // WS_DISABLED
+	if style != 0 && (style&0x08000000 == 0) == enabled {    // WS_DISABLED
 		recordAttachmentTrace("enabled-noop")
 		return false
 	}

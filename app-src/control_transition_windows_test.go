@@ -38,8 +38,8 @@ func TestControlUpdatePreviewTransitions(t *testing.T) {
 		app.textPreviewActive = scene.text
 		app.image = 0
 		if scene.image {
-			app.image = 1 // state only, never drawn or disposed
-		}
+			app.image = 1
+		} // state only, never drawn or disposed
 		sumatraView = nil
 		if scene.external {
 			sumatraView = &sumatraSession{}

@@ -3580,7 +3580,7 @@ func layoutUI(hwnd uintptr) {
 		sourcePathW = 180
 	}
 	recordAttachmentTrace("layout-before-sourceAliasCombo")
-	procMoveWindow.Call(app.sourceAliasCombo, 85, 13, uintptr(aliasWTop), 240, 0)
+	moveLayoutCombo(app.sourceAliasCombo, 85, 13, uintptr(aliasWTop), 240)
 	recordAttachmentTrace("layout-after-sourceAliasCombo")
 	recordAttachmentTrace("layout-before-sourceEdit")
 	procMoveWindow.Call(app.sourceEdit, uintptr(sourcePathX), 14, uintptr(sourcePathW), 25, 0)
@@ -3611,16 +3611,16 @@ func layoutUI(hwnd uintptr) {
 	procMoveWindow.Call(app.openFolderBtn, uintptr(openFolderX), 48, uintptr(openFolderW), 27, 0)
 	recordAttachmentTrace("layout-after-openFolderBtn")
 	recordAttachmentTrace("layout-before-categoryCombo")
-	procMoveWindow.Call(app.categoryCombo, 85, 82, 165, 260, 0)
+	moveLayoutCombo(app.categoryCombo, 85, 82, 165, 260)
 	recordAttachmentTrace("layout-after-categoryCombo")
 	recordAttachmentTrace("layout-before-extensionCombo")
-	procMoveWindow.Call(app.extensionCombo, 340, 82, 150, 320, 0)
+	moveLayoutCombo(app.extensionCombo, 340, 82, 150, 320)
 	recordAttachmentTrace("layout-after-extensionCombo")
 	recordAttachmentTrace("layout-before-filterAgeCombo")
-	procMoveWindow.Call(app.filterAgeCombo, 545, 82, 135, 220, 0)
+	moveLayoutCombo(app.filterAgeCombo, 545, 82, 135, 220)
 	recordAttachmentTrace("layout-after-filterAgeCombo")
 	recordAttachmentTrace("layout-before-filterSizeCombo")
-	procMoveWindow.Call(app.filterSizeCombo, 735, 82, 135, 220, 0)
+	moveLayoutCombo(app.filterSizeCombo, 735, 82, 135, 220)
 	recordAttachmentTrace("layout-after-filterSizeCombo")
 	clearW := int32(105)
 	clearX := w - 20 - clearW
@@ -3632,7 +3632,7 @@ func layoutUI(hwnd uintptr) {
 	procMoveWindow.Call(app.filterSortLabel, uintptr(sortLabelX), 87, uintptr(sortLabelW), 20, 0)
 	recordAttachmentTrace("layout-after-filterSortLabel")
 	recordAttachmentTrace("layout-before-filterSortCombo")
-	procMoveWindow.Call(app.filterSortCombo, uintptr(sortComboX), 82, uintptr(sortW), 220, 0)
+	moveLayoutCombo(app.filterSortCombo, uintptr(sortComboX), 82, uintptr(sortW), 220)
 	recordAttachmentTrace("layout-after-filterSortCombo")
 	recordAttachmentTrace("layout-before-filterClearBtn")
 	procMoveWindow.Call(app.filterClearBtn, uintptr(clearX), 81, uintptr(clearW), 28, 0)
@@ -3733,7 +3733,7 @@ func layoutUI(hwnd uintptr) {
 	procMoveWindow.Call(app.renameToolLabel, uintptr(renameLabelX), uintptr(y+4), uintptr(renameLabelW), 20, 0)
 	recordAttachmentTrace("layout-after-renameToolLabel")
 	recordAttachmentTrace("layout-before-renameToolCombo")
-	procMoveWindow.Call(app.renameToolCombo, uintptr(renameComboX), uintptr(y), uintptr(renameComboW), 220, 0)
+	moveLayoutCombo(app.renameToolCombo, uintptr(renameComboX), uintptr(y), uintptr(renameComboW), 220)
 	recordAttachmentTrace("layout-after-renameToolCombo")
 	recordAttachmentTrace("layout-before-renameToolBtn")
 	procMoveWindow.Call(app.renameToolBtn, uintptr(renameApplyX), uintptr(y-1), uintptr(renameApplyW), 29, 0)
@@ -3757,7 +3757,7 @@ func layoutUI(hwnd uintptr) {
 	procMoveWindow.Call(app.destinationLabel, uintptr(labelX), uintptr(destY+4), uintptr(labelW), 20, 0)
 	recordAttachmentTrace("layout-after-destinationLabel")
 	recordAttachmentTrace("layout-before-destAliasCombo")
-	procMoveWindow.Call(app.destAliasCombo, uintptr(fieldX), uintptr(destY), uintptr(aliasW), 260, 0)
+	moveLayoutCombo(app.destAliasCombo, uintptr(fieldX), uintptr(destY), uintptr(aliasW), 260)
 	recordAttachmentTrace("layout-after-destAliasCombo")
 	recordAttachmentTrace("layout-before-pathLabel")
 	procMoveWindow.Call(app.pathLabel, uintptr(pathLabelX), uintptr(destY+4), uintptr(pathLabelW), 20, 0)
@@ -5210,7 +5210,7 @@ func updatePreviewZoomControls() {
 	}
 	for _, hwnd := range []uintptr{app.zoomOutBtn, app.zoom100Btn, app.zoomInBtn, app.zoomFitBtn, app.zoomFitWidthBtn} {
 		if hwnd != 0 {
-			procShowWindow.Call(hwnd, show)
+			setPreviewControlVisible(hwnd, show != 0)
 		}
 	}
 	zoomEnabled := uintptr(0)
@@ -5227,14 +5227,14 @@ func updatePreviewZoomControls() {
 	}
 	for _, hwnd := range []uintptr{app.zoomOutBtn, app.zoom100Btn, app.zoomInBtn} {
 		if hwnd != 0 {
-			procEnableWindow.Call(hwnd, zoomEnabled)
+			setPreviewControlEnabled(hwnd, zoomEnabled != 0)
 		}
 	}
 	if app.zoomFitBtn != 0 {
-		procEnableWindow.Call(app.zoomFitBtn, fitEnabled)
+		setPreviewControlEnabled(app.zoomFitBtn, fitEnabled != 0)
 	}
 	if app.zoomFitWidthBtn != 0 {
-		procEnableWindow.Call(app.zoomFitWidthBtn, fitWidthEnabled)
+		setPreviewControlEnabled(app.zoomFitWidthBtn, fitWidthEnabled != 0)
 	}
 }
 

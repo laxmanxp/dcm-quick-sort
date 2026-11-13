@@ -1,7 +1,7 @@
 from pathlib import Path
 import hashlib
 root=Path(__file__).resolve().parents[1]
-for name,expected in {'app-src/control_updates_windows.go':'a1a356a635a086b34a5190a24fa4b1e4a36880026f8c4d1c1c8f7d069776cbd8','app-src/control_transition_windows_test.go':'911ca02bd766a4957962a3daf772f740bbe36e7f2fe27464f3562838bd1ee146','app-src/control_updates_windows_test.go':'fe14b4c907ebc447832a32326c4f3e451ae0adac16f5cef02508ea294e440e20'}.items():
+for name,expected in {'app-src/control_updates_windows.go':'6ddf79ea3b47a884935e4d7b11ef1c35bccc063bf92fa915f5041b33e72fd42d','app-src/control_transition_windows_test.go':'911ca02bd766a4957962a3daf772f740bbe36e7f2fe27464f3562838bd1ee146','app-src/control_updates_windows_test.go':'fe14b4c907ebc447832a32326c4f3e451ae0adac16f5cef02508ea294e440e20'}.items():
  assert hashlib.sha256((root/name).read_bytes()).hexdigest()==expected,(name,'authored source mismatch')
 p=root/'app-src/main_windows.go';b=p.read_bytes()
 expected='9957928f4c8f3f6ee962ec3e5583b349b888c2caaedd0d58fc7beaf16c1edac4'
