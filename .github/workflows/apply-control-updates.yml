@@ -1,0 +1,31 @@
+name: Apply exact live-control update optimization
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/apply-control-updates.yml, qualification/apply-control-updates.py]
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.2'
+          cache: false
+      - run: python qualification/apply-control-updates.py
+      - name: Cross compile native tests and preserve portable ownership checks
+        working-directory: app-src
+        run: |
+          go test -race -count=1 -run 'Test(Sumatra|Prepared)' ./...
+          GOOS=windows GOARCH=amd64 go test -c -o "$RUNNER_TEMP/dcm-controls.test.exe" .
+      - name: Commit only reviewed main wiring
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'DCM reviewed-patch automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app-src/main_windows.go
+          git commit -m 'perf: avoid redundant live dropdown and zoom control updates'
+          git push origin HEAD:release/v1.0.71
