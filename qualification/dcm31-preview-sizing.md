@@ -119,6 +119,28 @@ recovery and normal-close evidence before reporting failure. Cell readability
 still requires separate image review. Establish this new assertion's native RED
 before changing production initialization. No numbered step closes here.
 
+## Native assertion RED and candidate correction
+
+The strengthened registered `ui-xlsx` test at
+`45679e0380ab9ee2d912203f64469239d5864068` ran as
+`dcm-quicksort-ui-xlsx-20261113-231926-395a05c1` and exited 1 with
+`DCM31_XLSX_NATIVE_BOUNDS`. The first Excel outer window is 723x390 versus the
+902x487 pane client; its inner window is 903x488. Reopening has both native windows
+at 903x488 and passes the same four-pixel allowance. The six ordinary workflow
+records still pass, and the failure is reported only after preserved-byte checks
+and normal exit 0. This is an actual assertion RED, not a timeout or inferred
+failure from a missing screenshot.
+
+The candidate production change calls the existing `resizePreviewHandler()` once
+after successful `DoPreview` and ownership assignment, before automatic fit and
+toolbar updates. It rereads the current pane client rectangle and uses the
+handler's normal `SetRect` interface, following the documented host sequence.
+It adds no scaling constant, timer, forced redraw or direct Excel-window input.
+The existing initialization-failure and unload paths are unchanged. This remains
+a candidate until the same native bounds gate and reviewed images pass. Regression
+scope includes the focused XLSX/Open XML and DOCX/font units, Windows cross-build,
+XLSX first-open/reopen and DOCX UI checks, followed by the native app baseline.
+
 ## Coverage limits and durable material
 
 The fallback parser/grid has focused unit coverage for blank/sparse sheets,

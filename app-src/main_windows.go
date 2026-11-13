@@ -5718,6 +5718,9 @@ func loadWindowsPreviewHandler(path string) bool {
 	app.preview = ph
 	app.previewFit = true
 	app.previewFitWidth = false
+	// Synchronize the created viewer with the current pane after DoPreview.
+	// Initial SetWindow geometry alone can leave Office's outer window undersized.
+	resizePreviewHandler()
 	autoFitPreviewIfSupported(path, clsidText)
 	updatePreviewZoomControls()
 	return true

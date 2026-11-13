@@ -21,8 +21,11 @@ axes. Reopening fills the pane; that is not a proven repair. `DCM-XLSX-SIZE-01`
 is open under DCM-31. Diagnostic source `b437ba2a` confirms the clip before Restore
 and over five seconds afterward, with idle host layout. The Excel outer viewport
 is 723x390 physical screen units while the pane client is 902x487; the inner view
-is already 903x488. The new registered `ui-xlsx` bounds assertion must first
-produce RED on unchanged production source, then qualify the smallest fix.
+is already 903x488. The registered bounds gate produced actual RED at `45679e0`
+in run `231926-395a05c1`: the first-open viewport fails while reopening passes.
+The candidate adds the documented post-DoPreview resize through the existing
+helper. Local focused tests and an exact pushed Lenovo build/UI regression must
+pass before this defect or DCM-31 can close.
 See [the sizing checkpoint](qualification/dcm31-preview-sizing.md).
 
 DCM-30's fresh registered Lenovo run at production source
