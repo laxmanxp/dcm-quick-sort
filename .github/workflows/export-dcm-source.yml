@@ -1,4 +1,4 @@
-# Refresh pinned source for bounded attachment-phase profiling with full geometry retained.
+# Refresh pinned source for unchanged dropdown geometry and host zoom-state optimization.
 name: Export pinned DCM source for local review
 on:
   push:
