@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,[string]$Runtime=$env:DCM_SUMATRA_SOURCE_EXE,[switch]$ResizeTiming)
+param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,[string]$Runtime=$env:DCM_SUMATRA_SOURCE_EXE,[switch]$ResizeTiming,[switch]$CompactLabels)
 # User-approved optional provider walking skeleton; only isolated fixtures/runtime.
 $ErrorActionPreference='Stop'
 Set-StrictMode -Version Latest
@@ -13,6 +13,7 @@ $receipt=[ordered]@{schema=1;feature='DCM-SUMATRA-01';passed=$false;report=$lab;
 $layoutFailures=New-Object 'Collections.Generic.List[string]'
 $layoutChecks=New-Object 'Collections.Generic.List[object]'
 $receipt['resize_layout_checks']=$layoutChecks
+$labelChecks=New-Object 'Collections.Generic.List[object]';$receipt['label_checks']=$labelChecks;$receipt['compact_labels']=[bool]$CompactLabels
 $script:toolbarNames=$null
 $app=$null;$hwnd=[IntPtr]::Zero;$head='';$manifest=@();$fixture=$null
 Write-Output ('REPORT_ROOT='+$lab)
@@ -41,6 +42,11 @@ function Shot([string]$name,[string]$color=''){
     Own;$area=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea;[DcmNative]::Restore($hwnd,$app.Id,$area.Left+8,$area.Top+8);Start-Sleep -Milliseconds 400
     $s=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'.png')),$false)
     $shots.Add([ordered]@{name=$name;path=$s.Path;sha256=(Hash $s.Path);teal=$s.TealSamples;orange=$s.OrangeSamples;visual_reviewed=$false})
+    if($CompactLabels -and $name -ne 'failure'){
+        $labels=[DcmLabelProbe]::Check($hwnd,$app.Id);$labelChecks.Add([ordered]@{name=$name;audit=$labels})
+        Json (Join-Path $lab ($name+'-labels.json')) $labels
+        if(-not $labels.Passed){throw ('COMPACT_LABELS: '+($labels.Errors -join '; '))}
+    }
     if($name -in @('01-embedded-first-page','04j-resized-smaller','04k-resize-restored','07-narrower','07-restored','07-repeat-restored','06-moved-and-text-restored')){
         $background=[DcmSumatraProbe]::MeasureBackground($hwnd,$app.Id,$s.Path,$s.Left,$s.Top)
         $buttons=$null
@@ -102,6 +108,7 @@ try{
     $receipt['runtime_sha256']=Hash $runtimeExe;$receipt['policy_sha256']=Hash (Join-Path $runtimeDir 'sumatrapdfrestrict.ini')
     Add-Type -AssemblyName System.Drawing;Add-Type -AssemblyName System.Windows.Forms
     Add-Type -Path (Join-Path $repo 'tests/native/dcm-native.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
+    if($CompactLabels){Add-Type -Path (Join-Path $repo 'tests/native/dcm-label-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')}
     Add-Type -Path (Join-Path $repo 'tests/native/dcm-sumatra-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','Accessibility.dll','System.Drawing.dll')
     if($ResizeTiming){Add-Type -Path (Join-Path $repo 'tests/native/dcm-layout-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll');Add-Type -Path (Join-Path $repo 'tests/native/dcm-undo-input.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')}
     . (Join-Path $repo 'tests/native/new-fixtures.ps1');$fixture=New-DcmFixtures $lab
@@ -119,6 +126,7 @@ try{
     $until=[DateTime]::UtcNow.AddSeconds(15);do{$app.Refresh();$hwnd=$app.MainWindowHandle;if($hwnd -ne [IntPtr]::Zero){break};Start-Sleep -Milliseconds 100}while([DateTime]::UtcNow -lt $until)
     Wait 'fixture list' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 4}
     [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1003,'Accepted')
+    if($CompactLabels){[DcmLabelProbe]::LongSort($hwnd,$app.Id);Start-Sleep -Milliseconds 300}
     SelectFile '08-preview.pdf';$v=Viewer;Start-Sleep -Milliseconds 800;Shot '01-embedded-first-page' 'teal';AddPass 'embedded-owned-restricted-first-page'
     Json (Join-Path $lab 'toolbar-accessibility.json') ([DcmSumatraProbe]::ToolbarButtons($hwnd,$app.Id,$v.pid))
     [DcmSumatraProbe]::Command($hwnd,$app.Id,$v.pid,260);Start-Sleep -Milliseconds 400;Shot '01b-first-boundary' 'teal';AddPass 'first-page-boundary'
@@ -207,6 +215,7 @@ try{
     foreach($v in $viewers){$p=Get-Process -Id $v.pid -ErrorAction SilentlyContinue;if($p -and $p.StartTime.ToUniversalTime().ToString('o') -eq $v.start){throw 'Orphaned owned Sumatra process'}}
     CheckSource;$receipt['source_unchanged']=$true;$receipt['fixtures_preserved']=$true
     if($layoutFailures.Count){throw ($layoutFailures -join '; ')}
+    if($CompactLabels){AddPass 'all-audited-labels-and-selected-values-fit-without-overlap'}
     AddPass 'all-visible-toolbar-buttons-contained'
     AddPass 'host-background-clean-before-and-after-resize'
     $receipt.passed=$true
