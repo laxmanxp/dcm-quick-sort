@@ -4921,6 +4921,7 @@ func loadPreview(path string) {
 	if hasHandler && loadWindowsPreviewHandler(path) {
 		app.fallback = ""
 		app.previewActive = true
+		setText(app.statusLabel, "Windows preview: "+strings.ToUpper(strings.TrimPrefix(filepath.Ext(path), ".")))
 		return
 	}
 
