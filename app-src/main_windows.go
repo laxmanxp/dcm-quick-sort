@@ -3146,6 +3146,9 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 			setText(app.statusLabel, "Select a file or processed transaction. F5 reloads the source; Ctrl+\\ fits the preview.")
 		}
 		return 0
+	case wmStartupProbe:
+		startupHeartbeat(hwnd, wParam)
+		return 0
 	case wmLayoutTraceFence:
 		layoutTraceFence(hwnd, wParam)
 		return 0
@@ -5795,6 +5798,7 @@ func initGDIPlus() bool {
 }
 
 func main() {
+	defer flushStartupTrace()
 	defer flushLayoutTrace()
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()

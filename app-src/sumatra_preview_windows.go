@@ -90,20 +90,25 @@ func startSumatraPreview(path string) bool {
 	if !useSumatraProvider() {
 		return false
 	}
+	id := beginStartupTrace()
+	defer recordStartupTrace(id, "start-return")
 	if err := stopSumatraPreview(); err != nil {
 		sumatraError(err)
 		return true
 	}
+	recordStartupTrace(id, "previous-released")
 	document, err := validateSumatraDocument(path)
 	if err != nil {
 		sumatraError(err)
 		return true
 	}
+	recordStartupTrace(id, "document-validated")
 	exe, err := validateSumatraRuntime(os.Getenv("DCM_SUMATRA_EXE"))
 	if err != nil {
 		sumatraError(err)
 		return true
 	}
+	recordStartupTrace(id, "runtime-validated")
 	profile, err := os.MkdirTemp("", "dcm-sumatra-")
 	if err != nil {
 		sumatraError(err)
@@ -143,9 +148,11 @@ func startSumatraPreview(path string) bool {
 	si.Cb = uint32(unsafe.Sizeof(si))
 	si.Flags = 1
 	si.ShowWindow = 0
+	recordStartupTrace(id, "profile-job-prepared")
 	var pi syscall.ProcessInformation
 	ok, _, e := spCreateProcess.Call(uintptr(unsafe.Pointer(wstr(exe))), uintptr(unsafe.Pointer(&command[0])), 0, 0, 0, 4, 0, uintptr(unsafe.Pointer(wstr(filepath.Dir(exe)))), uintptr(unsafe.Pointer(&si)), uintptr(unsafe.Pointer(&pi)))
 	runtime.KeepAlive(command)
+	recordStartupTrace(id, "create-process-return")
 	if ok == 0 {
 		spClose.Call(job)
 		os.RemoveAll(profile)
@@ -165,6 +172,7 @@ func startSumatraPreview(path string) bool {
 		sumatraError(fmt.Errorf("resume viewer: %w", e))
 		return true
 	}
+	recordStartupTrace(id, "process-resumed")
 	app.fallback = "Loading PDF in Sumatra…"
 	setText(app.statusLabel, "Loading PDF in restricted Sumatra preview…")
 	if timer, _, _ := spSetTimer.Call(app.hwnd, sumatraTimerID, 100, 0); timer == 0 {
@@ -195,8 +203,10 @@ func pollSumatraPreview() {
 		}
 		spEnumChildren.Call(app.previewHwnd, sumatraFindChild, 0)
 		if v.child != 0 {
+			recordStartupTrace(startupProbeSequence, "child-attached")
 			layoutUI(app.hwnd)
 			resizeSumatraPreview()
+			recordStartupTrace(startupProbeSequence, "attachment-layout-complete")
 			app.fallback = ""
 			updateSumatraStatus(v, sumatraCurrentDocumentStatus(v))
 			updatePreviewZoomControls()

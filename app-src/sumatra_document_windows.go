@@ -108,6 +108,7 @@ func sumatraCurrentDocumentStatus(v *sumatraSession) string {
 	return sumatraDocumentStatus(q.known, q.label)
 }
 func updateSumatraStatus(v *sumatraSession, status string) {
+	recordStartupReady(status)
 	if sumatraView == v && v.status != status {
 		v.status = status
 		if v.child == 0 {
