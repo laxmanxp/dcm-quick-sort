@@ -3579,12 +3579,24 @@ func layoutUI(hwnd uintptr) {
 	if sourcePathW < 180 {
 		sourcePathW = 180
 	}
+	recordAttachmentTrace("layout-before-sourceAliasCombo")
 	procMoveWindow.Call(app.sourceAliasCombo, 85, 13, uintptr(aliasWTop), 240, 0)
+	recordAttachmentTrace("layout-after-sourceAliasCombo")
+	recordAttachmentTrace("layout-before-sourceEdit")
 	procMoveWindow.Call(app.sourceEdit, uintptr(sourcePathX), 14, uintptr(sourcePathW), 25, 0)
+	recordAttachmentTrace("layout-after-sourceEdit")
+	recordAttachmentTrace("layout-before-sourceBtn")
 	procMoveWindow.Call(app.sourceBtn, uintptr(sourceBrowseX), 13, uintptr(sourceBrowseW), 27, 0)
+	recordAttachmentTrace("layout-after-sourceBtn")
+	recordAttachmentTrace("layout-before-recoveryBtn")
 	procMoveWindow.Call(app.recoveryBtn, uintptr(recoveryX), 13, uintptr(recoveryW), 27, 0)
+	recordAttachmentTrace("layout-after-recoveryBtn")
+	recordAttachmentTrace("layout-before-reloadBtn")
 	procMoveWindow.Call(app.reloadBtn, uintptr(reloadX), 13, uintptr(reloadW), 27, 0)
+	recordAttachmentTrace("layout-after-reloadBtn")
+	recordAttachmentTrace("layout-before-sourceSuggestionList")
 	procMoveWindow.Call(app.sourceSuggestionList, uintptr(sourcePathX), 43, uintptr(sourcePathW), 140, 0)
+	recordAttachmentTrace("layout-after-sourceSuggestionList")
 	openFolderW := int32(110)
 	openFolderX := w - 20 - openFolderW
 	nameFilterX := int32(85)
@@ -3592,22 +3604,42 @@ func layoutUI(hwnd uintptr) {
 	if nameFilterW < 220 {
 		nameFilterW = 220
 	}
+	recordAttachmentTrace("layout-before-filterNameEdit")
 	procMoveWindow.Call(app.filterNameEdit, uintptr(nameFilterX), 49, uintptr(nameFilterW), 25, 0)
+	recordAttachmentTrace("layout-after-filterNameEdit")
+	recordAttachmentTrace("layout-before-openFolderBtn")
 	procMoveWindow.Call(app.openFolderBtn, uintptr(openFolderX), 48, uintptr(openFolderW), 27, 0)
+	recordAttachmentTrace("layout-after-openFolderBtn")
+	recordAttachmentTrace("layout-before-categoryCombo")
 	procMoveWindow.Call(app.categoryCombo, 85, 82, 165, 260, 0)
+	recordAttachmentTrace("layout-after-categoryCombo")
+	recordAttachmentTrace("layout-before-extensionCombo")
 	procMoveWindow.Call(app.extensionCombo, 340, 82, 150, 320, 0)
+	recordAttachmentTrace("layout-after-extensionCombo")
+	recordAttachmentTrace("layout-before-filterAgeCombo")
 	procMoveWindow.Call(app.filterAgeCombo, 545, 82, 135, 220, 0)
+	recordAttachmentTrace("layout-after-filterAgeCombo")
+	recordAttachmentTrace("layout-before-filterSizeCombo")
 	procMoveWindow.Call(app.filterSizeCombo, 735, 82, 135, 220, 0)
+	recordAttachmentTrace("layout-after-filterSizeCombo")
 	clearW := int32(105)
 	clearX := w - 20 - clearW
 	sortW := int32(190)
 	sortComboX := clearX - 8 - sortW
 	sortLabelW := int32(50)
 	sortLabelX := sortComboX - 5 - sortLabelW
+	recordAttachmentTrace("layout-before-filterSortLabel")
 	procMoveWindow.Call(app.filterSortLabel, uintptr(sortLabelX), 87, uintptr(sortLabelW), 20, 0)
+	recordAttachmentTrace("layout-after-filterSortLabel")
+	recordAttachmentTrace("layout-before-filterSortCombo")
 	procMoveWindow.Call(app.filterSortCombo, uintptr(sortComboX), 82, uintptr(sortW), 220, 0)
+	recordAttachmentTrace("layout-after-filterSortCombo")
+	recordAttachmentTrace("layout-before-filterClearBtn")
 	procMoveWindow.Call(app.filterClearBtn, uintptr(clearX), 81, uintptr(clearW), 28, 0)
+	recordAttachmentTrace("layout-after-filterClearBtn")
+	recordAttachmentTrace("layout-before-countLabel")
 	procMoveWindow.Call(app.countLabel, 20, 120, uintptr(listW), 24, 0)
+	recordAttachmentTrace("layout-after-countLabel")
 	zoomGap := int32(4)
 	zoomOutW, zoom100W, zoomInW, zoomFitW, zoomFitWidthW := int32(34), int32(56), int32(34), int32(44), int32(54)
 	zoomToolbarW := zoomOutW + zoom100W + zoomInW + zoomFitW + zoomFitWidthW + 4*zoomGap
@@ -3618,33 +3650,61 @@ func layoutUI(hwnd uintptr) {
 	if currentLabelW < 90 {
 		currentLabelW = 90
 	}
+	recordAttachmentTrace("layout-before-currentLabel")
 	procMoveWindow.Call(app.currentLabel, uintptr(previewX), 120, uintptr(currentLabelW), 24, 0)
+	recordAttachmentTrace("layout-after-currentLabel")
+	recordAttachmentTrace("layout-before-readTextCheck")
 	procMoveWindow.Call(app.readTextCheck, uintptr(readTextX), 116, uintptr(readTextW), 27, 0)
+	recordAttachmentTrace("layout-after-readTextCheck")
+	recordAttachmentTrace("layout-before-zoomOutBtn")
 	procMoveWindow.Call(app.zoomOutBtn, uintptr(zoomX), 116, uintptr(zoomOutW), 27, 0)
+	recordAttachmentTrace("layout-after-zoomOutBtn")
 	zoomX += zoomOutW + zoomGap
+	recordAttachmentTrace("layout-before-zoom100Btn")
 	procMoveWindow.Call(app.zoom100Btn, uintptr(zoomX), 116, uintptr(zoom100W), 27, 0)
+	recordAttachmentTrace("layout-after-zoom100Btn")
 	zoomX += zoom100W + zoomGap
+	recordAttachmentTrace("layout-before-zoomInBtn")
 	procMoveWindow.Call(app.zoomInBtn, uintptr(zoomX), 116, uintptr(zoomInW), 27, 0)
+	recordAttachmentTrace("layout-after-zoomInBtn")
 	zoomX += zoomInW + zoomGap
+	recordAttachmentTrace("layout-before-zoomFitBtn")
 	procMoveWindow.Call(app.zoomFitBtn, uintptr(zoomX), 116, uintptr(zoomFitW), 27, 0)
+	recordAttachmentTrace("layout-after-zoomFitBtn")
 	zoomX += zoomFitW + zoomGap
+	recordAttachmentTrace("layout-before-zoomFitWidthBtn")
 	procMoveWindow.Call(app.zoomFitWidthBtn, uintptr(zoomX), 116, uintptr(zoomFitWidthW), 27, 0)
+	recordAttachmentTrace("layout-after-zoomFitWidthBtn")
 	undoW := int32(68)
 	undoBatchW := int32(88)
 	headerGap := int32(4)
 	titleW := processedW - undoBatchW - undoW - (2 * headerGap)
+	recordAttachmentTrace("layout-before-processedTitleLabel")
 	procMoveWindow.Call(app.processedTitleLabel, uintptr(processedX), 120, uintptr(titleW), 24, 0)
+	recordAttachmentTrace("layout-after-processedTitleLabel")
+	recordAttachmentTrace("layout-before-undoBatchBtn")
 	procMoveWindow.Call(app.undoBatchBtn, uintptr(processedX+titleW+headerGap), 116, uintptr(undoBatchW), 27, 0)
+	recordAttachmentTrace("layout-after-undoBatchBtn")
+	recordAttachmentTrace("layout-before-undoBtn")
 	procMoveWindow.Call(app.undoBtn, uintptr(processedX+processedW-undoW), 116, uintptr(undoW), 27, 0)
+	recordAttachmentTrace("layout-after-undoBtn")
+	recordAttachmentTrace("layout-before-fileList")
 	procMoveWindow.Call(app.fileList, 20, 148, uintptr(listW), uintptr(previewH), 0)
+	recordAttachmentTrace("layout-after-fileList")
+	recordAttachmentTrace("layout-before-previewHwnd")
 	procMoveWindow.Call(app.previewHwnd, uintptr(previewX), 148, uintptr(previewW), uintptr(previewH), 0)
+	recordAttachmentTrace("layout-after-previewHwnd")
+	recordAttachmentTrace("layout-before-processedSearchEdit")
 	procMoveWindow.Call(app.processedSearchEdit, uintptr(processedX), 148, uintptr(processedW), 25, 0)
+	recordAttachmentTrace("layout-after-processedSearchEdit")
 	processedListY := int32(181)
 	processedListH := previewH - (processedListY - 148)
 	if processedListH < 120 {
 		processedListH = 120
 	}
+	recordAttachmentTrace("layout-before-processedList")
 	procMoveWindow.Call(app.processedList, uintptr(processedX), uintptr(processedListY), uintptr(processedW), uintptr(processedListH), 0)
+	recordAttachmentTrace("layout-after-processedList")
 	y := int32(158) + previewH
 	// Keep the lower form on a single alignment grid. Labels and controls move
 	// together so DPI/window changes cannot make rows drift independently.
@@ -3652,7 +3712,9 @@ func layoutUI(hwnd uintptr) {
 	labelW := int32(70)
 	fieldX := labelX + labelW + 5
 	rowH := int32(28)
+	recordAttachmentTrace("layout-before-nameLabel")
 	procMoveWindow.Call(app.nameLabel, uintptr(labelX), uintptr(y+4), uintptr(labelW), 20, 0)
+	recordAttachmentTrace("layout-after-nameLabel")
 	renameApplyW := int32(110)
 	renameComboW := int32(165)
 	renameLabelW := int32(35)
@@ -3664,10 +3726,18 @@ func layoutUI(hwnd uintptr) {
 	if nameW < 220 {
 		nameW = 220
 	}
+	recordAttachmentTrace("layout-before-nameEdit")
 	procMoveWindow.Call(app.nameEdit, uintptr(fieldX), uintptr(y), uintptr(nameW), uintptr(rowH), 0)
+	recordAttachmentTrace("layout-after-nameEdit")
+	recordAttachmentTrace("layout-before-renameToolLabel")
 	procMoveWindow.Call(app.renameToolLabel, uintptr(renameLabelX), uintptr(y+4), uintptr(renameLabelW), 20, 0)
+	recordAttachmentTrace("layout-after-renameToolLabel")
+	recordAttachmentTrace("layout-before-renameToolCombo")
 	procMoveWindow.Call(app.renameToolCombo, uintptr(renameComboX), uintptr(y), uintptr(renameComboW), 220, 0)
+	recordAttachmentTrace("layout-after-renameToolCombo")
+	recordAttachmentTrace("layout-before-renameToolBtn")
 	procMoveWindow.Call(app.renameToolBtn, uintptr(renameApplyX), uintptr(y-1), uintptr(renameApplyW), 29, 0)
+	recordAttachmentTrace("layout-after-renameToolBtn")
 
 	destY := y + 38
 	aliasW := int32(185)
@@ -3683,25 +3753,55 @@ func layoutUI(hwnd uintptr) {
 	if pathW < 180 {
 		pathW = 180
 	}
+	recordAttachmentTrace("layout-before-destinationLabel")
 	procMoveWindow.Call(app.destinationLabel, uintptr(labelX), uintptr(destY+4), uintptr(labelW), 20, 0)
+	recordAttachmentTrace("layout-after-destinationLabel")
+	recordAttachmentTrace("layout-before-destAliasCombo")
 	procMoveWindow.Call(app.destAliasCombo, uintptr(fieldX), uintptr(destY), uintptr(aliasW), 260, 0)
+	recordAttachmentTrace("layout-after-destAliasCombo")
+	recordAttachmentTrace("layout-before-pathLabel")
 	procMoveWindow.Call(app.pathLabel, uintptr(pathLabelX), uintptr(destY+4), uintptr(pathLabelW), 20, 0)
+	recordAttachmentTrace("layout-after-pathLabel")
+	recordAttachmentTrace("layout-before-destEdit")
 	procMoveWindow.Call(app.destEdit, uintptr(pathX), uintptr(destY), uintptr(pathW), uintptr(rowH), 0)
+	recordAttachmentTrace("layout-after-destEdit")
+	recordAttachmentTrace("layout-before-destBtn")
 	procMoveWindow.Call(app.destBtn, uintptr(browseX), uintptr(destY-1), uintptr(browseW), 29, 0)
+	recordAttachmentTrace("layout-after-destBtn")
+	recordAttachmentTrace("layout-before-destOpenBtn")
 	procMoveWindow.Call(app.destOpenBtn, uintptr(openDestX), uintptr(destY-1), uintptr(openDestW), 29, 0)
+	recordAttachmentTrace("layout-after-destOpenBtn")
 	by := y + 85
+	recordAttachmentTrace("layout-before-renameBtn")
 	procMoveWindow.Call(app.renameBtn, 20, uintptr(by), 90, 34, 0)
+	recordAttachmentTrace("layout-after-renameBtn")
+	recordAttachmentTrace("layout-before-moveBtn")
 	procMoveWindow.Call(app.moveBtn, 120, uintptr(by), 145, 34, 0)
+	recordAttachmentTrace("layout-after-moveBtn")
+	recordAttachmentTrace("layout-before-nextBtn")
 	procMoveWindow.Call(app.nextBtn, 275, uintptr(by), 80, 34, 0)
+	recordAttachmentTrace("layout-after-nextBtn")
+	recordAttachmentTrace("layout-before-openBtn")
 	procMoveWindow.Call(app.openBtn, 365, uintptr(by), 80, 34, 0)
+	recordAttachmentTrace("layout-after-openBtn")
+	recordAttachmentTrace("layout-before-fileFlowBtn")
 	procMoveWindow.Call(app.fileFlowBtn, 455, uintptr(by), 170, 34, 0)
+	recordAttachmentTrace("layout-after-fileFlowBtn")
+	recordAttachmentTrace("layout-before-statusLabel")
 	procMoveWindow.Call(app.statusLabel, 20, uintptr(by+43), uintptr(w-40), 20, 0)
+	recordAttachmentTrace("layout-after-statusLabel")
+	recordAttachmentTrace("layout-before-keyboardHintLabel")
 	procMoveWindow.Call(app.keyboardHintLabel, 20, uintptr(by+64), uintptr(w-40), 18, 0)
+	recordAttachmentTrace("layout-after-keyboardHintLabel")
+	recordAttachmentTrace("layout-before-destSuggestionList")
 	procMoveWindow.Call(app.destSuggestionList, uintptr(pathX), uintptr(destY+31), uintptr(pathW), 140, 0)
+	recordAttachmentTrace("layout-after-destSuggestionList")
 	// Reposition the whole layout without 49 intermediate synchronous repaints.
 	// Invalidate client/non-client areas once after the final geometry is set.
 	// Queue repaint only: never synchronously wait on the foreign PDF renderer.
+	recordAttachmentTrace("layout-before-invalidation")
 	procRedrawWindow.Call(hwnd, 0, 0, 0x0001|0x0004|0x0080|0x0400)
+	recordAttachmentTrace("layout-after-invalidation")
 }
 
 func populateFileList() {

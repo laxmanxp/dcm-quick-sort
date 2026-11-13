@@ -139,21 +139,32 @@ func pollSumatraPreview() {
 		spEnumChildren.Call(app.previewHwnd, sumatraFindChild, 0)
 		if v.child != 0 {
 			recordStartupTrace(v.traceID, "child-attached")
+			endAttachmentProfile := beginAttachmentProfile(v.traceID)
+			defer endAttachmentProfile()
 			layoutUI(app.hwnd)
+			recordAttachmentTrace("layout-complete-before-viewer-resize")
 			resizeSumatraPreview()
 			recordStartupTrace(v.traceID, "attachment-layout-complete")
+			recordAttachmentTrace("viewer-resize-complete")
 			app.fallback = ""
+			recordAttachmentTrace("initial-status-begin")
 			updateSumatraStatus(v, sumatraCurrentDocumentStatus(v))
+			recordAttachmentTrace("initial-status-end")
 			updatePreviewZoomControls()
+			recordAttachmentTrace("host-zoom-controls-end")
 			procInvalidateRect.Call(app.previewHwnd, 0, 1)
+			recordAttachmentTrace("preview-invalidation-end")
 		} else if time.Now().After(v.deadline) {
 			_ = stopSumatraPreview()
 			sumatraError(errors.New("Sumatra did not attach within the startup deadline"))
 		}
 	}
 	if sumatraView == v && v.child != 0 {
+		recordAttachmentTrace("toolbar-repair-begin")
 		repairSumatraToolbar(v)
+		recordAttachmentTrace("toolbar-repair-end")
 		updateSumatraStatus(v, sumatraCurrentDocumentStatus(v))
+		recordAttachmentTrace("final-status-end")
 	}
 }
 func resizeSumatraPreview() {
