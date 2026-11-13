@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,[string]$Letter='D:\FlowverseReportsRepo\dcm-flowuivision-20261103\inbox\05-letter.docx')
 # DCM-30. Natural installed-handler/fallback selection; never alter registrations.
-# The text assertions qualify the observed Open XML fallback, not Word fidelity.
+# Native handler content requires separate screenshot review; fallback text is asserted.
 $ErrorActionPreference='Stop';Set-StrictMode -Version Latest
 if($env:OS -ne 'Windows_NT' -or -not [Environment]::Is64BitProcess){throw 'Native Windows x64 required'}
 if(-not $BuildReceipt -or -not $env:FLOWDEV_WORKSPACE_ROOT){throw 'Exact build and workspace required'}
@@ -41,6 +41,18 @@ function ExpectBody([string]$name,[string[]]$tokens,[string[]]$absent){
  return $p
 }
 function CheckStatus([string]$prefix){$found=@([DcmTextProbe]::Controls($hwnd,$app.Id)|Where-Object {$_.Visible -and $_.Class -eq 'Static' -and $_.Text.StartsWith($prefix,[StringComparison]::Ordinal)});if($found.Count -ne 1){throw ('DOCX provider/status missing: '+$prefix)};return $found[0].Text}
+function NativeShot([string]$name){
+ Own;$nodes=@([DcmDocxProbe]::Snapshot($hwnd,$app.Id));$foreign=@($nodes|Where-Object {$_.Visible -and $_.PID -ne $app.Id})
+ if(-not $foreign.Count){throw 'Expected embedded native DOCX subtree missing'}
+ Json (Join-Path $lab ($name+'.native-windows.json')) $nodes
+ $identities=@($foreign|Select-Object -ExpandProperty PID -Unique|ForEach-Object {$p=Get-Process -Id $_;[ordered]@{pid=$p.Id;path=$p.Path;start=$p.StartTime.ToUniversalTime().ToString('o')}})
+ $text=[DcmDocxProbe]::ReadAccessibleText($hwnd,$app.Id);[IO.File]::WriteAllText((Join-Path $lab ($name+'.accessible.txt')),$text,$utf8)
+ Start-Sleep -Milliseconds 500;Shot $name
+ $captions=@([DcmDocxProbe]::HostStatics($hwnd,$app.Id)|ForEach-Object {[DcmNative]::Text([IntPtr]$_,$app.Id)})
+ $receipt['last_native_status_captions']=$captions
+ if(-not ($captions -ccontains 'Windows preview: DOCX')){throw 'DCM30_STALE_PROVIDER_STATUS: native DOCX preview is active but its provider/type is not identified'}
+ Record $name ([ordered]@{native_identities=$identities;accessible_text_sha256=(Hash (Join-Path $lab ($name+'.accessible.txt')));rendered_content_review='required_separately';status='Windows preview: DOCX'})
+}
 function Exclusive([string]$name){$h=[IO.File]::Open((Join-Path $fixture.inbox $name),[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::None);$h.Dispose()}
 function StopApp {
  if(-not $app){return};Own
@@ -63,13 +75,15 @@ try {
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-native.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-text-probe.cs')
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-undo-input.cs')
+ Add-Type -AssemblyName UIAutomationClient;Add-Type -AssemblyName UIAutomationTypes;Add-Type -AssemblyName WindowsBase
+ Add-Type -Path (Join-Path $repo 'tests/native/dcm-docx-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll',([Windows.Automation.AutomationElement]).Assembly.Location,([Windows.Automation.AutomationPattern]).Assembly.Location,([Windows.Point]).Assembly.Location)
  . (Join-Path $repo 'tests/native/new-fixtures.ps1');$fixture=New-DcmFixtures $lab
  Copy-Item -LiteralPath $Letter -Destination (Join-Path $fixture.inbox '05-letter.docx')
  $definition=Get-Content (Join-Path $repo 'tests/native/docx-content-fixture.json') -Raw -Encoding UTF8|ConvertFrom-Json
  $path=Join-Path $fixture.inbox '06-structured.DOCX';$zip=[IO.Compression.ZipFile]::Open($path,[IO.Compression.ZipArchiveMode]::Create)
  try{foreach($part in $definition.entries){if($part.name.StartsWith('/') -or $part.name.Contains('..')){throw 'Unsafe test ZIP part'};$entry=$zip.CreateEntry($part.name);$stream=$entry.Open();try{$bytes=if($part.PSObject.Properties.Name -contains 'text'){$utf8.GetBytes($part.text)}else{[Convert]::FromBase64String($part.base64)};$stream.Write($bytes,0,$bytes.Length)}finally{$stream.Dispose()}}}finally{$zip.Dispose()}
  Get-ChildItem $fixture.inbox -File|ForEach-Object {$expected[$_.Name]=Hash $_.FullName};$receipt['source_fixture_hashes']=$expected
- $receipt['historical_letter_source']=$Letter;$receipt['historical_currency_note']='The old fixture stores a literal question mark before 25,000; this is not an inferred rendering defect.'
+ $receipt['historical_letter_source']=$Letter;$receipt['historical_currency_note']='Console text conversion is not used as evidence of the currency glyph; the original fixture bytes are pinned.'
  $key='{8895b1c6-b41f-4c1c-a562-0d564250836f}';$reg=[Microsoft.Win32.Registry]::ClassesRoot;$r=$reg.OpenSubKey('.docx');$prog='';if($r){try{$prog=[string]$r.GetValue('')}finally{$r.Dispose()}}
  $registrations=@();foreach($k in @(($prog+'\shellex\'+$key),('.docx\shellex\'+$key),('SystemFileAssociations\.docx\shellex\'+$key))){$r=$reg.OpenSubKey($k);$value=$null;if($r){try{$value=$r.GetValue('')}finally{$r.Dispose()}};$registrations+=[ordered]@{key=$k;value=$value}};$receipt['handler_registrations_read_only']=$registrations
  $exe=Join-Path $lab ('DCM-DOCX-'+[Guid]::NewGuid().ToString('N')+'.exe');Copy-Item $build.app_artifact.path $exe
@@ -82,7 +96,17 @@ try {
  Wait 'fixture list' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq $expected.Count}
  SelectFile '01-alpha.txt';$plain=[IO.File]::ReadAllText((Join-Path $fixture.inbox '01-alpha.txt'));$p=ExpectBody '01-initial-text' @($plain) @('DCM DOCX Preview');Shot '01-initial-text'
  SelectFile '05-letter.docx'
- $letterTokens=@('DCM DOCX Preview','Title: FlowDoc P3 Acceptance','Government of Odisha - Gurundia Block','Subject: Road Repair','Sanctioned amount: ?25,000','Generated by FlowDoc.','Block Development Officer','Rendered locally from DOCX Open XML')
+ $nodes=@([DcmDocxProbe]::Snapshot($hwnd,$app.Id));$native=@($nodes|Where-Object {$_.Visible -and $_.PID -ne $app.Id}).Count -gt 0
+ if($native){
+  $receipt.provider='Installed Windows DOCX preview handler';$receipt['native_visual_review_required']=$true
+  NativeShot '02-native-letter'
+  SelectFile '06-structured.DOCX';NativeShot '04-native-structured'
+  SelectFile '01-alpha.txt';$p=ExpectBody '08-text-recovery' @($plain) @('DCM-30 FIELD REPORT');Shot '08-text-recovery'
+  if(@([DcmDocxProbe]::Snapshot($hwnd,$app.Id)|Where-Object {$_.Visible -and $_.PID -ne $app.Id}).Count){throw 'Native viewer retained after text selection'}
+  Exclusive '05-letter.docx';Exclusive '06-structured.DOCX';Record '09-both-docx-files-released' $null
+  SelectFile '05-letter.docx';NativeShot '10-native-letter-reopened'
+ }else{
+ $letterTokens=@('DCM DOCX Preview','Title: FlowDoc P3 Acceptance','Government of Odisha - Gurundia Block','Subject: Road Repair',('Sanctioned amount: '+[char]0x20B9+'25,000'),'Generated by FlowDoc.','Block Development Officer','Rendered locally from DOCX Open XML')
  $p=ExpectBody '02-letter-content' $letterTokens @('DCM disposable native qualification fixture','DCM-30 FIELD REPORT');$receipt.provider='Built-in DOCX Open XML structured-text fallback';$receipt['letter_status']=CheckStatus 'DCM DOCX Preview:';Shot '02-letter-content';Exclusive '05-letter.docx';Record '03-letter-exclusive-access' $null
  SelectFile '06-structured.DOCX'
  $tokens=@('DCM DOCX Preview','Title: DCM-30 structured preview','DCM-30 FIELD REPORT','Alpha parcel: 31 units.','Formatting is intentionally mixed.',('Unicode: Caf'+[char]233),'Measurements','TABLE 1','| Item','Quantity','| Bolts','12','| Panels','3','[Image: Green sample square','green-square.png]','END DCM-30 ALPHA','Rendered locally from DOCX Open XML')
@@ -94,6 +118,7 @@ try {
  if((Preview).Text -cne $structured){throw 'Zoom reset changed content'};Record '07-docx-zoom-reset' $null
  SelectFile '01-alpha.txt';$p=ExpectBody '08-text-recovery' @($plain) @('DCM DOCX Preview','DCM-30 FIELD REPORT');Shot '08-text-recovery';Exclusive '05-letter.docx';Exclusive '06-structured.DOCX';Record '09-both-docx-files-released' $null
  SelectFile '05-letter.docx';$p=ExpectBody '10-letter-reopened' $letterTokens @('DCM-30 FIELD REPORT','TABLE 1');Shot '10-letter-reopened'
+ }
  Files;StopApp;Source;Exclusive '05-letter.docx';Exclusive '06-structured.DOCX'
  if((Hash $Letter) -ne $expected['05-letter.docx'] -or (Hash $exe) -ne $build.app_artifact.sha256){throw 'Original fixture/app changed'}
  Record '11-normal-close-and-original-bytes' $null;$receipt['source_unchanged']=$true;$receipt['fixtures_preserved']=$true;$receipt['journal_empty']=$true;$receipt.passed=$true
