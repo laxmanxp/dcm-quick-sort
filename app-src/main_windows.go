@@ -5017,6 +5017,7 @@ func unloadPreview() {
 		procIUnknownSetSite.Call(self, 0)
 		syscall.SyscallN(app.preview.Vtbl.Release, self)
 		app.preview = nil
+		setNativePreviewTraceActive(0, nativePreviewTraceSession{})
 	}
 	app.previewActive = false
 	releasePreviewImage()
@@ -5658,9 +5659,15 @@ func resizePreviewHandler() {
 	if app.preview == nil {
 		return
 	}
+	handler := uintptr(unsafe.Pointer(app.preview))
+	traceSession := nativePreviewTraceSessionFor(handler)
+	traceCall := beginNativePreviewTrace(traceSession, "GetClientRect", app.previewHwnd, handler, 0, nil)
 	var rc RECT
-	procGetClientRect.Call(app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
-	syscall.SyscallN(app.preview.Vtbl.SetRect, uintptr(unsafe.Pointer(app.preview)), uintptr(unsafe.Pointer(&rc)))
+	rectOK, _, _ := procGetClientRect.Call(app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
+	endNativePreviewTraceClientRect(traceCall, rectOK, rc)
+	traceCall = beginNativePreviewTrace(traceSession, "SetRect", app.previewHwnd, handler, 0, &rc)
+	hr, _, _ := syscall.SyscallN(app.preview.Vtbl.SetRect, uintptr(unsafe.Pointer(app.preview)), uintptr(unsafe.Pointer(&rc)))
+	endNativePreviewTraceHRESULT(traceCall, hr, handler)
 }
 
 func toggleCurrentPDFPreviewFit(path, clsidText string) bool {
@@ -5686,7 +5693,8 @@ func loadWindowsPreviewHandler(path string) bool {
 	if !guidFromString(clsidText, &clsid) || !guidFromString("{8895b1c6-b41f-4c1c-a562-0d564250836f}", &iidPreview) {
 		return false
 	}
-	ph := createPreviewHandler(&clsid, &iidPreview)
+	traceSession := newNativePreviewTraceSession(clsid)
+	ph := createPreviewHandler(&clsid, &iidPreview, traceSession)
 	if ph == nil {
 		return false
 	}
@@ -5701,14 +5709,20 @@ func loadWindowsPreviewHandler(path string) bool {
 		return false
 	}
 	var rc RECT
-	procGetClientRect.Call(app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
+	traceCall := beginNativePreviewTrace(traceSession, "GetClientRect", app.previewHwnd, self, 0, nil)
+	rectOK, _, _ := procGetClientRect.Call(app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
+	endNativePreviewTraceClientRect(traceCall, rectOK, rc)
+	traceCall = beginNativePreviewTrace(traceSession, "SetWindow", app.previewHwnd, self, 0, &rc)
 	hr, _, _ := syscall.SyscallN(ph.Vtbl.SetWindow, self, app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
+	endNativePreviewTraceHRESULT(traceCall, hr, self)
 	if hresultFailed(hr) {
 		procIUnknownSetSite.Call(self, 0)
 		syscall.SyscallN(ph.Vtbl.Release, self)
 		return false
 	}
+	traceCall = beginNativePreviewTrace(traceSession, "DoPreview", app.previewHwnd, self, 0, nil)
 	hr, _, _ = syscall.SyscallN(ph.Vtbl.DoPreview, self)
+	endNativePreviewTraceHRESULT(traceCall, hr, self)
 	if hresultFailed(hr) {
 		syscall.SyscallN(ph.Vtbl.Unload, self)
 		procIUnknownSetSite.Call(self, 0)
@@ -5716,6 +5730,7 @@ func loadWindowsPreviewHandler(path string) bool {
 		return false
 	}
 	app.preview = ph
+	setNativePreviewTraceActive(self, traceSession)
 	app.previewFit = true
 	app.previewFitWidth = false
 	// Synchronize the created viewer with the current pane after DoPreview.
@@ -5726,14 +5741,16 @@ func loadWindowsPreviewHandler(path string) bool {
 	return true
 }
 
-func createPreviewHandler(clsid, iidPreview *GUID) *iPreviewHandler {
+func createPreviewHandler(clsid, iidPreview *GUID, traceSession nativePreviewTraceSession) *iPreviewHandler {
 	// Explorer-style preview handlers are intended to run out of process in
 	// Prevhost.exe. Prefer LOCAL_SERVER so COM can use that surrogate. Some
 	// third-party handlers are registered only in-process, so keep a guarded
 	// compatibility fallback.
 	for _, ctx := range []uintptr{CLSCTX_LOCAL_SERVER, CLSCTX_INPROC_SERVER} {
 		var ph *iPreviewHandler
+		traceCall := beginNativePreviewTrace(traceSession, "CoCreateInstance", app.previewHwnd, 0, ctx, nil)
 		hr, _, _ := procCoCreateInstance.Call(uintptr(unsafe.Pointer(clsid)), 0, ctx, uintptr(unsafe.Pointer(iidPreview)), uintptr(unsafe.Pointer(&ph)))
+		endNativePreviewTraceHRESULT(traceCall, hr, uintptr(unsafe.Pointer(ph)))
 		if !hresultFailed(hr) && ph != nil {
 			return ph
 		}

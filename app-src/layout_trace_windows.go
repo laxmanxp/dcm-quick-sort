@@ -83,11 +83,15 @@ func flushLayoutTrace() {
 	for i := start; i < n; i++ {
 		events = append(events, layoutTraceEvents[i%layoutTraceLimit])
 	}
+	nativeTotal, nativeEvents := nativePreviewTraceSnapshot()
 	b, err := json.MarshalIndent(struct {
-		Schema int                `json:"schema"`
-		Total  uint64             `json:"total"`
-		Events []layoutTraceEvent `json:"events"`
-	}{1, n, events}, "", "  ")
+		Schema             int                       `json:"schema"`
+		Total              uint64                    `json:"total"`
+		Events             []layoutTraceEvent        `json:"events"`
+		NativePreviewLimit int                       `json:"native_preview_limit"`
+		NativePreviewTotal uint64                    `json:"native_preview_total"`
+		NativePreviewCalls []nativePreviewTraceEvent `json:"native_preview_calls"`
+	}{1, n, events, nativePreviewTraceLimit, nativeTotal, nativeEvents}, "", "  ")
 	if err == nil {
 		_ = os.WriteFile(filepath.Join(os.TempDir(), "dcm-layout-trace.json"), b, 0600)
 	}

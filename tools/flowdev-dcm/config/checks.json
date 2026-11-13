@@ -35,6 +35,7 @@
         "ui-refresh": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-refresh.ps1"],
         "text-unit": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "regressions", "-Run", "^TestDCM26"],
         "xlsx-unit": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "regressions", "-Run", "^(Test(XLSX|RenderXLSX)|Test(OpenXML|InspectOpenXML|ResolveOpenXML|ReadOpenXML|ReadZipEntryLimited|OfficeFoundation))"],
+        "native-preview-rect-unit": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "regressions", "-Run", "^TestDCM31NativePreviewPhysicalRect"],
         "ui-docx": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-docx.ps1"],
         "ui-xlsx": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-xlsx.ps1", "-RequireNativeBounds"],
         "ui-xlsx-layout": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-xlsx.ps1", "-ObserveNativeLayout", "-RequireNativeBounds"],

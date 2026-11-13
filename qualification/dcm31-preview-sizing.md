@@ -141,7 +141,43 @@ a candidate until the same native bounds gate and reviewed images pass. Regressi
 scope includes the focused XLSX/Open XML and DOCX/font units, Windows cross-build,
 XLSX first-open/reopen and DOCX UI checks, followed by the native app baseline.
 
+## Post-initialization resize alone is ineffective
+
+Candidate `33cbe3c7d6ae8f00250079da456695a22ac5095d` passed the 24 XLSX/Open XML
+and seven DOCX/font local units and Windows cross-build. It was pushed before
+FlowDev update/build and the same native `ui-xlsx` gate. The new native app hash is
+`2f230b189c49289cbcce6c48adea2c9b8acddf94083f047a08fa6cda5f7cbaf2`.
+Run `dcm-quicksort-ui-xlsx-20261113-232554-5572d8ff` still exits 1 with
+`DCM31_XLSX_NATIVE_BOUNDS` for first open: outer 723x390, inner 903x488, expected
+client 902x487. Reopening passes both native rectangles. Source, files, journal
+and normal close remain preserved. The post-initialization call is consistent
+with the documented lifecycle but does not resolve this defect.
+
+The next diagnostic records the supplied rectangle, GetClientRect success,
+caller DPI context and COM HRESULT rather than assuming the ignored SetRect
+result was successful. A separate real-HWND Windows unit will establish whether
+the proposed measurement boundary returns physical client dimensions and restores
+its caller context. A physical-rectangle experiment must be scoped to the observed
+Excel CLSID `{00020827-0000-0000-C000-000000000046}` and prove both first open and
+reopen; the currently correct inner/reopened windows must not become oversized.
+The preview-handler documentation specifies an area in the parent HWND but does
+not establish an unconditional physical-pixel contract for all providers.
+
 ## Coverage limits and durable material
+
+The next diagnostic adds bounded, opt-in native-call records to the existing
+`DCM_LAYOUT_TRACE=1` output. It preserves the first 128 activation/GetClientRect/
+SetWindow/DoPreview/SetRect records, including the selected CLSID, caller and pane
+DPI contexts, rectangle arguments and exact HRESULTs. It does not alter DPI
+contexts or native call ordering. A separate, currently unwired measurement
+boundary deliberately retains logical GetClientRect behavior so the registered
+`native-preview-rect-unit` can establish a real RED on Lenovo before correction.
+The hidden owned HWND tests cover nine creator/caller DPI combinations, invalid
+handles, unchanged window geometry/awareness and caller-context restoration.
+An unavailable API or absent non-100% scaling is an explicit unqualified skip.
+The combined diagnostic/scaffold passes the existing 24 XLSX/Open XML and seven
+DOCX/font local units; both the Windows app and Windows test binary cross-compile.
+Native execution of this diagnostic/scaffold remains pending at this checkpoint.
 
 The fallback parser/grid has focused unit coverage for blank/sparse sheets,
 shared/inline strings, dates, cached formulas, bounds and malformed packages.

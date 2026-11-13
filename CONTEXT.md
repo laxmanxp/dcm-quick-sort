@@ -23,9 +23,11 @@ and over five seconds afterward, with idle host layout. The Excel outer viewport
 is 723x390 physical screen units while the pane client is 902x487; the inner view
 is already 903x488. The registered bounds gate produced actual RED at `45679e0`
 in run `231926-395a05c1`: the first-open viewport fails while reopening passes.
-The candidate adds the documented post-DoPreview resize through the existing
-helper. Local focused tests and an exact pushed Lenovo build/UI regression must
-pass before this defect or DCM-31 can close.
+The post-DoPreview resize candidate at `33cbe3c7` passed 31 focused local units and
+Windows cross-build, but native run `232554-5572d8ff` repeats the same first-open
+failure. It is not a clipping fix. Next trace actual COM rectangles/HRESULTs and
+establish a real Windows measurement-unit RED before an Excel-specific physical
+rectangle experiment. Other native providers must retain their existing policy.
 See [the sizing checkpoint](qualification/dcm31-preview-sizing.md).
 
 DCM-30's fresh registered Lenovo run at production source
@@ -51,6 +53,8 @@ final installer/package and publication remain open.
 - Runtime: `D:\FlowverseReportsRepo\flowdev-standalone-validation\flowdev-test.exe`.
 - Workspace/report root: `D:\FlowverseReportsRepo`.
 - XLSX selectors: `xlsx-unit`, `ui-xlsx` and diagnostic `ui-xlsx-layout`.
+- `native-preview-rect-unit` is the isolated real-HWND DPI measurement gate;
+  its unwired logical scaffold intentionally awaits native RED before correction.
 - Completed DOCX selector: `ui-docx` → `tools/test-ui-docx.ps1`.
 
 Code locally, unit test, commit/push, then use Desktop Commander for

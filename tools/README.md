@@ -30,6 +30,9 @@ stays unchanged. Native `go test -json -count=1` runs preserve raw output, indiv
 failures, and skips. Targeted selectors fail when they execute zero tests.
 
 `baseline` runs all app unit tests. `regressions` runs `^Test(D[1-6]|Release)`.
+`native-preview-rect-unit` runs the focused Windows DPI measurement tests on
+owned hidden borderless windows. Non-100% scaling and supported DPI contexts are
+required for qualification; skips are not accepted as a physical-coordinate pass.
 `installer-regressions` uses that pattern in the installer module; `installer-unit`
 runs its entire suite. `installer-integration` runs the in-process installer engine
 in a verified private HKCU mapping and disposable configuration. `build` produces
