@@ -13,11 +13,21 @@ jobs:
       - uses: actions/checkout@v4
       - name: Verify local source identities and wire diagnostic
         run: python qualification/prepare-startup-probe.py
+      - name: Apply locally reviewed unambiguous input-helper name
+        shell: python
+        run: |
+          import pathlib,hashlib
+          p=pathlib.Path('tools/test-ui-sumatra-startup.ps1');b=p.read_bytes()
+          assert hashlib.sha256(b).hexdigest()=='2876e842fe016527689fd39c4c2d7f577a368768d16ab67ed5c44f6ef988823b'
+          s=b.decode();assert s.count('function Select(')==1 and s.count("Select '")==3
+          s=s.replace('function Select(', 'function SelectFile(').replace("Select '","SelectFile '")
+          assert hashlib.sha256(s.encode()).hexdigest()=='5d221ccd402bf6ca95b569370ceae35d14535d5497cba98eba2d76810dbc1b1e'
+          p.write_bytes(s.encode())
       - name: Commit only intended wiring
         run: |
           if git diff --quiet; then exit 0; fi
           git config user.name 'DCM reviewed-tooling automation'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add app-src/main_windows.go app-src/sumatra_preview_windows.go app-src/sumatra_document_windows.go tools/flowdev-dcm/config/checks.json
-          git commit -m 'test: wire opt-in startup stage trace and queued heartbeat'
+          git add app-src/main_windows.go app-src/sumatra_preview_windows.go app-src/sumatra_document_windows.go tools/flowdev-dcm/config/checks.json tools/test-ui-sumatra-startup.ps1
+          git commit -m 'test: wire opt-in startup measurement with explicit input helper'
           git push origin HEAD:release/v1.0.71
