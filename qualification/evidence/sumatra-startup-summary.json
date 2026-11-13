@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "feature": "DCM-SUMATRA-STARTUP-01",
+  "date_ist": "2026-11-13",
+  "tested_commit": "497dbb29c66092db690c3ba501501a09f9acb64e",
+  "report_root": "D:\\FlowverseReportsRepo",
+  "performance_fixed": false,
+  "numbered_steps_closed": [],
+  "scope": "Diagnostic measurement integrity and file safety passed; startup responsiveness failed provisional 250ms queue-delay target. Target is a project diagnostic target, not an external standard.",
+  "cache_note": "Fresh QuickSort and viewer processes; each run uses a new private runtime copy. OS cache not flushed and runtime bytes pre-read for identity/copy. Not true cold boot/storage cache testing.",
+  "shared_machine_note": "An unrelated unoembed unit run was observed before measurement; no unrelated process or host settings were changed. Not an isolated benchmark.",
+  "runs": [
+    {
+      "report": "dcm-quicksort-ui-sumatra-startup-20261113-010300-2885f858",
+      "receipt_sha256": "d2b571cb3b8fe77ad49ef735f17776b023cec3fab5559628c9df08bc9fe1d469",
+      "trace_sha256": "97bd3725322ec53f3090f4b1e0bc2a9a1e72d9cc280ec003eb1380e23dc60f0c",
+      "measurement_completed": true,
+      "responsiveness_accepted": false,
+      "host_exit_code": 0,
+      "source_unchanged": true,
+      "fixture_bytes_preserved": true,
+      "samples": [
+        {"sequence":1,"condition":"first-in-fresh-host","ready_status_ms":2389.3218,"max_queue_ack_ms":1757.7565,"over_provisional_250ms":true,"document_validation_ms":0.582,"runtime_validation_ms":48.767,"profile_job_preparation_ms":1.615,"create_process_call_ms":1695.003,"synchronous_start_ms":1747.208,"attachment_wait_after_return_ms":431.188,"attachment_layout_ms":162.705,"trace_enter_to_ready_ms":2343.743},
+        {"sequence":2,"condition":"repeat-in-same-host","ready_status_ms":554.8991,"max_queue_ack_ms":162.7735,"over_provisional_250ms":false,"document_validation_ms":0.0,"runtime_validation_ms":45.082,"profile_job_preparation_ms":0.0,"create_process_call_ms":16.577,"synchronous_start_ms":63.697,"attachment_wait_after_return_ms":322.182,"attachment_layout_ms":130.743,"trace_enter_to_ready_ms":518.881},
+        {"sequence":3,"condition":"repeat-in-same-host","ready_status_ms":547.7125,"max_queue_ack_ms":201.6759,"over_provisional_250ms":false,"document_validation_ms":0.0,"runtime_validation_ms":40.365,"profile_job_preparation_ms":1.03,"create_process_call_ms":19.051,"synchronous_start_ms":61.639,"attachment_wait_after_return_ms":323.329,"attachment_layout_ms":135.769,"trace_enter_to_ready_ms":523.588},
+        {"sequence":4,"condition":"repeat-in-same-host","ready_status_ms":643.1898,"max_queue_ack_ms":202.0497,"over_provisional_250ms":false,"document_validation_ms":0.0,"runtime_validation_ms":48.79,"profile_job_preparation_ms":0.0,"create_process_call_ms":13.744,"synchronous_start_ms":67.065,"attachment_wait_after_return_ms":326.653,"attachment_layout_ms":183.238,"trace_enter_to_ready_ms":578.655}
+      ]
+    },
+    {
+      "report": "dcm-quicksort-ui-sumatra-startup-20261113-010417-3013a7a2",
+      "receipt_sha256": "9465005a41e549c74aefd57f665f0b1cfdde690f787ffda9295ee222400f1e16",
+      "trace_sha256": "4196e3ae16048eb0e04af2884b49aa89f3f77f7e35032f80b962aa9189851bac",
+      "measurement_completed": true,
+      "responsiveness_accepted": false,
+      "host_exit_code": 0,
+      "source_unchanged": true,
+      "fixture_bytes_preserved": true,
+      "samples": [
+        {"sequence":1,"condition":"first-in-fresh-host","ready_status_ms":1874.4617,"max_queue_ack_ms":1497.2459,"over_provisional_250ms":true,"document_validation_ms":0.642,"runtime_validation_ms":47.031,"profile_job_preparation_ms":0.0,"create_process_call_ms":1432.646,"synchronous_start_ms":1482.542,"attachment_wait_after_return_ms":218.647,"attachment_layout_ms":133.329,"trace_enter_to_ready_ms":1836.177},
+        {"sequence":2,"condition":"repeat-in-same-host","ready_status_ms":512.833,"max_queue_ack_ms":153.9758,"over_provisional_250ms":false,"document_validation_ms":0.549,"runtime_validation_ms":38.305,"profile_job_preparation_ms":0.0,"create_process_call_ms":13.573,"synchronous_start_ms":54.123,"attachment_wait_after_return_ms":330.251,"attachment_layout_ms":97.062,"trace_enter_to_ready_ms":483.428},
+        {"sequence":3,"condition":"repeat-in-same-host","ready_status_ms":555.1509,"max_queue_ack_ms":153.745,"over_provisional_250ms":false,"document_validation_ms":0.0,"runtime_validation_ms":45.016,"profile_job_preparation_ms":0.594,"create_process_call_ms":17.905,"synchronous_start_ms":64.782,"attachment_wait_after_return_ms":322.369,"attachment_layout_ms":135.206,"trace_enter_to_ready_ms":525.334},
+        {"sequence":4,"condition":"repeat-in-same-host","ready_status_ms":560.0916,"max_queue_ack_ms":202.7765,"over_provisional_250ms":false,"document_validation_ms":0.552,"runtime_validation_ms":40.452,"profile_job_preparation_ms":0.668,"create_process_call_ms":15.408,"synchronous_start_ms":58.753,"attachment_wait_after_return_ms":331.021,"attachment_layout_ms":142.381,"trace_enter_to_ready_ms":535.188}
+      ]
+    }
+  ],
+  "visual_review": {
+    "first_run_full_images_reviewed": 4,
+    "first_run_content_crops_individually_reviewed": false,
+    "second_run_images_individually_reviewed": false,
+    "raw_flags_changed": false,
+    "image_sha256": {
+      "startup-1.png": "527aa0cc28f2b2c7ee61f6e06f90f13fe88a339cb94a0a47e520edb76c2526dc",
+      "startup-2.png": "f6af40af124c6441a079c0a5785a7317a758870488c909a460f0bc202eeed094",
+      "startup-3.png": "f6af40af124c6441a079c0a5785a7317a758870488c909a460f0bc202eeed094",
+      "startup-4.png": "f6af40af124c6441a079c0a5785a7317a758870488c909a460f0bc202eeed094"
+    }
+  },
+  "baseline": {"report":"dcm-quicksort-baseline-20261113-010443-73f34848","passed":370,"failed":0,"skipped":["TestRealGeneratedPPTXIntegration"],"exit_code":0,"timed_out":false,"source_unchanged":true,"receipt_sha256":"5d57f9c499efca5a66093139596b9d5eadaa160348367495bea0d26e1a958713"},
+  "scroll_regression": {"report":"dcm-quicksort-ui-sumatra-scroll-20261113-010542-3f4b5091","cases":14,"passed":true,"exit_code":0,"source_unchanged":true,"images_reviewed":false,"receipt_sha256":"85e1921e835748fa65a14c4d43f708c5b0ca9b0e47397eb8ba6fd28a5a02b9e6"},
+  "resize_regression": {"report":"dcm-quicksort-ui-sumatra-20261113-010815-aaa93ba1","receipt_sha256":"f112a63449038420d5e3f897024a9adfd77a74906acde6ca15bdf5d933c713df","passed":true,"cases":23,"timing_bursts":12,"raw_natural_comparisons":24,"all_sampled_differences_zero":true,"exit_code":0,"source_unchanged":true,"fixtures_preserved":true,"images_individually_reviewed":false},
+  "build": {"report":"dcm-quicksort-build-20261113-010220-8d36bdb9","receipt_sha256":"0cd4a1652151bad515685cac2d2d49c4cb172a08c54f7654ae8f11f480eef93a","app_sha256":"255e0d70ba3e052dc765b4a9229c48be87cf1ddcaab6785fd4b8ce830ccb696b","bytes":7257600,"source_manifest_sha256":"b91d9775472d040c132e63c0850fa2bc0b380a6279b2dd560f52d4938d977741","source_manifest_files":359},
+  "default_provider_changed": false,
+  "runtime_policy_changed": false,
+  "user_acceptance": "not_recorded",
+  "merged": false,
+  "published": false
+}
