@@ -139,7 +139,7 @@ func pollSumatraPreview() {
 		spEnumChildren.Call(app.previewHwnd, sumatraFindChild, 0)
 		if v.child != 0 {
 			recordStartupTrace(v.traceID, "child-attached")
-			layoutSumatraTransition()
+			layoutUI(app.hwnd)
 			resizeSumatraPreview()
 			recordStartupTrace(v.traceID, "attachment-layout-complete")
 			app.fallback = ""
@@ -220,7 +220,7 @@ func stopSumatraPreview() error {
 	spClose.Call(v.job)
 	sumatraView = nil
 	updatePreviewZoomControls()
-	layoutSumatraTransition()
+	layoutUI(app.hwnd)
 	// Only the exact session directory created by MkdirTemp belongs to this viewer.
 	_ = os.RemoveAll(v.profile)
 	return nil
