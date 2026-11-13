@@ -1,4 +1,4 @@
-# Refresh pinned source for compact filter and Processed-header layout correction.
+# Refresh pinned source for default Windows.Data.Pdf navigation and zoom qualification.
 name: Export pinned DCM source for local review
 on:
   push:
