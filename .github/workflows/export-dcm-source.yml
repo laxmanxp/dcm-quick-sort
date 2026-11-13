@@ -1,4 +1,4 @@
-# Refresh pinned source for unchanged dropdown geometry and host zoom-state optimization.
+# Refresh pinned source for compact filter and Processed-header layout correction.
 name: Export pinned DCM source for local review
 on:
   push:
