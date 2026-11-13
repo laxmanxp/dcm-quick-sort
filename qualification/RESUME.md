@@ -1,35 +1,32 @@
-# QuickSort — readable PDF scrolling verified; next startup responsiveness
+# QuickSort — first-PDF startup UI blocking measured; correction pending
 
-Latest: [readable scrolling](2026-11-13-sumatra-scroll.md), 13 November 2026 IST (native receipts 12 November UTC).
-Native-tested source `401b44521ed36c835c04f39ffcd79ef6f3ee79af`; application remains `02e6efb39f08c5cfa29da4787cd4f41bf71b642a`.
-No application or installer change in this pass. Sumatra stays optional, Windows.Data.Pdf default. No numbered closure: DCM01–18 and20–27 complete at their recorded boundaries;19 blocked;28/29 pending broader provider acceptance. Human acceptance unrecorded.
+Latest: [startup measurement](2026-11-13-sumatra-startup.md), 13 November 2026.
+Native-tested source `497dbb29c66092db690c3ba501501a09f9acb64e` adds opt-in diagnostics only. No performance correction has been made.
 
-## Verified here
+## Verified finding
 
-New FlowDev `ui-sumatra-scroll` passes14 records in two consecutive runs. All12 first-run full-window captures inspected for actual expected headings/digits, not just colours. At100% and FitWidth: page1 top/middle/bottom/reverse, page2 distinct top/bottom; native offsets/page number, complete marker plus dark glyph pixels corroborate images. Switching to text releases the PDF; normal close0, source five-file set/bytes unchanged, destination/journal empty, private viewer/profile cleanup and exclusive access pass.
+Two diagnostic runs complete four PDF opens per fresh host. First ready status: 2389/1874 ms. Longest first-open posted-queue acknowledgement: 1758/1497 ms, exceeding the provisional 250-ms diagnostic budget. `responsiveness_accepted=false` in both receipts; command PASS means measurement and safety integrity, not responsive startup.
 
-This uses one generated two-page PDF and native scroll messages. FitWidth is zoom in single-page display mode, not continuous scrolling or wheel/touch/human acceptance. At100% horizontal overflow is normal; real horizontal scrolling reveals left markers. Long title may extend past viewport and transient zoom notice may cover title, not tested text blocks. No semantic OCR claim.
+CreateProcessW call interval accounts for 1695/1433 ms on first open, versus 14–19 ms on repeated opens. Runtime/policy validation takes 38–49 ms. This identifies the blocking UI-thread call interval, not an antivirus/cache/storage explanation. Do not explain every historical timeout from this result. The ready-status observation is not an exact first-pixel timestamp.
 
-Fresh baseline370/0/1 (371 parents); retained external PPTX skip. Existing `ui-sumatra-resize-timing` passes23 behavior records plus12 bursts,24 sampled raw/natural comparisons all zero. Repeat and resize images not separately reviewed. Product hash unchanged. Added fixture/tooling only; three retained new-harness failures were byte-conversion, incomplete horizontal positioning and coarse marker measurement, not invented product repairs.
+Fresh-process vs same-host repeats, not true cold boot/cache: private runtime is pre-read for copying/hash checks; no cache flushing or reboot. An unrelated unit session was observed before the run. Shared-machine observations, not an isolated benchmark or published service level.
 
-## Next exact scope
+Four first-run full-window screenshots were reviewed; four content crops were checked automatically, not separately inspected. Repeat/regression images not reviewed. All eight PDF opens show correct target/content, source bytes remain intact, text recovery releases the PDF, and both hosts close normally without retained private viewers/profiles. Fresh baseline370/0/1, scroll14 and resize23+12bursts pass; all24 resize raw/natural comparisons zero. External PPTX skip remains not executed.
 
-Measure first-PDF startup costs and host responsiveness under cold/warm conditions (`DCM-SUMATRA-STARTUP-01`). Preserve exact readiness and file-operation safeguards; do not call posted test input or increased timeouts a product speed fix. Keep readable-scroll and fixed-wait resize regressions. Also retain native damaged-file long-path banner, Size/Sort and Processed labels, DCM19 isolation, DCM_REAL_PPTX, remaining operations/path/release cases, managed runtime/distribution, installer/package and user acceptance. Do not switch the default or silently close28/29.
+## Next exact action
 
-## Execution
+Write focused tests for nonblocking startup, then move blocking validation/process creation off the UI thread. Preserve pinned runtime/exact no-print/no-write policy and suspended process assigned to owned kill-on-close job before resume. Keep window updates on UI thread. Use selection/generation tokens, dispose of late results, and coordinate pending startup with cancellation/close so no stale document or untracked suspended process survives. Do not implement fire-and-forget process creation or bypass checksum checks. Reuse the same queue-latency probe before/after; then run loading cancellation, active-PDF shutdown, Undo and release-refusal regressions. A responsive UI and faster completed PDF are different outcomes; measure both.
 
-Author locally -> GitHub -> FlowDev update/build/test on Lenovo, serial native UI suites. Workspace `D:\FlowverseReportsRepo`; checkout `D:\FlowverseReportsRepo\dcm-quicksort-candidate`; profile `tools\flowdev-dcm`; runner `D:\FlowverseReportsRepo\flowdev-standalone-validation\flowdev-test.exe`. Device `d18227f2-0b54-4b11-9026-56ac40305f02`. No remote source edits or unrelated-window changes.
+DCM-SUMATRA-STARTUP-01 remains open. Do not repeat existing scrolling as a substitute for the blocking-startup correction. The diagnostic is enabled only by DCM_STARTUP_TRACE=1, records bounded numeric events in memory and flushes to the test-private TEMP at normal exit.
 
-Runtime source `D:\Flowverse\sumatra-preview-prototype\runtime\sumatra-3.6.1\SumatraPDF-3.6.1-64.exe`, passed as DCM_SUMATRA_SOURCE_EXE. Each harness copies it into its own lab and writes the exact restricted policy. Keep checksum/no-write/no-print restrictions and native ownership/capture guards.
+## Execution and identities
 
-`ui-sumatra-scroll` requires current DCM_BUILD_RECEIPT. Last matching receipt `D:\FlowverseReportsRepo\dcm-quicksort-build-20261112-221301-00846739\receipt.json` matches401b4452 only. Rebuild after tracker/source commits; never relabel old receipts. App hash `a02164f61a1334389649179f246a5b17a56a69771f334404b75962a212a2b1bc`.
+Code locally -> GitHub -> FlowDev update/build/test on Lenovo, one native UI suite at a time. Device `d18227f2-0b54-4b11-9026-56ac40305f02`. Workspace `D:\FlowverseReportsRepo`; candidate `D:\FlowverseReportsRepo\dcm-quicksort-candidate`; profile `tools\flowdev-dcm`; runner `D:\FlowverseReportsRepo\flowdev-standalone-validation\flowdev-test.exe`. No remote source edits or unrelated process changes.
 
-Fixture `tests/fixtures/sumatra-scroll.pdf` is -text in .gitattributes. Hash05304a98a830954b4f5bfedf0187e78aa847248a80b0ca2ba2b5b5f843352bb0,6214bytes. Do not remove binary attribute or normalize fixture at runtime. Generator and reference metadata committed. Pixel-edge refinement preserves original thresholds; exact headings still require separate image review.
+Runtime source `D:\Flowverse\sumatra-preview-prototype\runtime\sumatra-3.6.1\SumatraPDF-3.6.1-64.exe`; the harness copies it privately. New selector `ui-sumatra-startup` requires DCM_BUILD_RECEIPT and DCM_SUMATRA_SOURCE_EXE like the prior suites.
 
-## Reports under D:\FlowverseReportsRepo
+Last build receipt `D:\FlowverseReportsRepo\dcm-quicksort-build-20261113-010220-8d36bdb9\receipt.json` matches497dbb29 only. App SHA256 `255e0d70ba3e052dc765b4a9229c48be87cf1ddcaab6785fd4b8ce830ccb696b`. Refresh build after metadata/source commits; never rewrite historical receipts.
 
-Reviewed scroll `dcm-quicksort-ui-sumatra-scroll-20261112-221314-11122de8`; repeat221502-8c982330.
-Baseline `dcm-quicksort-baseline-20261112-221419-946fd6f9`.
-Resize regression `dcm-quicksort-ui-sumatra-20261112-221534-1f047660`.
-Evidence: `evidence/sumatra-scroll-native-summary.json`.
-Preserve scroll failures215621-6975d64b,220123-9e07d43f,220753-ab49aefd and all previous source-specific evidence. Raw review flags stay unchanged; summaries record actual image inspection. PR#1 stays draft; no merge/publication.
+Reports under D:\FlowverseReportsRepo: startup010300-2885f858 and010417-3013a7a2 (prefix dcm-quicksort-ui-sumatra-startup-20261113-); baseline010443-73f34848; scroll010542-3f4b5091; resize010815-aaa93ba1. Full paths and hashes in `evidence/sumatra-startup-summary.json`.
+
+No numbered closure: DCM01–18 and20–27 retain completion;19 blocked;28/29 pending. Keep Sumatra opt-in/Windows.Data.Pdf default, general labels/error banner, externalPPTX, operation/path/release variants, runtime distribution/installer and actual user acceptance open. PR#1 remains draft; no installation/default association/printing/merge/publication. All prior failures and source-specific evidence retained.
