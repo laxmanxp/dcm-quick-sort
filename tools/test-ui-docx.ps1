@@ -31,7 +31,14 @@ function Files {
 function Shot([string]$name){Own;$screen=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea;[DcmNative]::Restore($hwnd,$app.Id,$screen.Left+8,$screen.Top+8);Start-Sleep -Milliseconds 300;$s=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'.png')),$false);$shots.Add([ordered]@{name=$name;path=$s.Path;sha256=(Hash $s.Path);visual_reviewed=$false})}
 function Record([string]$name,$detail){$cases.Add([ordered]@{name=$name;passed=$true;detail=$detail});Files}
 function SelectFile([string]$name){$items=@([DcmNative]::ListItems($hwnd,$app.Id,1016));$index=[Array]::IndexOf($items,$name);if($index -lt 0){throw 'Missing fixture in list'};[DcmUndoInput]::Select($hwnd,$app.Id,$index);$stem=[IO.Path]::GetFileNameWithoutExtension($name);Wait ('selection '+$name) {([DcmUndoInput]::TryText($hwnd,$app.Id,1005)) -ceq $stem}}
-function Preview {return [DcmTextProbe]::Preview($hwnd,$app.Id)}
+function Preview {
+ $nodes=@([DcmDocxProbe]::Snapshot($hwnd,$app.Id))
+ if(@($nodes|Where-Object {$_.Visible -and $_.PID -ne $app.Id}).Count){return $null}
+ $edits=@($nodes|Where-Object {$_.Visible -and $_.PID -eq $app.Id -and $_.Class -eq 'Edit'})
+ if($edits.Count -gt 1){throw 'Multiple owned preview edits'}
+ if($edits.Count -eq 1){return [pscustomobject]@{Handle=$edits[0].Handle;Text=[DcmNative]::Text([IntPtr]$edits[0].Handle,$app.Id)}}
+ return $null
+}
 function ExpectBody([string]$name,[string[]]$tokens,[string[]]$absent){
  Wait ('body '+$name) {$p=Preview;($null -ne $p) -and $p.Text.Contains($tokens[0])}
  $p=Preview;$last=-1;foreach($token in $tokens){$at=$p.Text.IndexOf($token,$last+1,[StringComparison]::Ordinal);if($at -lt 0 -or $at -lt $last){throw ('Missing/out-of-order DOCX content: '+$token)};$last=$at}
@@ -42,6 +49,7 @@ function ExpectBody([string]$name,[string[]]$tokens,[string[]]$absent){
 }
 function CheckStatus([string]$prefix){$found=@([DcmTextProbe]::Controls($hwnd,$app.Id)|Where-Object {$_.Visible -and $_.Class -eq 'Static' -and $_.Text.StartsWith($prefix,[StringComparison]::Ordinal)});if($found.Count -ne 1){throw ('DOCX provider/status missing: '+$prefix)};return $found[0].Text}
 function NativeShot([string]$name){
+ Wait 'visible native DOCX subtree' {@([DcmDocxProbe]::Snapshot($hwnd,$app.Id)|Where-Object {$_.Visible -and $_.PID -ne $app.Id}).Count -gt 0}
  Own;$nodes=@([DcmDocxProbe]::Snapshot($hwnd,$app.Id));$foreign=@($nodes|Where-Object {$_.Visible -and $_.PID -ne $app.Id})
  if(-not $foreign.Count){throw 'Expected embedded native DOCX subtree missing'}
  Json (Join-Path $lab ($name+'.native-windows.json')) $nodes
@@ -96,6 +104,11 @@ try {
  Wait 'fixture list' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq $expected.Count}
  SelectFile '01-alpha.txt';$plain=[IO.File]::ReadAllText((Join-Path $fixture.inbox '01-alpha.txt'));$p=ExpectBody '01-initial-text' @($plain) @('DCM DOCX Preview');Shot '01-initial-text'
  SelectFile '05-letter.docx'
+ Wait 'native DOCX or completed fallback body' {
+  $n=@([DcmDocxProbe]::Snapshot($hwnd,$app.Id))
+  if(@($n|Where-Object {$_.Visible -and $_.PID -ne $app.Id}).Count){return $true}
+  $p=Preview;return ($null -ne $p -and $p.Text.StartsWith('DCM DOCX Preview'))
+ }
  $nodes=@([DcmDocxProbe]::Snapshot($hwnd,$app.Id));$native=@($nodes|Where-Object {$_.Visible -and $_.PID -ne $app.Id}).Count -gt 0
  if($native){
   $receipt.provider='Installed Windows DOCX preview handler';$receipt['native_visual_review_required']=$true
