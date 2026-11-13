@@ -1,4 +1,4 @@
-# Refresh pinned source for readable PDF scrolling at 100 percent and Fit Width.
+# Refresh pinned source for nonblocking Sumatra startup and cancellation ownership.
 name: Export pinned DCM source for local review
 on:
   push:
