@@ -70,6 +70,31 @@ function Save-State([string]$Name){
     Write-Json (Join-Path $lab ($Name+'.controls.json')) ([DcmNative]::Snapshot($script:hwnd,$script:app.Id))
     Write-Json (Join-Path $lab ($Name+'.files.json')) ([ordered]@{inbox=@(Get-ChildItem -LiteralPath $fixture.inbox -File | ForEach-Object {[ordered]@{name=$_.Name;sha256=(Hash $_.FullName)}});destination=@(Get-ChildItem -LiteralPath $fixture.destination -File | ForEach-Object {[ordered]@{name=$_.Name;sha256=(Hash $_.FullName)}})})
 }
+function Assert-PdfPage([string]$Name,[int]$Page){
+    Assert-Owned
+    if($Page -lt 1 -or $Page -gt 2){throw 'Only the known two-page fixture is qualified'}
+    $controls=@([DcmNative]::Snapshot($script:hwnd,$script:app.Id))
+    if(@($controls|Where-Object {$_.Visible -and $_.Text -ceq ('Page '+$Page+' of 2')}).Count -ne 1){throw 'Wrong visible PDF page label'}
+    if(-not (Status-Contains ('DCM PDF Preview')) -or -not (Status-Contains ('Page '+$Page+'/2'))){throw 'Wrong provider or page status'}
+    $previous=[DcmNative]::IsWindowEnabled([DcmNative]::Control($script:hwnd,$script:app.Id,1060))
+    $next=[DcmNative]::IsWindowEnabled([DcmNative]::Control($script:hwnd,$script:app.Id,1061))
+    if($previous -ne ($Page -eq 2) -or $next -ne ($Page -eq 1)){throw 'First/last PDF boundary button state is wrong'}
+    $null=Save-Shot ($Name+'-window')
+    $pixels=Save-Shot ($Name+'-document') -Preview
+    if($Page -eq 1 -and ($pixels.teal_samples -lt 100 -or $pixels.orange_samples -gt 100)){throw 'Wrong or blank first-page pixels'}
+    if($Page -eq 2 -and ($pixels.orange_samples -lt 100 -or $pixels.teal_samples -gt 100)){throw 'Wrong or blank second-page pixels'}
+    $cases.Add([ordered]@{name=$Name;kind='default PDF page pixels and boundary readback';passed=$true;page=$Page;previous_enabled=$previous;next_enabled=$next;teal_samples=$pixels.teal_samples;orange_samples=$pixels.orange_samples})
+}
+function Pan-PdfToTop([string]$Name){
+    # Exercise the existing drag handler only in this owned default-provider test.
+    # Native messages are not physical mouse/touchpad acceptance.
+    Assert-Owned
+    $preview=[DcmNative]::ChildByClass($script:hwnd,$script:app.Id,'QuickSortPreview')
+    $v=[DcmImageProbe]::Geometry($preview,$script:app.Id)
+    $dx=[Math]::Min(80,[int]($v.Width/4));$dy=[Math]::Min(120,[int]($v.Height/4))
+    for($i=0;$i -lt 6;$i++){[DcmImageProbe]::Drag($preview,$script:app.Id,$dx,$dy);Start-Sleep -Milliseconds 80}
+    Assert-PdfPage $Name 1
+}
 function Start-OwnedApp {
     $psi=New-Object Diagnostics.ProcessStartInfo
     $psi.FileName=$exe
@@ -84,6 +109,11 @@ function Start-OwnedApp {
     $psi.EnvironmentVariables['DCM_QUICKSORT_BACKUP_DIR']=Join-Path $lab 'configuration-backups'
     $psi.EnvironmentVariables['TEMP']=Join-Path $lab 'temp'
     $psi.EnvironmentVariables['TMP']=Join-Path $lab 'temp'
+    if($Suite -eq 'pdf'){
+        $psi.EnvironmentVariables.Remove('DCM_PDF_PROVIDER')
+        $psi.EnvironmentVariables.Remove('DCM_SUMATRA_EXE')
+        $receipt['pdf_provider']='default Windows.Data.Pdf; opt-in environment removed'
+    }
     $script:app=New-Object Diagnostics.Process
     $script:app.StartInfo=$psi
     if(-not $script:app.Start()){throw 'Could not launch exact candidate copy.'}
@@ -310,6 +340,7 @@ try {
     Add-Type -AssemblyName System.Drawing
     Add-Type -AssemblyName System.Windows.Forms
     Add-Type -Path (Join-Path $repo 'tests\native\dcm-native.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
+    if($Suite -eq 'pdf'){Add-Type -Path (Join-Path $repo 'tests/native/dcm-image-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')}
     . (Join-Path $repo 'tests\native\new-fixtures.ps1')
     $fixture=New-DcmFixtures $lab
     $receipt['configuration_backup_root']=Join-Path $lab 'configuration-backups'
@@ -430,19 +461,34 @@ try {
     }
     if($Suite -in @('pdf','previews')){
         Invoke-Fvs 'pdf-open' "click clear`ntype name `"08-preview`"`nwait_ready type=textbox target=newname text=`"08-preview`" timeout=5s`nwait_ready type=control target=pdfstatus text~=`"Page 1/2`" timeout=20s`ninspect main`nexpect pdfstatus text~=`"Fit Width`""
+        if($Suite -eq 'pdf'){Assert-PdfPage 'pdf-first-boundary' 1}
         foreach($case in @(@('pdf-fit-width','width','Fit Width'),@('pdf-100','zoomreset','100%'),@('pdf-110','zoomin','110%'),@('pdf-return-100','zoomout','100%'))){
             Invoke-Fvs $case[0] ("click "+$case[1]+"`nwait_ready type=control target=pdfstatus text~=`""+$case[2]+"`" timeout=20s`ndelay 400ms`ninspect main`nexpect pdfstatus text~=`""+$case[2]+"`"")
             $null=Save-Shot ($case[0]+'-window')
             $pixels=Save-Shot ($case[0]+'-document') -Preview
             if($pixels.teal_samples -lt 100){throw "$($case[0]) has no adequate visible teal document content; footer state is insufficient."}
             $cases.Add([ordered]@{name=($case[0]+' visible document pixels');passed=$true;teal_samples=$pixels.teal_samples;visual_reviewed=$false})
+            if($Suite -eq 'pdf' -and $case[0] -in @('pdf-100','pdf-110')){Pan-PdfToTop ($case[0]+'-top-readable')}
+        }
+        if($Suite -eq 'pdf'){
+            Invoke-Fvs 'pdf-fit-page' "click fit`nwait_ready type=control target=pdfstatus text~=`"Fit`" timeout=20s`ndelay 400ms`ninspect main"
+            if(Status-Contains 'Fit Width'){throw 'Fit Page did not replace Fit Width'}
+            Assert-PdfPage 'pdf-fit-page-visible' 1
         }
         Invoke-Fvs 'pdf-page-two' "click nextpage`nwait_ready type=control target=pdfstatus text~=`"Page 2/2`" timeout=20s`ndelay 400ms`ninspect main`nexpect pdfstatus text~=`"Page 2/2`""
         $pixels=Save-Shot 'pdf-page-two-document' -Preview
         if($pixels.orange_samples -lt 100){throw 'Second PDF page did not display orange document content.'}
+        if($Suite -eq 'pdf'){Assert-PdfPage 'pdf-last-boundary' 2}
         Invoke-Fvs 'pdf-page-one-return' "click prevpage`nwait_ready type=control target=pdfstatus text~=`"Page 1/2`" timeout=20s`nclick width`nwait_ready type=control target=pdfstatus text~=`"Fit Width`" timeout=20s`ndelay 400ms`ninspect main"
         $pixels=Save-Shot 'pdf-page-one-return-document' -Preview
         if($pixels.teal_samples -lt 100){throw 'Returning to PDF page one did not restore teal content.'}
+        if($Suite -eq 'pdf'){
+            Assert-PdfPage 'pdf-first-boundary-restored' 1
+            $journal=Join-Path $fixture.config 'recovery\move-journal.jsonl'
+            if((Test-Path $journal) -and ([IO.File]::ReadAllText($journal)).Trim()){throw 'Preview-only workflow changed the operation journal'}
+            $h=[IO.File]::Open((Join-Path $fixture.inbox '08-preview.pdf'),[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::None);$h.Dispose()
+            $cases.Add([ordered]@{name='default-PDF-source-released-and-journal-empty';passed=$true})
+        }
         Assert-Fixtures
     }
     if($Suite -eq 'previews'){
