@@ -27,7 +27,7 @@ function Files {
  if(@(Get-ChildItem -LiteralPath $fixture.destination -Force).Count){throw 'Destination changed'}
  $journal=Join-Path $fixture.config 'recovery\move-journal.jsonl';if((Test-Path $journal) -and ([IO.File]::ReadAllText($journal)).Trim()){throw 'Unexpected operation journal'}
 }
-function Select([string]$file){$items=@([DcmNative]::ListItems($hwnd,$app.Id,1016));$index=[Array]::IndexOf($items,$file);if($index -lt 0){throw 'Fixture not listed'};[DcmUndoInput]::Select($hwnd,$app.Id,$index);return $index}
+function SelectFile([string]$file){$items=@([DcmNative]::ListItems($hwnd,$app.Id,1016));$index=[Array]::IndexOf($items,$file);if($index -lt 0){throw 'Fixture not listed'};[DcmUndoInput]::Select($hwnd,$app.Id,$index);return $index}
 function TextReady {
  Wait 'text recovery' {([DcmUndoInput]::TryText($hwnd,$app.Id,1005)) -ceq '01-alpha' -and ($null -eq [DcmSumatraProbe]::Find($hwnd,$app.Id)) -and @((PrivateProcesses)).Count -eq 0}
  $p=[DcmTextProbe]::Preview($hwnd,$app.Id);if(-not $p -or $p.Text -cne $textExpected){throw 'Wrong text preview'}
@@ -60,13 +60,13 @@ try {
  $app=New-Object Diagnostics.Process;$app.StartInfo=$psi;if(-not $app.Start()){throw 'Host start failed'}
  $receipt['host_pid']=$app.Id;$receipt['host_start']=$app.StartTime.ToUniversalTime().ToString('o')
  $until=[DateTime]::UtcNow.AddSeconds(15);do{$app.Refresh();$hwnd=$app.MainWindowHandle;if($hwnd -ne [IntPtr]::Zero){break};Start-Sleep -Milliseconds 50}while([DateTime]::UtcNow -lt $until)
- Wait 'four fixtures' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 4};$null=Select '01-alpha.txt';TextReady
+ Wait 'four fixtures' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 4};$null=SelectFile '01-alpha.txt';TextReady
  $area=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea;[DcmNative]::Restore($hwnd,$app.Id,$area.Left+8,$area.Top+8);Start-Sleep -Milliseconds 300
  for($i=1;$i -le 4;$i++) {
   $monitor=New-Object DcmStartupMonitor($hwnd,$app.Id);$until=[DateTime]::UtcNow.AddSeconds(3)
   while($monitor.SampleCount -lt 2 -and [DateTime]::UtcNow -lt $until){Start-Sleep -Milliseconds 10}
   if($monitor.SampleCount -lt 2){throw 'Queue probe not acknowledged'}
-  $mark=$monitor.ElapsedMs;$clock=[Diagnostics.Stopwatch]::StartNew();$index=Select '08-preview.pdf'
+  $mark=$monitor.ElapsedMs;$clock=[Diagnostics.Stopwatch]::StartNew();$index=SelectFile '08-preview.pdf'
   while([DcmStartupMonitor]::Ready($hwnd,$app.Id) -lt $i -and $clock.ElapsedMilliseconds -lt 20000){Own;Start-Sleep -Milliseconds 10}
   $readyMs=$clock.Elapsed.TotalMilliseconds;if([DcmStartupMonitor]::Ready($hwnd,$app.Id) -ne $i){throw 'Document-ready observation deadline'}
   Start-Sleep -Milliseconds 100;$samples=@($monitor.Stop());$monitor.Dispose();$monitor=$null
@@ -80,7 +80,7 @@ try {
   $viewers.Add([ordered]@{pid=$p.Id;start=$p.StartTime.ToUniversalTime().ToString('o');path=$p.Path});[DcmSumatraProbe]::CheckGeometry($hwnd,$app.Id,$v.PID)
   Start-Sleep -Milliseconds 150
   foreach($crop in @($false,$true)){$name='startup-'+$i+$(if($crop){'-content'}else{''});$s=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'.png')),$crop);$shots.Add([ordered]@{name=$name;path=$s.Path;sha256=(Hash $s.Path);visual_reviewed=$false});if($crop -and ($s.TealSamples -lt 1000 -or $s.OrangeSamples -gt 100)){throw 'Wrong or blank PDF content'}}
-  $null=Select '01-alpha.txt';TextReady;Files
+  $null=SelectFile '01-alpha.txt';TextReady;Files
  }
  [DcmNative]::CloseAsync($hwnd,$app.Id);if(-not $app.WaitForExit(15000) -or $app.ExitCode -ne 0){throw 'Normal close failed'};$receipt['exit_code']=$app.ExitCode;$app.Dispose();$app=$null
  if(@((PrivateProcesses)).Count -or @(Get-ChildItem $lab -Directory -Filter 'dcm-sumatra-*').Count){throw 'Private viewer/profile survived'}
