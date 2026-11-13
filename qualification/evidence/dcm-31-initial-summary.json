@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "feature": "DCM-31",
+  "recorded_on": "2026-11-14",
+  "timezone": "Asia/Kolkata",
+  "tested_source": "3d3af0fc3d67effdd7184251deb4ff234008dc1c",
+  "result": "PARTIAL_first_open_native_XLSX_sizing",
+  "defect": "DCM-XLSX-SIZE-01",
+  "raw_flowdev_passed": true,
+  "raw_case_count": 6,
+  "raw_feature_accepted": false,
+  "visual_review_passed": false,
+  "provider": "Installed Windows XLSX preview handler",
+  "run": "dcm-quicksort-ui-xlsx-20261113-225846-094bf40a",
+  "build_receipt": "D:\\FlowverseReportsRepo\\dcm-quicksort-build-20261113-225251-10a6593e\\receipt.json",
+  "app_sha256": "8c682baab23b4ea831314ae0ff1bc2c9a98a1180d05365fb6968014bee9f9ef5",
+  "local_units": {
+    "pass": 24,
+    "fail": 0,
+    "skip": 0
+  },
+  "native_units": {
+    "pass": 24,
+    "fail": 0,
+    "skip": 0
+  },
+  "source_unchanged": true,
+  "fixtures_preserved": true,
+  "journal_empty": true,
+  "host_exit_code": 0,
+  "visual_review": {
+    "reviewer": "ChatGPT direct inspection plus independent agent review",
+    "images": [
+      {
+        "name": "01-initial-text",
+        "sha256": "19a7eece9204159f2c2737c8585698d1342697ca3b1e17757cb31ce0aa3f23b7",
+        "reviewed": true,
+        "full_frame_pass": true,
+        "observation": "Correct alpha fixture text and TXT footer; host controls are fully painted."
+      },
+      {
+        "name": "02-native-workbook",
+        "sha256": "c0b3be90c83d48d9378b09e9740a1ee3e0114e8b71f33ba9b52f52519583d1e3",
+        "reviewed": true,
+        "full_frame_pass": false,
+        "observation": "Real Orders cell content is readable, but first-open Excel preview occupies about80% of pane width/height; white right/bottom bands, clipped dates, sheet tabs/scrollbars absent. Not full visual acceptance."
+      },
+      {
+        "name": "04-text-recovery",
+        "sha256": "273692fbed652330b2d60920ee9c4e7cfe63ab031c2d5944c10969fa26e43aab",
+        "reviewed": true,
+        "full_frame_pass": true,
+        "observation": "Correct alpha text and TXT footer return; no stale worksheet body remains."
+      },
+      {
+        "name": "06-native-workbook-reopened",
+        "sha256": "1aa01fba55504668de0d875106f7f3ef71c3e227fa6ff3c968dc898656e8058c",
+        "reviewed": true,
+        "full_frame_pass": true,
+        "observation": "Reopened worksheet fills pane; Orders/Read me tabs, scrollbars and full26-09-2026 date visible. Reopening is not a proven first-open repair."
+      }
+    ],
+    "raw_receipt_unchanged": true
+  },
+  "native_accessibility": "Programmatic-access refusal; no cell-content assertion from accessibility and no bypass attempted.",
+  "native_sheet_navigation": "not_exercised",
+  "root_cause": "not_established; pre-capture geometry is not synchronized with image",
+  "next_check": "flowdev test dcm-quicksort ui-xlsx-layout",
+  "completed_steps": 29,
+  "remaining_steps": 21,
+  "numbered_steps_closed": [],
+  "user_test": "not_recorded",
+  "final_package_qualified": false,
+  "release_published": false
+}

@@ -35,7 +35,7 @@
       "DCM-30"
     ],
     "next_step": "DCM-31",
-    "checkpoint": "qualification/dcm30-complete.md",
+    "checkpoint": "qualification/dcm31-preview-sizing.md",
     "blocked_steps": ["DCM-19"],
     "active_blockers": ["DCM-EXPLORER-ISOLATION-01"],
     "next_runnable_step": "DCM-31",
@@ -160,6 +160,19 @@
       "exit_code": 0,
       "source_unchanged": true,
       "freshly_rerun_in_this_continuation": false
+    },
+    "ui_xlsx_checkpoint": {
+      "commit": "3d3af0fc3d67effdd7184251deb4ff234008dc1c",
+      "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-xlsx-20261113-225846-094bf40a",
+      "raw_passed": true,
+      "case_count": 6,
+      "reviewed_images": 4,
+      "feature_accepted": false,
+      "result": "PARTIAL_first_open_native_XLSX_sizing",
+      "app_sha256": "8c682baab23b4ea831314ae0ff1bc2c9a98a1180d05365fb6968014bee9f9ef5",
+      "source_unchanged": true,
+      "user_test": "not_recorded",
+      "evidence": "qualification/evidence/dcm-31-initial-summary.json"
     }
   },
   "evidence": {
@@ -197,7 +210,9 @@
     "dcm27_completion": "qualification/dcm27-complete.md",
     "dcm22_checkpoint": "qualification/2026-11-11-dcm22.md",
     "dcm30_completion": "qualification/dcm30-complete.md",
-    "dcm30_native_summary": "qualification/evidence/dcm-30-native-summary.json"
+    "dcm30_native_summary": "qualification/evidence/dcm-30-native-summary.json",
+    "dcm31_sizing_checkpoint": "qualification/dcm31-preview-sizing.md",
+    "dcm31_initial_summary": "qualification/evidence/dcm-31-initial-summary.json"
   },
   "items": [
     {
@@ -264,9 +279,11 @@
       "external_fixture_status": "DCM-14 baseline skipped TestRealGeneratedPPTXIntegration because DCM_REAL_PPTX was not supplied. Supply an identified fixture and run unchanged assertions before PPTX/final-package acceptance; visible UI review remains separate.",
       "acceptance": "Record visible success, blank/error and cancellation behavior for the formats advertised by the selected release. State fallback fidelity limits explicitly.", "blocked_by": ["DCM-SOURCE-01"], "evidence_refs": [
         "native_1069_report",
-        "dcm30_completion"
+        "dcm30_completion",
+        "dcm31_sizing_checkpoint"
       ],
-      "docx_checkpoint": "DCM-30 complete for two representative documents through installed Word handler at 8eb1470a; seven native records and five reviewed captures. Other formats/error states and native fallback remain separate."
+      "docx_checkpoint": "DCM-30 complete for two representative documents through installed Word handler at 8eb1470a; seven native records and five reviewed captures. Other formats/error states and native fallback remain separate.",
+      "xlsx_checkpoint": "DCM-31 PARTIAL: actual cells, text recovery and reopen observed at3d3af0fc, but first-open Excel view clips to about80% of pane; DCM-XLSX-SIZE-01 requires investigation. Local/native XLSX/OpenXML units each24/0/0. No native sheet navigation or fallback headed acceptance."
     },
     {
       "id": "DCM-RELEASE-01", "feature": "Qualify and publish the exact packaged release candidate", "status": "planned", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
@@ -327,6 +344,24 @@
     {"id": "DCM-SUMATRA-DOCUMENT-STATE-01", "feature": "Do not advertise successful PDF preview merely because a viewer attached", "status": "fixed", "severity": "low", "ui_test": "native_damaged_file_RED_and_one_reviewed_GREEN; repeat_incomplete", "user_test": "not_recorded", "release_gate": true, "parent_steps": ["DCM-28", "DCM-29"], "acceptance": "A header-valid unloadable PDF reaches the decoder and shows a truthful no-page host state rather than ready navigation/zoom. Preserve native error, file bytes and text recovery. Pinned page-field observation is not a general PDF parser.", "native_test": "39af1659: errors workflow12 records PASS once; all10 captures reviewed (6host,1modal,3content). Damaged-file false readiness and password-prompt startup timeout reproduced and fixed. Missing-runtime restoration, wrong/correct password,17s prompt hold,cancel/text recovery and file safety pass. Baseline369/0/1. Later navigation/lifecycle/error-repeat attempts failed visibility capture guards, not accepted. Long error paths clip. No numbered closure/default switch/release.", "evidence_refs": ["qualification/2026-11-12-sumatra-errors.md", "qualification/evidence/sumatra-errors-native-summary.json"]},
     {"id": "DCM-SUMATRA-PASSWORD-01", "feature": "Keep an owned password prompt alive while waiting for user input", "status": "fixed", "severity": "medium", "ui_test": "native17s_timeout_RED_to_surviving_prompt_GREEN; known_fixture_cancel_wrong_correct_password_pass", "user_test": "not_recorded", "release_gate": true, "parent_steps": ["DCM-28", "DCM-29"], "acceptance": "Do not kill a visible owned password prompt on the15s attachment deadline; show password-required state, retain bounded startup after prompt closes, allow cancel/text recovery and known correct password rendering. Host must not read password text. One encryption fixture and17s wait are bounded evidence, not all encryption/modal variants.", "native_test": "39af1659: errors workflow12 records PASS once; all10 captures reviewed (6host,1modal,3content). Damaged-file false readiness and password-prompt startup timeout reproduced and fixed. Missing-runtime restoration, wrong/correct password,17s prompt hold,cancel/text recovery and file safety pass. Baseline369/0/1. Later navigation/lifecycle/error-repeat attempts failed visibility capture guards, not accepted. Long error paths clip. No numbered closure/default switch/release.", "evidence_refs": ["qualification/2026-11-12-sumatra-errors.md", "qualification/evidence/sumatra-errors-native-summary.json"]},
     {"id": "DCM-SUMATRA-ERROR-COPY-01", "feature": "Make missing-runtime guidance and long error paths readable", "status": "implemented", "severity": "low", "finding_kind": "reviewed_UI_observation", "ui_test": "missing_runtime_message_fully_readable_in_reviewed_capture; native_damaged_file_banner_path_still_clips", "user_test": "not_recorded", "release_gate": true, "parent_steps": ["DCM-28", "DCM-46"], "acceptance": "Provide concise truthful missing-runtime guidance and readable path/detail presentation at supported geometry. Retain actual failure cause and recovery behavior; do not confuse functional error detection with complete visual approval.", "evidence_refs": ["qualification/2026-11-12-sumatra-errors.md", "qualification/evidence/sumatra-errors-native-summary.json", "qualification/2026-11-12-sumatra-readable-retry.md", "qualification/evidence/sumatra-readable-retry-summary.json"], "before_readable_retry": {"status": "planned", "ui_test": "long_path_clipping_observed_in_missing_runtime_and_native_decoder_banner"}, "resolution_state": "partial", "native_test": "At715cd61d two fresh12-record error runs pass; all10 first-run captures reviewed. Missing-runtime short message and recovery guidance are fully visible; original OS/path cause retained by Unwrap. Native damaged-file long-path banner remains clipped, so this combined issue is not closed."},
-    {"id": "DCM-SUMATRA-SCROLL-01", "feature": "Verify readable content after scrolling at 100 percent and Fit Width", "status": "tested", "ui_test": "14_records_pass_twice; all12_first_run_full_images_reviewed", "user_test": "not_recorded", "release_gate": true, "parent_steps": ["DCM-29"], "acceptance": "Using the exact optional provider, expose readable top/middle/bottom and reverse-scroll content on page1, plus distinct page2 top/bottom; validate scroll/page identity and source bytes, then review actual headings and digits. Native scroll messages and one fixture are not continuous-mode or physical-input acceptance.", "native_test": "401b4452: two ui-sumatra-scroll runs pass14 records each; all12 first-run full-window captures inspected for exact readable headings/digits. Native scroll offsets/page identity/marker-and-glyph checks agree at100% and FitWidth, including return-to-top and distinct page2. Baseline370/0/1 and existing resize-timing23+12bursts pass with zero sampled paint differences. Test-only fixture/input/measurement corrections; product/runtime unchanged. No numbered closure, default switch or publication.", "evidence_refs": ["qualification/2026-11-13-sumatra-scroll.md", "qualification/evidence/sumatra-scroll-native-summary.json"]}
+    {"id": "DCM-SUMATRA-SCROLL-01", "feature": "Verify readable content after scrolling at 100 percent and Fit Width", "status": "tested", "ui_test": "14_records_pass_twice; all12_first_run_full_images_reviewed", "user_test": "not_recorded", "release_gate": true, "parent_steps": ["DCM-29"], "acceptance": "Using the exact optional provider, expose readable top/middle/bottom and reverse-scroll content on page1, plus distinct page2 top/bottom; validate scroll/page identity and source bytes, then review actual headings and digits. Native scroll messages and one fixture are not continuous-mode or physical-input acceptance.", "native_test": "401b4452: two ui-sumatra-scroll runs pass14 records each; all12 first-run full-window captures inspected for exact readable headings/digits. Native scroll offsets/page identity/marker-and-glyph checks agree at100% and FitWidth, including return-to-top and distinct page2. Baseline370/0/1 and existing resize-timing23+12bursts pass with zero sampled paint differences. Test-only fixture/input/measurement corrections; product/runtime unchanged. No numbered closure, default switch or publication.", "evidence_refs": ["qualification/2026-11-13-sumatra-scroll.md", "qualification/evidence/sumatra-scroll-native-summary.json"]},
+    {
+      "id": "DCM-XLSX-SIZE-01",
+      "feature": "Resolve initial native Excel preview sizing",
+      "status": "planned",
+      "ui_test": "first_open_clipped_to_approximately80_percent; reopened_fills_pane; cause_open",
+      "user_test": "not_recorded",
+      "release_gate": true,
+      "parent_steps": [
+        "DCM-31"
+      ],
+      "acceptance": "Diagnose the first-open clipped Excel viewport using synchronized DPI-context geometry and unforced adjacent images; resolve the observed sizing cause and verify first open, text recovery and reopen through the exact-source registered workflow. Do not claim a longer wait or reopening is a product fix.",
+      "native_test": "At3d3af0fc, run225846-094bf40a passes6 rawrecords but02-native-workbook.png has white right/bottom bands and missing sheet tabs;06-native-workbook-reopened.png fills the pane. All4 images reviewed. Preserved source/workbook bytes and normal host exit0.",
+      "evidence_refs": [
+        "qualification/dcm31-preview-sizing.md",
+        "qualification/evidence/dcm-31-initial-summary.json"
+      ],
+      "resolution_state": "open_diagnostic_pending"
+    }
   ]
 }

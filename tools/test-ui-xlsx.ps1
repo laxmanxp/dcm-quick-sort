@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
  [string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,
- [string]$Workbook='D:\FlowverseReportsRepo\dcm-flowuivision-20261103\inbox\06-orders.xlsx'
+ [string]$Workbook='D:\FlowverseReportsRepo\dcm-flowuivision-20261103\inbox\06-orders.xlsx',
+ [switch]$ObserveNativeLayout
 )
 # DCM-31: natural installed-handler/fallback selection; no registration changes.
 # Native cells require separate image review. Fallback sheet/cell readback is asserted.
@@ -14,6 +15,8 @@ if($lab.StartsWith($repo+[IO.Path]::DirectorySeparatorChar,[StringComparison]::O
 $null=New-Item -ItemType Directory $lab;$utf8=New-Object Text.UTF8Encoding($false)
 $cases=New-Object 'Collections.Generic.List[object]';$shots=New-Object 'Collections.Generic.List[object]'
 $receipt=[ordered]@{schema=1;feature='DCM-31';report=$lab;started_utc=[DateTime]::UtcNow.ToString('o');passed=$false;feature_accepted=$false;cases=$cases;captures=$shots;visual_review_required=$true;user_test='not_recorded';provider='not_observed'}
+$receipt['native_layout_diagnostic']=[bool]$ObserveNativeLayout
+if($ObserveNativeLayout){$receipt['layout_observations']=New-Object 'Collections.Generic.List[object]'}
 $app=$null;$hwnd=[IntPtr]::Zero;$owned=$null;$head='';$manifest=@();$fixture=$null;$expected=@{};$exe=''
 $workbookHash='5059729f4390ecd2e169bb2d1eb850c768532ebbb24b9733e87b82b012d6d24f'
 $sheetNames=@('Orders','Read me')
@@ -33,7 +36,19 @@ function Files {
  if(@(Get-ChildItem $fixture.destination -Force).Count){throw 'Destination changed'}
  $p=Join-Path $fixture.config 'recovery\move-journal.jsonl';if((Test-Path $p) -and ([IO.File]::ReadAllText($p)).Trim()){throw 'Unexpected operation journal'}
 }
-function Shot([string]$name){Own;$screen=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea;[DcmNative]::Restore($hwnd,$app.Id,$screen.Left+8,$screen.Top+8);Start-Sleep -Milliseconds 300;$s=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'.png')),$false);$shots.Add([ordered]@{name=$name;path=$s.Path;sha256=(Hash $s.Path);visual_reviewed=$false})}
+function ObserveLayout([string]$name){
+ if(-not $ObserveNativeLayout){return};Own
+ $path=Join-Path $lab ($name+'.geometry.json')
+ Json $path ([ordered]@{utc=[DateTime]::UtcNow.ToString('o');geometry=[DcmPreviewGeometry]::Observe($hwnd,$app.Id);host_layout=[DcmLayoutProbe]::Observe($hwnd,$app.Id)})
+ $receipt.layout_observations.Add([ordered]@{name=$name;path=$path;sha256=(Hash $path)})
+}
+function CaptureFrame([string]$name){
+ Own;ObserveLayout ($name+'-before-capture')
+ $s=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'.png')),$false)
+ ObserveLayout ($name+'-after-capture')
+ $shots.Add([ordered]@{name=$name;path=$s.Path;sha256=(Hash $s.Path);visual_reviewed=$false})
+}
+function Shot([string]$name){Own;$screen=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea;[DcmNative]::Restore($hwnd,$app.Id,$screen.Left+8,$screen.Top+8);Start-Sleep -Milliseconds 300;CaptureFrame $name}
 function Record([string]$name,$detail){$cases.Add([ordered]@{name=$name;passed=$true;detail=$detail});Files}
 function SelectFile([string]$name){$items=@([DcmNative]::ListItems($hwnd,$app.Id,1016));$index=[Array]::IndexOf($items,$name);if($index -lt 0){throw 'Missing fixture in list'};[DcmUndoInput]::Select($hwnd,$app.Id,$index);$stem=[IO.Path]::GetFileNameWithoutExtension($name);Wait ('selection '+$name) {([DcmUndoInput]::TryText($hwnd,$app.Id,1005)) -ceq $stem};$selected=@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016));if($selected.Count -ne 1 -or $selected[0] -ne $index){throw 'Selected fixture index mismatch'}}
 function HostCaptions {return @([DcmDocxProbe]::HostStatics($hwnd,$app.Id)|ForEach-Object {[DcmNative]::Text([IntPtr]$_,$app.Id)})}
@@ -77,7 +92,17 @@ function NativeShot([string]$name){
  Json (Join-Path $lab ($name+'.native-windows.json')) $nodes
  $identities=@($native|Select-Object -ExpandProperty PID -Unique|ForEach-Object {$p=Get-Process -Id $_;[ordered]@{pid=$p.Id;path=$p.Path;start=$p.StartTime.ToUniversalTime().ToString('o');is_host=($p.Id -eq $app.Id)}})
  $text=[DcmDocxProbe]::ReadAccessibleText($hwnd,$app.Id);[IO.File]::WriteAllText((Join-Path $lab ($name+'.accessible.txt')),$text,$utf8)
- Start-Sleep -Milliseconds 500;Shot $name;RequireStatus 'Windows preview: XLSX'
+ Start-Sleep -Milliseconds 500
+ if($ObserveNativeLayout){CaptureFrame ($name+'-before-restore')}
+ Shot $name
+ if($ObserveNativeLayout){
+  # Retain raw output, then observe natural settling. These captures issue no
+  # Restore, resize, SetRect, repaint request, fence, or native-provider input.
+  Start-Sleep -Milliseconds 250;CaptureFrame ($name+'-natural-250')
+  Start-Sleep -Milliseconds 750;CaptureFrame ($name+'-natural-1000')
+  Start-Sleep -Milliseconds 3000;CaptureFrame ($name+'-natural-4000')
+ }
+ RequireStatus 'Windows preview: XLSX'
  Record $name ([ordered]@{native_identities=$identities;accessible_text_sha256=(Hash (Join-Path $lab ($name+'.accessible.txt')));rendered_cells_machine_asserted=$false;rendered_content_review='required_separately';native_sheet_navigation='not_exercised';status='Windows preview: XLSX'})
 }
 function Exclusive {$h=[IO.File]::Open((Join-Path $fixture.inbox '06-orders.xlsx'),[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::None);$h.Dispose()}
@@ -102,6 +127,10 @@ try {
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-native.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-undo-input.cs')
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-xlsx-input.cs')
+ if($ObserveNativeLayout){
+  Add-Type -Path (Join-Path $repo 'tests/native/dcm-preview-geometry.cs')
+  Add-Type -Path (Join-Path $repo 'tests/native/dcm-layout-probe.cs')
+ }
  Add-Type -AssemblyName UIAutomationClient;Add-Type -AssemblyName UIAutomationTypes;Add-Type -AssemblyName WindowsBase
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-docx-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll',([Windows.Automation.AutomationElement]).Assembly.Location,([Windows.Automation.AutomationPattern]).Assembly.Location,([Windows.Point]).Assembly.Location)
  . (Join-Path $repo 'tests/native/new-fixtures.ps1');$fixture=New-DcmFixtures $lab
@@ -116,6 +145,7 @@ try {
  $psi=New-Object Diagnostics.ProcessStartInfo;$psi.FileName=$exe;$psi.Arguments='"'+(Join-Path $fixture.inbox '01-alpha.txt')+'"';$psi.UseShellExecute=$false;$psi.WorkingDirectory=$lab
  $psi.EnvironmentVariables['LOCALAPPDATA']=$fixture.local;$psi.EnvironmentVariables['APPDATA']=$fixture.roaming;$psi.EnvironmentVariables['TEMP']=$temp;$psi.EnvironmentVariables['TMP']=$temp;$psi.EnvironmentVariables['DCM_QUICKSORT_BACKUP_DIR']=Join-Path $lab 'backups'
  foreach($var in @('DCM_PDF_PROVIDER','DCM_SUMATRA_EXE','DCM_STARTUP_TRACE','DCM_LAYOUT_TRACE')){$psi.EnvironmentVariables.Remove($var)}
+ if($ObserveNativeLayout){$psi.EnvironmentVariables['DCM_LAYOUT_TRACE']='1';$receipt['host_layout_trace']=Join-Path $temp 'dcm-layout-trace.json'}
  $app=New-Object Diagnostics.Process;$app.StartInfo=$psi;if(-not $app.Start()){throw 'Host launch failed'};$owned=[ordered]@{pid=$app.Id;path=$exe;start=$app.StartTime.ToUniversalTime().ToString('o')};$receipt['owned_process']=$owned
  $until=[DateTime]::UtcNow.AddSeconds(20);do{$app.Refresh();if($app.HasExited){throw 'Host exited before window'};$hwnd=$app.MainWindowHandle;if($hwnd -ne [IntPtr]::Zero){break};Start-Sleep -Milliseconds 100}while([DateTime]::UtcNow -lt $until)
  Wait 'fixture list' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq $expected.Count}
@@ -146,6 +176,7 @@ try {
  SelectFile '06-orders.xlsx'
  if($native){NativeShot '06-native-workbook-reopened'}else{Orders '06-orders-reopened';Shot '06-orders-reopened'}
  Files;StopApp;Source;Exclusive
+ if($ObserveNativeLayout){$receipt['host_layout_trace_sha256']=Hash $receipt.host_layout_trace}
  if((Hash $Workbook) -ne $workbookHash -or (Hash $exe) -ne $build.app_artifact.sha256){throw 'Original workbook/app changed'}
  if($cases.Count -lt 5 -or $shots.Count -lt 4){throw 'Incomplete XLSX qualification records/captures'}
  Record '07-normal-close-and-original-bytes' $null;$receipt['source_unchanged']=$true;$receipt['fixtures_preserved']=$true;$receipt['journal_empty']=$true;$receipt.passed=$true

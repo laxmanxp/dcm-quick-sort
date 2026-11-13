@@ -49,6 +49,14 @@ filesystem evidence, screenshots and cleanup outcome. No installed DCM files cha
   `feature_accepted` remains false until independent image review is recorded.
   The related `xlsx-unit` selector runs focused XLSX/Open XML units. Damaged,
   protected and interrupted files remain DCM-34; broad lifecycle is DCM-35.
+- `ui-xlsx-layout`: diagnostic version of the same bounded workflow. It retains
+  the ordinary Restore/300 ms capture, adds a capture before restore and natural
+  adjacent captures after 250/1,000/4,000 ms of accumulated explicit waits, and
+  records paired DPI-context/window geometry and host layout state. Observation
+  adds execution time; timestamps are authoritative. Natural captures issue no
+  resize, repaint, SetRect, fence or native-provider input. The existing bounded
+  host layout trace is enabled in the disposable process. A later clean frame
+  is diagnostic evidence, not a production fix or automatic visual acceptance.
 - `ui-filters`: text/extension/name/age/size filters, no-match state, deterministic
   Name and File Type order, and Next, with native ListBox readback. `ui-rename`
   checks Clean spacing, Rename, durable Processed history after restart, and Undo

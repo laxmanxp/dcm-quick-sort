@@ -30,6 +30,8 @@ try{
     $receipt['label_probe_compiled']=$true
     Add-Type -Path (Join-Path $repo 'tests/native/dcm-xlsx-input.cs')
     $receipt['xlsx_input_compiled']=$true
+    Add-Type -Path (Join-Path $repo 'tests/native/dcm-preview-geometry.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')
+    $receipt['preview_geometry_compiled']=$true
     $receipt['native_adapter_compiled']=$true
     . (Join-Path $repo 'tests\native\new-fixtures.ps1')
     $fixture=New-DcmFixtures $report

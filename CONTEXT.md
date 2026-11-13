@@ -10,8 +10,17 @@ and the numbered qualification plan is [completion-50.json](qualification/comple
 
 **29 of 50 steps are complete; 21 remain.** Complete: DCM-01–18 and DCM-20–30.
 DCM-19 remains blocked on a disposable Windows Explorer integration environment.
-**Next: DCM-31 — verify XLSX preview.** These counts include setup work and are
+**Active: DCM-31 — XLSX preview remains PARTIAL.** These counts include setup work and are
 not a product-completion percentage or user acceptance.
+
+At pushed source `3d3af0fc3d67effdd7184251deb4ff234008dc1c`, local and native XLSX/
+Open XML units each passed 24/0/0; tooling and exact native build passed. The
+registered `ui-xlsx` run passed six machine records, but all four images were
+reviewed and the first Excel view occupies only about 80% of its pane in both
+axes. Reopening fills the pane; that is not a proven repair. `DCM-XLSX-SIZE-01`
+is open under DCM-31. Next run `ui-xlsx-layout` with a fresh exact build to collect
+paired DPI-context geometry and natural adjacent captures; do not force redraw
+or treat a longer wait as a fix. See [the sizing checkpoint](qualification/dcm31-preview-sizing.md).
 
 DCM-30's fresh registered Lenovo run at production source
 `8eb1470a891ea3454f1738d58191fdb90284ab42` passed seven native records. All five
@@ -35,7 +44,8 @@ final installer/package and publication remain open.
   exact repository and branch above. Do not substitute another QuickSort folder.
 - Runtime: `D:\FlowverseReportsRepo\flowdev-standalone-validation\flowdev-test.exe`.
 - Workspace/report root: `D:\FlowverseReportsRepo`.
-- Current DOCX selector: `ui-docx` → `tools/test-ui-docx.ps1`.
+- XLSX selectors: `xlsx-unit`, `ui-xlsx` and diagnostic `ui-xlsx-layout`.
+- Completed DOCX selector: `ui-docx` → `tools/test-ui-docx.ps1`.
 
 Code locally, unit test, commit/push, then use Desktop Commander for
 `flowdev update dcm-quicksort` followed by the focused `flowdev test` selector.
