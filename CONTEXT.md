@@ -1,5 +1,55 @@
 # DCM QuickSort — project context
 
+## Current checkpoint — 14 November 2026 (Asia/Kolkata)
+
+The active application is **standalone DCM QuickSort v1.0.71**, repository
+`https://github.com/laxmanxp/dcm-quick-sort.git`, branch `release/v1.0.71`.
+Production source is `app-src/`; installer source is `installer-src/`.
+The release is still unpublished. The current backlog is [todo.json](todo.json)
+and the numbered qualification plan is [completion-50.json](qualification/completion-50.json).
+
+**29 of 50 steps are complete; 21 remain.** Complete: DCM-01–18 and DCM-20–30.
+DCM-19 remains blocked on a disposable Windows Explorer integration environment.
+**Next: DCM-31 — verify XLSX preview.** These counts include setup work and are
+not a product-completion percentage or user acceptance.
+
+DCM-30's fresh registered Lenovo run at production source
+`8eb1470a891ea3454f1738d58191fdb90284ab42` passed seven native records. All five
+full-window images were reviewed: the installed Word handler shows the letter,
+formatted/table/image fixture, correct DOCX footer, text recovery and reopening.
+Local DOCX/font units passed 7/0/0 and Windows cross-build passed. The existing
+native baseline at the same source is 379 passed, 0 failed, 1 external-PPTX skip.
+See [DCM-30 evidence and limits](qualification/dcm30-complete.md).
+
+An earlier raw-pass DOCX run has one incomplete host-paint screenshot. A fresh
+unchanged run is clean, but that does not prove a repair or cause.
+`DCM-UI-RESIZE-01` is reopened under DCM-46 for that observation, preserving its
+earlier bounded fix history. User acceptance, remaining formats/error states,
+final installer/package and publication remain open.
+
+### Verified Lenovo registration and restart
+
+- App ID: `dcm-quicksort`.
+- Checkout: `D:\FlowverseReportsRepo\dcm-quicksort-candidate`.
+- Profile: that checkout's `tools\flowdev-dcm`; `config/repos.list` maps to the
+  exact repository and branch above. Do not substitute another QuickSort folder.
+- Runtime: `D:\FlowverseReportsRepo\flowdev-standalone-validation\flowdev-test.exe`.
+- Workspace/report root: `D:\FlowverseReportsRepo`.
+- Current DOCX selector: `ui-docx` → `tools/test-ui-docx.ps1`.
+
+Code locally, unit test, commit/push, then use Desktop Commander for
+`flowdev update dcm-quicksort` followed by the focused `flowdev test` selector.
+Only one native run at a time. UI tests require `DCM_BUILD_RECEIPT` from a
+successful `build` run for the exact current clean checkout; rebuild after
+checkout changes. Read the selected harness before choosing fixtures or
+environment variables. Review actual images separately from machine results.
+
+## Historical checkpoint — 9 November 2026
+
+The sections below preserve the original recovery checkpoint and historical
+findings. Their then-open statuses are superseded by the current checkpoint,
+`todo.json` and the numbered plan; do not restart already-closed safety work.
+
 Checkpoint: 2026-11-09. v1.0.71 is an unpublished candidate on `release/v1.0.71`. Source recovery and native regression work are recorded below; final packaging and UI acceptance remain pending.
 
 ## Product decision

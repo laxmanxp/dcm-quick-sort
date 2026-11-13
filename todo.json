@@ -2,18 +2,43 @@
   "schema_version": 1,
   "app": "DCM QuickSort",
   "suite": "FileFlow Suite",
-  "updated_on": "2026-11-13",
+  "updated_on": "2026-11-14",
   "scope": "Independent native Go application/window alongside Flow Search, DeepSearch and FileFlow. Reuse existing behavior; a Walk/Rust migration, new PDF engine or shared launcher is not a DCM release prerequisite.",
   "completion_plan": {
     "path": "qualification/completion-50.json",
     "step_count": 50,
     "completed_setup_steps": ["DCM-01", "DCM-02", "DCM-03", "DCM-04", "DCM-05"],
-    "completed_product_steps": ["DCM-06", "DCM-07", "DCM-08", "DCM-09", "DCM-10", "DCM-11", "DCM-12", "DCM-13", "DCM-14", "DCM-15", "DCM-16", "DCM-17", "DCM-18", "DCM-20", "DCM-21", "DCM-22", "DCM-23", "DCM-24", "DCM-25", "DCM-26", "DCM-27", "DCM-28", "DCM-29"],
-    "next_step": "DCM-30",
-    "checkpoint": "qualification/2026-11-13-default-pdf-completion.md",
+    "completed_product_steps": [
+      "DCM-06",
+      "DCM-07",
+      "DCM-08",
+      "DCM-09",
+      "DCM-10",
+      "DCM-11",
+      "DCM-12",
+      "DCM-13",
+      "DCM-14",
+      "DCM-15",
+      "DCM-16",
+      "DCM-17",
+      "DCM-18",
+      "DCM-20",
+      "DCM-21",
+      "DCM-22",
+      "DCM-23",
+      "DCM-24",
+      "DCM-25",
+      "DCM-26",
+      "DCM-27",
+      "DCM-28",
+      "DCM-29",
+      "DCM-30"
+    ],
+    "next_step": "DCM-31",
+    "checkpoint": "qualification/dcm30-complete.md",
     "blocked_steps": ["DCM-19"],
     "active_blockers": ["DCM-EXPLORER-ISOLATION-01"],
-    "next_runnable_step": "DCM-30",
+    "next_runnable_step": "DCM-31",
     "rule": "The first five completed steps are setup/diagnostic work, not product acceptance. Preserve all original defect IDs and prior evidence."
   },
   "status_values": ["planned", "implemented", "tested", "fixed"],
@@ -30,12 +55,12 @@
     "archive_release_certified": false,
     "candidate_version": "v1.0.71",
     "candidate_branch": "release/v1.0.71",
-    "candidate_code_commit": "9a2ed85a38e25c3ad9698ee41ec993379dff9686",
+    "candidate_code_commit": "8eb1470a891ea3454f1738d58191fdb90284ab42",
     "source_import_commit": "abe95acad96343e16d93396790a52bfe4d4b7b59",
     "archive_sha256": "64e1cb1666acc9a70aeeb9656b4f30ca26fc30ad142ea32e154cb7a63dc7b5aa",
     "native_regression_commit": "4619e0ef2bed51b7685c5f84d0fc0f87702bb1ca",
     "native_regression_result": "23 top-level app regressions: 23 passed, 0 failed, 0 skipped, exit 0, no timeout, source unchanged. DCM-12 adds invalid-template-package coverage; all three D4 parent tests and five nested cases passed. All earlier safety tests remain GREEN. Full app/installer/UI/package qualification remains open.",
-    "last_native_attempt": "9a2ed85a: default Windows.Data.Pdf enhanced workflow19 action/readback records passes once; ten full images reviewed. Actual pages1/2, disabled boundary controls,100/110/return100,Fit Page/Fit Width and readable native pan verified; files/journal/close intact. Two unchanged repeats failed capture visibility guards and remain incomplete. Baseline379/0/1 and optional Sumatra23 pass. App byte-identical to2cafe818; historical blank cause unknown, no product fix claimed. Close only DCM28/29 within demonstrated two-page scope; human/package/default states unchanged.",
+    "last_native_attempt": "8eb1470a: current ui-docx 183530-acd8af62 PASS (7 records); all five images reviewed. Installed Word handler displays letter and formatted/table/image fixture, text recovery and reopen; exact bytes/journal/normal exit preserved. DCM-30 closed for representative content only. Earlier partial-paint frame retained and DCM-UI-RESIZE-01 reopened for DCM-46. Native baseline at this source 379/0/1; human/package still pending.",
     "app_baseline_dcm14_checkpoint": {"commit": "13f52cb0ed5e494bd838062c6b7e3fcca424f068", "report": "20261110-030347-e80c1e53", "count": 352, "passed": 351, "failed": 0, "skipped": ["TestRealGeneratedPPTXIntegration"], "exit_code": 0, "timed_out": false, "source_unchanged": true, "skip_disposition": "DCM_REAL_PPTX not set; not executed, not passed. External fixture remains required under DCM-32 / DCM-PREVIEW-01 / DCM-47."},
     "app_baseline_dcm20_checkpoint": {"commit": "ded8595377d4cf187a07624b3a869cdd05494fb7", "report": "C:\\FlowverseReports\\dcm-quicksort-baseline-20261111-005651-f0924008", "count": 355, "passed": 354, "failed": 0, "skipped": ["TestRealGeneratedPPTXIntegration"], "exit_code": 0, "timed_out": false, "source_unchanged": true, "skip_disposition": "External DCM_REAL_PPTX fixture still required under DCM-32/47; not executed or passed."},
     "app_baseline_dcm21_checkpoint": {"commit": "a363333ede3243ead62ce11f5a22c8665205ffe5", "report": "20261111-025742-6ba62701", "count": 358, "passed": 357, "failed": 0, "skipped": ["TestRealGeneratedPPTXIntegration"], "exit_code": 0, "timed_out": false, "source_unchanged": true, "skip_disposition": "DCM_REAL_PPTX still required under DCM-32 / DCM-PREVIEW-01 / DCM-47; not executed, not passed."},
@@ -110,7 +135,32 @@
       "status": "read_only_observation_complete; one_serial_targeted_run_completed",
       "evidence": "qualification/2026-11-09-baby-steps.md"
     },
-    "source_draft_pr": "https://github.com/laxmanxp/dcm-quick-sort/pull/1"
+    "source_draft_pr": "https://github.com/laxmanxp/dcm-quick-sort/pull/1",
+    "ui_docx_checkpoint": {
+      "commit": "8eb1470a891ea3454f1738d58191fdb90284ab42",
+      "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-docx-20261113-183530-acd8af62",
+      "passed": true,
+      "case_count": 7,
+      "reviewed_images": 5,
+      "provider": "Installed Windows DOCX preview handler",
+      "app_sha256": "8c682baab23b4ea831314ae0ff1bc2c9a98a1180d05365fb6968014bee9f9ef5",
+      "app_exit_code": 0,
+      "source_unchanged": true,
+      "user_test": "not_recorded",
+      "evidence": "qualification/evidence/dcm-30-native-summary.json"
+    },
+    "app_baseline_dcm30_checkpoint": {
+      "run": "dcm-quicksort-baseline-20261113-075058-dd0f60d2",
+      "commit": "8eb1470a891ea3454f1738d58191fdb90284ab42",
+      "passed": 379,
+      "failed": 0,
+      "skipped": [
+        "TestRealGeneratedPPTXIntegration"
+      ],
+      "exit_code": 0,
+      "source_unchanged": true,
+      "freshly_rerun_in_this_continuation": false
+    }
   },
   "evidence": {
     "default_pdf_completion": "qualification/2026-11-13-default-pdf-completion.md",
@@ -145,7 +195,9 @@
     "dcm25_completion": "qualification/dcm25-complete.md",
     "dcm26_completion": "qualification/dcm26-complete.md",
     "dcm27_completion": "qualification/dcm27-complete.md",
-    "dcm22_checkpoint": "qualification/2026-11-11-dcm22.md"
+    "dcm22_checkpoint": "qualification/2026-11-11-dcm22.md",
+    "dcm30_completion": "qualification/dcm30-complete.md",
+    "dcm30_native_summary": "qualification/evidence/dcm-30-native-summary.json"
   },
   "items": [
     {
@@ -210,12 +262,31 @@
       "id": "DCM-PREVIEW-01", "feature": "Qualify advertised preview formats and failure states", "status": "planned", "ui_test": "limited_fixture_pass_on_v1.0.69; remaining_formats_not_run", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "TXT, PNG and lightweight DOCX/XLSX/PPTX fallbacks passed the Nov3 fixture checks. Legacy DOC/XLS/PPT, complex Office fidelity and protected/damaged files were not certified.",
       "external_fixture_status": "DCM-14 baseline skipped TestRealGeneratedPPTXIntegration because DCM_REAL_PPTX was not supplied. Supply an identified fixture and run unchanged assertions before PPTX/final-package acceptance; visible UI review remains separate.",
-      "acceptance": "Record visible success, blank/error and cancellation behavior for the formats advertised by the selected release. State fallback fidelity limits explicitly.", "blocked_by": ["DCM-SOURCE-01"], "evidence_refs": ["native_1069_report"]
+      "acceptance": "Record visible success, blank/error and cancellation behavior for the formats advertised by the selected release. State fallback fidelity limits explicitly.", "blocked_by": ["DCM-SOURCE-01"], "evidence_refs": [
+        "native_1069_report",
+        "dcm30_completion"
+      ],
+      "docx_checkpoint": "DCM-30 complete for two representative documents through installed Word handler at 8eb1470a; seven native records and five reviewed captures. Other formats/error states and native fallback remain separate."
     },
     {
       "id": "DCM-RELEASE-01", "feature": "Qualify and publish the exact packaged release candidate", "status": "planned", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,
       "acceptance": "Record source revision and app/installer hashes; verify payload identity, install/upgrade/restore, native feature evidence on Lenovo against the advertised DCM release scope. Do not introduce a new printing feature as a prerequisite. Publish a newer release only after its gates are satisfied; keep v1.0.63 publication distinct from later development evidence.",
-      "blocked_by": ["DCM-SOURCE-01", "D1", "D2", "D3", "D4", "D5", "D6", "DCM-NATIVE-01", "DCM-PDF-01", "DCM-PREVIEW-01", "DCM-UI-EMPTY-COPY-01", "DCM-UI-LABEL-01", "DCM-EXPLORER-ISOLATION-01"], "evidence_refs": ["published_release", "archive_source_audit", "native_1069_report", "baby_steps_checkpoint"]
+      "blocked_by": [
+        "DCM-SOURCE-01",
+        "D1",
+        "D2",
+        "D3",
+        "D4",
+        "D5",
+        "D6",
+        "DCM-NATIVE-01",
+        "DCM-PDF-01",
+        "DCM-PREVIEW-01",
+        "DCM-UI-EMPTY-COPY-01",
+        "DCM-UI-LABEL-01",
+        "DCM-EXPLORER-ISOLATION-01",
+        "DCM-UI-RESIZE-01"
+      ], "evidence_refs": ["published_release", "archive_source_audit", "native_1069_report", "baby_steps_checkpoint"]
     },
     {"id": "DCM-INSTALL-CLEANUP-01", "feature": "Resolve isolated installer uninstall-cleanup nonzero exit", "status": "fixed", "severity": "medium", "finding_kind": "reproduced_lifecycle_failure", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true, "acceptance": "Diagnose the owned cleanup subprocess exit 1 without weakening assertions. Preserve backup contents, prove owned path/registration cleanup, and obtain a clean full installer-engine result before package qualification.", "native_test": "Reproduced script self-deletion exit 1 and console-dependent delay failure. Corrected by 70e8f240; success and three locked-target cases passed. Full isolated engine and FlowDev PASS at a49e6595 after preserving unnamed registry JSON keys in the evidence reader. Registry cleanup and unchanged live keys verified; final package requalification remains required.", "evidence_refs": ["dcm13_checkpoint", "dcm13_completion"]},
     {"id": "DCM-UI-EMPTY-COPY-01", "feature": "Distinguish filtered no-match from truly empty folder wording", "status": "fixed", "severity": "low", "finding_kind": "reviewed_ui_observation", "ui_test": "passed_DCM21_with_separate_image_review", "user_test": "not_recorded", "release_gate": true, "acceptance": "A no-match filter must not imply the physical folder is complete; preserve clear-filter recovery and no-selection file safety. Verify under DCM-21 and DCM-46.", "evidence_refs": ["dcm17_checkpoint", "dcm21_checkpoint"], "native_test": "Fresh native filter and launch runs at a363333e verify the filter-aware no-match header/hint, cleared draft and selection, harmless no-selection actions with a valid disposable destination, and Clear Filters recovery. All ten screenshots inspected. Final-candidate regression remains required."},
@@ -231,7 +302,24 @@
     {"id": "DCM-SUMATRA-UI-01", "feature": "Fix clipped embedded Sumatra page-number field and resolve redundant disabled host PDF controls", "status": "fixed", "ui_test": "page_field_and_host_sizing_controls_verified_at_two_sizes; full_ui_not_approved", "user_test": "not_recorded", "release_gate": true, "parent_steps": ["DCM-28", "DCM-29"], "acceptance": "Keep PrinterAccess=0 and DiskAccess=0; make page controls completely readable/clickable and qualify page/zoom controls at tested DPI/window sizes. Do not enable printing merely to restore toolbar geometry.", "evidence_refs": ["qualification/2026-11-12-sumatra-stage1.md", "qualification/evidence/sumatra-stage1-native-summary.json", "qualification/2026-11-12-sumatra-toolbar.md", "qualification/evidence/sumatra-toolbar-native-summary.json"], "native_test": "Geometry RED 8666752a retained. At c53f8526 page field moves from -13 to 8 within 43px toolbar, page entry and accessible navigation/zoom pass. New far-right overflow and host repaint artifacts have separate open IDs. Runtime/policy hashes unchanged; no print enablement."},
     {"id": "DCM-SUMATRA-DISTRIBUTION-01", "feature": "Qualify managed Sumatra runtime packaging and applicable distribution terms", "status": "planned", "ui_test": "not_applicable", "user_test": "not_recorded", "release_gate": true, "parent_steps": ["DCM-47", "DCM-48"], "acceptance": "Before bundling or publishing, verify exact runtime source/licence notices and applicable source distribution obligations, installer payload identity, private policy installation and upgrade behavior. Stage 1 copies an existing test runtime only; no executable is bundled or released.", "evidence_refs": ["qualification/2026-11-12-sumatra-stage1.md"]},
     {"id": "DCM-SUMATRA-UI-02", "feature": "Avoid far-right Sumatra toolbar control clipping at narrower host width", "status": "fixed", "ui_test": "Aa_visibly_contained_at_1280_1216_1152_host_widths; no_universal_layout_claim", "user_test": "not_recorded", "release_gate": true, "parent_steps": ["DCM-28", "DCM-29", "DCM-46"], "acceptance": "At supported narrower sizes, make toolbar controls available without clipping or provide a verified overflow route. Extend beyond the Edit/Static containment assertion. Retain strict runtime policy.", "evidence_refs": ["qualification/2026-11-12-sumatra-toolbar.md", "qualification/evidence/sumatra-toolbar-native-summary.json", "qualification/2026-11-12-sumatra-resize.md", "qualification/evidence/sumatra-resize-native-summary.json"], "prior_ui_test": "observed_in_reviewed_smaller_window_capture", "native_test": "24ff2f24 reserves preview width via bounded side panels. All 20 first-run full captures reviewed; Aa and other rightmost icons visible. MSAA geometry underreported prior clipping and is supplementary only. Narrow Processed header is more compressed; DCM-UI-LABEL-01 remains open."},
-    {"id": "DCM-UI-RESIZE-01", "feature": "Remove stale host button and footer fragments after resize restoration", "status": "fixed", "ui_test": "fixed_wait_diagnostic_RED_to_GREEN_twice; 18_GREEN_and3_RED_images_reviewed", "user_test": "not_recorded", "release_gate": true, "parent_steps": ["DCM-46"], "acceptance": "Diagnose repeated-resize partial frames without masking raw evidence; preserve completion/paint traces and verify clean controls under identical fixed-wait RED/GREEN sequencing. Scope closure to the reproduced queued-layout path and tested geometry; retain other historic cause uncertainty and general layout gates.", "evidence_refs": ["qualification/2026-11-12-sumatra-toolbar.md", "qualification/evidence/sumatra-toolbar-native-summary.json", "qualification/2026-11-12-sumatra-resize.md", "qualification/evidence/sumatra-resize-native-summary.json", "qualification/2026-11-12-sumatra-readable-retry.md", "qualification/evidence/sumatra-readable-retry-summary.json", "qualification/2026-11-12-sumatra-resize-timing.md", "qualification/evidence/sumatra-resize-timing-summary.json"], "prior_ui_test": "observed_in_reviewed_resize_restored_and_later_captures", "native_test": "02e6efb3: queued resize/paint work reproduced at c15bf4a6 (partial smaller raw image; natural recovery matches redraw reference). Defer 49 per-control repaints and invalidate completed client/frames once. Same fixed-wait harness passes twice: 23 behavior records plus 12 timing bursts per run, all 24 sampled raw/natural differences zero. Eighteen first-GREEN images and three RED images reviewed. Baseline370/0/1; ordinary Sumatra23, launch12, text17 and image23 regressions pass. Tested queued-layout path corrected; other historical causes/general layout/startup gates not waived. No numbered closure/default switch/release.", "before_readable_retry": {"status": "fixed", "ui_test": "native_repaint_comparison_RED_to_GREEN; unassisted_full_captures_reviewed", "native_test": "1b5cadca RED had 2426/2171/2426 changed samples against explicit redraw reference after restore/repeated resize; 24ff2f24 has zero across 107276 sampled host points, repeated twice. App queues invalidation after final control layout. Diagnostic references occur after raw captures, not before acceptance. Tested matrix only; fixture contents unchanged."}, "resolution_state": "fixed_reproduced_queued_layout_path_in_tested_matrix", "before_resize_timing": {"status": "implemented", "ui_test": "raw_repeated_resize_capture_failed; unchanged_retry_passed; root_cause_open", "native_test": "At715cd61d report152144-1254fe66 fails with32603/107276 repaint differences and1746 background mismatches. Three raw/adjacent/reference images reviewed and actual incomplete host controls confirmed. Unchanged report152939-74d333d0 passes23 checks with zero paint differences. Retain both outcomes; later pass is not a correction. Earlier24ff2f24 evidence remains historical.", "resolution_state": "reopened_intermittent", "acceptance": "Reproduce resize repaint trails with a focused assertion; restore clean host background and controls after shrinking/enlarging without masking raw capture evidence. Exact cause is not yet established."}},
+    {"id": "DCM-UI-RESIZE-01", "feature": "Remove stale host button and footer fragments after resize restoration", "status": "implemented", "ui_test": "DOCX_reopen_incomplete_frame_observed; unchanged_fresh_run_clean; cause_open", "user_test": "not_recorded", "release_gate": true, "parent_steps": ["DCM-46"], "acceptance": "Diagnose repeated-resize partial frames without masking raw evidence; preserve completion/paint traces and verify clean controls under identical fixed-wait RED/GREEN sequencing. Scope closure to the reproduced queued-layout path and tested geometry; retain other historic cause uncertainty and general layout gates.", "evidence_refs": [
+        "qualification/2026-11-12-sumatra-toolbar.md",
+        "qualification/evidence/sumatra-toolbar-native-summary.json",
+        "qualification/2026-11-12-sumatra-resize.md",
+        "qualification/evidence/sumatra-resize-native-summary.json",
+        "qualification/2026-11-12-sumatra-readable-retry.md",
+        "qualification/evidence/sumatra-readable-retry-summary.json",
+        "qualification/2026-11-12-sumatra-resize-timing.md",
+        "qualification/evidence/sumatra-resize-timing-summary.json",
+        "qualification/dcm30-complete.md",
+        "qualification/evidence/dcm-30-native-summary.json"
+      ], "prior_ui_test": "observed_in_reviewed_resize_restored_and_later_captures", "native_test": "At8eb1470a, raw-pass run075025-5212636c has an incomplete host layout/paint in10-native-letter-reopened.png (sha256e31f6de63c0de5747b8617c5efcef220f2e82d3ed46bcf0719cbf8906256c787). Actual letter content is readable, shell controls are blank/at smaller geometry. Fresh unchanged run183530-acd8af62 passes7 and all5 images are clean. No adjacent timing/paint trace was recorded for the earlier frame; do not call the new pass a repair. Retain earlier queued-layout fix scope, diagnose/disposition this observation before final DCM-46 acceptance.", "before_readable_retry": {"status": "fixed", "ui_test": "native_repaint_comparison_RED_to_GREEN; unassisted_full_captures_reviewed", "native_test": "1b5cadca RED had 2426/2171/2426 changed samples against explicit redraw reference after restore/repeated resize; 24ff2f24 has zero across 107276 sampled host points, repeated twice. App queues invalidation after final control layout. Diagnostic references occur after raw captures, not before acceptance. Tested matrix only; fixture contents unchanged."}, "resolution_state": "reopened_for_DOCX_reopen_capture", "before_resize_timing": {"status": "implemented", "ui_test": "raw_repeated_resize_capture_failed; unchanged_retry_passed; root_cause_open", "native_test": "At715cd61d report152144-1254fe66 fails with32603/107276 repaint differences and1746 background mismatches. Three raw/adjacent/reference images reviewed and actual incomplete host controls confirmed. Unchanged report152939-74d333d0 passes23 checks with zero paint differences. Retain both outcomes; later pass is not a correction. Earlier24ff2f24 evidence remains historical.", "resolution_state": "reopened_intermittent", "acceptance": "Reproduce resize repaint trails with a focused assertion; restore clean host background and controls after shrinking/enlarging without masking raw capture evidence. Exact cause is not yet established."},
+      "before_dcm30_review": {
+        "status": "fixed",
+        "ui_test": "fixed_wait_diagnostic_RED_to_GREEN_twice; 18_GREEN_and3_RED_images_reviewed",
+        "resolution_state": "fixed_reproduced_queued_layout_path_in_tested_matrix",
+        "native_test": "02e6efb3: queued resize/paint work reproduced at c15bf4a6 (partial smaller raw image; natural recovery matches redraw reference). Defer 49 per-control repaints and invalidate completed client/frames once. Same fixed-wait harness passes twice: 23 behavior records plus 12 timing bursts per run, all 24 sampled raw/natural differences zero. Eighteen first-GREEN images and three RED images reviewed. Baseline370/0/1; ordinary Sumatra23, launch12, text17 and image23 regressions pass. Tested queued-layout path corrected; other historical causes/general layout/startup gates not waived. No numbered closure/default switch/release."
+      }},
     {"id": "DCM-SUMATRA-LIFECYCLE-01", "feature": "Verify bounded PDF switching, loading abandonment, basic error recovery and active-PDF close", "status": "tested", "ui_test": "11_records_pass_twice; all_10_first_run_captures_reviewed", "user_test": "not_recorded", "release_gate": true, "parent_steps": ["DCM-28", "DCM-29"], "acceptance": "Distinct PDF/text switching, selection-based cancellation observed during loading, truthful empty/header errors and recovery, normal active-PDF close; preserve source bytes and leave no owned viewer, private session profile or source lock. This bounded gate does not cover Undo, crashes or release refusal.", "native_test": "deb8373d: two new lifecycle runs pass 11 records each; 40 selections/run, 10 observed loading cancellations/run, four attached A-B-text cycles, empty/header errors and recovery, normal active-PDF close with no private processes/profiles/locks. All 10 first-run captures inspected. Baseline 367/0/1 and existing 23-check Sumatra suite pass. Test-only additions; no app changes, default switch, numbered closure or release.", "evidence_refs": ["qualification/2026-11-12-sumatra-lifecycle.md", "qualification/evidence/sumatra-lifecycle-native-summary.json"]},
     {"id": "DCM-UNDO-REFRESH-01", "feature": "Clear stale destination view after individual Undo moves its selected PDF back", "status": "fixed", "severity": "medium", "ui_test": "native_RED_to_GREEN; two_final_runs; eight_full_images_reviewed", "user_test": "not_recorded", "release_gate": true, "parent_steps": ["DCM-28", "DCM-44"], "acceptance": "After Undo changes either source or destination directory, refresh the active list and clear a removed target; preserve original bytes and journal identity. Batch Undo/path-alias matrices remain separate.", "native_test": "cc04ae7c: two consecutive nine-record Undo/viewer-exit runs pass; eight first-run full screenshots reviewed. Destination stale-selection RED at55e2b877 fixed by0c9cdf87. Windows baseline368/0/1 includes six release-refusal cases; Refresh23 and lifecycle11 regressions pass. Test readiness changed to posted selection/bounded polling; initial startup responsiveness remains open. No numbered closure, default switch or release.", "evidence_refs": ["qualification/2026-11-12-sumatra-undo.md", "qualification/evidence/sumatra-undo-native-summary.json"]},
     {"id": "DCM-SUMATRA-UNDO-01", "feature": "Qualify individual active-PDF Undo and controlled viewer-exit recovery", "status": "tested", "ui_test": "nine_records_pass_twice; eight_full_images_reviewed", "user_test": "not_recorded", "release_gate": true, "parent_steps": ["DCM-28", "DCM-29", "DCM-37", "DCM-44"], "acceptance": "Release active/reopened PDF for individual Undo Rename/Move, verify exact restoration and original journal IDs, show controlled owned-viewer exit truthfully, and recover on Reload. Windows injected wait/termination failures must not admit Rename, Move or Undo. This is not full live-permission-denial or Batch Undo qualification.", "native_test": "cc04ae7c: two consecutive nine-record Undo/viewer-exit runs pass; eight first-run full screenshots reviewed. Destination stale-selection RED at55e2b877 fixed by0c9cdf87. Windows baseline368/0/1 includes six release-refusal cases; Refresh23 and lifecycle11 regressions pass. Test readiness changed to posted selection/bounded polling; initial startup responsiveness remains open. No numbered closure, default switch or release.", "evidence_refs": ["qualification/2026-11-12-sumatra-undo.md", "qualification/evidence/sumatra-undo-native-summary.json"]},

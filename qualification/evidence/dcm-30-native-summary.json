@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "feature": "DCM-30",
+  "app": "DCM QuickSort",
+  "candidate_version": "v1.0.71",
+  "recorded_on_local_date": "2026-11-14",
+  "timezone": "Asia/Kolkata",
+  "tested_source": "8eb1470a891ea3454f1738d58191fdb90284ab42",
+  "branch": "release/v1.0.71",
+  "result": "complete_for_representative_native_DOCX_content",
+  "production_change": "Previously pushed one-line native preview footer correction at 8eb1470a; this continuation changes evidence and project context only.",
+  "flowdev": {
+    "app_id": "dcm-quicksort",
+    "origin": "https://github.com/laxmanxp/dcm-quick-sort.git",
+    "profile": "D:\\FlowverseReportsRepo\\dcm-quicksort-candidate\\tools\\flowdev-dcm",
+    "runtime": "D:\\FlowverseReportsRepo\\flowdev-standalone-validation\\flowdev-test.exe",
+    "commands": [
+      "flowdev update dcm-quicksort",
+      "flowdev test dcm-quicksort ui-docx"
+    ],
+    "update_result": "already_up_to_date",
+    "feature_exit_code": 0,
+    "native_run": "dcm-quicksort-ui-docx-20261113-183530-acd8af62",
+    "started_utc": "2026-11-13T18:35:30.1232466Z",
+    "finished_utc": "2026-11-13T18:35:55.3417261Z",
+    "passed_records": 7,
+    "failed_records": 0
+  },
+  "build_receipt": "D:\\FlowverseReportsRepo\\dcm-quicksort-build-20261113-074831-dccd7e8e\\receipt.json",
+  "app_sha256": "8c682baab23b4ea831314ae0ff1bc2c9a98a1180d05365fb6968014bee9f9ef5",
+  "provider": "Installed Windows DOCX preview handler",
+  "source_fixture_hashes": {
+    "01-alpha.txt": "ed80c15fbda9a2955adb26430305a1753afcae571f85eeee37c5d89cecbbc70d",
+    "03-charlie.txt": "6fbd1356de6bec94c5658e39207be639dcb93bdfbaf807f81b90b5bd80120852",
+    "08-preview.pdf": "7a5724909e8367d2e680fa525506bcedf1bf711eddfb109a0f4046081f3a250a",
+    "02-bravo.txt": "694044d87f1e08fe266fa4a98d5a3c2dbcb2c718f4641005684cb1513971b6a3",
+    "06-structured.DOCX": "559c4d171b51bafb66e0513f6f31c65757f503be3aa06cba8b4594c9da9c9550",
+    "05-letter.docx": "11ca20995a5da66033c8dd75cc55a145bc6179bf189ac7d8bfaf9d90562a72a7"
+  },
+  "source_unchanged": true,
+  "fixtures_preserved": true,
+  "journal_empty": true,
+  "host_exit_code": 0,
+  "local_units": {
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "compiler": "Go 1.27.4 linux/amd64",
+    "scope": "DOCX structured-text fallback plus text font-size unit"
+  },
+  "local_windows_crossbuild": {
+    "passed": true,
+    "scope": "compilation only; distinct toolchain/executable from Lenovo"
+  },
+  "recovered_native_baseline": {
+    "run": "dcm-quicksort-baseline-20261113-075058-dd0f60d2",
+    "commit": "8eb1470a891ea3454f1738d58191fdb90284ab42",
+    "passed": 379,
+    "failed": 0,
+    "skipped": [
+      "TestRealGeneratedPPTXIntegration"
+    ],
+    "exit_code": 0,
+    "source_unchanged": true,
+    "freshly_rerun_in_this_continuation": false
+  },
+  "visual_review": {
+    "reviewer": "ChatGPT direct image inspection",
+    "reviewed_full_window_captures": 5,
+    "raw_visual_reviewed_flags_unchanged": true,
+    "images": [
+      {
+        "name": "01-initial-text",
+        "sha256": "48c3c0467c9d386c78fa025436225ad866f9cf3b8bb4ac94556c1cd3fe15abc9",
+        "visual_reviewed": true,
+        "result": "passed_for_recorded_frame",
+        "observation": "The selected alpha text fixture, preview heading and Plain-text preview: TXT footer agree; the shell is fully painted."
+      },
+      {
+        "name": "02-native-letter",
+        "sha256": "830bf125ad8eb3dc6412018db4452703b7f0813f457e9c441cb9a60def9b9053",
+        "visual_reviewed": true,
+        "result": "passed_for_recorded_frame",
+        "observation": "The actual Gurundia Block heading, Road Repair subject, rupee amount 25,000, FlowDoc text and Block Development Officer signature are readable; Windows preview: DOCX is visible."
+      },
+      {
+        "name": "04-native-structured",
+        "sha256": "a8f5901b23fa003f5ec37d1ed28dc3918abe23f8400b979459cb88504ad9c74c",
+        "visual_reviewed": true,
+        "result": "passed_for_recorded_frame",
+        "observation": "DCM-30 FIELD REPORT, Alpha parcel 31 units, bold and regular text, Cafe with accented e, Measurements table with Bolts/12 and Panels/3, green image and END DCM-30 ALPHA are visible."
+      },
+      {
+        "name": "08-text-recovery",
+        "sha256": "1f01c6e71ed3421bfb6a6e5d3ac84c87ab3861b1170900115a2197d3fd4107bb",
+        "visual_reviewed": true,
+        "result": "passed_for_recorded_frame",
+        "observation": "Alpha text and its TXT footer return; no prior DOCX body remains; the shell is fully painted."
+      },
+      {
+        "name": "10-native-letter-reopened",
+        "sha256": "69b66c6da47923325b136f79707e2bf5a46798770c681b99dbb823d9abc0ea50",
+        "visual_reviewed": true,
+        "result": "passed_for_recorded_frame",
+        "observation": "The original letter and DOCX footer return after both document changes; file list, buttons, labels and footer are fully painted at this capture."
+      }
+    ]
+  },
+  "retained_prior_evidence": {
+    "stale_footer_RED": {
+      "run": "dcm-quicksort-ui-docx-20261113-074320-590bcdc7",
+      "commit": "c0c6e4c599aaf9889bcdad2d7193cb4a9e5e6e2d",
+      "error": "DCM30_STALE_PROVIDER_STATUS",
+      "image_reviewed": true
+    },
+    "raw_pass_with_visual_failure": {
+      "run": "dcm-quicksort-ui-docx-20261113-075025-5212636c",
+      "raw_passed_records": 7,
+      "image": "10-native-letter-reopened.png",
+      "sha256": "e31f6de63c0de5747b8617c5efcef220f2e82d3ed46bcf0719cbf8906256c787",
+      "visual_result": "incomplete_host_paint; not full visual acceptance",
+      "reviewed_images": 5,
+      "follow_up": "DCM-UI-RESIZE-01 / DCM-46"
+    },
+    "earlier_machine_pass": {
+      "run": "dcm-quicksort-ui-docx-20261113-074859-1d0d1f66",
+      "raw_passed_records": 7,
+      "images_reviewed_in_this_continuation": false
+    }
+  },
+  "limits": [
+    "Current Windows UI acceptance uses the installed Microsoft Word preview handler; the fallback has local unit coverage, not current headed acceptance on a handler-free host.",
+    "No general Word layout fidelity, native DOCX zoom/pagination, protected/damaged document or all-document claim.",
+    "The older incomplete-paint frame remains a separate unresolved shell/restore observation. A later clean capture is not a root-cause fix.",
+    "Direct child shutdown, detached preview and exclusive file access do not imply termination of a shared Word preview-host process.",
+    "User acceptance and final package/release qualification remain pending; broader preview failures and cleanup remain DCM-34/35."
+  ],
+  "user_test": "not_recorded",
+  "final_package_qualified": false,
+  "numbered_steps_closed": [
+    "DCM-30"
+  ],
+  "completed_steps": 29,
+  "remaining_steps": 21,
+  "next_step": "DCM-31",
+  "blocked_steps": [
+    "DCM-19"
+  ],
+  "durable_reports": {
+    "repository": "laxmanxp/flowverse-reports",
+    "path": "apps/dcm-quicksort/dcm30-20261113-183530"
+  }
+}
