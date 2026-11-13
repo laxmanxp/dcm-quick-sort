@@ -90,7 +90,10 @@ try {
  $trace=Join-Path $lab 'dcm-startup-trace.json';if(-not(Test-Path $trace)){throw 'Trace missing'}
  $receipt['startup_trace']=$trace;$receipt['startup_trace_sha256']=Hash $trace;$receipt['responsiveness_accepted']=(@($measurements|Where-Object {$_.over_250ms}).Count -eq 0)
  $receipt['source_unchanged']=$true;$receipt['fixtures_preserved']=$true;$receipt['journal_empty']=$true;$receipt.passed=$true
-}catch{$receipt['error']=$_.Exception.Message;$receipt['error_position']=$_.InvocationInfo.PositionMessage;Write-Output ('FAIL='+$_.Exception.Message)}
+}catch{
+ $receipt['error']=$_.Exception.Message;$receipt['error_position']=$_.InvocationInfo.PositionMessage;Write-Output ('FAIL='+$_.Exception.Message)
+ if($app -and -not $app.HasExited){try{Own;$s=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab 'failure.png'),$false);$shots.Add([ordered]@{name='failure';path=$s.Path;sha256=(Hash $s.Path);visual_reviewed=$false})}catch{$receipt['failure_capture_error']=$_.Exception.Message}}
+}
 finally {
  if($monitor){$monitor.Dispose()}
  if($app){try{Own;[DcmNative]::CloseAsync($hwnd,$app.Id);if(-not $app.WaitForExit(15000)){throw 'Owned cleanup timeout'};$receipt['cleanup_exit']=$app.ExitCode;$app.Dispose()}catch{$receipt['cleanup_error']=$_.Exception.Message};$receipt.passed=$false}

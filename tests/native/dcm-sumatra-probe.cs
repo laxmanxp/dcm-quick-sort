@@ -37,10 +37,11 @@ public static class DcmSumatraProbe {
         var v=Find(host,hostPID);if(v==null||v.PID!=expectedPID)throw new Exception("Viewer identity mismatch");
         if(!PostMessage((IntPtr)v.Window,0x111,(IntPtr)command,IntPtr.Zero))throw new Exception("Owned command failed");
     }
+    [DllImport("user32.dll")] static extern bool IsIconic(IntPtr h);
     public static void CheckGeometry(IntPtr host,int hostPID,int expectedPID){
         var v=Find(host,hostPID);if(v==null||v.PID!=expectedPID)throw new Exception("Viewer absent");
         IntPtr panel=Panel(host,hostPID);
-        IntPtr old=SetThreadDpiAwarenessContext((IntPtr)(-4));try{RECT p,c;GetWindowRect(panel,out p);GetWindowRect((IntPtr)v.Window,out c);if(c.L<p.L||c.T<p.T||c.R>p.R||c.B>p.B||c.R-c.L<200||c.B-c.T<100)throw new Exception("Embedded viewer escaped preview bounds");}finally{SetThreadDpiAwarenessContext(old);}
+        IntPtr old=SetThreadDpiAwarenessContext((IntPtr)(-4));try{RECT p,c;GetWindowRect(panel,out p);GetWindowRect((IntPtr)v.Window,out c);if(c.L<p.L||c.T<p.T||c.R>p.R||c.B>p.B||c.R-c.L<200||c.B-c.T<100)throw new Exception(String.Format("Embedded viewer escaped preview bounds: host_minimized={0}; host_visible={1}; panel=({2},{3},{4},{5}); viewer=({6},{7},{8},{9}); viewer_pid={10}",IsIconic(host),IsWindowVisible(host),p.L,p.T,p.R,p.B,c.L,c.T,c.R,c.B,expectedPID));}finally{SetThreadDpiAwarenessContext(old);}
     }
 
     [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr h);
