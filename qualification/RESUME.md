@@ -1,30 +1,31 @@
-# DCM QuickSort — remaining attachment cost localized; no new speed fix
+# DCM QuickSort — live-control optimization verified; next compact-width label cleanup
 
-Latest: [attachment phase profile](2026-11-13-sumatra-attachment-profile.md), 13 November 2026.
-Native-tested source `5294d6cf32e84038aeed93750800bd7308bad7ad`.
+Latest: [control update optimization](2026-11-13-control-update-optimization.md).
+Native-tested source `cc6a1a37308ba57be37c33c81e743b668bb89a1c`, 13 November 2026.
 
-## Verified diagnosis
+## Retain this implementation
 
-Two four-opening runs complete with exact selection/content, preserved fixture bytes and cleanup. Run A queue samples218/297/327/204ms: two exceed provisional250ms. Unchanged B201/246/167/140ms passes the same target. Keep both; overall performance_accepted=false. Shared-machine, opt-in tracing observations, not cold boot/cache-flushed or isolated benchmarks.
+Eight dropdown call sites skip only exact LIVE geometry matches with same-thread/class/closed-list/equivalent-DPI guards. No geometry cache. Unknown/mixed/changed state uses original MoveWindow. Full layout calculation, preview-pane sizing and final repaint remain. Zoom updates inspect own WS_VISIBLE/WS_DISABLED and retain actual state changes. Do not reintroduce the failed whole-layout shortcut.
 
-Full attachment handler177–339ms; full49-control layout114–246ms; host zoom-button visibility/enabled updates38–88ms. These two host phases account for85.6–88.6% of measured attachment time. Separate viewer resize11–18ms, first status5–11ms, toolbar repair6–19ms, final status0–2ms. The slowest handler had246ms layout plus50ms zoom updates; seven drop-down moves totaled189ms. These are elapsed call intervals, not a diagnosis of Windows/driver/scheduling internals or proof all calls are dispensable.
+Two four-opening runs: UI queued responses16.8–156.3ms, all below the unchanged provisional250ms budget. Full layout9.6–52.8ms (previous113.6–246.0ms), attachment49.8–166.0ms (previous177.0–339.4ms). Every attachment skipped8 redundant dropdown moves and5 enable calls; no required hide was skipped. First PDF ready1.58–2.26s, not uniformly faster. Shared-machine measurements, not cold-boot/isolated benchmark or universal guarantee.
 
-The new trace only records numeric per-control and phase checkpoints within a UI-thread-only attachment scope. All49 original MoveWindow argument lists/order, final redraw, full transition geometry, worker ownership, runtime restrictions and the startup harness remain unchanged. Ordinary launches leave tracing disabled. One new Windows parent verifies disabled/nested/zero-ID scope behavior.
+## Verified matrix and boundaries
 
-Fresh Windows baseline373/0/1 (374 parent results), no timeout, source unchanged. Pending-close3, lifecycle11, resize23+12bursts all pass;24 repaint comparisons zero. All4 first-run full-window images individually inspected. Crops checked automatically; repeat/regression images not separately reviewed. Test fixtures only; installed runtime/user documents/associations unchanged.
+Baseline377/0/1 (378 parents); four new actual-Windows-control parents. DPI awareness contexts/mixed caller context tested, not physical monitor/scaling-setting changes. Startup2x4, resize23+12bursts (all24 sampled differences zero), pending-close3,lifecycle11,Undo9,errors12,scroll14,text17,image23,sort9 and filters74 action/readback records pass. No summing repeated/parent/UI counts. External PPTX remains the sole skip, not a pass.
 
-## Next bounded correction
+Nine full images reviewed:4 startup-A and5 resize/restore/text frames. Other images not separately reviewed. Known narrow Size/Sort overlap and Processed-heading clipping remain open. Raw flags unchanged. Exact evidence in `evidence/control-update-optimization-summary.json`.
 
-Retain full layout calculation and the required preview-container sizing. Target unnecessary native updates for unchanged drop-down geometry and unchanged host zoom-button state, with explicit tests for changed size/DPI, hidden/restored state and preview transitions. Do not restore the rejected whole-layout skip or trust cached dimensions across DPI/handle changes. Measure the smallest safe change with this same profile and queue test, then run resize, lifecycle, Undo and error regressions. No performance repair has been implemented in this diagnostic pass.
+## Next bounded action
 
-The prior optimization at948ff3f5/8e510e2e caused visible containment failure and remains removed. Async worker creation remains retained. Old failures, including the325ms-class delays, remain source-bound historical evidence. DCM-SUMATRA-STARTUP-01 stays open; no numbered/user acceptance is inferred.
+Correct the existing compact-width filter row and Processed-header layout (DCM-UI-LABEL-01) with actual readable labels, dropdown usability, full preview containment and resize screenshots. Then audit remaining DCM-28/29 acceptance gaps. Keep startup/resize and relevant selection/filter regressions; do not add another profiling-only step unless a new failure warrants it. Broader physical-DPI/manual/runtime-distribution gates remain separate, not silently certified.
 
-## Workflow and evidence
+## Workflow / identity
 
-Code locally -> GitHub -> FlowDev update/build/test on Lenovo, one native DCM UI suite at a time. Device d18227f2-0b54-4b11-9026-56ac40305f02. Workspace D:\FlowverseReportsRepo; candidate dcm-quicksort-candidate; profile tools\flowdev-dcm; runner D:\FlowverseReportsRepo\flowdev-standalone-validation\flowdev-test.exe. Runtime source D:\Flowverse\sumatra-preview-prototype\runtime\sumatra-3.6.1\SumatraPDF-3.6.1-64.exe. No remote source edits or unrelated-process changes.
+Local code -> GitHub -> FlowDev update/build/test on Lenovo; no remote source edits. Device `d18227f2-0b54-4b11-9026-56ac40305f02`. Workspace `D:\FlowverseReportsRepo`; candidate `dcm-quicksort-candidate`; profile `tools\flowdev-dcm`; runner `D:\FlowverseReportsRepo\flowdev-standalone-validation\flowdev-test.exe`. One DCM UI suite at a time; do not touch unrelated LibreOffice/other sessions.
 
-Exact build: D:\FlowverseReportsRepo\dcm-quicksort-build-20261113-031920-176d38b8\receipt.json, matches5294d6cf only. App SHA25634c17d1ccc72259fffc4425210b4839674cb1d3e3a75d36b5bba6da9b9188b18. Rebuild after tracker/source commits; never relabel historical receipts.
+Build receipt `D:\FlowverseReportsRepo\dcm-quicksort-build-20261113-044538-b6b19d38\receipt.json` matches cc6a1a37 only. App SHA256 `13fdc03eca1d049c8f88e6bb4ed2c402015bbb6a4ad30aa0aa4ef30c1356d5cd`.
+Runtime source `D:\Flowverse\sumatra-preview-prototype\runtime\sumatra-3.6.1\SumatraPDF-3.6.1-64.exe`; harness copies it privately. Exact hash/policy checks unchanged. Rebuild after metadata/source changes, never relabel old receipts.
 
-Reports under D:\FlowverseReportsRepo: startup032014-6ac5acb9 and032205-3e83c8ae; baseline032229-c7441c1d; pending-close032325-7e5b69e1; lifecycle032340-62160fbf; resize032419-b0e1cc88 (all20261113). Full names and hashes: evidence/sumatra-attachment-profile-summary.json.
+Preserve native RED95ad5af2 (new redundant-control tests) and two preapplication workflow hash failures; report explains them. Earlier async/resize failures remain historical, not erased.
 
-DCM01–18 and20–27 retain completion;19 blocked;28/29 pending. General labels/error banner, externalPPTX, remaining operations/path variants, distribution/installer and manual acceptance stay open. Sumatra optional, Windows.Data.Pdf default. PR#1 draft; no installation, associations, printing, merge or publication.
+No numbered closure: DCM01–18 and20–27 complete,19 blocked,28/29 pending. Keep optional Sumatra/default Windows.Data.Pdf, externalPPTX, error-banner, operation/path/release variants, runtime packaging/licensing and human acceptance. PR#1 draft; no installation/association/printing/merge/publication.

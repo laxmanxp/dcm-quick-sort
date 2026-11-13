@@ -1,0 +1,26 @@
+name: Record verified live-control optimization
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/record-control-updates.yml]
+permissions:
+  contents: write
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply locally validated tracker transformation
+        run: |
+          echo '196b41ccedde5342dd9daf41b3fcf739d824e36499d423334742eb3993ce9a92  qualification/record-control-updates.py' | sha256sum -c -
+          python qualification/record-control-updates.py
+          echo 'e618bb842fa421336204d611eb7faf5a1246b7253f8969e76f3a3850db83be99  todo.json' | sha256sum -c -
+          echo 'e82d599a8b109d1606fdaf32882dbeba34b93c60545264591ee2e3e488bb9836  qualification/completion-50.json' | sha256sum -c -
+      - name: Save metadata without changing numbered or user acceptance
+        run: |
+          git config user.name 'DCM reviewed-checkpoint automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add todo.json qualification/completion-50.json
+          git commit -m 'test: record bounded control-update performance and safety verification'
+          git push origin HEAD:release/v1.0.71
