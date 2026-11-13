@@ -34,6 +34,21 @@ filesystem evidence, screenshots and cleanup outcome. No installed DCM files cha
 
 ## Behavioral gates
 
+- `ui-xlsx`: focused DCM-31 text → workbook → text → workbook qualification,
+  using the exact historical `06-orders.xlsx` fixture under
+  `D:\FlowverseReportsRepo\dcm-flowuivision-20261103\inbox` (SHA-256
+  `5059729f4390ecd2e169bb2d1eb850c768532ebbb24b9733e87b82b012d6d24f`).
+  It lets the existing provider choose naturally and never changes associations.
+  Native Excel may run in-process or out-of-process; its provider footer and
+  visible subtree are observed, but actual cell readability requires separate
+  screenshot review. No foreign/native Excel sheet input is assumed. The built-in
+  fallback additionally verifies `Orders`/`Read me` names, actual grid cells and
+  sheet selection through its owned combo (1024), notifying the preview parent.
+  Both routes check text recovery, source bytes, exclusive file access after
+  switching, normal host close and exact build/source identity. Raw
+  `feature_accepted` remains false until independent image review is recorded.
+  The related `xlsx-unit` selector runs focused XLSX/Open XML units. Damaged,
+  protected and interrupted files remain DCM-34; broad lifecycle is DCM-35.
 - `ui-filters`: text/extension/name/age/size filters, no-match state, deterministic
   Name and File Type order, and Next, with native ListBox readback. `ui-rename`
   checks Clean spacing, Rename, durable Processed history after restart, and Undo
