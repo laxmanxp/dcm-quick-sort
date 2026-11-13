@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,[string]$Runtime=$env:DCM_SUMATRA_SOURCE_EXE)
+param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,[string]$Runtime=$env:DCM_SUMATRA_SOURCE_EXE,[switch]$CloseWhileLoading)
 # Focused, source-bound lifecycle acceptance; no user documents or installed runtime changes.
 $ErrorActionPreference='Stop'
 Set-StrictMode -Version Latest
@@ -123,6 +123,7 @@ try {
     $psi=New-Object Diagnostics.ProcessStartInfo;$psi.FileName=$exe;$psi.Arguments='"'+(Join-Path $fixture.inbox '01-alpha.txt')+'"';$psi.UseShellExecute=$false;$psi.WorkingDirectory=$lab
     $psi.EnvironmentVariables['LOCALAPPDATA']=$fixture.local;$psi.EnvironmentVariables['APPDATA']=$fixture.roaming
     $psi.EnvironmentVariables['TEMP']=$lab;$psi.EnvironmentVariables['TMP']=$lab
+    if($CloseWhileLoading){$psi.EnvironmentVariables['DCM_STARTUP_TRACE']='1'}
     $psi.EnvironmentVariables['DCM_PDF_PROVIDER']='sumatra';$psi.EnvironmentVariables['DCM_SUMATRA_EXE']=$runtimeExe
     $psi.EnvironmentVariables['DCM_QUICKSORT_BACKUP_DIR']=Join-Path $lab 'backups'
     $app=New-Object Diagnostics.Process;$app.StartInfo=$psi;if(-not $app.Start()){throw 'App start failed.'}
@@ -130,6 +131,7 @@ try {
     $until=[DateTime]::UtcNow.AddSeconds(15);do{$app.Refresh();$hwnd=$app.MainWindowHandle;if($hwnd -ne [IntPtr]::Zero){break};Start-Sleep -Milliseconds 50}while([DateTime]::UtcNow -lt $until)
     Wait 'seven fixture rows' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 7}
     $null=SelectFile '01-alpha.txt';TextReady;AddPass 'initial-text-without-viewer'
+    if(-not $CloseWhileLoading){
     $null=SelectFile '08-preview.pdf';$a=Viewer '08-preview.pdf';Shot '01-pdf-A' 'teal';AddPass 'pdf-A-owned-content'
     $null=SelectFile '09-second.pdf';$b=Viewer '09-second.pdf';Gone $a;Shot '02-direct-switch-B' 'orange';AddPass 'direct-PDF-to-PDF-replaces-content-and-process'
     $null=SelectFile '01-alpha.txt';Gone $b;TextReady;Shot '03-text-after-PDF';AddPass 'switch-to-text-releases-both-PDFs'
@@ -160,6 +162,12 @@ try {
     if((Status) -notlike 'Sumatra preview unavailable:*no PDF header*'){throw 'Invalid PDF error missing.'}
     Shot '06-invalid-PDF-error';AddPass 'invalid-header-truthful-error-no-viewer'
     $null=SelectFile '09-second.pdf';$last=Viewer '09-second.pdf';Shot '07-valid-PDF-recovery-before-close' 'orange';AddPass 'valid-PDF-recovery-after-invalid-header'
+    }else{
+        $s=SelectFile '08-preview.pdf'
+        if($s -notlike 'Loading PDF*'){throw 'Pending-close test did not observe loading; no acceptance claimed.'}
+        $receipt['status_at_close_request']=$s
+        AddPass 'loading-observed-before-close-request'
+    }
     CheckFiles
     $sw=[Diagnostics.Stopwatch]::StartNew();[DcmNative]::CloseAsync($hwnd,$app.Id)
     if(-not $app.WaitForExit(15000) -or $app.ExitCode -ne 0){throw 'Active-PDF host did not close normally.'}
@@ -171,7 +179,13 @@ try {
     if(@(Get-ChildItem -LiteralPath $lab -Directory -Filter 'dcm-sumatra-*').Count){throw 'Viewer profile survived host close.'}
     ExclusivePDFs;CheckFiles;CheckSource
     if((Hash $runtimeExe) -ne $receipt.runtime_sha256 -or (Hash $policyPath) -ne $receipt.policy_sha256 -or (Hash $exe) -ne $receipt.app_sha256){throw 'Executable/policy changed during test.'}
-    AddPass 'close-with-active-PDF-drains-viewers-profiles-and-file-handles'
+    if($CloseWhileLoading){
+        $tracePath=Join-Path $lab 'dcm-startup-trace.json'
+        if(-not(Test-Path $tracePath)){throw 'Pending-close trace missing'}
+        $receipt['startup_trace']=Get-Content $tracePath -Raw|ConvertFrom-Json
+        $receipt['startup_trace_sha256']=Hash $tracePath
+        AddPass 'close-during-loading-drains-preparation-and-private-resources'
+    }else{AddPass 'close-with-active-PDF-drains-viewers-profiles-and-file-handles'}
     $receipt['source_unchanged']=$true;$receipt['fixtures_preserved']=$true;$receipt['journal_empty']=$true;$receipt['private_viewers_remaining']=0;$receipt.passed=$true
 }catch{
     $receipt['error']=$_.Exception.Message;$receipt['error_position']=$_.InvocationInfo.PositionMessage

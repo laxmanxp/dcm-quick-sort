@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 	"unsafe"
 )
@@ -18,6 +19,7 @@ const wmStartupProbe = 0x83A1
 var startupProbeEnabled = os.Getenv("DCM_STARTUP_TRACE") == "1"
 var startupProbeEpoch = time.Now()
 var startupProbeSequence uint64
+var startupProbeEventsMu sync.Mutex
 var startupProbeEvents = make([]startupProbeEvent, 0, 256)
 
 type startupProbeEvent struct {
@@ -35,7 +37,12 @@ func beginStartupTrace() uint64 {
 	return startupProbeSequence
 }
 func recordStartupTrace(sequence uint64, stage string) {
-	if !startupProbeEnabled || sequence == 0 || len(startupProbeEvents) >= 1024 {
+	if !startupProbeEnabled || sequence == 0 {
+		return
+	}
+	startupProbeEventsMu.Lock()
+	defer startupProbeEventsMu.Unlock()
+	if len(startupProbeEvents) >= 1024 {
 		return
 	}
 	startupProbeEvents = append(startupProbeEvents, startupProbeEvent{time.Since(startupProbeEpoch).Microseconds(), sequence, stage})
@@ -47,6 +54,8 @@ func startupHeartbeat(hwnd, token uintptr) {
 	layoutTraceSetProp.Call(hwnd, uintptr(unsafe.Pointer(wstr("DCM.Startup.Ack"))), token)
 }
 func flushStartupTrace() {
+	startupProbeEventsMu.Lock()
+	defer startupProbeEventsMu.Unlock()
 	if !startupProbeEnabled {
 		return
 	}
@@ -61,10 +70,10 @@ func flushStartupTrace() {
 
 var startupReadySequence uint64
 
-func recordStartupReady(status string) {
-	if startupProbeEnabled && startupReadySequence != startupProbeSequence && strings.HasPrefix(status, "Sumatra PDF preview") {
-		startupReadySequence = startupProbeSequence
-		recordStartupTrace(startupProbeSequence, "document-ready-status")
-		layoutTraceSetProp.Call(app.hwnd, uintptr(unsafe.Pointer(wstr("DCM.Startup.Ready"))), uintptr(startupProbeSequence))
+func recordStartupReady(sequence uint64, status string) {
+	if startupProbeEnabled && startupReadySequence != sequence && strings.HasPrefix(status, "Sumatra PDF preview") {
+		startupReadySequence = sequence
+		recordStartupTrace(sequence, "document-ready-status")
+		layoutTraceSetProp.Call(app.hwnd, uintptr(unsafe.Pointer(wstr("DCM.Startup.Ready"))), uintptr(sequence))
 	}
 }

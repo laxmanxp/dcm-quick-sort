@@ -5,12 +5,11 @@ package main
 // Reuses the prototype's separate-process -plugin/owned-job design, not Sumatra
 // source code. A pinned unmodified runtime remains an opt-in external dependency.
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"runtime"
-	"strings"
 	"syscall"
 	"time"
 	"unsafe"
@@ -51,6 +50,8 @@ type sumatraExtendedLimit struct {
 }
 type sumatraSession struct {
 	process, job, child uintptr
+	thread              uintptr
+	traceID             uint64
 	pid                 uint32
 	profile, path       string
 	status              string
@@ -84,8 +85,8 @@ func sumatraError(err error) {
 	procInvalidateRect.Call(app.previewHwnd, 0, 1)
 }
 
-// Startup returns immediately after a suspended process is assigned to its own
-// kill-on-close job. A UI timer observes attachment instead of waiting on rendering.
+// Validation and process creation run off the UI thread. One pending worker
+// owns the suspended process until the UI accepts its still-current request.
 func startSumatraPreview(path string) bool {
 	if !useSumatraProvider() {
 		return false
@@ -97,93 +98,27 @@ func startSumatraPreview(path string) bool {
 		return true
 	}
 	recordStartupTrace(id, "previous-released")
-	document, err := validateSumatraDocument(path)
-	if err != nil {
-		sumatraError(err)
+	if sumatraClosing {
 		return true
 	}
-	recordStartupTrace(id, "document-validated")
-	exe, err := validateSumatraRuntime(os.Getenv("DCM_SUMATRA_EXE"))
-	if err != nil {
-		sumatraError(err)
+	if sumatraRetired != nil {
+		sumatraError(errors.New("previous PDF startup cleanup is not confirmed; retry Reload"))
 		return true
 	}
-	recordStartupTrace(id, "runtime-validated")
-	profile, err := os.MkdirTemp("", "dcm-sumatra-")
-	if err != nil {
-		sumatraError(err)
+	if !ensureSumatraTimer() {
+		sumatraError(errors.New("could not start viewer readiness timer"))
 		return true
 	}
-	args, err := sumatraArguments(app.previewHwnd, document, profile)
-	if err != nil {
-		os.RemoveAll(profile)
-		sumatraError(err)
-		return true
-	}
-	argv := append([]string{exe}, args...)
-	for i := range argv {
-		argv[i] = syscall.EscapeArg(argv[i])
-	}
-	command, err := syscall.UTF16FromString(strings.Join(argv, " "))
-	if err != nil {
-		os.RemoveAll(profile)
-		sumatraError(err)
-		return true
-	}
-	job, _, callErr := spCreateJob.Call(0, 0)
-	if job == 0 {
-		os.RemoveAll(profile)
-		sumatraError(fmt.Errorf("create viewer job: %w", callErr))
-		return true
-	}
-	limits := sumatraExtendedLimit{}
-	limits.Basic.Flags = 0x2000
-	if ok, _, e := spSetJob.Call(job, 9, uintptr(unsafe.Pointer(&limits)), unsafe.Sizeof(limits)); ok == 0 {
-		spClose.Call(job)
-		os.RemoveAll(profile)
-		sumatraError(fmt.Errorf("contain viewer: %w", e))
-		return true
-	}
-	si := syscall.StartupInfo{}
-	si.Cb = uint32(unsafe.Sizeof(si))
-	si.Flags = 1
-	si.ShowWindow = 0
-	recordStartupTrace(id, "profile-job-prepared")
-	var pi syscall.ProcessInformation
-	ok, _, e := spCreateProcess.Call(uintptr(unsafe.Pointer(wstr(exe))), uintptr(unsafe.Pointer(&command[0])), 0, 0, 0, 4, 0, uintptr(unsafe.Pointer(wstr(filepath.Dir(exe)))), uintptr(unsafe.Pointer(&si)), uintptr(unsafe.Pointer(&pi)))
-	runtime.KeepAlive(command)
-	recordStartupTrace(id, "create-process-return")
-	if ok == 0 {
-		spClose.Call(job)
-		os.RemoveAll(profile)
-		sumatraError(fmt.Errorf("start Sumatra: %w", e))
-		return true
-	}
-	defer spClose.Call(uintptr(pi.Thread))
-	sumatraView = &sumatraSession{process: uintptr(pi.Process), job: job, pid: pi.ProcessId, profile: profile, path: document, deadline: time.Now().Add(15 * time.Second)}
-	if ok, _, e = spAssignJob.Call(job, uintptr(pi.Process)); ok == 0 {
-		spTerminateProcess.Call(uintptr(pi.Process), 1)
-		_ = stopSumatraPreview()
-		sumatraError(fmt.Errorf("assign viewer job: %w", e))
-		return true
-	}
-	if r, _, e := spResumeThread.Call(uintptr(pi.Thread)); uint32(r) == 0xffffffff {
-		_ = stopSumatraPreview()
-		sumatraError(fmt.Errorf("resume viewer: %w", e))
-		return true
-	}
-	recordStartupTrace(id, "process-resumed")
+	sumatraQueued = &sumatraLaunchSpec{path: path, runtime: os.Getenv("DCM_SUMATRA_EXE"), parent: app.previewHwnd, traceID: id}
 	app.fallback = "Loading PDF in Sumatra…"
 	setText(app.statusLabel, "Loading PDF in restricted Sumatra preview…")
-	if timer, _, _ := spSetTimer.Call(app.hwnd, sumatraTimerID, 100, 0); timer == 0 {
-		_ = stopSumatraPreview()
-		sumatraError(errors.New("could not start viewer readiness timer"))
-	}
 	procInvalidateRect.Call(app.previewHwnd, 0, 1)
+	advanceSumatraPreparation()
 	return true
 }
 
 func pollSumatraPreview() {
+	advanceSumatraPreparation()
 	v := sumatraView
 	if v == nil {
 		return
@@ -203,10 +138,10 @@ func pollSumatraPreview() {
 		}
 		spEnumChildren.Call(app.previewHwnd, sumatraFindChild, 0)
 		if v.child != 0 {
-			recordStartupTrace(startupProbeSequence, "child-attached")
+			recordStartupTrace(v.traceID, "child-attached")
 			layoutUI(app.hwnd)
 			resizeSumatraPreview()
-			recordStartupTrace(startupProbeSequence, "attachment-layout-complete")
+			recordStartupTrace(v.traceID, "attachment-layout-complete")
 			app.fallback = ""
 			updateSumatraStatus(v, sumatraCurrentDocumentStatus(v))
 			updatePreviewZoomControls()
@@ -237,11 +172,32 @@ func resizeSumatraPreview() {
 }
 
 func stopSumatraPreview() error {
+	cancelSumatraPreparation()
+	if sumatraRetired != nil && sumatraPending == nil {
+		if !ensureSumatraTimer() {
+			return errors.New("cannot observe pending viewer cleanup")
+		}
+		retired := sumatraRetired
+		sumatraRetired = nil
+		sumatraPending = newPreparedResource(func(_ context.Context) (*sumatraSession, error) { return retired, nil }, disposePreparedSumatra)
+		sumatraPending.Cancel()
+	}
+	if sumatraPending != nil && sumatraPending.decided {
+		if out, done := sumatraPending.PollDone(); done {
+			sumatraPending = nil
+			if out.err != nil {
+				sumatraRetired = out.value
+				return out.err
+			}
+		}
+	}
 	v := sumatraView
 	if v == nil {
 		return nil
 	}
-	spKillTimer.Call(app.hwnd, sumatraTimerID)
+	if !sumatraPreparationBusy() {
+		spKillTimer.Call(app.hwnd, sumatraTimerID)
+	}
 	if sumatraOwnsWindow(v, v.child) {
 		spShowWindowAsync.Call(v.child, 0)
 		procPostMessageW.Call(v.child, WM_CLOSE, 0, 0)
@@ -255,6 +211,10 @@ func stopSumatraPreview() error {
 	}
 	if r != 0 {
 		return errors.New("viewer release not confirmed; file operations remain blocked")
+	}
+	if v.thread != 0 {
+		spClose.Call(v.thread)
+		v.thread = 0
 	}
 	spClose.Call(v.process)
 	spClose.Call(v.job)
@@ -355,6 +315,10 @@ func repairSumatraToolbar(v *sumatraSession) {
 func releaseSumatraForOperation() bool {
 	if err := stopSumatraPreview(); err != nil {
 		sumatraError(err)
+		return false
+	}
+	if sumatraPreparationBusy() {
+		sumatraError(errors.New("PDF startup is being cancelled; retry the file operation after cleanup"))
 		return false
 	}
 	return true

@@ -37,6 +37,7 @@
         "ui-text": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-text.ps1"],
         "ui-sumatra-scroll": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-sumatra-scroll.ps1"],
         "ui-sumatra-startup": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-sumatra-startup.ps1"],
+        "ui-sumatra-pending-close": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-sumatra-lifecycle.ps1", "-CloseWhileLoading"],
         "ui-sumatra-lifecycle": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-sumatra-lifecycle.ps1"],
         "ui-sumatra-errors": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-sumatra-errors.ps1"],
         "ui-sumatra-undo": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-sumatra-undo.ps1"],

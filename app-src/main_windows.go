@@ -3204,6 +3204,9 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 			return 1
 		}
 	case WM_COMMAND:
+		if sumatraClosing {
+			return 0
+		}
 		id := int(loword(wParam))
 		notify := hiword(wParam)
 		if notify == BN_CLICKED {
@@ -3386,6 +3389,9 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 	case WM_CLOSE:
 		if app.backgroundMoveBusy {
 			procMessageBoxW.Call(app.hwnd, uintptr(unsafe.Pointer(wstr("A file operation is still running in the background. DCM will remain open until the operation finishes safely."))), uintptr(unsafe.Pointer(wstr("Background Operation — DCM - Quick Sort"))), 0x40)
+			return 0
+		}
+		if !closeSumatraPreview() {
 			return 0
 		}
 		unloadPreview()
