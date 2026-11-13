@@ -15,7 +15,7 @@ jobs:
         with:
           go-version: '1.23.2'
           cache: false
-      - name: Canonicalize helper and reconcile exact locally compiled counter identity
+      - name: Canonicalize exact locally compiled helper and test comments
         shell: python
         run: |
           import pathlib,hashlib,subprocess
@@ -23,6 +23,12 @@ jobs:
           formatted=subprocess.run(['gofmt'],input=p.read_bytes(),stdout=subprocess.PIPE,check=True).stdout
           assert hashlib.sha256(formatted).hexdigest()=='6ddf79ea3b47a884935e4d7b11ef1c35bccc063bf92fa915f5041b33e72fd42d'
           p.write_bytes(formatted)
+          p=pathlib.Path('app-src/control_transition_windows_test.go');b=p.read_bytes()
+          old=b'\t\t\tapp.image = 1 // state only, never drawn or disposed\n\t\t}'
+          assert b.count(old)==1
+          b=b.replace(old,b'\t\t\tapp.image = 1\n\t\t} // state only, never drawn or disposed')
+          assert hashlib.sha256(b).hexdigest()=='911ca02bd766a4957962a3daf772f740bbe36e7f2fe27464f3562838bd1ee146'
+          p.write_bytes(b)
           p=pathlib.Path('qualification/apply-control-updates.py');b=p.read_bytes()
           assert hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()=='16f2828246882763d63b45a0521510cfca8f626b'
           old=b'a1a356a635a086b34a5190a24fa4b1e4a36880026f8c4d1c1c8f7d069776cbd8';assert b.count(old)==1
@@ -38,6 +44,6 @@ jobs:
           if git diff --quiet; then exit 0; fi
           git config user.name 'DCM reviewed-patch automation'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add app-src/main_windows.go app-src/control_updates_windows.go qualification/apply-control-updates.py
+          git add app-src/main_windows.go app-src/control_updates_windows.go app-src/control_transition_windows_test.go qualification/apply-control-updates.py
           git commit -m 'perf: avoid redundant live dropdown and zoom control updates'
           git push origin HEAD:release/v1.0.71
