@@ -1,4 +1,16 @@
-# DCM-31 — XLSX content renders; first-open sizing remains open
+# DCM-31 — XLSX sizing investigation and retained RED evidence
+
+## Current disposition
+
+The guarded Excel outer-window repair is qualified at production source
+`ec7a02349e9f53c6fcfd889cf21f800f36c68b4a`. The unchanged Windows matrix passes
+all 48 cases; diagnostic and ordinary XLSX workflows pass strict outer/inner
+bounds, with separately reviewed content images. DOCX regression and the full
+Windows baseline also pass. See [the final DCM-31 checkpoint](dcm31-complete.md)
+for exact evidence and limits. The historical entries below retain their original
+PARTIAL/RED dispositions; they are not retroactively accepted.
+
+## Original partial checkpoint
 
 Recorded 14 November 2026 (Asia/Kolkata). Tested source:
 `3d3af0fc3d67effdd7184251deb4ff234008dc1c`, branch `release/v1.0.71`.

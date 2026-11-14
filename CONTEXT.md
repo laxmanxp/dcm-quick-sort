@@ -8,51 +8,92 @@ Production source is `app-src/`; installer source is `installer-src/`.
 The release is still unpublished. The current backlog is [todo.json](todo.json)
 and the numbered qualification plan is [completion-50.json](qualification/completion-50.json).
 
-**29 of 50 steps are complete; 21 remain.** Complete: DCM-01–18 and DCM-20–30.
+**30 of 50 steps are complete; 20 remain.** Complete: DCM-01–18 and DCM-20–31.
 DCM-19 remains blocked on a disposable Windows Explorer integration environment.
-**Active: DCM-31 — XLSX preview remains PARTIAL.** These counts include setup work and are
-not a product-completion percentage or user acceptance.
+**Next runnable step: DCM-32 — PPTX preview.** These counts include setup work and
+are not a product-completion percentage or user acceptance.
 
-At pushed source `3d3af0fc3d67effdd7184251deb4ff234008dc1c`, local and native XLSX/
-Open XML units each passed 24/0/0; tooling and exact native build passed. The
-registered `ui-xlsx` run passed six machine records, but all four images were
-reviewed and the first Excel view occupies only about 80% of its pane in both
-axes. Reopening fills the pane; that is not a proven repair. `DCM-XLSX-SIZE-01`
-is open under DCM-31. Diagnostic source `b437ba2a` confirms the clip before Restore
-and over five seconds afterward, with idle host layout. The Excel outer viewport
-is 723x390 physical screen units while the pane client is 902x487; the inner view
-is already 903x488. The registered bounds gate produced actual RED at `45679e0`
-in run `231926-395a05c1`: the first-open viewport fails while reopening passes.
-The post-DoPreview resize candidate at `33cbe3c7` passed 31 focused local units and
-Windows cross-build, but native run `232554-5572d8ff` repeats the same first-open
-failure. It is not a clipping fix. At `147bf909`, the real Windows measurement gate
-establishes RED in all three unaware-caller cases (320x240 logical versus400x300
-physical), with no skips. COM trace confirms successful722x390 calls and stable
-caller context on both opens; all ten diagnostic workbook views still clip.
-At `bcee0759`, physical measurement passes2 top-level/12 leaf native cases with no
-skips, but initial-only physical SetWindow still leaves all ten workbook frames
-clipped. Trace shows902x487 SetWindow followed by722x390 SetRect, both successful.
-Consistent physical policy at `9881724b` fits the outer window but oversizes the
-inner worksheet to1128x609; all ten bounds checks still fail. That wiring is
-reverted to147bf909 logical COM behavior. Next establish nativeRED for a guarded
-outer-only window repair using owned hidden test windows, then qualify Excel's
-actual response without relaxing inner/outer bounds. Other providers retain their
-existing policy. No numbered step closes.
-See [the sizing checkpoint](qualification/dcm31-preview-sizing.md).
+The count records qualification at the tested production source below. This
+completion record is being finalized from retained evidence; its own commit,
+push and Lenovo synchronization were not yet observed when prepared. Confirm
+those final record-delivery actions before reporting the production task DONE.
+The report bundle is already confirmed in GitHub at
+`69fee755a94468165018b499fe7d876779e57ec8`.
 
-DCM-30's fresh registered Lenovo run at production source
-`8eb1470a891ea3454f1738d58191fdb90284ab42` passed seven native records. All five
-full-window images were reviewed: the installed Word handler shows the letter,
-formatted/table/image fixture, correct DOCX footer, text recovery and reopening.
-Local DOCX/font units passed 7/0/0 and Windows cross-build passed. The existing
-native baseline at the same source is 379 passed, 0 failed, 1 external-PPTX skip.
+### DCM-31 qualified result
+
+DCM-31 is complete for representative native XLSX content and the reproduced
+viewport sizing defect at pushed production source
+`ec7a02349e9f53c6fcfd889cf21f800f36c68b4a`. The application keeps logical COM
+SetWindow/SetRect rectangles. For the active exact Excel preview handler only,
+it checks the owned pane and unique immediate EXCEL9/EXCEL7 hierarchy, then asks
+Windows to size the outer viewport in the pane's DPI context. It restores the
+caller context, revalidates active state after COM, and suppresses repair during
+unload. It does not resize the inner worksheet or alter other providers' policy.
+An accepted asynchronous request alone is not considered completed layout.
+
+The unchanged native helper assertions pass **2 top-level tests and 48 leaf
+cases**, with zero failures/skips, after the recorded RED. Registered
+`ui-xlsx-layout` run `012003-6ce3d109` passes six workflow records and all ten
+strict outer/inner bounds checks. Both renderer windows are 903x488 against the
+902x487 pane client, within the unchanged four-pixel tolerance. All 12 diagnostic
+captures were separately reviewed, including first open before Restore, natural
+adjacent observations, text recovery and reopening. Orders cells, full dates,
+Orders/Read me tabs and scrollbars are visible without the former unused bands.
+Native sheet navigation and the Read me sheet body were not exercised.
+
+The ordinary `ui-xlsx` regression `012116-fbdc6385` passes six records and two
+bounds checks, with all four captures reviewed. `ui-docx` regression
+`012139-efd939a9` passes seven records and all five captures are reviewed. The
+21 current images show the expected content, correct provider footer and complete
+host shell in their recorded frames. Source and fixture bytes are unchanged,
+journals remain empty, files are released and all three UI hosts close normally
+with exit 0. Raw machine visual-review and feature-accepted flags remain intact;
+acceptance is recorded separately.
+
+The full native app baseline `012309-4ee29c99` at that source is **383 passed,
+0 failed, 1 external-PPTX skip**. The skip is `TestRealGeneratedPPTXIntegration`
+because `DCM_REAL_PPTX` was not supplied; it is still required under DCM-32/47.
+The exact native build `011936-e3a17b9f` is 7,365,632 bytes, SHA-256
+`7f51956e67dd7e0a33eef51a6ad8cf8a742ad6e2d64585348614eaa485e35827`.
+Local validation passed 24 XLSX/OpenXML and seven DOCX/font tests, and both the
+Windows app and test binary cross-compiled. These local artifacts are distinct
+from the native build and are not release packages.
+
+See [DCM-31 completion](qualification/dcm31-complete.md),
+[the native summary](qualification/evidence/dcm-31-native-summary.json), and
+[the durable evidence bundle](https://github.com/laxmanxp/flowverse-reports/tree/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023).
+Qualification is limited to the representative workbook and installed Excel
+handler at the tested Lenovo scaling/geometry. Headed fallback behavior, native
+sheet navigation/zoom, arbitrary/protected/damaged workbooks, general Excel
+fidelity and all-provider/all-DPI behavior are not certified. Broader preview
+failure and cleanup gates remain DCM-34/35; user acceptance and final package/
+publication remain open. Excel's internal DPI behavior was not proven as a cause.
+
+### Retained earlier evidence
+
+The original `3d3af0fc` XLSX run passed six raw records but failed first-open
+visual review. Diagnostic `b437ba2a` confirmed persistent clipping before Restore
+and over five seconds later with idle host layout. The strict gate produced RED
+at `45679e0`. Post-DoPreview resize `33cbe3c7` did not fix it. At `147bf909`, trace
+showed successful logical 722x390 COM calls with stable caller context. Initial-only
+physical SetWindow at `bcee0759` still clipped; uniform physical rectangles at
+`9881724b` fitted the outer viewport but oversized the inner worksheet to 1128x609.
+Those failed COM policies were reverted. Corrected hidden-window fixtures at
+`95cab148` established clean outer-repair RED: nine geometry failures, all 39 guard
+cases passing and zero skips. The failed trials, original image failure and first
+fixture-setup failure remain recorded in
+[the sizing checkpoint](qualification/dcm31-preview-sizing.md); later GREEN does
+not relabel them as passing or prove Excel's internal mechanism.
+
+DCM-30's original completion remains at production source
+`8eb1470a891ea3454f1738d58191fdb90284ab42`: seven native records and five reviewed
+images through the installed Word handler. Its historical baseline was 379/0/1;
+the current ec7a0234 regression and 383/0/1 baseline are recorded above.
 See [DCM-30 evidence and limits](qualification/dcm30-complete.md).
-
-An earlier raw-pass DOCX run has one incomplete host-paint screenshot. A fresh
-unchanged run is clean, but that does not prove a repair or cause.
-`DCM-UI-RESIZE-01` is reopened under DCM-46 for that observation, preserving its
-earlier bounded fix history. User acceptance, remaining formats/error states,
-final installer/package and publication remain open.
+An earlier raw-pass DOCX run has an incomplete host-paint screenshot. The new
+clean frames do not establish its cause or repair. `DCM-UI-RESIZE-01` remains
+open under DCM-46, preserving the earlier bounded queued-layout fix history.
 
 ### Verified Lenovo registration and restart
 
@@ -63,14 +104,20 @@ final installer/package and publication remain open.
 - Runtime: `D:\FlowverseReportsRepo\flowdev-standalone-validation\flowdev-test.exe`.
 - Workspace/report root: `D:\FlowverseReportsRepo`.
 - XLSX selectors: `xlsx-unit`, `ui-xlsx` and diagnostic `ui-xlsx-layout`.
-- `native-preview-rect-unit` is the isolated real-HWND DPI measurement gate;
-  its initial logical scaffold established native RED at147bf909 before correction.
-- `excel-preview-layout-unit` covers the guarded outer-window repair boundary;
-  corrected source95cab148 records clean native RED: nine intended geometry
-  failures and all39 guard cases passing, zero skips. The guarded repair and
-  Excel-only integration are implemented; native unit and feature GREEN remain
-  pending. Repairs are suppressed during unload and revalidate state after COM.
+- `native-preview-rect-unit` is the isolated real-HWND physical measurement gate:
+  RED at 147bf909, then native GREEN at bcee0759. Its qualified helper remains
+  separate and unused by the accepted application sizing policy.
+- `excel-preview-layout-unit` covers the guarded outer-window repair boundary:
+  corrected source 95cab148 establishes clean native RED; ec7a0234 passes the same
+  two top-level tests and 48 leaf cases, including nine geometry and 39 guard cases.
 - Completed DOCX selector: `ui-docx` → `tools/test-ui-docx.ps1`.
+
+The smallest DCM-32 task is to recover and hash the existing two-slide fixture
+`D:\FlowverseReportsRepo\dcm-flowuivision-20261103\inbox\07-slides.pptx`, verify it
+against the unchanged external test's expected text/image relationship, and add
+a focused committed FlowDev route supplying `DCM_REAL_PPTX`. Actual visible
+slide text/images and navigation still require focused headed qualification.
+The broad `ui-previews` workflow is not the first DCM-32 test.
 
 Code locally, unit test, commit/push, then use Desktop Commander for
 `flowdev update dcm-quicksort` followed by the focused `flowdev test` selector.
