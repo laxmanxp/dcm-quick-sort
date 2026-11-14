@@ -34,13 +34,14 @@
       "DCM-29",
       "DCM-30",
       "DCM-31",
-      "DCM-32"
+      "DCM-32",
+      "DCM-33"
     ],
-    "next_step": "DCM-33",
+    "next_step": "DCM-34",
     "checkpoint": "qualification/dcm33-legacy-office.md",
     "blocked_steps": ["DCM-19"],
     "active_blockers": ["DCM-EXPLORER-ISOLATION-01"],
-    "next_runnable_step": "DCM-33",
+    "next_runnable_step": "DCM-34",
     "continuation_blocker": null,
     "rule": "The first five completed steps are setup/diagnostic work, not product acceptance. Preserve all original defect IDs and prior evidence."
   },
@@ -58,13 +59,88 @@
     "archive_release_certified": false,
     "candidate_version": "v1.0.71",
     "candidate_branch": "release/v1.0.71",
-    "candidate_code_commit": "e19ff30b1663a4b5bb385a3667ab6342f299cc1e",
+    "candidate_code_commit": "8704a1bdd930886a9ae4d0849822add0088603d8",
     "source_import_commit": "abe95acad96343e16d93396790a52bfe4d4b7b59",
     "archive_sha256": "64e1cb1666acc9a70aeeb9656b4f30ca26fc30ad142ea32e154cb7a63dc7b5aa",
     "native_regression_commit": "4619e0ef2bed51b7685c5f84d0fc0f87702bb1ca",
     "native_regression_result": "23 top-level app regressions: 23 passed, 0 failed, 0 skipped, exit 0, no timeout, source unchanged. DCM-12 adds invalid-template-package coverage; all three D4 parent tests and five nested cases passed. All earlier safety tests remain GREEN. Full app/installer/UI/package qualification remains open.",
-    "last_native_attempt": "DCM-33 remains PARTIAL overall. Representative installed-handler XLS accepted at pushed and Lenovo-tested source e19ff30b1663a4b5bb385a3667ab6342f299cc1e. Registered update PASS was observed in the Desktop Commander console; no native update JSON was available. Five exact test receipts bind the clean candidate. Legacy units 131559-93a60d28 pass 4 top-level / 33 leaf cases; Excel units 131705-b50e60c8 pass 2 top-level / 48 leaf cases, zero failures/skips. Tooling 131742-34c89720 passes 31 scripts; exact build 131747-caf81c29 has 461 source files and app bytes identical to b3d46b9. UI 132721-e381a696 passes 6 records / 12 captures / 5 attempts / 5 strict four-pixel bounds records; all 12 images are separately reviewed. All 11 cell meanings are correct: 9 display strings match exactly, B6 1,25,000 and B8 2,11,000 are accepted as en-IN numeric equivalents of manifest 125,000 and 211,000. First open is stable only at attempt 3, reopening only at attempt 2; the first readiness frame lacks a painted sheet-tab bar and remains unstable. Raw acceptance/review flags stay false. Source/fixtures and registry unchanged, journal empty, XLS released and host exit 0. No production change/new RED; DOC RED/GREEN and the historical b3d46b9 full 388 / 0 / 0 baseline remain intact and were not rerun. 31 complete / 19 remaining; next legacy PPT.",
+    "last_native_attempt": "DCM-33 complete within bounded representative DOC/XLS/PPT and shared unavailable-contract scope. At 8704a1bdd930886a9ae4d0849822add0088603d8, ui-tooling 143912-47769611 passes 32 script parses, native helper compilation, 9 binding guards and 2 exact title contracts; build 143916-26f42fd5 binds 468 source files and the unchanged 7367168-byte app hash d8df2a791b736ecbee517f7efaff742a5b64271516c97fed96cc604a7ee45b7b. ui-legacy-ppt 143934-8e80521d passes 8 records, 18 captures, 8 native attempts and 2 scoped PageDown/PageUp actions. All 18 final images are separately reviewed (10 full-window frames and 8 same-frame crops): Bridge Inspection/September 2026/image, Payments 125000 / 86000, 1 -> 2 -> 1, TXT recovery and reopening are correct. Native source/archive audit passes 68 checks and image-integrity audit 185 checks. Initial 87788e3 legacy units 143403-3dcb113d pass 4 top-level / 33 leaf cases, with zero failures/skips; these units were not rerun after the final helper/tooling-only correction. Initial UI 143622-814c1f0b retains its exact-title harness failure, 2 reviewed history images, no navigation and normal exit 0; the observed legacy Compatibility Mode suffix is now pinned without relaxing ownership guards. No product defect or production fix is claimed. Source/fixtures/registry unchanged, journal empty, presentation released, final host exit 0; raw feature/format/review flags remain false. Complete for representative installed-handler DOC/XLS/PPT at the observed Lenovo geometry, supported by the unchanged all-format missing/failed-handler routing and presenter units plus the separately reviewed shared unavailable UI control in the DOC milestone. This closes only DCM-33: 32 complete/18 remaining; next DCM-34. DCM-19 remains blocked. Separate headed absent/failing-provider environments, broader damaged/protected/cancellation/lifecycle coverage, arbitrary fidelity, user acceptance and release remain open.",
+    "dcm33_native_acceptance_checkpoint": {
+      "status": "passed_with_separate_image_review",
+      "completion": "complete",
+      "tested_source": "8704a1bdd930886a9ae4d0849822add0088603d8",
+      "legacy_unit_source": "87788e30b3b2c378cc5249ef506b67fa1c5ce07d",
+      "numbered_steps_closed": [
+        "DCM-33"
+      ],
+      "numbered_plan": {
+        "complete": 32,
+        "remaining": 18
+      },
+      "acceptance": "Complete for representative installed-handler DOC/XLS/PPT at the observed Lenovo geometry, supported by the unchanged all-format missing/failed-handler routing and presenter units plus the separately reviewed shared unavailable UI control in the DOC milestone. This closes only DCM-33: 32 complete/18 remaining; next DCM-34. DCM-19 remains blocked. Separate headed absent/failing-provider environments, broader damaged/protected/cancellation/lifecycle coverage, arbitrary fidelity, user acceptance and release remain open.",
+      "application_and_installer_unchanged_since": "b3d46b9e2003dbbfa2ae431e134e0692b8168d34",
+      "fixture": "tests/fixtures/dcm33-legacy-ppt.ppt",
+      "fixture_sha256": "b4e6a98d2f4dd27ab66566a58ae734b1b297e75a1053084b54867b5b3346a773",
+      "fixture_bytes": 510976,
+      "native_gates": {
+        "legacy_unit": {
+          "source": "87788e30b3b2c378cc5249ef506b67fa1c5ce07d",
+          "report": "143403-3dcb113d",
+          "top_level_passed": 4,
+          "leaf_passed": 33,
+          "failed": 0,
+          "skipped": 0,
+          "rerun_at_final_source": false
+        },
+        "tooling": {
+          "source": "8704a1bdd930886a9ae4d0849822add0088603d8",
+          "report": "143912-47769611",
+          "scripts": 32,
+          "binding_guards": 9,
+          "title_contracts": 2
+        },
+        "build": {
+          "report": "143916-26f42fd5",
+          "source_files": 468,
+          "app_bytes": 7367168,
+          "app_sha256": "d8df2a791b736ecbee517f7efaff742a5b64271516c97fed96cc604a7ee45b7b"
+        },
+        "ui": {
+          "report": "143934-8e80521d",
+          "cases_passed": 8,
+          "images_retained": 18,
+          "images_separately_reviewed": 18,
+          "native_capture_attempts": 8,
+          "scoped_navigation_actions": 2,
+          "normal_exit_code": 0
+        }
+      },
+      "prior_failed_ui": {
+        "source": "87788e30b3b2c378cc5249ef506b67fa1c5ce07d",
+        "report": "143622-814c1f0b",
+        "cause": "Exact legacy PowerPoint title includes Compatibility Mode; harness expectation corrected",
+        "images_retained_and_reviewed": 2,
+        "navigation_actions": 0,
+        "normal_exit_code": 0,
+        "product_defect_claimed": false
+      },
+      "independent_audits": {
+        "native_checks_passed": 68,
+        "native_checks_failed": 0,
+        "image_integrity_checks_passed": 185,
+        "image_integrity_checks_failed": 0
+      },
+      "raw_acceptance_flags_changed": false,
+      "historical_full_baseline": "388/0/0 at b3d46b9; not rerun or rebound",
+      "scope_note": "Installed Word/Excel/PowerPoint handlers were present. Missing/failed legacy-provider outcomes are covered by focused units and the shared generic unavailable UI control, not separate headed absent-provider setups. Preserve DOC RED/GREEN and historical 388/0/0 at b3d46b9; no new full baseline. XLS retains 9 exact display strings plus 2 explicit en-IN numeric equivalents and no native recalculation/sheet-navigation claim. PPT input is scoped posted PageDown/PageUp, not physical keyboard input; unused right/bottom pane space remains an observed sizing limitation, with required content readable and unclipped. Original readiness/raw flags and earlier historical counts remain intact. DCM-34/35/46/47, user acceptance and package/publication remain open; completion documentation is not another native application run.",
+      "evidence": "qualification/evidence/dcm-33-ppt-native-summary.json",
+      "reports_path": "apps/dcm-quicksort/dcm33-20261114-143934/legacy-ppt-8704a1b",
+      "reports_commit": "d77a250bb7b02610afc957804cffc46cea2d6081",
+      "next_smallest_step": "DCM-34: qualify the smallest remaining damaged/protected preview and interruption/recovery path; reuse existing shared unavailable evidence."
+    },
     "dcm33_xls_native_acceptance_checkpoint": {
+      "historical_checkpoint": true,
+      "superseded_by": "dcm33_native_acceptance_checkpoint",
       "status": "passed_with_separate_image_review",
       "full_dcm33_status": "PARTIAL",
       "tested_source": "e19ff30b1663a4b5bb385a3667ab6342f299cc1e",
@@ -202,6 +278,8 @@
       "next_after_xls": "Legacy PPT qualification"
     },
     "dcm33_progress_checkpoint": {
+      "historical_checkpoint": true,
+      "superseded_by": "dcm33_native_acceptance_checkpoint",
       "status": "PARTIAL",
       "milestone": "Shared unavailable-footer fix and representative native DOC accepted at b3d46b9; later XLS accepted in dcm33_xls_native_acceptance_checkpoint. Overall DCM-33 remains PARTIAL with legacy PPT pending.",
       "starting_commit": "d4edf54b60b4ce86b6642df43547a77506bc7c4a",
@@ -673,6 +751,7 @@
     "dcm33_checkpoint": "qualification/dcm33-legacy-office.md",
     "dcm33_doc_native_summary": "qualification/evidence/dcm-33-doc-native-summary.json",
     "dcm33_xls_native_summary": "qualification/evidence/dcm-33-xls-native-summary.json",
+    "dcm33_ppt_native_summary": "qualification/evidence/dcm-33-ppt-native-summary.json",
     "dcm32_checkpoint": "qualification/dcm32-pptx.md",
     "dcm32_native_summary": "qualification/evidence/dcm-32-native-summary.json",
     "dcm32_progress_summary": "qualification/evidence/dcm-32-progress-summary.json",
@@ -739,7 +818,7 @@
     },
     {"id": "DCM-PDF-01", "feature": "Resolve manual PDF zoom visual qualification", "status": "tested", "ui_test": "current_default_provider_visual_qualification_passed_once; two_repeat_capture_failures_preserved", "user_test": "not_recorded", "release_gate": true, "existing_evidence": "Nov3 100%/110% captures were blank despite passing footer assertions; Fit Width restored content. Rendering versus capture/focus cause remains unknown.", "acceptance": "Verify visible page content after manual zoom and Fit Width in a restored, identified window. Resolve any rendering or capture defect; footer text alone is not a visual PASS.", "blocked_by": [], "evidence_refs": ["native_1069_report", "default_pdf_completion", "qualification/evidence/default-pdf-completion-summary.json"], "previous_ui_test": "initial_and_fit_width_pass_on_v1.0.69; manual_zoom_unresolved", "previous_blocked_by": ["DCM-SOURCE-01"], "native_test": "9a2ed85a: default Windows.Data.Pdf enhanced workflow19 action/readback records passes once; ten full images reviewed. Actual pages1/2, disabled boundary controls,100/110/return100,Fit Page/Fit Width and readable native pan verified; files/journal/close intact. Two unchanged repeats failed capture visibility guards and remain incomplete. Baseline379/0/1 and optional Sumatra23 pass. App byte-identical to2cafe818; historical blank cause unknown, no product fix claimed. Close only DCM28/29 within demonstrated two-page scope; human/package/default states unchanged.", "disposition": "Current build meets the bounded page/zoom visual acceptance. Old v1.0.69 blank cause is unresolved historically, not a newly fixed product defect. Final-candidate/manual gates remain separate."},
     {
-      "id": "DCM-PREVIEW-01", "feature": "Qualify advertised preview formats and failure states", "status": "planned", "ui_test": "representative_native_DOCX_DCM30_XLSX_DCM31_PPTX_DCM32_and_legacy_DOC_XLS_DCM33_milestones_pass_with_separate_image_review; XLS_has_recorded_en_IN_numeric_equivalence; legacy_PPT_and_broader_failure_states_open", "user_test": "not_recorded", "release_gate": true,
+      "id": "DCM-PREVIEW-01", "feature": "Qualify advertised preview formats and failure states", "status": "planned", "ui_test": "representative_native_DOCX_DCM30_XLSX_DCM31_PPTX_DCM32_and_legacy_DOC_XLS_PPT_DCM33_pass_with_separate_image_review; XLS_en_IN_equivalence_recorded; broader_failure_and_release_gates_open", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "TXT, PNG and lightweight DOCX/XLSX/PPTX fallbacks passed the Nov3 fixture checks. Legacy DOC/XLS/PPT, complex Office fidelity and protected/damaged files were not certified.",
       "external_fixture_status": "Tracked synthetic PPTX fixture af42fff55297109195b95039d2ac39c5d53b1fae23b59e7b40a7184d679b93f1 passes focused 29/0/0 parser tests and the separately reviewed DCM-32 native two-slide gate at b3be3a0. The new full native baseline at b3d46b9 executes the unchanged real integration and passes 388 / 0 / 0. Earlier full-suite skips remain unchanged in their historical records; final package qualification remains open under DCM-47.",
       "acceptance": "Record visible success, blank/error and cancellation behavior for the formats advertised by the selected release. State fallback fidelity limits explicitly.", "blocked_by": ["DCM-SOURCE-01"], "evidence_refs": [
@@ -754,12 +833,13 @@
         "dcm32_preliminary_reports",
         "dcm33_checkpoint",
         "dcm33_doc_native_summary",
-        "dcm33_xls_native_summary"
+        "dcm33_xls_native_summary",
+        "dcm33_ppt_native_summary"
       ],
       "docx_checkpoint": "DCM-30 complete for two representative documents through installed Word handler at 8eb1470a; seven native records and five reviewed captures. Other formats/error states and native fallback remain separate.",
       "xlsx_checkpoint": "DCM-31 complete at ec7a0234 for representative installed-handler XLSX content and reproduced sizing: ten strict outer/inner bounds plus 12 reviewed diagnostic captures; ordinary workflow six records/two bounds and four reviewed captures also pass. 24 focused XLSX/OpenXML units pass; native sheet navigation and headed fallback remain unqualified. DCM-34/35, user acceptance and final package remain separate.",
       "pptx_checkpoint": "DCM-32 is complete at b3be3a016a92759ed88eeb364645f56fb5cc7916 for the representative two-slide native PowerPoint preview. Registered update, tooling, 29 / 0 / 0 parser units and exact build pass; ui-pptx 094009-df395f56 passes 8 records / 18 captures / 8 native attempts with 2 scoped queued Page keys and all_fixture_slides_captured=true. All images were separately reviewed for title/date/bridge, Payments table 125000 / 86000, return, TXT recovery, reopening and host shell. Raw feature/review flags remain false. Source and fixtures remain unchanged, journal empty, presentation released and host exit 0. Application source remains ec7a023. Physical keyboard, headed fallback, arbitrary fidelity, DCM-34/35/46/47 and user acceptance remain separate.",
-      "legacy_office_checkpoint": "DCM-33 remains PARTIAL: shared unavailable-footer fix and representative native DOC accepted at b3d46b9 after retained cc094810 RED; original 4 top-level / 33 leaf GREEN, 388 / 0 / 0 baseline and 8-record / 15-image DOC milestone remain historical. Representative native XLS is now accepted at e19ff30 after focused legacy 4 / 33 and Excel 2 / 48 units, 31-script tooling and an exact 461-file build with unchanged app bytes. XLS UI passes 6 records / 12 separately reviewed images / 5 native attempts / 5 strict bounds records. All 11 cell meanings are correct; 9 display literals match, with en-IN B6 1,25,000 and B8 2,11,000 explicitly accepted as numeric equivalents. Original readiness and raw feature/format/review flags remain intact. Installed DOC/XLS handlers were present; no headed absent-provider acceptance, sheet navigation or new full baseline is claimed. Legacy PPT is next; 31 complete / 19 remaining and no numbered step closes."
+      "legacy_office_checkpoint": "DCM-33 complete within bounded installed-handler DOC/XLS/PPT plus shared unavailable contract. DOC b3d46b9, XLS e19ff30 and PPT 8704a1b retain separate native evidence and image reviews. PPT passes 8 records / 18 reviewed images / scoped 1 -> 2 -> 1; original title-harness failure is retained. XLS 9 exact literals / 2 en-IN equivalents and DOC shared unavailable control remain unchanged. All-format routing/presenter units 4 top-level / 33 leaf cases pass at 87788e3; final delta only pins the observed PPT title and adds tooling assertions. Historical 388/0/0 baseline is not rerun. 32 complete / 18 remaining; next DCM-34. Separate headed missing-provider environments, arbitrary fidelity, user/package acceptance and broader failure/lifecycle gates remain open."
     },
     {
       "id": "DCM-RELEASE-01", "feature": "Qualify and publish the exact packaged release candidate", "status": "planned", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,

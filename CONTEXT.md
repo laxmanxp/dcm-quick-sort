@@ -8,12 +8,14 @@ Production source is `app-src/`; installer source is `installer-src/`.
 The release is still unpublished. The current backlog is [todo.json](todo.json)
 and the numbered qualification plan is [completion-50.json](qualification/completion-50.json).
 
-**31 of 50 steps are complete; 19 remain.** Complete: DCM-01–18 and DCM-20–32.
+**32 of 50 steps are complete; 18 remain.** Complete: DCM-01–18 and DCM-20–33.
 DCM-19 remains blocked on a disposable Windows Explorer integration environment.
-**Next runnable step: DCM-33 — legacy Office handler behavior**, continuing with
-representative legacy PPT. The footer fix and representative DOC and XLS
-milestones are accepted; DCM-33 as a whole remains PARTIAL. These counts
-include setup work and are not a product-completion percentage or user acceptance.
+**Next runnable step: DCM-34 — preview failure and interruption states.**
+DCM-33 is complete for representative installed-handler DOC/XLS/PPT previews
+and the shared missing/failed-handler contract. Separate headed absent-provider
+environments and broader release gates remain outside this bounded result.
+These counts include setup work and are not a product-completion percentage
+or user acceptance.
 
 The DCM-31 completion record is now published at
 `8671cc7bc9557ffca65de53ca79ace1156f65d00`; the registered Lenovo update received
@@ -24,8 +26,8 @@ report bundle is confirmed at `69fee755a94468165018b499fe7d876779e57ec8`.
 
 **The shared unavailable-footer fix and representative native DOC milestone
 are complete at pushed and Lenovo-tested source
-`b3d46b9e2003dbbfa2ae431e134e0692b8168d34`. The later XLS milestone below leaves
-legacy PPT pending, so DCM-33 remains PARTIAL.** The registered update received
+`b3d46b9e2003dbbfa2ae431e134e0692b8168d34`. At the DOC/XLS checkpoints, legacy
+PPT was still pending and DCM-33 remained PARTIAL; completion follows below.** The registered update received
 that source before the focused gates. The unavailable presenter now replaces the previous file's
 success footer with the current type and missing/failed-handler outcome while
 retaining the fallback body and ordinary file actions.
@@ -68,8 +70,8 @@ See [the DCM-33 checkpoint](qualification/dcm33-legacy-office.md) and
 [the DOC native summary](qualification/evidence/dcm-33-doc-native-summary.json)
 for receipts, separate image review and report publication identity. The
 DOC completion documentation records the tested `b3d46b9` source; publishing it
-does not imply another native application acceptance run. The numbered count
-stays **31 complete / 19 remaining**.
+does not imply another native application acceptance run. At that milestone,
+the numbered count stayed **31 complete / 19 remaining**.
 
 ### DCM-33 accepted XLS milestone
 
@@ -117,8 +119,61 @@ providers and sheet navigation remain unqualified. Raw `feature_accepted=false`,
 semantic acceptance is recorded separately in the
 [XLS native summary](qualification/evidence/dcm-33-xls-native-summary.json).
 Publishing this documentation records the tested `e19ff30` qualification and
-does not constitute another native run. **DCM-33 stays PARTIAL, 31 complete /
-19 remaining; legacy PPT is the next baby step.**
+does not constitute another native run. **At the XLS checkpoint, DCM-33 stayed
+PARTIAL, 31 complete / 19 remaining, with legacy PPT next.** The later completion
+record below preserves those historical counts and scope.
+
+### DCM-33 complete: representative legacy PPT and combined acceptance
+
+**DCM-33 is complete within its representative DOC/XLS/PPT and shared unavailable
+contract.** The final PPT source is
+`8704a1bdd930886a9ae4d0849822add0088603d8`, pushed and received through registered
+FlowDev before the final gates. It adds qualification assets and corrects one
+harness expectation; application/installer source and recorded app bytes remain
+unchanged from accepted `b3d46b9`. The genuine 510,976-byte CFBF PowerPoint fixture
+has SHA-256 `b4e6a98d2f4dd27ab66566a58ae734b1b297e75a1053084b54867b5b3346a773`.
+Independent validation follows the live presentation slide order, verifies both
+slides and the original embedded image, and rejects renamed PPTX, a wrong amount
+and reversed slide references.
+
+Initial candidate `87788e3` passes native `legacy-preview-unit`
+`143403-3dcb113d`: **4 top-level tests / 33 leaf cases, zero failures/skips**.
+Its first UI run `143622-814c1f0b` stops before navigation because PowerPoint adds
+` - Compatibility Mode` to the exact legacy window title. The two original
+images and normal exit 0 remain preserved. The final helper pins that observed
+PPT title while retaining the PPTX title and all ownership/process/input guards.
+This is a harness correction, not a product rendering defect. The final delta
+contains only the helper and tooling; the Go units were not rerun or rebound.
+
+At `8704a1b`, `ui-tooling` `143912-47769611` passes **32 script parses, native
+helper compilation, nine binding guards and two exact title contracts**.
+Exact build `143916-26f42fd5` binds **468 source files** and the unchanged
+7,367,168-byte app. Registered `ui-legacy-ppt` `143934-8e80521d` passes **eight
+records, 18 captures, eight attempts and two scoped PageDown/PageUp actions**.
+All 18 final images are separately reviewed: 10 full-window frames and eight
+same-frame crops. The two initial-failure history images are reviewed separately.
+The bridge title/date/image, Payments table `125000` / `86000`, native
+**1 -> 2 -> 1**, TXT recovery and reopening are readable and correct.
+
+Each native stage stabilizes on its second retained attempt. Slide 2 changes
+26,210 sampled pixels; returning to slide 1 differs by zero. The independent
+source/archive audit passes **68 checks** and image-integrity audit **185 checks**.
+Source/fixtures and Office registrations are unchanged, the journal is empty,
+the presentation is released and the host closes normally with exit 0.
+Raw feature/format/visual-review flags remain false; semantic acceptance is
+recorded separately. Unused space remains at the right/bottom of the pane;
+required slide content is not clipped. Physical keyboard input, complete pane
+sizing across scales and arbitrary presentation fidelity are not certified.
+
+The combined closure uses the three separate installed-handler results, the
+all-format missing/failed-handler routing/presenter units and the separately
+reviewed shared unavailable control from DOC. It does not claim separate headed
+absent/failing DOC/XLS/PPT provider environments. The historical **388/0/0**
+baseline stays at `b3d46b9`; user acceptance, DCM-34/35/46/47 and release remain
+open. See [the PPT native summary](qualification/evidence/dcm-33-ppt-native-summary.json)
+for the pinned report publication and detailed limits. Documentation publication
+records the accepted candidates and is not another native application run.
+**32 complete / 18 remaining; next DCM-34.**
 
 ### DCM-32 qualified result
 
@@ -269,12 +324,15 @@ open under DCM-46, preserving the earlier bounded queued-layout fix history.
   `tests/fixtures/dcm33-legacy-xls.xls`, focused legacy/Excel units and matching
   exact build. The separate image review records the observed en-IN grouping.
 
-The smallest next task is DCM-33 legacy PPT: prepare a genuine binary presentation
-with pinned representative content and inspect the existing native-handler/
-unavailable contract, then add the smallest focused gate. Preserve the accepted
-DOC and XLS milestones and shared unavailable coverage; do not rerun the broad
-`ui-previews` workflow first. DCM-19's
-Explorer-isolation blocker is unchanged.
+- Completed PPT milestone selector: `ui-legacy-ppt`, using the pinned
+  `tests/fixtures/dcm33-legacy-ppt.ppt` and exact build. Preserve the observed
+  Compatibility Mode title guard, scoped navigation and separate image review.
+
+The smallest next task is DCM-34: select the smallest remaining damaged/protected
+preview or interruption/recovery case, using the existing shared unavailable
+control as prior evidence. Preserve the accepted DOC/XLS/PPT milestones; do not
+start with the broad `ui-previews` workflow. DCM-19's Explorer-isolation blocker
+is unchanged.
 
 Code locally, unit test, commit/push, then use Desktop Commander for
 `flowdev update dcm-quicksort` followed by the focused `flowdev test` selector.

@@ -3,15 +3,20 @@
 Started 14 November 2026 (Asia/Kolkata). Standalone DCM QuickSort v1.0.71,
 repository `laxmanxp/dcm-quick-sort`, branch `release/v1.0.71`.
 
-**PARTIAL overall: the shared unavailable-footer fix and representative native
-DOC and XLS milestones are complete; legacy PPT remains pending.** The numbered
-plan remains **31 complete / 19 remaining**. DOC acceptance is bound to
-`b3d46b9e2003dbbfa2ae431e134e0692b8168d34`; the later XLS qualification is bound to
-`e19ff30b1663a4b5bb385a3667ab6342f299cc1e`, with unchanged application/installer
-source and app bytes. Both candidates were pushed before their registered
-Lenovo gates. The XLS review explicitly accepts equivalent en-IN numeric
-grouping for two cells. These milestones do not close DCM-33 or certify the
-final package. The smallest next baby step is genuine legacy PPT.
+**COMPLETE within representative installed-handler DOC/XLS/PPT and shared
+unavailable-contract scope.** The numbered plan is now **32 complete /
+18 remaining**, with DCM-34 next and DCM-19 still blocked. DOC acceptance stays
+at `b3d46b9`, XLS at `e19ff30` and final PPT at
+`8704a1bdd930886a9ae4d0849822add0088603d8`. All candidates were pushed before
+registered Lenovo qualification. The later PPT work changes fixture/harness
+assets only; application/installer source and recorded app bytes remain `b3d46b9`.
+XLS retains explicit en-IN numeric equivalence for two cells.
+
+Closure combines each representative native format, all-format missing/failed
+routing and presenter units, and the separately reviewed shared unavailable
+control. It does not certify separate headed absent/failing-provider environments,
+arbitrary fidelity, physical-user acceptance or the final release. Earlier
+DOC/XLS checkpoint counts and receipts below remain historical evidence.
 
 ## Starting identity and observed contract
 
@@ -295,7 +300,98 @@ arbitrary workbook fidelity, damaged/protected files, broader lifecycle or
 physical user acceptance is claimed. DCM-34/35/46/47 and final release gates
 remain open.
 
-**DCM-33 remains PARTIAL; no numbered step closes: 31 complete / 19 remaining.**
-Continue with a genuine legacy PPT fixture and the smallest native/unavailable
-gate in a separate baby step. Preserve the accepted DOC/XLS milestones and
-DCM-19's Explorer-isolation blocker.
+**At the XLS checkpoint DCM-33 remained PARTIAL: 31 complete / 19 remaining.**
+Legacy PPT was then the next baby step. The later result below closes DCM-33
+without changing the DOC/XLS receipts or their original scope/counts.
+
+## Accepted native PPT milestone and DCM-33 completion
+
+The final source is `8704a1bdd930886a9ae4d0849822add0088603d8`, following initial
+qualification candidate `87788e30b3b2c378cc5249ef506b67fa1c5ce07d`. The committed
+fixture is a **510,976-byte genuine PowerPoint 97–2003 CFBF binary**, SHA-256
+`b4e6a98d2f4dd27ab66566a58ae734b1b297e75a1053084b54867b5b3346a773`.
+It derives from the existing two-slide PPTX fixture and retains its representative
+content and DCM-32 footers. Independent binary validation follows the live
+Current User/UserEdit/persist-directory/slide-list references, verifies both
+slides in order, all 14 text blocks and the embedded PNG. Negative probes reject
+a renamed PPTX, a wrong amount and reversed slide references. No Lenovo conversion
+or production renderer change was used.
+
+### Preserved first attempt and exact-title harness correction
+
+At `87788e3`, native `legacy-preview-unit` `143403-3dcb113d` passes **4 top-level
+and 33 leaf cases**, with zero failures/skips. Initial tooling/build also pass.
+Initial UI `143622-814c1f0b` fails its exact-title binding before any navigation:
+PowerPoint displays `PowerPoint Slide Show  -  07-slides.ppt  -  Compatibility Mode`.
+Both retained history images were separately reviewed; the bridge slide is
+readable, and the owned host closes normally with exit 0.
+
+The final change pins that observed title for the exact PPT fixture. It preserves
+the original PPTX title, exact allowed filenames, owned host/pane hierarchy,
+PowerPoint process identity/start time and PageUp/PageDown-only message boundary.
+Only `tests/native/dcm-pptx-input.cs` and `tools/test-ui-tooling.ps1` change between
+the initial and final candidates. This is a harness correction, not a product
+rendering defect. The Go result remains at `87788e3`; no rerun at `8704a1b` is claimed.
+
+### Final registered gates and separate image review
+
+| Gate | Source / report suffix | Result |
+|---|---|---|
+| `legacy-preview-unit` | `87788e3` / `143403-3dcb113d` | 4 top-level / 33 leaf pass, zero fail/skip; prior to title-only harness correction. |
+| `ui-tooling` | `8704a1b` / `143912-47769611` | 32 scripts parse; native helpers compile; 9 binding guards and 2 title contracts pass. |
+| `build` | `8704a1b` / `143916-26f42fd5` | 468 source entries; recorded app bytes/hash unchanged from accepted DOC. |
+| `ui-legacy-ppt` | `8704a1b` / `143934-8e80521d` | 8 records, 18 captures, 8 attempts, 2 scoped navigation actions pass. |
+
+Both candidate update outputs and all seven gate receipts, including the initial
+UI failure, are retained. The final app is **7,367,168 bytes**, SHA-256
+`d8df2a791b736ecbee517f7efaff742a5b64271516c97fed96cc604a7ee45b7b`.
+The independent native audit passes **68 checks**: all 131 original archive files
+match, all three source manifests match immutable Git (450 LF-to-CRLF-only text
+entries plus 18 exact entries each), and source/gate/ordering/count binding agrees.
+The independent image-integrity audit passes **185 checks**, covering all 18 final
+images, 8 same-frame crops and 2 initial-history images. These audits do not make
+semantic acceptance judgments.
+
+All **18 final images** are separately reviewed: **10 full-window frames and
+8 same-frame crops**. The initial and recovered TXT content is exact. Slide 1
+shows `Bridge Inspection`, `September 2026` and the bridge image; slide 2 shows
+`Payments`, `Scheme` / `Amount`, `Bridge` / `125000` and `Road` / `86000`.
+Scoped posted PageDown/PageUp actions produce **1 -> 2 -> 1** and reopening
+returns to the correct first slide. Each stage retains two attempts and stabilizes
+only on the second. Slide 2 differs by 26,210 sampled pixels from the first-slide
+baseline; the returned first slide differs by zero. Reopening is independently
+reviewed for slide-1 content, without claiming its pixel equality was a harness gate.
+
+Source/fixtures and Office registrations are unchanged, the journal stays empty,
+exclusive presentation release succeeds and the host exits normally with code 0.
+Raw `feature_accepted=false`, `format_accepted=false` and `visual_reviewed=false`
+remain untouched. Semantic acceptance lives in the separate review. The pane
+retains unused right/bottom space, while required content is readable and
+unclipped; full pane utilization and all display scales are not certified.
+
+The [PPT native summary](evidence/dcm-33-ppt-native-summary.json) pins the detailed
+receipts, original failure, separate reviews and report publication. Report
+repository: `laxmanxp/flowverse-reports`; commit
+`d77a250bb7b02610afc957804cffc46cea2d6081`; prefix
+`apps/dcm-quicksort/dcm33-20261114-143934/legacy-ppt-8704a1b`.
+
+### Closure rationale, remaining scope and next step
+
+The original DCM-33 requirement is satisfied within the representative test scope:
+DOC, XLS and PPT render through their installed native handlers; focused units
+cover all three legacy types' missing/failed-handler routing and unavailable
+presentation; the DOC workflow separately shows the shared unavailable body and
+truthful footer with recovery. No live Office registrations were changed, and
+no separate headed absent/failing-provider machine is claimed.
+
+This closes **DCM-33 only: 32 complete / 18 remaining**. The prior full **388/0/0**
+baseline stays at `b3d46b9`; it was not rerun or rebound. DOC/XLS historical evidence
+and counts, including XLS numeric equivalence, remain intact. Physical keyboard
+input, arbitrary fidelity, damaged/protected files and broad interruption/lifecycle
+qualification remain separate. DCM-19's disposable Explorer environment blocker,
+DCM-34/35/46/47, user acceptance, final package and publication remain open.
+
+**Next: DCM-34**, beginning with the smallest remaining damaged/protected preview
+or interruption/recovery case and reusing the existing shared unavailable control.
+Completion-record publication and final Lenovo documentation sync record the
+accepted candidates; they do not constitute another native application run.
