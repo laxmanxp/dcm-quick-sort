@@ -123,7 +123,7 @@ public static class DcmPptxInput {
         public string Class,WindowTitle,ProcessPath,StartedUtc,FixtureName;
     }
     private static IntPtr NativeWindow(IntPtr host,int pid,string filename) {
-        if(filename!="07-slides.pptx")throw new Exception("Only the pinned native PPTX fixture is allowed");
+        if(filename!="07-slides.pptx" && filename!="07-slides.ppt")throw new Exception("Only the pinned native PPTX or PPT fixture is allowed");
         IntPtr pane=Pane(host,pid);var found=new List<IntPtr>();int count=0;bool truncated=false;
         EnumProc callback=delegate(IntPtr h,IntPtr p) {
             if(++count>100){truncated=true;return false;}
@@ -140,14 +140,19 @@ public static class DcmPptxInput {
         return window;
     }
     public static NativeTarget BindNativeSlide(IntPtr host,int pid) {
-        IntPtr window=NativeWindow(host,pid,"07-slides.pptx");uint actual;uint thread=GetWindowThreadProcessId(window,out actual);
+        return BindNativeSlide(host,pid,"07-slides.pptx");
+    }
+    // Keep the original PPTX entry point unchanged. The legacy gate can bind
+    // only the second committed fixture name, never an arbitrary window title.
+    public static NativeTarget BindNativeSlide(IntPtr host,int pid,string filename) {
+        IntPtr window=NativeWindow(host,pid,filename);uint actual;uint thread=GetWindowThreadProcessId(window,out actual);
         if(actual==0 || actual==(uint)pid || thread==0)throw new Exception("Expected the observed out-of-process PowerPoint renderer");
         using(var process=Process.GetProcessById((int)actual)) {
             string path=process.MainModule.FileName;
             if(process.HasExited || !String.Equals(Path.GetFileName(path),"POWERPNT.EXE",StringComparison.OrdinalIgnoreCase))
                 throw new Exception("Native slide is not rendered by the observed PowerPoint process");
             var target=new NativeTarget{Host=host.ToInt64(),HostPID=pid,Pane=GetParent(window).ToInt64(),Hwnd=window.ToInt64(),ProcessId=(int)actual,ThreadId=thread,
-                Class=Class(window),WindowTitle="PowerPoint Slide Show  -  07-slides.pptx",ProcessPath=path,StartedUtc=process.StartTime.ToUniversalTime().ToString("o"),FixtureName="07-slides.pptx"};
+                Class=Class(window),WindowTitle="PowerPoint Slide Show  -  "+filename,ProcessPath=path,StartedUtc=process.StartTime.ToUniversalTime().ToString("o"),FixtureName=filename};
             ValidateNativeSlide(host,pid,target);return target;
         }
     }

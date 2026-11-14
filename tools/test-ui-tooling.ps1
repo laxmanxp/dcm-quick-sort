@@ -32,6 +32,23 @@ try{
     $receipt['xlsx_input_compiled']=$true
     Add-Type -Path (Join-Path $repo 'tests/native/dcm-pptx-input.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
     $receipt['pptx_input_compiled']=$true
+    # Exercise the exact-name input boundary without targeting a real window.
+    # Invalid names must fail before any HWND lookup; both allowed fixtures must
+    # still fail the ownership guard when given the zero handle.
+    $nativeBindingGuards=@()
+    foreach($name in @('', '07-slides.PPT', '07-slides.ppt.exe', '08-slides.ppt', '..\07-slides.ppt', 'C:\07-slides.ppt', '07-slides.pptx.tmp')){
+        $caught=''
+        try{$null=[DcmPptxInput]::BindNativeSlide([IntPtr]::Zero,0,$name)}catch{$caught=$_.Exception.ToString()}
+        if(-not $caught.Contains('Only the pinned native PPTX or PPT fixture is allowed')){throw ('Native binding accepted an unpinned name or missed the name guard: '+$name)}
+        $nativeBindingGuards+=[ordered]@{fixture_name=$name;expected_guard='exact_fixture_name';passed=$true}
+    }
+    foreach($name in @('07-slides.pptx','07-slides.ppt')){
+        $caught=''
+        try{$null=[DcmPptxInput]::BindNativeSlide([IntPtr]::Zero,0,$name)}catch{$caught=$_.Exception.ToString()}
+        if(-not $caught.Contains('PPTX control ownership mismatch')){throw ('Native binding failed to retain the HWND ownership guard: '+$name)}
+        $nativeBindingGuards+=[ordered]@{fixture_name=$name;expected_guard='owned_host';passed=$true}
+    }
+    $receipt['native_presentation_binding_guards']=$nativeBindingGuards
     Add-Type -Path (Join-Path $repo 'tests/native/dcm-preview-geometry.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')
     $receipt['preview_geometry_compiled']=$true
     $receipt['native_adapter_compiled']=$true

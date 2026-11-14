@@ -44,6 +44,7 @@
         "ui-pptx": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-pptx.ps1"],
         "ui-legacy-doc": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-legacy-doc.ps1"],
         "ui-legacy-xls": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-legacy-xls.ps1"],
+        "ui-legacy-ppt": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-legacy-ppt.ps1"],
         "ui-xlsx-layout": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-xlsx.ps1", "-ObserveNativeLayout", "-RequireNativeBounds"],
         "ui-text": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-text.ps1"],
         "ui-sumatra-scroll": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-sumatra-scroll.ps1"],
