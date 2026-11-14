@@ -36,7 +36,7 @@
       "DCM-31"
     ],
     "next_step": "DCM-32",
-    "checkpoint": "qualification/dcm31-complete.md",
+    "checkpoint": "qualification/dcm32-pptx.md",
     "blocked_steps": ["DCM-19"],
     "active_blockers": ["DCM-EXPLORER-ISOLATION-01"],
     "next_runnable_step": "DCM-32",
@@ -321,6 +321,7 @@
     "dcm31_initial_summary": "qualification/evidence/dcm-31-initial-summary.json",
     "dcm31_completion": "qualification/dcm31-complete.md",
     "dcm31_native_summary": "qualification/evidence/dcm-31-native-summary.json",
+    "dcm32_checkpoint": "qualification/dcm32-pptx.md",
     "dcm31_outer_fix_reports": "https://github.com/laxmanxp/flowverse-reports/tree/main/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023"
   },
   "items": [
@@ -385,16 +386,18 @@
     {
       "id": "DCM-PREVIEW-01", "feature": "Qualify advertised preview formats and failure states", "status": "planned", "ui_test": "representative_native_DOCX_DCM30_and_XLSX_DCM31_pass; remaining_formats_and_failure_states_open", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "TXT, PNG and lightweight DOCX/XLSX/PPTX fallbacks passed the Nov3 fixture checks. Legacy DOC/XLS/PPT, complex Office fidelity and protected/damaged files were not certified.",
-      "external_fixture_status": "DCM-14 baseline skipped TestRealGeneratedPPTXIntegration because DCM_REAL_PPTX was not supplied. Supply an identified fixture and run unchanged assertions before PPTX/final-package acceptance; visible UI review remains separate.",
+      "external_fixture_status": "DCM-32 now has tracked synthetic text/image/table fixture af42fff55297109195b95039d2ac39c5d53b1fae23b59e7b40a7184d679b93f1; unchanged real integration passes in29/0/0local focused tests. Native focused wrapper requires actual run/pass and zero skip; native execution pending.",
       "acceptance": "Record visible success, blank/error and cancellation behavior for the formats advertised by the selected release. State fallback fidelity limits explicitly.", "blocked_by": ["DCM-SOURCE-01"], "evidence_refs": [
         "native_1069_report",
         "dcm30_completion",
         "dcm31_sizing_checkpoint",
         "dcm31_completion",
-        "dcm31_native_summary"
+        "dcm31_native_summary",
+        "dcm32_checkpoint"
       ],
       "docx_checkpoint": "DCM-30 complete for two representative documents through installed Word handler at 8eb1470a; seven native records and five reviewed captures. Other formats/error states and native fallback remain separate.",
-      "xlsx_checkpoint": "DCM-31 complete at ec7a0234 for representative installed-handler XLSX content and reproduced sizing: ten strict outer/inner bounds plus 12 reviewed diagnostic captures; ordinary workflow six records/two bounds and four reviewed captures also pass. 24 focused XLSX/OpenXML units pass; native sheet navigation and headed fallback remain unqualified. DCM-34/35, user acceptance and final package remain separate."
+      "xlsx_checkpoint": "DCM-31 complete at ec7a0234 for representative installed-handler XLSX content and reproduced sizing: ten strict outer/inner bounds plus 12 reviewed diagnostic captures; ordinary workflow six records/two bounds and four reviewed captures also pass. 24 focused XLSX/OpenXML units pass; native sheet navigation and headed fallback remain unqualified. DCM-34/35, user acceptance and final package remain separate.",
+      "pptx_checkpoint": "Focused fixture, pptx-unit and ui-pptx prepared. Existing product preview routing unchanged. Initial native harness observes first/reopened slide; actual provider navigation must be qualified after inspection. DCM-32 remains PARTIAL."
     },
     {
       "id": "DCM-RELEASE-01", "feature": "Qualify and publish the exact packaged release candidate", "status": "planned", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,

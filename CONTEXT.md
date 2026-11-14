@@ -13,12 +13,25 @@ DCM-19 remains blocked on a disposable Windows Explorer integration environment.
 **Next runnable step: DCM-32 — PPTX preview.** These counts include setup work and
 are not a product-completion percentage or user acceptance.
 
-The count records qualification at the tested production source below. This
-completion record is being finalized from retained evidence; its own commit,
-push and Lenovo synchronization were not yet observed when prepared. Confirm
-those final record-delivery actions before reporting the production task DONE.
-The report bundle is already confirmed in GitHub at
-`69fee755a94468165018b499fe7d876779e57ec8`.
+The DCM-31 completion record is now published at
+`8671cc7bc9557ffca65de53ca79ace1156f65d00`; the registered Lenovo update received
+that exact commit. Its production tests remain bound to `ec7a0234`, and its
+report bundle is confirmed at `69fee755a94468165018b499fe7d876779e57ec8`.
+
+### DCM-32 active qualification
+
+A focused PPTX fixture and registered `pptx-unit` / `ui-pptx` gates are prepared.
+The historical two-slide file does not match the unchanged real-PPTX test and
+has no embedded image. A reproducible synthetic text/image/table fixture now
+passes that original test plus the focused Open XML suite: 29 local tests pass,
+zero failures or skips. Its bytes are tracked and hash-bound. The app's existing
+native-handler-first routing and fallback code are unchanged.
+
+Native tooling/unit/build/UI validation remains pending for this new checkpoint.
+The initial native UI branch observes first open, text recovery and reopening;
+inspect its real provider hierarchy before qualifying native slide navigation.
+Fallback selector navigation is implemented in the test harness. No numbered
+step closes yet. See [DCM-32 checkpoint](qualification/dcm32-pptx.md).
 
 ### DCM-31 qualified result
 
@@ -112,11 +125,11 @@ open under DCM-46, preserving the earlier bounded queued-layout fix history.
   two top-level tests and 48 leaf cases, including nine geometry and 39 guard cases.
 - Completed DOCX selector: `ui-docx` → `tools/test-ui-docx.ps1`.
 
-The smallest DCM-32 task is to recover and hash the existing two-slide fixture
-`D:\FlowverseReportsRepo\dcm-flowuivision-20261103\inbox\07-slides.pptx`, verify it
-against the unchanged external test's expected text/image relationship, and add
-a focused committed FlowDev route supplying `DCM_REAL_PPTX`. Actual visible
-slide text/images and navigation still require focused headed qualification.
+The smallest DCM-32 task is to run the focused committed `pptx-unit` and
+`ui-pptx` gates after `ui-tooling` and an exact-source `build`. The fixture is
+`tests/fixtures/dcm32-slides.pptx`; its manifest pins source bytes and semantic
+expectations. Supply `DCM_BUILD_RECEIPT` from that build. Review all actual slide
+images and preserve the provider-navigation gap until it is exercised.
 The broad `ui-previews` workflow is not the first DCM-32 test.
 
 Code locally, unit test, commit/push, then use Desktop Commander for

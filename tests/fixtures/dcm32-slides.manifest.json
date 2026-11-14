@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "feature": "DCM-32",
+  "file": "dcm32-slides.pptx",
+  "bytes": 31109,
+  "sha256": "af42fff55297109195b95039d2ac39c5d53b1fae23b59e7b40a7184d679b93f1",
+  "generator": "generate-pptx-fixture.py",
+  "dependencies": {
+    "python-pptx": "1.0.2",
+    "Pillow": "13.0.0"
+  },
+  "synthetic": true,
+  "slide_count": 2,
+  "slide_size_inches": [
+    12,
+    6.75
+  ],
+  "slides": [
+    {
+      "number": 1,
+      "required_text": [
+        "Bridge Inspection",
+        "September 2026"
+      ],
+      "image": {
+        "part": "ppt/media/image1.png",
+        "size": [
+          360,
+          200
+        ],
+        "sha256": "5ef82f1dc22bb5098a3bbc4d7501e07bf9cec88a29ed547d3a86f88ff356303c",
+        "marker_rgb": {
+          "teal": [
+            20,
+            125,
+            146
+          ],
+          "orange": [
+            232,
+            123,
+            53
+          ]
+        }
+      }
+    },
+    {
+      "number": 2,
+      "required_text": [
+        "Payments",
+        "Scheme",
+        "125000",
+        "Road",
+        "86000"
+      ],
+      "table_rows": [
+        [
+          "Scheme",
+          "Amount"
+        ],
+        [
+          "Bridge",
+          "125000"
+        ],
+        [
+          "Road",
+          "86000"
+        ]
+      ]
+    }
+  ],
+  "scope": "Two representative static slides; this is not a general PowerPoint fidelity corpus."
+}

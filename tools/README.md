@@ -30,6 +30,14 @@ stays unchanged. Native `go test -json -count=1` runs preserve raw output, indiv
 failures, and skips. Targeted selectors fail when they execute zero tests.
 
 `baseline` runs all app unit tests. `regressions` runs `^Test(D[1-6]|Release)`.
+`pptx-unit` runs the focused PPTX/Open XML parser tests through that same native
+runner. It supplies the committed `tests/fixtures/dcm32-slides.pptx` with its
+manifest, verifies both source identities, and requires the unchanged
+`TestRealGeneratedPPTXIntegration` to emit one run and one pass event with no skip.
+The wrapper restores any previous `DCM_REAL_PPTX` value and records a separate
+`pptx-fixture-verification.json`; the native receipt and raw test log are retained
+unchanged. A missing, altered or malformed fixture cannot pass by skipping the
+external-fixture test. This selector does not certify visible slides.
 `native-preview-rect-unit` runs the focused Windows DPI measurement tests on
 owned hidden borderless windows. Non-100% scaling and supported DPI contexts are
 required for qualification; skips are not accepted as a physical-coordinate pass.
@@ -51,5 +59,12 @@ Passing these checks is source/package evidence. UI screenshots require separate
 review, and installer registration requires a disposable Windows user/VM because
 changing LOCALAPPDATA/APPDATA does not isolate HKCU integration keys.
 
+For the focused PPTX feature, use `pptx-unit`, `ui-tooling`, and `build` after the
+registered update. Set `DCM_BUILD_RECEIPT` to that exact build receipt, then run
+`flowdev test dcm-quicksort ui-pptx`. The harness observes the installed Windows
+handler or built-in fallback selected by the application. It does not change
+Office registration. Review the actual slide captures separately before recording
+DCM-32 acceptance; parser success and a ready provider footer are insufficient.
+
 See `../tests/native/README.md` for `ui-tooling`, `ui-move`, `ui-batch`, `ui-pdf`,
-`ui-previews`, their exact artifact binding, and the isolated installer test plan.
+`ui-previews`, `ui-pptx`, their exact artifact binding, and the isolated installer test plan.

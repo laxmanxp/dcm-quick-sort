@@ -34,6 +34,40 @@ filesystem evidence, screenshots and cleanup outcome. No installed DCM files cha
 
 ## Behavioral gates
 
+- `pptx-unit`: focused DCM-32 PPTX/Open XML parser qualification with the committed
+  synthetic `tests/fixtures/dcm32-slides.pptx` and its manifest (31,109 bytes,
+  SHA-256 `af42fff55297109195b95039d2ac39c5d53b1fae23b59e7b40a7184d679b93f1`).
+  Slide one contains `Bridge Inspection`, `September 2026` and an embedded bridge
+  image; slide two contains `Payments` and the `Scheme`/`Amount` table with
+  `Bridge`/`125000` and `Road`/`86000`. These are synthetic test values.
+  `tools/test-pptx-unit.ps1` sets `DCM_REAL_PPTX` only for the native runner's
+  process tree, restores the prior value, and verifies actual run/pass events for
+  the unchanged `TestRealGeneratedPPTXIntegration`. Targeted skips fail. The
+  fixture, its manifest and the exact source snapshot must agree. The original
+  raw receipt is preserved; the additional `pptx-fixture-verification.json`
+  records the fixture/event check. Tests consume the committed PPTX rather than
+  regenerate it; `tests/fixtures/generate-pptx-fixture.py` records reproducibility.
+- `ui-pptx`: focused DCM-32 visible presentation qualification using that same
+  pinned deck and an exact clean build receipt. The installed Windows preview
+  handler or built-in fallback is selected naturally; associations are never
+  altered. Actual text/image readability must be reviewed in the captures.
+  The harness also checks text recovery, reopening, unchanged source/fixture
+  bytes, an empty operation journal, file release and normal host close.
+  The initial native-handler branch observes the first slide and reopening; it
+  does not navigate the foreign provider. That branch alone cannot close the
+  two-slide visual gate. The fallback uses owned combo 1025 under the preview
+  pane for slide 1 → 2 → 1, corroborated by distinct content captures and the
+  first slide's image colors. A provider caption or selected slide label alone
+  cannot prove the visible slide content. Protected/damaged presentations remain
+  DCM-34, and broad repeated-switching lifecycle remains DCM-35.
+- Built-in PPTX fidelity is bounded: it renders text, tables as tab-separated
+  rows, and embedded images with simplified fonts and geometry. It does not
+  reproduce slide-master/layout inheritance, grouped transforms, original rich
+  text/table styling, image crop/effects, charts/SmartArt, animation or media.
+  It limits previews to 200 slides, 256 shapes per slide and 16K characters per
+  shape. Parser and image-relationship coverage does not prove Windows image
+  decoding or native PowerPoint fidelity. Record which provider was observed;
+  do not count an installed-handler run as headed fallback qualification.
 - `ui-xlsx`: focused DCM-31 text → workbook → text → workbook qualification,
   using the exact historical `06-orders.xlsx` fixture under
   `D:\FlowverseReportsRepo\dcm-flowuivision-20261103\inbox` (SHA-256
