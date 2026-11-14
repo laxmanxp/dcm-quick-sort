@@ -598,6 +598,7 @@ type appState struct {
 	image                                                                                                                                              uintptr
 	imageStream                                                                                                                                        *iUnknown
 	preview                                                                                                                                            *iPreviewHandler
+	previewExcelOuterRepair                                                                                                                            bool
 	previewActive                                                                                                                                      bool
 	fallback                                                                                                                                           string
 	updatingSuggestions, updatingFileList, updatingProcessedList                                                                                       bool
@@ -662,6 +663,7 @@ var previewSiteVtbl = previewHostSiteVtbl{
 var previewSite = previewHostSite{Vtbl: &previewSiteVtbl, refs: 1}
 var iidIUnknown = GUID{Data1: 0x00000000, Data2: 0x0000, Data3: 0x0000, Data4: [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
 var iidPreviewHandlerFrame = GUID{Data1: 0xFEC87AAF, Data2: 0x35F9, Data3: 0x447A, Data4: [8]byte{0xAD, 0xB7, 0x20, 0x23, 0x44, 0x91, 0x40, 0x1A}}
+var clsidExcelPreviewHandler = GUID{Data1: 0x00020827, Data2: 0x0000, Data3: 0x0000, Data4: [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
 
 func wstr(s string) *uint16               { p, _ := syscall.UTF16PtrFromString(s); return p }
 func loword(v uintptr) uint16             { return uint16(v & 0xffff) }
@@ -5004,6 +5006,9 @@ func loadImageWithError(path string) error {
 }
 
 func unloadPreview() {
+	// A retiring handler may cause nested size messages during COM cleanup.
+	// Preserve its normal cleanup calls, but do not request an outer repair.
+	app.previewExcelOuterRepair = false
 	if err := stopSumatraPreview(); err != nil {
 		sumatraError(err)
 	}
@@ -5016,7 +5021,7 @@ func unloadPreview() {
 		syscall.SyscallN(app.preview.Vtbl.Unload, self)
 		procIUnknownSetSite.Call(self, 0)
 		syscall.SyscallN(app.preview.Vtbl.Release, self)
-		app.preview = nil
+		app.preview, app.previewExcelOuterRepair = nil, false
 		setNativePreviewTraceActive(0, nativePreviewTraceSession{})
 	}
 	app.previewActive = false
@@ -5656,18 +5661,32 @@ func abs32(v int32) int32 {
 }
 
 func resizePreviewHandler() {
-	if app.preview == nil {
+	ph := app.preview
+	if ph == nil {
 		return
 	}
-	handler := uintptr(unsafe.Pointer(app.preview))
+	pane, repairOuter := app.previewHwnd, app.previewExcelOuterRepair
+	handler := uintptr(unsafe.Pointer(ph))
 	traceSession := nativePreviewTraceSessionFor(handler)
-	traceCall := beginNativePreviewTrace(traceSession, "GetClientRect", app.previewHwnd, handler, 0, nil)
+	traceCall := beginNativePreviewTrace(traceSession, "GetClientRect", pane, handler, 0, nil)
 	var rc RECT
-	rectOK, _, _ := procGetClientRect.Call(app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
+	rectOK, _, _ := procGetClientRect.Call(pane, uintptr(unsafe.Pointer(&rc)))
 	endNativePreviewTraceClientRect(traceCall, rectOK, rc)
-	traceCall = beginNativePreviewTrace(traceSession, "SetRect", app.previewHwnd, handler, 0, &rc)
-	hr, _, _ := syscall.SyscallN(app.preview.Vtbl.SetRect, uintptr(unsafe.Pointer(app.preview)), uintptr(unsafe.Pointer(&rc)))
+	if repairOuter && rectOK == 0 {
+		return
+	}
+	traceCall = beginNativePreviewTrace(traceSession, "SetRect", pane, handler, 0, &rc)
+	hr, _, _ := syscall.SyscallN(ph.Vtbl.SetRect, handler, uintptr(unsafe.Pointer(&rc)))
 	endNativePreviewTraceHRESULT(traceCall, hr, handler)
+	// COM may reenter the host. Repair only the same still-active Excel viewer
+	// after its normal logical SetRect succeeded; the helper touches its outer
+	// window only and reports request acceptance, not asynchronous completion.
+	if int32(hr) != int32(S_OK) || !repairOuter || app.preview != ph || app.previewHwnd != pane || !app.previewExcelOuterRepair {
+		return
+	}
+	traceCall = beginNativePreviewTrace(traceSession, "ExcelOuterRepairRequest", pane, handler, 0, nil)
+	accepted := repairExcelPreviewOuterWindow(pane)
+	endNativePreviewTraceBOOL(traceCall, accepted)
 }
 
 func toggleCurrentPDFPreviewFit(path, clsidText string) bool {
@@ -5693,6 +5712,7 @@ func loadWindowsPreviewHandler(path string) bool {
 	if !guidFromString(clsidText, &clsid) || !guidFromString("{8895b1c6-b41f-4c1c-a562-0d564250836f}", &iidPreview) {
 		return false
 	}
+	excelOuterRepair := clsid == clsidExcelPreviewHandler
 	traceSession := newNativePreviewTraceSession(clsid)
 	ph := createPreviewHandler(&clsid, &iidPreview, traceSession)
 	if ph == nil {
@@ -5712,6 +5732,11 @@ func loadWindowsPreviewHandler(path string) bool {
 	traceCall := beginNativePreviewTrace(traceSession, "GetClientRect", app.previewHwnd, self, 0, nil)
 	rectOK, _, _ := procGetClientRect.Call(app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
 	endNativePreviewTraceClientRect(traceCall, rectOK, rc)
+	if excelOuterRepair && rectOK == 0 {
+		procIUnknownSetSite.Call(self, 0)
+		syscall.SyscallN(ph.Vtbl.Release, self)
+		return false
+	}
 	traceCall = beginNativePreviewTrace(traceSession, "SetWindow", app.previewHwnd, self, 0, &rc)
 	hr, _, _ := syscall.SyscallN(ph.Vtbl.SetWindow, self, app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
 	endNativePreviewTraceHRESULT(traceCall, hr, self)
@@ -5729,13 +5754,14 @@ func loadWindowsPreviewHandler(path string) bool {
 		syscall.SyscallN(ph.Vtbl.Release, self)
 		return false
 	}
-	app.preview = ph
+	app.preview, app.previewExcelOuterRepair = ph, excelOuterRepair
 	setNativePreviewTraceActive(self, traceSession)
 	app.previewFit = true
 	app.previewFitWidth = false
-	// Synchronize the created viewer with the current pane after DoPreview.
-	// Initial SetWindow geometry alone can leave Office's outer window undersized.
-	resizePreviewHandler()
+	// Run the Excel compatibility request once after its viewer is initialized.
+	if excelOuterRepair {
+		resizePreviewHandler()
+	}
 	autoFitPreviewIfSupported(path, clsidText)
 	updatePreviewZoomControls()
 	return true

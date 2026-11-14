@@ -151,6 +151,15 @@ func endNativePreviewTraceClientRect(e *nativePreviewTraceEvent, ok uintptr, rec
 	e.FinishedUS, e.Completed = time.Since(layoutTraceStart).Microseconds(), true
 }
 
+func endNativePreviewTraceBOOL(e *nativePreviewTraceEvent, accepted bool) {
+	if e == nil {
+		return
+	}
+	e.BOOLResult = &accepted
+	e.After = observeNativePreviewTraceDPI(uintptr(e.Pane))
+	e.FinishedUS, e.Completed = time.Since(layoutTraceStart).Microseconds(), true
+}
+
 func nativePreviewTraceSnapshot() (uint64, []nativePreviewTraceEvent) {
 	n := nativePreviewTraceCallCount
 	if n > nativePreviewTraceLimit {

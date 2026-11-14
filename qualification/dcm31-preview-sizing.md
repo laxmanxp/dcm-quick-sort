@@ -268,8 +268,31 @@ fixtures fail before calling the helper because Windows assigns the matching
 popup's owner to the top-level pane instead of the requested child. The fixture
 now explicitly uses that top-level owner; the popup still must not count as an
 inner child. All assertions and nine-plus39 case counts are unchanged. Windows
-test compilation passes; a clean focused native RED rerun is pending. This first
-run is not described as a clean guard qualification.
+test compilation passes. The corrected run at
+`95cab1480ef04dec5d8dac44b6ba4ca436163f72` (`20261114-010750-40a70726`) establishes
+clean RED: all nine geometry assertions fail with the inactive helper, all39 guard
+cases pass, one top-level test passes and one fails, with zero skips/timeouts and
+unchanged source. The first run remains recorded separately with its fixture
+failures. Implementation and real-provider qualification are the next boundaries.
+
+The guarded repair candidate now checks the owned pane, exact unique immediate
+EXCEL9/EXCEL7 hierarchy, child styles, matching renderer PID and DPI contexts.
+It repeats identity and topology checks immediately before the only positioning
+request, for EXCEL9 at the pane's logical client bounds in the pane's DPI context.
+Flags preserve activation, visibility and Z order; the async flag posts only when
+Windows identifies different input queues. The caller context is restored and
+verified on all switched paths. True means accepted request, not completed layout.
+The app latches eligibility from the actual parsed Excel CLSID, suppresses it at
+unload entry, and revalidates the handler/pane/policy after successful logical
+SetRect. The initial post-DoPreview sizing call is now Excel-only, restoring other
+providers' previously qualified initialization behavior. The BOOL-only diagnostic
+does not fabricate a rectangle argument. Native unit GREEN and actual Excel
+first-open/reopen bounds plus reviewed images remain pending. Combined local
+validation passes 24 XLSX/OpenXML and seven DOCX/font tests, zero skips or
+failures; the Windows application and unchanged Windows test suite compile.
+The local application cross-build is 7,377,920 bytes, SHA-256
+`4cc8785b1fa48da947a803f5bfb73dbd59267d9e60cc52ec583cc6dc5a27c2a5`;
+it was not executed in Linux and is not a release artifact.
 
 The diagnostic at147bf909 added bounded, opt-in native-call records to the existing
 `DCM_LAYOUT_TRACE=1` output. It preserves the first 128 activation/GetClientRect/
