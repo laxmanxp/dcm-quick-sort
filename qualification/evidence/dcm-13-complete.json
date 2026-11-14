@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "step": "DCM-13",
+  "status": "complete_at_native_engine_boundary",
+  "product_fix_commit": "70e8f240a0228c8548562bb627db4213cbaf1d17",
+  "runner_fix_and_latest_test_commit": "a49e65951b5be9d26dc7d74a4916ae0b1b54664d",
+  "unit": {
+    "commit": "70e8f240a0228c8548562bb627db4213cbaf1d17",
+    "report": "C:\\FlowverseReports\\dcm-quicksort-installer-unit-20261109-180724-83ef3b94",
+    "top_level_passed": 26,
+    "failed": 0,
+    "skipped": 0,
+    "exit_code": 0,
+    "timed_out": false,
+    "reused_existing_run": true
+  },
+  "cleanup_cases": [
+    {
+      "case": "successful-removal",
+      "exit_code": 0,
+      "installation_removed": true,
+      "script_removed": true,
+      "output": ""
+    },
+    {
+      "case": "locked-uninstaller",
+      "exit_code": 1,
+      "installation_removed": false,
+      "script_removed": false,
+      "locked_bytes_preserved": true
+    },
+    {
+      "case": "locked-install-file",
+      "exit_code": 1,
+      "installation_removed": false,
+      "script_removed": false,
+      "locked_bytes_preserved": true
+    },
+    {
+      "case": "locked-script",
+      "exit_code": 2,
+      "installation_removed": true,
+      "script_removed": false
+    }
+  ],
+  "integration": {
+    "commit": "a49e65951b5be9d26dc7d74a4916ae0b1b54664d",
+    "report": "C:\\FlowverseReports\\dcm-quicksort-installer-integration-20261109-181814-920da14f",
+    "top_level_passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "exit_code": 0,
+    "timed_out": false,
+    "source_unchanged": true,
+    "flowdev_exit_code": 0,
+    "finished_utc": "2026-11-09T18:18:43.3172651Z",
+    "source_manifest_files": 206,
+    "source_manifest_sha256": "c72711a390f97e149c4044e4545d3dcbac2a77762aecd57de56f130b3931eaa7",
+    "engine_receipt_sha256": "13323bf25b40fbc62ebc483f799d6d6326d986d61ef5a66b5a5f95be13bd5584",
+    "app_payload_sha256": "a10e368eef249dbb38b340c52cfc8e2c2cb583758d14f07d09778c5ab9ee98c5"
+  },
+  "safeguards": {
+    "registry_override_reset": true,
+    "private_registry_removed": true,
+    "live_registry_unchanged": true,
+    "installation_directory_removed": true,
+    "cleanup_scripts_removed": true,
+    "five_shadow_registration_trees_absent": true,
+    "cleanup_child_pid": 5068
+  },
+  "matching_upgrade_restore_and_retained_backup_hashes": {
+    "destinations.conf": "9dcec2036ad6c6459c3e9e00d17b987901cac89dd74b99f79eebb4cc7ce0540d",
+    "learning.json": "221b93366f3d65cf425744b4014ebd93a0e8e634c7856fd41c7b5ad0f30bf827",
+    "naming-templates.json": "8f1f2b92710dc211f1594b559a5c451f7d95cf3316ede626e5ca9e3742f29226",
+    "settings.json": "f85620fa4f333ac79e082bfeeb2867f53cc09727fbacb428a1a8875dc59985ab",
+    "sources.conf": "2f5cbf84cfa865336f50660c8f89033afef7db37f0ed2f49a88ade8eab1ea380"
+  },
+  "prior_attempts": [
+    {
+      "commit": "f6fc1b177bdec7adebc3a76be78032e78c61c54e",
+      "report": "20261109-175613-3c49dd15",
+      "result": "observed script exit 1, console delay failure and missing-batch error"
+    },
+    {
+      "commit": "ad843c4bb7e4ef57c832100ed1ba4ae670437a97",
+      "report": "20261109-180340-926276fe",
+      "result": "delay and locked cases passed; successful self-delete still failed with exit /b"
+    },
+    {
+      "commit": "70e8f240a0228c8548562bb627db4213cbaf1d17",
+      "report": "20261109-180827-7e9bc739",
+      "result": "native engine PASS; outer runner failed parsing empty JSON key"
+    }
+  ],
+  "reuse_basis": "70e8f240 -> a49e6595 changes only tools/run-native.ps1: 7 insertions and 1 deletion. Installer/application implementation and tests are identical.",
+  "limits": [
+    "in-process installer engine; test executable is the uninstall self-copy",
+    "packaged setup/uninstaller E2E and live Explorer interaction not run",
+    "no UI image review or user acceptance",
+    "full app suite, final package identity and publication remain pending"
+  ],
+  "next_step": "DCM-14"
+}

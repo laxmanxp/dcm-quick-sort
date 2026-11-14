@@ -1,0 +1,32 @@
+name: Record Sumatra readable error retry and open resize regression
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/record-sumatra-readable-retry.yml]
+permissions:
+  contents: write
+concurrency:
+  group: dcm-release-metadata
+  cancel-in-progress: false
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - name: Verify tested implementation and apply locally validated metadata
+        run: |
+          git diff --exit-code 715cd61d7da00ee0125eb006246e77711411acc2 -- app-src installer-src tests tools
+          python qualification/record-sumatra-readable-retry.py
+          echo 'cfab7dfb9605557d5a99ba7419a89fb998e9ee505c42c123df15ca5d2db00334  todo.json' | sha256sum --check
+          echo 'c1efc214c296e072200ae42cda8fc1808fbbe058ce649d9697c8f567fc730e11  qualification/completion-50.json' | sha256sum --check
+      - name: Save checkpoint without force, release or merge
+        run: |
+          git config user.name 'DCM reviewed-checkpoint automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add todo.json qualification/completion-50.json
+          git commit -m 'test: record readable PDF errors and reopen intermittent resize gate'
+          git push origin HEAD:release/v1.0.71

@@ -1,0 +1,22 @@
+name: Observe asynchronous validation without weakening error assertions
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/async-test-observation.yml]
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply exact locally reviewed test-only corrections
+        run: python qualification/async-test-observation.py
+      - name: Save test corrections
+        run: |
+          git config user.name 'DCM reviewed-test automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tools/test-ui-sumatra-lifecycle.ps1 app-src/sumatra_pending_windows_test.go
+          git commit -m 'test: wait for exact async validation result and pin subtest UI thread'
+          git push origin HEAD:release/v1.0.71

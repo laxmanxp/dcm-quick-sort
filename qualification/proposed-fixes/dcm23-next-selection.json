@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "red_report": "C:\\FlowverseReports\\dcm-quicksort-ui-navigation-20261111-043627-c228308f",
+  "red_commit": "b2a4e5ad895b31f6d8be4d9110f9b2cd3d044912",
+  "reason": "Native Next test reproduced stale selected row while currentFile/filename draft advanced. Clear old selection only in explicit Next; preserve ordinary multi-selection. Change navigation fixture from LOG (not a built-in text preview) to CSV (supported), retaining every assertion.",
+  "files": [
+    {
+      "path": "app-src/main_windows.go",
+      "before_blob": "88e27310ef6605852fd99840f8e62a11ae6cd7ef",
+      "after_sha256": "4c71a8b0499a1f5a38d43e876b3ff691b02e84106147d91961601ba4f4f5d954",
+      "replacements": [
+        {
+          "old": "\tapp.index++\n\tshowCurrent(false)\n\tfocusFileList()\n",
+          "new": "\tapp.index++\n\t// Next is single-file navigation: discard the old selection before\n\t// showCurrent selects the new row (or leaves none at end of list).\n\tapp.updatingFileList = true\n\tprocSendMessageW.Call(app.fileList, LB_SETSEL, 0, ^uintptr(0))\n\tapp.updatingFileList = false\n\tshowCurrent(false)\n\tfocusFileList()\n",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "tools/test-ui-navigation.ps1",
+      "before_blob": "29f690f0dadcb9f2c53635537d572c489c1ca2f6",
+      "after_sha256": "292ebb5c554162e0bcd27805177713dff0790d6cfaa370150eac9b785845d0fc",
+      "replacements": [
+        {"old": "02-hidden.log", "new": "02-hidden.csv", "count": 4}
+      ]
+    }
+  ]
+}

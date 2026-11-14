@@ -1,0 +1,81 @@
+{
+  "schema": 1,
+  "feature": "DCM-SUMATRA-01",
+  "date_ist": "2026-11-12",
+  "tested_commit": "b05024332f018b544f7d1e704c5e017fac66f364",
+  "default_provider_changed": false,
+  "numbered_steps_closed": [],
+  "status": "implemented_partial_native_qualification",
+  "native": {
+    "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-sumatra-20261111-233859-93834514",
+    "passed": true,
+    "behavior_cases": ["embedded-owned-restricted-first-page", "next-page-visible-content", "last-page-boundary", "previous-page-visible-content", "alternate-open-disabled", "switch-to-text-releases-PDF", "rename-releases-viewer-and-preserves-bytes", "move-releases-viewer-and-preserves-bytes"],
+    "exit_code": 0,
+    "source_unchanged": true,
+    "fixtures_preserved": true,
+    "owned_viewer_pids": [22616, 24268, 10024],
+    "owned_viewers_gone_after_normal_close": true
+  },
+  "visual_review": {
+    "full_window_images": 6,
+    "content_crops": 5,
+    "all_individually_inspected": true,
+    "raw_flags_modified": false,
+    "finding": "Page-number field clipped at top of embedded viewer; disabled QuickSort sizing controls still present. DCM-SUMATRA-UI-01 remains open.",
+    "capture_directory": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-sumatra-20261111-233859-93834514",
+    "capture_sha256": {
+      "01-embedded-first-page.png": "d5ec584e25991ca30f800837253074d473acf63946df21955f794a163c040a14",
+      "01-embedded-first-page-content.png": "d2f8697a094071fb86467b5d52e3d6ebe24b1f9d2df711b94c9403190e87fa84",
+      "02-next-page.png": "fdec75e83125fa66539e9608c484b4b44f00876c4458a8664f01cd6d0b982611",
+      "02-next-page-content.png": "732e7a737970886e674aa52a1d30c051e3a343cf130ddc263d2cefe953667ee7",
+      "03-last-boundary.png": "fdec75e83125fa66539e9608c484b4b44f00876c4458a8664f01cd6d0b982611",
+      "03-last-boundary-content.png": "732e7a737970886e674aa52a1d30c051e3a343cf130ddc263d2cefe953667ee7",
+      "04-previous-page.png": "0cc0d35d5ddddb40ecc1e3d8cb283d894e4ca592ea79f74f57921333d06e0865",
+      "04-previous-page-content.png": "d2f8697a094071fb86467b5d52e3d6ebe24b1f9d2df711b94c9403190e87fa84",
+      "05-open-command-disabled.png": "0cc0d35d5ddddb40ecc1e3d8cb283d894e4ca592ea79f74f57921333d06e0865",
+      "05-open-command-disabled-content.png": "d2f8697a094071fb86467b5d52e3d6ebe24b1f9d2df711b94c9403190e87fa84",
+      "06-moved-and-text-restored.png": "ff2547c8872ce25f8963a32fcf89194208f7339b11c8e3756c9a3ac0fcb09091"
+    }
+  },
+  "build": {
+    "receipt": "D:\\FlowverseReportsRepo\\dcm-quicksort-build-20261111-233847-d6a39720\\receipt.json",
+    "receipt_sha256": "e7429e5a22abcd1923dc2e1ca4224a28693c600afbee65e127f042ffbc777713",
+    "app_sha256": "6e0da23dbd7bf67d5610e9e82b7859df851690b11caeeb38c23284e61323d984",
+    "size_bytes": 7223296,
+    "source_manifest_sha256": "cfb6f46eb89962e3b8206d5a733efb4445b61562d31ad0a7fe22e96075df9aae",
+    "manifest_files": 297
+  },
+  "runtime": {
+    "version": "3.6.1",
+    "sha256": "719f689b34f47be8ca105ce8484948474dafde0e106bab599e4a89326070c3d0",
+    "policy_sha256": "f82ee9c3ff09da529f67f2ee73ab716dd53678d0f52b00ddcffc9d6dc0a908aa",
+    "printer_access": false,
+    "disk_access": false,
+    "private_fixture_copy": true,
+    "bundled_or_published": false,
+    "all_restriction_routes_tested": false
+  },
+  "baseline": {
+    "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-baseline-20261111-234138-747a8dff",
+    "receipt_sha256": "a0c2ea7fd885aaa39fe262a7884a547db29872543dc533d3c5af6af29545e43c",
+    "count": 366,
+    "passed": 365,
+    "failed": 0,
+    "skipped": ["TestRealGeneratedPPTXIntegration"],
+    "exit_code": 0,
+    "timed_out": false,
+    "source_unchanged": true
+  },
+  "regressions": [
+    {"selector": "ui-text", "cases": 17, "passed": true, "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-text-20261111-234201-8b3fe3f2", "receipt_sha256": "c2a0bd87dab3ccbd61345d0025c28812053bb7c145eed4c0c5ef5a1155f887b0", "images_separately_reviewed": false},
+    {"selector": "ui-image", "cases": 23, "passed": true, "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-image-20261111-234218-04fe2476", "receipt_sha256": "fa5e3cdbc107b37fbcdf0e73aa4287e7447ff6bc8a4435cac5dafbdd336272ae", "images_separately_reviewed": false}
+  ],
+  "retained_failures": [
+    {"commit": "3f6b1b42b84980a3a421595166a711a203fa0329", "report": "dcm-quicksort-ui-sumatra-20261111-232240-30170f6f", "error": "Deadline: embedded Sumatra child", "reason": "test-only pre-implementation RED"},
+    {"commit": "185ba410e8b8fc2489e18854e7a756f1050aaedc", "report": "dcm-quicksort-ui-sumatra-20261111-233015-40552c48", "error": "Deadline: selection 08-preview.pdf", "capture_error": "Refusing occluded/offscreen capture", "root_cause": "not established", "cleanup_exit": 0}
+  ],
+  "pending": ["DCM-SUMATRA-UI-01", "first-page Previous boundary and actual control click qualification", "DCM-29 zoom/resize", "rapid switching, cancel, unavailable/corrupt/password-protected PDFs", "Undo and release-timeout refusal", "active-PDF close and abnormal-exit lifecycle", "default selection UI and managed runtime packaging", "DCM-SUMATRA-DISTRIBUTION-01", "DCM-19 and all prior release/user gates"],
+  "user_acceptance": "not_recorded",
+  "merged": false,
+  "published": false
+}

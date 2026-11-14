@@ -1,0 +1,99 @@
+{
+  "schema": 1,
+  "feature": "DCM-25",
+  "date": "2026-11-11",
+  "feature_accepted": true,
+  "tested_commit": "1554c9b87bbb834b14d54b231eae4b4ece27b8d2",
+  "qualification_summary": "1554c9b8: native ui-refresh PASS with 23 successful records and nine individually reviewed screenshots. Failed-source Refresh stale list/draft/preview RED at 03c9be04 is fixed. Normal Refresh, actual Browse switching, same-basename different contents, empty-source safety, B-only Rename/Move, unavailable-source safety and recovery pass. Full baseline 358 passed / 0 failed / 1 retained external-PPTX skip; selection and launch regression commands pass. Only DCM-25 newly closed; DCM-19 remains blocked.",
+  "native_ui": {
+    "commit": "1554c9b87bbb834b14d54b231eae4b4ece27b8d2",
+    "report": "C:\\FlowverseReports\\dcm-quicksort-ui-refresh-20261111-132617-5e4dccbb",
+    "passed": true,
+    "case_count": 23,
+    "state_integrity_records": 18,
+    "picker_records": 4,
+    "vision_setup_records": 1,
+    "reviewed_images": 9,
+    "app_exit_code": 0,
+    "app_pid": 17984,
+    "children_drained": true,
+    "source_unchanged": true,
+    "fixture_state_matches_controlled_changes": true,
+    "raw_visual_reviewed": false,
+    "review_evidence": "qualification/evidence/dcm-25-native-summary.json",
+    "started_utc": "2026-11-11T13:26:17.9938859Z",
+    "finished_utc": "2026-11-11T13:26:38.8194882Z"
+  },
+  "baseline": {
+    "commit": "1554c9b87bbb834b14d54b231eae4b4ece27b8d2",
+    "report": "20261111-132539-4f1de17d",
+    "count": 359,
+    "passed": 358,
+    "failed": 0,
+    "skipped": ["TestRealGeneratedPPTXIntegration"],
+    "exit_code": 0,
+    "timed_out": false,
+    "source_unchanged": true,
+    "skip_disposition": "Identified DCM_REAL_PPTX fixture remains required before DCM-32 / DCM-PREVIEW-01 / DCM-47; not executed or passed."
+  },
+  "build": {
+    "receipt": "C:\\FlowverseReports\\dcm-quicksort-build-20261111-132602-da7ecfec\\receipt.json",
+    "receipt_sha256": "53a3d6d3fe41ead807006a8f46f08bf51dfe4a35203f37b6d7e3decd57ccc0a7",
+    "app_sha256": "b6353d846a8c58c167032dc06a873e15e48273dbdbd68e67758877bd8b364466",
+    "source_unchanged": true
+  },
+  "product_red": {
+    "commit": "03c9be04fb23a0c0d5f05858f6b6865937ffd207",
+    "report": "C:\\FlowverseReports\\dcm-quicksort-ui-refresh-20261111-132238-b590b5c8",
+    "error": "DCM25_UNAVAILABLE_SOURCE_STALE_TARGET: failed Refresh retained old list or filename draft.",
+    "failure_image_reviewed": true,
+    "wrong_file_mutation_attempted_after_unavailable_source": false
+  },
+  "retained_harness_failures": [
+    {"commit":"adfdb8c763ce5b6a829d4c5f9bd4a195e5ad8bc9","report_suffix":"20261111-131534-30dfe6d4","cause":"Missing initial FlowUIVision inspect; corrected before any feature acceptance."},
+    {"commit":"7a09faece184832eb3e09300906735ad78c285ae","report_suffix":"20261111-131738-6fd3c7d0","cause":"Harness assumed automatic post-last-row-move reselection. Existing no-current behavior retained; independent file check plus explicit Refresh now verifies recovery."},
+    {"commit":"9bb76be29fd7e49c6464da3eef4aaaeaee52464f","report_suffix":"20261111-131932-722d40b4","cause":"Harness selected a fixture before returned folder/list finished updating. Added exact source/list readiness guard."}
+  ],
+  "fixture_contract": {
+    "initial_files": 5,
+    "controlled_added_files": ["Folder A/00-added.txt"],
+    "controlled_removed_files": ["Folder A/03-to-remove.txt"],
+    "temporarily_moved_source": "Folder A -> Temporarily Moved A -> Folder A",
+    "app_operations": ["Folder B With Spaces/02-shared.txt -> Folder B With Spaces/B-renamed.txt", "Folder B With Spaces/B-renamed.txt -> Vault/Accepted/B-renamed.txt"],
+    "original_A_shared_unchanged": true,
+    "final_expected_files": 5,
+    "final_hashes": {
+      "Folder A/00-added.txt":"29d0a5eb0026eb6e31dab7362ebfa1a8e9e05f6eddf2851988947e5baf004c42",
+      "Folder A/02-shared.txt":"c8c27bc9831c85d29a48a6cd1197906cbd95c1a0ed601c3ea08fbceaaac8a978",
+      "Folder A/01-alpha.txt":"199cfeb36afb06793a27b833cc1a9f7d4ca55d5e2277380fb14d827d32bb27c8",
+      "Vault/Accepted/B-renamed.txt":"d0c5470f331fb3042b752beebd8896f46f1e7210bb04800752ffb28e30146466",
+      "Folder B With Spaces/04-bravo.txt":"63cae3df800f863601e8def92dc549f4a41a70e0a3993f3dfb9990e039f26e33"
+    }
+  },
+  "reviewed_images": 9,
+  "images": [
+    {"name":"DCM-25-reload-resets-draft","sha256":"50013baccd8a9a93a5c8eb27e49151c466cc249e62cc55cc4e6a06895b037e40","reviewed":true,"review":"Original A shared file remains selected; stale draft reset and readable A content visible."},
+    {"name":"DCM-25-reload-drops-removed-target","sha256":"3af9eb516675537121e139ad106b794343dbe4536f35b6aac1b735013aeb542c","reviewed":true,"review":"Removed fixture no longer listed; added file selected with matching draft and content."},
+    {"name":"DCM-25-same-name-different-folder","sha256":"5ccd44943d90d56c9650823ef379a91d11c2a935e1a1bb6617bd2cf7b60097aa","reviewed":true,"review":"B source path, same shared basename, and distinct B text agree."},
+    {"name":"DCM-25-empty-folder-clears-targets","sha256":"f5c4eb4b77bcc4fb7a0283a7d2379cad7ad675b5d1a7ba745e96d3f285c7de88","reviewed":true,"review":"Empty source has blank list/draft and empty-folder guidance; no previous preview remains."},
+    {"name":"DCM-25-rename-target-is-B-not-A","sha256":"b796a53b9a002d95b961b397834ea055b8941dbcc86d060571f9b86e2308bba8","reviewed":true,"review":"Renamed B row/draft/heading match; preview retains original B content; Processed shows rename."},
+    {"name":"DCM-25-move-target-is-B-not-A","sha256":"78553762541279e19d6159ae05f3247ac8b6783488d8ef3ca489d7914e7926ac","reviewed":true,"review":"After Move and explicit Reload, only B bravo remains; preview/draft agree and history shows intended operations."},
+    {"name":"DCM-25-original-A-shared-unchanged","sha256":"470728daafbaf3e34bf06a0c221cce204bd8c9f9b3c013435410887944238880","reviewed":true,"review":"Returning to A shows original shared filename and readable A-specific contents unchanged."},
+    {"name":"DCM-25-unavailable-source-clears-targets","sha256":"0554c2b17c418250dfb5425d64335ae31e5aeb0bcea2a349e85c1f9038987765","reviewed":true,"review":"Source unavailable heading, detailed read error and Reload guidance visible; list and draft empty; old preview absent."},
+    {"name":"DCM-25-source-recovery","sha256":"a3901d4e68f155575dd548d16e82bdbbecb4675e883c5ed8017b68d7a3049636","reviewed":true,"review":"Restored A lists correct three files, selects added file and displays matching draft/readable preview."}
+  ],
+  "image_path_rule": "Each image is native_ui.report plus its name plus .png; raw desktop-edge-containing captures remain on Lenovo.",
+  "boundaries": {"installer_changed":false,"preview_engine_changed":false,"new_go_parent_tests":0,"new_native_regression":true,"human_user_acceptance":"not_recorded","raw_visual_flags_changed":false,"remaining_visual_issue":"DCM-UI-LABEL-01","other_steps_closed":false,"merged":false,"published":false},
+  "regression_commands": {
+    "commit":"1554c9b87bbb834b14d54b231eae4b4ece27b8d2",
+    "ui-selection":"PASS",
+    "ui-launch":"PASS",
+    "process":3380,
+    "exit_code":0,
+    "new_screenshots_separately_reviewed":false,
+    "reports": {
+      "ui-selection":"C:\\FlowverseReports\\dcm-quicksort-ui-selection-20261111-132717-40bc10d4",
+      "ui-launch":"C:\\FlowverseReports\\dcm-quicksort-ui-launch-20261111-132739-cf097855"
+    }
+  }
+}

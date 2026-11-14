@@ -1,0 +1,25 @@
+name: Record compact-label correction and provider acceptance audit
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/record-compact-labels.yml]
+permissions:
+  contents: write
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply exact locally checked tracker update
+        run: |
+          python qualification/record-compact-labels.py
+          echo 'c539db5aa8b223eb8c8bb7c5e299310d539dc79c2f47dd3165a8cc5e0e7a4e12  todo.json' | sha256sum -c -
+          echo '425f807970019aa81079f59b3ac2c4d81b14598fb142ee4f1930d985a0d886e6  qualification/completion-50.json' | sha256sum -c -
+      - name: Save only verified metadata
+        run: |
+          git config user.name 'DCM reviewed-checkpoint automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add todo.json qualification/completion-50.json
+          git commit -m 'test: close bounded label defect and record default-provider PDF acceptance gap'
+          git push origin HEAD:release/v1.0.71

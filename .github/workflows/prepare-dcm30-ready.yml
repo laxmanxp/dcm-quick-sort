@@ -1,0 +1,20 @@
+name: Prepare DOCX provider readiness checks
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/prepare-dcm30-ready.yml]
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - run: python qualification/prepare-dcm30-ready.py
+      - run: |
+          git config user.name 'DCM reviewed-test automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tools/test-ui-docx.ps1
+          git commit -m 'test: await native DOCX subtree before choosing the readback path'
+          git push origin HEAD:release/v1.0.71

@@ -1,0 +1,16 @@
+{
+  "red_report": "C:\\FlowverseReports\\dcm-quicksort-ui-refresh-20261111-132238-b590b5c8",
+  "files": [
+    {
+      "path": "app-src/main_windows.go",
+      "before_blob": "a8f062488333deff9d8f5a901e188a4d8ced928d",
+      "after_sha256": "5b225f834487d7ad8e25b01875f045abc75548547daf7776db65ac4e8876e62c",
+      "replacements": [
+        {
+          "old": "\tif err != nil {\n\t\tsetText(app.statusLabel, \"Cannot read source folder: \"+err.Error())\n\t\treturn\n\t}",
+          "new": "\tif err != nil {\n\t\t// A failed refresh must not leave cached paths as actionable targets.\n\t\tapp.files = nil\n\t\tapp.index = -1\n\t\tapp.startupPreferredFile = \"\"\n\t\tpopulateFileList()\n\t\tshowCurrent(false)\n\t\tsetText(app.currentLabel, \"PREVIEW  ·  Source unavailable\")\n\t\tapp.fallback = \"Cannot read source folder: \" + err.Error() + \"\\n\\nRestore access or choose another folder, then Reload.\"\n\t\tsetText(app.statusLabel, \"Cannot read source folder: \"+err.Error())\n\t\tprocInvalidateRect.Call(app.previewHwnd, 0, 1)\n\t\treturn\n\t}"
+        }
+      ]
+    }
+  ]
+}

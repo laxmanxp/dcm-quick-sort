@@ -1,0 +1,372 @@
+{
+  "schema_version": 1,
+  "file": "dcm33-legacy-xls.xls",
+  "sha256": "aac8c2cacf614339bb743d0e7da6e2d06dfc155a0a44626832e740907318721f",
+  "bytes": 6656,
+  "required_text": [
+    "DCM-33 LEGACY XLS",
+    "Inspection date",
+    "14 November 2026",
+    "Description",
+    "Amount",
+    "Bridge inspection",
+    "125,000",
+    "Road repair",
+    "86,000",
+    "Total",
+    "211,000"
+  ],
+  "sheet_name": "Inspection",
+  "datemode": 0,
+  "cell_oracles": [
+    {
+      "address": "A2",
+      "type": "text",
+      "value": "DCM-33 LEGACY XLS",
+      "display_text": "DCM-33 LEGACY XLS",
+      "number_format": "General"
+    },
+    {
+      "address": "A3",
+      "type": "text",
+      "value": "Inspection date",
+      "display_text": "Inspection date",
+      "number_format": "General"
+    },
+    {
+      "address": "B3",
+      "type": "date",
+      "value": 46340,
+      "display_text": "14 November 2026",
+      "number_format": "dd mmmm yyyy",
+      "iso_date": "2026-11-14",
+      "xls_number_format": "dd\\ mmmm\\ yyyy"
+    },
+    {
+      "address": "A5",
+      "type": "text",
+      "value": "Description",
+      "display_text": "Description",
+      "number_format": "General"
+    },
+    {
+      "address": "B5",
+      "type": "text",
+      "value": "Amount",
+      "display_text": "Amount",
+      "number_format": "General"
+    },
+    {
+      "address": "A6",
+      "type": "text",
+      "value": "Bridge inspection",
+      "display_text": "Bridge inspection",
+      "number_format": "General"
+    },
+    {
+      "address": "B6",
+      "type": "number",
+      "value": 125000,
+      "display_text": "125,000",
+      "number_format": "#,##0"
+    },
+    {
+      "address": "A7",
+      "type": "text",
+      "value": "Road repair",
+      "display_text": "Road repair",
+      "number_format": "General"
+    },
+    {
+      "address": "B7",
+      "type": "number",
+      "value": 86000,
+      "display_text": "86,000",
+      "number_format": "#,##0"
+    },
+    {
+      "address": "A8",
+      "type": "text",
+      "value": "Total",
+      "display_text": "Total",
+      "number_format": "General"
+    },
+    {
+      "address": "B8",
+      "type": "formula",
+      "value": 211000,
+      "display_text": "211,000",
+      "number_format": "#,##0",
+      "formula": "=SUM(B6:B7)",
+      "cached_value": 211000
+    }
+  ],
+  "generator": {
+    "source_file": "dcm33-legacy-xls.source.xlsx",
+    "source_sha256": "f5e87b9e1235814ca0ef998e16e7b2cb919c75158732d0f05065d27ad58b921c",
+    "source_bytes": 4053,
+    "script": "dcm33-legacy-xls.generate.mjs",
+    "script_sha256": "4ac2a2f2a8097acdcadf3283eb270a8334721e66441a85c2df77304b58a852d0",
+    "node_version": "v24.22.1",
+    "artifact_tool_version": "2.8.148",
+    "libreoffice_version": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+    "export_filter": "MS Excel 97",
+    "command": "\"$CODEX_PRIMARY_RUNTIME_NODE\" --preserve-symlinks-main <OS-temp-directory>/dcm33-legacy-xls.generate.mjs --output-dir <absolute-workspace-path>/outputs/<fresh-run-id>",
+    "setup": "In a fresh writable OS temp directory, symlink node_modules to CODEX_PRIMARY_RUNTIME_NODE_MODULES and dcm33-legacy-xls.generate.mjs to this tracked generator. Do not add node_modules to the application repository.",
+    "post_export_normalization": false,
+    "same_runtime_regeneration": {
+      "independent_exports_compared": 2,
+      "source_byte_identical": false,
+      "binary_byte_identical": true,
+      "first_source_sha256": "f5e87b9e1235814ca0ef998e16e7b2cb919c75158732d0f05065d27ad58b921c",
+      "second_source_sha256": "7f733dd2f1eaf64fa9cb8ff374a47227fa29cc8ff8104b5b61529c2ed72ef0ef",
+      "binary_sha256": "aac8c2cacf614339bb743d0e7da6e2d06dfc155a0a44626832e740907318721f",
+      "different_source_zip_parts": [
+        {
+          "part": "xl/workbook.xml",
+          "relationship_ids_only": true
+        },
+        {
+          "part": "_rels/.rels",
+          "relationship_ids_only": true
+        },
+        {
+          "part": "xl/_rels/workbook.xml.rels",
+          "relationship_ids_only": true
+        }
+      ],
+      "post_export_normalization": false
+    },
+    "reproducibility_limit": "Two independent exports in the recorded runtime produced identical XLS bytes. Source XLSX bytes differed because artifact-tool generated different relationship IDs; the worksheet/style parts were unchanged. No byte-identical source regeneration or cross-version/platform XLS guarantee is claimed. Native qualification consumes the committed XLS and its pinned hash."
+  },
+  "format": "Excel 97-2003 binary XLS: Compound File Binary Format with a BIFF8 Workbook stream, exported using LibreOffice MS Excel 97",
+  "scope": "One visible worksheet with a synthetic title, typed date, two numeric amounts and one SUM formula. Local fixture preparation only; native DCM/Windows preview and missing-provider acceptance are separate gates.",
+  "provenance": {
+    "kind": "original_synthetic",
+    "created_for": "DCM QuickSort DCM-33 legacy XLS qualification",
+    "personal_or_sensitive_data": false,
+    "third_party_fixture_used": false,
+    "content_origin": "All labels, date and amounts were authored for this fixture. No third-party spreadsheet content was imported.",
+    "production_source_modified": false,
+    "lenovo_conversion_used": false
+  },
+  "structure": {
+    "cfbf_magic": "d0cf11e0a1b11ae1",
+    "cfbf_major_version": 3,
+    "sector_bytes": 512,
+    "streams": [
+      {
+        "name": "Workbook",
+        "bytes": 2759
+      },
+      {
+        "name": "\u0001CompObj",
+        "bytes": 73
+      },
+      {
+        "name": "\u0001Ole",
+        "bytes": 20
+      },
+      {
+        "name": "\u0005SummaryInformation",
+        "bytes": 172
+      },
+      {
+        "name": "\u0005DocumentSummaryInformation",
+        "bytes": 116
+      }
+    ],
+    "workbook_stream_bytes": 2759,
+    "bof_records": [
+      {
+        "offset": 0,
+        "version": "0x0600",
+        "type": "0x0005"
+      },
+      {
+        "offset": 1914,
+        "version": "0x0600",
+        "type": "0x0010"
+      }
+    ],
+    "boundsheets": [
+      {
+        "name": "Inspection",
+        "offset": 1914,
+        "visible": true
+      }
+    ],
+    "encrypted": false,
+    "formula_records": [
+      {
+        "address": "B8",
+        "formula": "=SUM(B6:B7)",
+        "cached_value": 211000.0,
+        "xf_index": 30,
+        "record_offset": 2550,
+        "record_id": "0x0006",
+        "token_bytes": 13,
+        "tokens_hex": "250500060001c001c019100000",
+        "token_types": [
+          "PtgArea",
+          "PtgAttrSum"
+        ]
+      }
+    ]
+  },
+  "local_validation": {
+    "validator": "dcm33-legacy-xls.validate.py",
+    "validator_sha256": "a4629d41ed122a48c207885378b66596392395e169ad76c7c6d4c292b8efa3ee",
+    "command": "\"$CODEX_PRIMARY_RUNTIME_PYTHON\" -B tests/fixtures/dcm33-legacy-xls.validate.py",
+    "compound_file_and_cell_reader": "xlrd 2.0.1",
+    "independent_formula_validation": "The raw Workbook stream is parsed as bounded BIFF records. The B8 Formula record contains PtgArea B6:B7 followed by PtgAttrSum, with the independently read IEEE-754 numeric cache 211000. xlrd separately confirms cell type/value/date/format. Source XLSX XML confirms its typed date, SUM expression and numeric formula cache. No LibreOffice or DCM code is used by this validator.",
+    "genuine_fixture_passed": true,
+    "exact_populated_cells_match": true,
+    "source_xlsx_contract_passed": true,
+    "artifact_input_change_checks": [
+      {
+        "B6": 1,
+        "B7": 86000,
+        "B8": 86001
+      },
+      {
+        "B6": 0,
+        "B7": 86000,
+        "B8": 86000
+      },
+      {
+        "B6": 125000,
+        "B7": 86000,
+        "B8": 211000
+      }
+    ],
+    "artifact_formula_error_matches": 0,
+    "negative_checks": [
+      {
+        "passed": false,
+        "file": "renamed-xlsx.xls",
+        "error": "Not CFBF: renamed XLSX/CSV is not legacy XLS",
+        "case": "renamed_xlsx",
+        "exit_code": 1,
+        "sha256": "f5e87b9e1235814ca0ef998e16e7b2cb919c75158732d0f05065d27ad58b921c",
+        "expected_error": "Not CFBF: renamed XLSX/CSV is not legacy XLS"
+      },
+      {
+        "passed": false,
+        "file": "wrong-value.xls",
+        "error": "B6 value mismatch",
+        "case": "wrong_numeric_value",
+        "exit_code": 1,
+        "sha256": "a9692af1ef58e5f37de4aae55970a42465791f175b4256415b9847dedf8a0d9f",
+        "expected_error": "B6 value mismatch"
+      },
+      {
+        "passed": false,
+        "file": "wrong-formula.xls",
+        "error": "BIFF formula expression mismatch",
+        "case": "wrong_formula_same_cache",
+        "exit_code": 1,
+        "sha256": "377e0ab382819c857107c96d0e961e64f43128c36151d7af7e48315c7a8c0a6a",
+        "expected_error": "BIFF formula expression mismatch"
+      }
+    ],
+    "render_pages_per_workbook": 1,
+    "source_and_export_pdf_text_exact_match": true,
+    "source_and_export_png_identical": false,
+    "rendered_evidence": [
+      {
+        "kind": "source-render",
+        "pdf_file": "outputs/initial/source-render/dcm33-legacy-xls.source.pdf",
+        "pdf_sha256": "3d67fd5ce2561069b3eb8dae36170a0244965d8902597193be4feee5273f2a2b",
+        "pages": 1,
+        "extracted_text": [
+          "DCM-33 LEGACY XLS",
+          "Inspection date",
+          "14 November 2026",
+          "Description",
+          "Amount",
+          "Bridge inspection",
+          "125,000",
+          "Road repair",
+          "86,000",
+          "Total",
+          "211,000"
+        ],
+        "required_text_exact_match": true,
+        "png_file": "outputs/initial/source-render/page-1.png",
+        "png_sha256": "3bc2a96f4955de9b0cc21881e45d68f1a9786d772ece8d087a453ce73e965f19",
+        "png_size": [
+          596,
+          842
+        ]
+      },
+      {
+        "kind": "binary-render",
+        "pdf_file": "outputs/initial/binary-render/dcm33-legacy-xls.pdf",
+        "pdf_sha256": "ce79192b5658b38eff4de59b9e5f2e675b3cbb172ed5b21b903b6be6cb66d3e8",
+        "pages": 1,
+        "extracted_text": [
+          "DCM-33 LEGACY XLS",
+          "Inspection date",
+          "14 November 2026",
+          "Description",
+          "Amount",
+          "Bridge inspection",
+          "125,000",
+          "Road repair",
+          "86,000",
+          "Total",
+          "211,000"
+        ],
+        "required_text_exact_match": true,
+        "png_file": "outputs/initial/binary-render/page-1.png",
+        "png_sha256": "1827d0103a3c8614fd5bb580cbf76d442ef9372abdac7adf0c96e4fd4c9aa822",
+        "png_size": [
+          596,
+          842
+        ]
+      }
+    ],
+    "artifact_preview": {
+      "file": "outputs/initial/artifact-preview.png",
+      "sha256": "d11df0e828fdcfde44af7bb43b5e720622df4e17502a79699584b08a75046a67",
+      "size": [
+        615,
+        242
+      ]
+    },
+    "visual_review": "All 11 expected text/value strings are readable. Title, date, labels, amounts and formula total are unclipped; one sheet and one PDF page. Both complete local source and binary renders were reviewed.",
+    "native_office_acceptance": "not_run",
+    "format_preservation_note": "LibreOffice writes the date format as dd\\ mmmm\\ yyyy (escaped spaces), while the source uses dd mmmm yyyy. Both local renders display 14 November 2026. Image bytes differ; no pixel-identical render claim is made."
+  },
+  "format_references": [
+    {
+      "title": "LibreOffice File Conversion Filters Tables",
+      "url": "https://help.libreoffice.org/latest/en-US/text/shared/guide/convertfilters.html"
+    },
+    {
+      "title": "Microsoft MS-XLS BOF",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/4d6a3d1e-d7c5-405f-bbae-d01e9cb79366"
+    },
+    {
+      "title": "Microsoft MS-XLS Formula",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/8e3c6978-6c9f-4915-a826-07613204b244"
+    },
+    {
+      "title": "Microsoft MS-XLS FormulaValue",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/39a0757a-c7bb-4e85-b144-3e7837b059d7"
+    },
+    {
+      "title": "Microsoft MS-XLS PtgArea",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/b3c714c2-4fcf-4888-9e15-1cbf17e4d5d3"
+    },
+    {
+      "title": "Microsoft MS-XLS RgceArea",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/6df491b9-14e8-4efd-9d92-98db51b7cdbd"
+    },
+    {
+      "title": "Microsoft MS-XLS PtgAttrSum",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/79ef57f6-27ab-4fec-b893-7dd727e771d1"
+    }
+  ]
+}

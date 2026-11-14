@@ -16,6 +16,10 @@ https://github.com/laxmanxp/dcm-quick-sort/releases/latest
 
 DCM QuickSort remains a separate application and window within the **FileFlow Suite** umbrella, alongside Flow Search, DeepSearch and FileFlow. Existing Go behavior remains the reuse baseline. See [project context](CONTEXT.md) and [tracked work](todo.json) for source provenance, native test evidence and the remaining release gates; the newer v1.0.69 test record and v1.0.70 archive do not establish a certified newer release.
 
+## Development candidate
+
+The complete recovered v1.0.70 source and v1.0.71 fixes are on `release/v1.0.71`. This candidate is **not yet qualified or published**. D3/D4 native regressions and all 24 installer unit tests have passed at the recorded checkpoint; file safety, final packaging and visible Windows acceptance remain in progress. See [qualification evidence](qualification/2026-11-09-progress.md) for exact commits and limits.
+
 ## What it does
 
 - Preview PDFs with a DCM-owned renderer: Fit, 100%, 25–800% zoom, Ctrl+mouse-wheel, page navigation and pan

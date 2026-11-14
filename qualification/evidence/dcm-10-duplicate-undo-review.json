@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "step": "DCM-10",
+  "review_date": "2026-11-09",
+  "result": "pass_at_code_native_evidence_boundary",
+  "evidence_kind": "transcription_of_existing_native_events_and_source_review",
+  "new_native_run": false,
+  "product_or_test_source_changed": false,
+  "tested_commit": "26eeaed3b9041a31b17c197ef2a095f53ee2a9e6",
+  "reviewed_branch_head": "37f11040a6ec3222762556c6dee23ce1061e8a90",
+  "comparison": "Three later commits changed nine qualification/tracker files only; no product, installer, test or runner changes.",
+  "report": "C:\\FlowverseReports\\dcm-quicksort-regressions-20261109-151557-80d9f368",
+  "stdout_lines_one_based": [66, 105],
+  "receipt_lines_one_based": [202, 239],
+  "receipt": {
+    "selected_group_top_level_passed": 21,
+    "selected_group_top_level_failed": 0,
+    "selected_group_skipped": 0,
+    "exit_code": 0,
+    "timed_out": false,
+    "source_unchanged": true,
+    "go_version": "go1.27.0 windows/amd64",
+    "source_manifest_files": 189,
+    "source_manifest_sha256": "3f9dd6e0f9fe7d518dbeaea6be8f2a1c8b3bda62d7e22231f06deea885af296d"
+  },
+  "review_counts": {"d6_top_level_passed": 8, "nested_subtests_passed": 2, "failed": 0, "skipped": 0},
+  "counting_note": "Reviewed tests are already included in the 21-test group. Do not add nested or reviewed tests to that total.",
+  "source_blobs": {
+    "app-src/d1_d6_file_safety_regression_test.go": "79bc7d105fd96b7c018ba181381795cdbe4c9bb4",
+    "app-src/duplicate_fingerprint.go": "df117746f426f510d8805d0d667cf6366aa40c55",
+    "app-src/duplicate_restore_windows.go": "f6a60a9d16aa3ba1ff6000d2c36b251470be9bb9"
+  },
+  "pass_events": [
+    {"test": "TestD6DuplicateUndoRefusesChangedDestination/direct", "time": "2026-11-09T20:46:36.645595+05:30", "action": "pass", "nested": true},
+    {"test": "TestD6DuplicateUndoRefusesChangedDestination/journaled", "time": "2026-11-09T20:46:36.7886385+05:30", "action": "pass", "nested": true},
+    {"test": "TestD6DuplicateUndoRefusesChangedDestination", "time": "2026-11-09T20:46:36.7886385+05:30", "action": "pass", "nested": false},
+    {"test": "TestD6DuplicateFingerprintIsDurableBeforeDeletion", "time": "2026-11-09T20:46:36.961447+05:30", "action": "pass", "nested": false},
+    {"test": "TestD6LegacyDuplicateWithoutFingerprintCannotUndo", "time": "2026-11-09T20:46:36.976821+05:30", "action": "pass", "nested": false},
+    {"test": "TestD6EmptyDuplicateCanStillUndo", "time": "2026-11-09T20:46:37.1010164+05:30", "action": "pass", "nested": false},
+    {"test": "TestD6BatchPreflightRefusesChangedDuplicateBeforeAnyUndo", "time": "2026-11-09T20:46:37.2559869+05:30", "action": "pass", "nested": false},
+    {"test": "TestD6RestartDoesNotInferUndoFromTwoChangedCopies", "time": "2026-11-09T20:46:37.4636207+05:30", "action": "pass", "nested": false},
+    {"test": "TestD6PendingRestartRefusesChangedSurvivingCopy", "time": "2026-11-09T20:46:37.648269+05:30", "action": "pass", "nested": false},
+    {"test": "TestD6MovedDuplicateSurvivorRequiresAttentionAfterRestart", "time": "2026-11-09T20:46:37.953184+05:30", "action": "pass", "nested": false}
+  ],
+  "limits": [
+    "Fingerprint test reads persisted events after execution; not a power-loss test of every journal boundary.",
+    "Batch preflight refusal does not establish crash-atomic rollback after a batch begins.",
+    "Normal-app visible Undo/restart workflows, full suites, final package and user acceptance remain pending.",
+    "No UI screenshots, new native run, merge or publication are claimed."
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "files": [
+    {
+      "path": "app-src/main_windows.go",
+      "before_blob": "b79cb4828d454dac61964a77173ca4b14586ddf5",
+      "after_sha256": "5baba1d837b92ba59496fe6ad7fd3e992ed327e4e8078920ed4d64c11592b4a5",
+      "replacements": [
+        {
+          "old": "\tif readTextEnabled() {\n\t\tshowTextPreview(path)\n\t\treturn\n\t}",
+          "new": "\tif readTextEnabled() {\n\t\tif showTextPreview(path) {\n\t\t\tsetText(app.statusLabel, \"Read as text: \"+strings.ToUpper(strings.TrimPrefix(filepath.Ext(path), \".\")))\n\t\t}\n\t\treturn\n\t}"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "feature": "DCM-18",
+  "tested_commit": "a3e4c185dd00bf75222694db7a324b86de50bc86",
+  "report": "C:\\FlowverseReports\\dcm-quicksort-ui-folder-20261110-181633-dfd65522",
+  "build_receipt": "C:\\FlowverseReports\\dcm-quicksort-build-20261110-181432-f131c8f5\\receipt.json",
+  "build_receipt_sha256": "75505674fd12224129eff271e76c1723cb64e260edb37d2531699493dcbea99c",
+  "app_sha256": "a10e368eef249dbb38b340c52cfc8e2c2cb583758d14f07d09778c5ab9ee98c5",
+  "result": {
+    "passed": true,
+    "case_count": 9,
+    "source_list_integrity_checks": 5,
+    "actual_picker_confirmations": 2,
+    "flowuivision_flows": 2,
+    "flowuivision_steps_per_flow": 3,
+    "exit_code": 0,
+    "source_unchanged": true,
+    "owned_app_pid": 4540,
+    "owned_app_exit_code": 0,
+    "children_drained": true,
+    "forced_stop": false
+  },
+  "started_utc": "2026-11-10T18:16:33.8126827Z",
+  "finished_utc": "2026-11-10T18:16:47.3670757Z",
+  "raw_visual_reviewed": false,
+  "image_review": {
+    "reviewed": true,
+    "scope": "DCM-18 functional folder workflow; not whole-product layout approval",
+    "images": [
+      {
+        "name": "DCM-18-picker-open",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-folder-20261110-181633-dfd65522\\DCM-18-picker-open.png",
+        "sha256": "ea53e13c7d8768213d12cca193579137b4ae4459371e41307f85dd07a7c43b82",
+        "review": "Actual owned folder dialog; Initial Inbox breadcrumb and Select Folder/Cancel visible."
+      },
+      {
+        "name": "DCM-18-cancel-preserves-source",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-folder-20261110-181633-dfd65522\\DCM-18-cancel-preserves-source.png",
+        "sha256": "9561ae7bc535ac6a1fe6f6b13cdd4fbbd090f2745252a64762e5255ec77fe001",
+        "review": "Original source, 00-initial.txt and readable text preview remain after cancellation."
+      },
+      {
+        "name": "DCM-18-open-spaced-folder-picker",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-folder-20261110-181633-dfd65522\\DCM-18-open-spaced-folder-picker.png",
+        "sha256": "10c5ccfef7a89c7bc859f93cc594a8da2ec2fcfd8b9c2d1851b62df2084943bd",
+        "review": "Folder field visibly contains the full isolated Folder With Spaces path before confirmation."
+      },
+      {
+        "name": "DCM-18-spaced-folder-loaded",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-folder-20261110-181633-dfd65522\\DCM-18-spaced-folder-loaded.png",
+        "sha256": "5b5bf0252e68abee9342c0668f222fb5433acc1580757a1f476b2d84cc047954",
+        "review": "Source ends in Folder With Spaces; both target filenames are listed; selected alpha text is readable."
+      },
+      {
+        "name": "DCM-18-return-original-folder-picker",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-folder-20261110-181633-dfd65522\\DCM-18-return-original-folder-picker.png",
+        "sha256": "f6d9052b83bbde27b4d374526e74dc993ecc2fe4f1e949cf692ce9e5ead5fa39",
+        "review": "Picker starts in Folder With Spaces; Folder field specifies Initial Inbox for return."
+      },
+      {
+        "name": "DCM-18-original-folder-restored",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-folder-20261110-181633-dfd65522\\DCM-18-original-folder-restored.png",
+        "sha256": "d7f7f3c5c5784d9d5cf9e5c6f77a94ededcb1e0049b32973f680c1dc8aa10272",
+        "review": "Original source, single filename, draft and readable original text restored."
+      }
+    ]
+  },
+  "fixtures": {
+    "00-initial.txt": "4ea1f1917063fef21627981f2a7e63c017245254747aa1d42f969ba6dc2b818e",
+    "01-target alpha.txt": "7b7f48f9a7810123be1b0723dded01a8a022992dcb0fb44f29f77576ca11ea97",
+    "02-target bravo.txt": "ecf876bfb7edc74fe5c151025346775e6b7db524e1cd56158fcdba4aaa5e3e47"
+  },
+  "history": [
+    {
+      "report": "C:\\FlowverseReports\\dcm-quicksort-ui-folder-20261110-181124-359bcb27",
+      "commit": "4b26e8d7b031abb28d52bff540c4dc952d6286f4",
+      "result": "Probe-only PASS; actual picker opened/cancelled and controls observed; not full DCM-18 acceptance."
+    },
+    {
+      "report": "C:\\FlowverseReports\\dcm-quicksort-ui-folder-20261110-181547-2391fd35",
+      "commit": "a3e4c185dd00bf75222694db7a324b86de50bc86",
+      "result": "FAIL at first screenshot: Refusing occluded/offscreen capture. App exit 0, children drained, source unchanged. Cause not established. Same code/build retried once; capture guard retained."
+    }
+  ],
+  "remaining": [
+    "DCM-UI-EMPTY-COPY-01",
+    "DCM-UI-LABEL-01",
+    "external PPTX integration",
+    "final package and packaged installer lifecycle",
+    "Explorer integration",
+    "user acceptance"
+  ],
+  "next_step": "DCM-19"
+}

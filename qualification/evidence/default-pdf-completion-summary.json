@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "features": ["DCM-28", "DCM-29"],
+  "tested_commit": "9a2ed85a38e25c3ad9698ee41ec993379dff9686",
+  "date_ist": "2026-11-13",
+  "report_root": "D:\\FlowverseReportsRepo",
+  "provider": "Default Windows.Data.Pdf; child DCM_PDF_PROVIDER and DCM_SUMATRA_EXE explicitly removed",
+  "application_code_changed": false,
+  "default_provider_changed": false,
+  "first_run": {
+    "report": "dcm-quicksort-ui-pdf-20261113-063940-e3af9283",
+    "receipt_sha256": "67612a30c59a369d4427dd267de3d3131868fa9ca2a709ca4bf746c0b34471b8",
+    "passed": true, "records": 19, "flowuivision_action_records": 8, "independent_readback_records": 11,
+    "exit_code": 0, "source_unchanged": true, "all_owned_processes_closed": true,
+    "fixture_safety": {"source_files": 4, "names_and_bytes_unchanged": true, "destination_empty": true, "journal_empty": true, "exclusive_pdf_access": true}
+  },
+  "visual_review": {
+    "report": "dcm-quicksort-ui-pdf-20261113-063940-e3af9283",
+    "full_images_individually_reviewed": 10, "captures_total": 24,
+    "reviewed_hashes": {
+      "pdf-first-boundary-window.png": "688e5c4b9c0711b675522cffbae13629314f7e995afffc5ffb64c8e6dbc71e73",
+      "pdf-fit-width-window.png": "17ae0f3c4ee4d56f8dee71ba778d9943fe0b0554a5c367dba06e85f21454f237",
+      "pdf-100-window.png": "d0cf084d9e4bc802472fb6ecdd2e618c18c4239c3391d0992b78032d30d174d8",
+      "pdf-100-top-readable-window.png": "feea157b45181aa6f3e5c2c776e7f085a89c94bb21f40a92146d0ebeaa171663",
+      "pdf-110-window.png": "3d4d8f2b01b36f8d30c2046cf086110ce7cab45081efb07876b37c0b7484f6a3",
+      "pdf-110-top-readable-window.png": "e8adfbcf95e813a2b55b7e5652f43a3e2563bd31fe67ec485ab8dfb5d9857bcd",
+      "pdf-return-100-window.png": "627cb56b346a8ee4db70397654e633fabe0ea85951c2d64605e42729d4a41ac7",
+      "pdf-fit-page-visible-window.png": "a3f682f39ff63b617268a9b44aeb1f09285ba26d89b1a67875a94c978d33d282",
+      "pdf-last-boundary-window.png": "0832872075ad3e9d9a6282c82815d8f500de831dbbe059baa2bca77aaee14c08",
+      "pdf-first-boundary-restored-window.png": "17ae0f3c4ee4d56f8dee71ba778d9943fe0b0554a5c367dba06e85f21454f237"
+    },
+    "raw_flags_modified": false, "crops_individually_reviewed": false, "repeat_images_individually_reviewed": false, "regression_images_individually_reviewed": false,
+    "observations": "Fit Width and Fit Page show readable page-one headings; page two shows its distinct heading and orange content. Initial centered 100% view is cropped but not blank; owned native panning reveals an intact title at100/110%. Not every document line fits at manual zoom.",
+    "scope": "Review is actual image inspection, not OCR. Boundary buttons read back disabled at first/last pages; disabled controls were not force-activated. Drag uses native messages, not physical input acceptance."
+  },
+  "build": {
+    "report": "dcm-quicksort-build-20261113-063835-3b1e3377",
+    "receipt_sha256": "1f56aae3cba92f7757de3117a2462d869f910577ebb48efde07d8d8ebfb24bdd",
+    "app_sha256": "9298cc004fbfc3029ad7385704702e305d6b413ccf4be8ffe124265de19763e0",
+    "bytes": 7336960,
+    "manifest_sha256": "8e0091286316d0af68b3e72f3013e5602891a2d188c99644a056491bb4874113",
+    "manifest_files": 409, "app_matches_previous_compact_layout_build": true
+  },
+  "test_change": {"path": "tools/run-ui.ps1", "sha256": "239d9a13476c60210187a35dc13ba2e00618647edbf91181e45f65bf163f49a7", "original_deadlines_and_capture_guards_retained": true, "fixture_changed": false},
+  "historical_issue": {"id": "DCM-PDF-01", "old_blank_reproduced_on_current_build": false, "old_root_cause_known": false, "new_product_fix_claimed": false},
+  "repeat_attempts": [
+    {"report": "dcm-quicksort-ui-pdf-20261113-064146-02ff0a50", "receipt_sha256": "42f88fa5ddb84d79a55ed8e3ed12c328cdcaf8caef5c210bcc149b179149cde1", "passed": false, "completed_records_before_stop": 15, "error": "Refusing occluded/offscreen capture; sampled covering window class XamlExplorerHostIslandWindow, pid11056", "cleanup_exit": 0, "forced_stop": false, "source_unchanged_recorded": null},
+    {"report": "dcm-quicksort-ui-pdf-20261113-064608-8299c122", "receipt_sha256": "7500a8c5244ebea5c252a13233bcdbc968b6d5f75e5b69027158df1bddd8d261", "passed": false, "completed_records_before_stop": 15, "error": "Refusing minimized/hidden capture", "cleanup_exit": 0, "forced_stop": false, "source_unchanged_recorded": null}
+  ],
+  "repeatability_qualification_completed": false,
+  "repeat_failure_scope": "Retain both capture-guard failures. Cause of popup/minimization not established. No unrelated window manipulated or capture guard bypassed; partial records are not counted as a passing run.",
+  "numbered_steps_closed": ["DCM-28", "DCM-29"],
+  "next_step": "DCM-30",
+  "completion_scope": "Only the demonstrated two-page navigation/zoom workflow; one enhanced passing run and ten reviewed full images. Two later capture-guard failures retained; no repeatability or final release claim.",
+  "baseline": {"report": "dcm-quicksort-baseline-20261113-064704-4847f825", "receipt_sha256": "e1325638b540c79e3253d4572272f1a2340ddc56da6de5d6943bb6c844fe2100", "parent_count": 380, "passed": 379, "failed": 0, "skipped": ["TestRealGeneratedPPTXIntegration"], "exit_code": 0, "timed_out": false, "source_unchanged": true},
+  "sumatra_regression": {"report": "dcm-quicksort-ui-sumatra-20261113-064842-b69cd133", "receipt_sha256": "e4c0f6c83e97cf913090f4c8b0ae01e637a96be1732a35c4700ea20554994296", "passed": true, "records": 23, "exit_code": 0, "source_unchanged": true, "fixtures_preserved": true, "images_reviewed": false},
+  "serialized_command_exit": 1,
+  "serialized_command_exit_note": "Repeat ui-pdf failed capture guard; subsequent baseline and Sumatra selections passed. Do not report the entire command as all-green.",
+  "user_acceptance": "not_recorded", "merged": false, "published": false
+}

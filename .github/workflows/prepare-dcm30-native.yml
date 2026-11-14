@@ -1,0 +1,22 @@
+name: Prepare owned native DOCX observation
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/prepare-dcm30-native.yml, qualification/prepare-dcm30-native.py]
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - run: python qualification/prepare-dcm30-native.py
+      - name: Save exact test-only adjustment
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'DCM reviewed-test automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tools/test-ui-docx.ps1
+          git commit -m 'test: distinguish native DOCX handler from own text fallback'
+          git push origin HEAD:release/v1.0.71

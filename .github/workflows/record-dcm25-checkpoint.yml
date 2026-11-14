@@ -1,0 +1,49 @@
+name: Record verified DCM-25 checkpoint
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths:
+      - qualification/record-dcm25-checkpoint.py
+      - .github/workflows/record-dcm25-checkpoint.yml
+permissions:
+  contents: write
+concurrency:
+  group: dcm25-checkpoint
+  cancel-in-progress: false
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/v1.0.71
+      - name: Apply only guarded tracker updates
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 qualification/record-dcm25-checkpoint.py
+          git diff --check
+          python3 - <<'PYCODE'
+          import subprocess
+          changed = set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines())
+          assert changed == {'todo.json','qualification/completion-50.json'}, changed
+          PYCODE
+          git config user.name 'DCM reviewed-checkpoint automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add todo.json qualification/completion-50.json
+          git commit -m 'docs: close DCM-25 only after native Refresh and screenshot acceptance'
+          git push origin HEAD:refs/heads/release/v1.0.71
+          git rev-parse HEAD > checkpoint-commit.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dcm25-verified-checkpoint
+          path: |
+            checkpoint-commit.txt
+            todo.json
+            qualification/completion-50.json
+            checkpoint-exports/completion-50.md
+            qualification/dcm25-complete.md
+            qualification/evidence/dcm-25-native-summary.json
+          retention-days: 1

@@ -1,0 +1,25 @@
+name: Record verified queued-layout timing correction
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/record-sumatra-resize-timing.yml]
+permissions:
+  contents: write
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply exact locally validated metadata update
+        run: |
+          python qualification/record-sumatra-resize-timing.py
+          echo 'daa545c1f3d7afa076f5083815065eb9aa904a7deb9ccb5b0ea6c381c4beeaac  todo.json' | sha256sum -c -
+          echo '890d2c15e76ca5bd0efc360f40c63165b943243c9e2413c2fe96407643cfa5de  qualification/completion-50.json' | sha256sum -c -
+      - name: Commit metadata without force or publication
+        run: |
+          git config user.name 'DCM reviewed-checkpoint automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add todo.json qualification/completion-50.json
+          git commit -m 'test: record bounded resize backlog correction and retained gates'
+          git push origin HEAD:release/v1.0.71

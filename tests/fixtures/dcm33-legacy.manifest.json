@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "file": "dcm33-legacy.doc",
+  "sha256": "a6e70ab1c1c6db3d720f7fe12b8268e7c74f55e27c27f926be0f6bf3df2c3105",
+  "bytes": 18432,
+  "required_text": [
+    "DCM-33 LEGACY DOC",
+    "Inspection date: 14 November 2026",
+    "Bridge count: 7",
+    "Status: Ready for review"
+  ],
+  "format": "Word 97-2003 binary DOC exported with the MS Word 97 filter; observed FIB nFib is 0x0101",
+  "scope": "Single-page representative legacy DOC with four synthetic text paragraphs. Native Windows handler and unavailable-state acceptance are separate gates.",
+  "provenance": {
+    "kind": "original_synthetic",
+    "created_for": "DCM QuickSort DCM-33 legacy DOC qualification",
+    "personal_or_sensitive_data": false,
+    "third_party_fixture_used": false,
+    "content_origin": "All title, date, count and status text were authored for this qualification fixture. No third-party document content was imported.",
+    "production_source_modified": false,
+    "lenovo_conversion_used": false
+  },
+  "generator": {
+    "script": "dcm33-generate-legacy.py",
+    "script_sha256": "9cb74d9e4843064fcdc5c1891c639adc0f037bc6e7629c1d39a24e284ee28ee7",
+    "python_docx_version": "1.2.0",
+    "libreoffice_version": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+    "export_filter": "MS Word 97",
+    "command": "python tests/fixtures/dcm33-generate-legacy.py --output-dir <new-scratch-directory>",
+    "source_file": "dcm33-legacy.source.docx",
+    "source_bytes": 36811,
+    "source_sha256": "62a5637ee35f76788c9a09138f1e2cd12899795f9b8ea6d2fe0e14a29e061c3f",
+    "source_metadata_and_zip_timestamps": "Fixed at 2026-11-14; no post-export binary normalization",
+    "same_runtime_regeneration": {
+      "source_byte_identical": true,
+      "binary_byte_identical": true,
+      "independent_exports_compared": 2
+    },
+    "reproducibility_limit": "Two exports in this pinned runtime were byte-identical. Other LibreOffice versions, operating systems or environment settings are not guaranteed to produce the same bytes. Native qualification consumes the committed DOC and its pinned hash."
+  },
+  "structure": {
+    "cfbf_magic": "d0cf11e0a1b11ae1",
+    "cfbf_major_version": 3,
+    "sector_bytes": 512,
+    "streams": [
+      {
+        "name": "\u0001CompObj",
+        "bytes": 106
+      },
+      {
+        "name": "\u0001Ole",
+        "bytes": 20
+      },
+      {
+        "name": "1Table",
+        "bytes": 10559
+      },
+      {
+        "name": "\u0005SummaryInformation",
+        "bytes": 468
+      },
+      {
+        "name": "WordDocument",
+        "bytes": 3645
+      },
+      {
+        "name": "\u0005DocumentSummaryInformation",
+        "bytes": 172
+      }
+    ],
+    "fib_wIdent": "0xA5EC",
+    "fib_nFib": "0x0101",
+    "fib_nFibBack": "0x00BF",
+    "encrypted": false,
+    "table_stream": "1Table",
+    "csw": 14,
+    "cslw": 22,
+    "fc_lcb_pair_count": 136,
+    "ccpText": 93,
+    "fcClx": 8858,
+    "lcbClx": 21,
+    "piece_count": 1
+  },
+  "local_validation": {
+    "validator": "dcm33-validate-legacy.py",
+    "validator_sha256": "49389391022c24cee049c3ec4c5d12bede29e04d9126d56edb2fe05a98786f40",
+    "command": "python tests/fixtures/dcm33-validate-legacy.py",
+    "compound_file_reader": "xlrd 2.0.1",
+    "main_story_extraction": "Independent FIB -> CLX -> PlcPcd extraction from WordDocument, using the FIB-selected table stream; no LibreOffice or DCM code for text extraction",
+    "main_story_text": "DCM-33 LEGACY DOC\nInspection date: 14 November 2026\nBridge count: 7\nStatus: Ready for review\n",
+    "exact_required_paragraphs_match": true,
+    "source_and_export_rendered_locally": true,
+    "render_pages": 1,
+    "rendered_pdf_text_matches_required_paragraphs": true,
+    "source_and_export_png_identical": true,
+    "rendered_png_sha256": "977d078c39faa5b24f774b0dbf395ae788b71044f3cb15b750fb80b96c9ae5f1",
+    "visual_review": "Passed: all four lines are readable on one page, with no clipping, missing text or decorative title border. Source and binary export renders are identical.",
+    "native_office_acceptance": "not_run",
+    "negative_checks": {
+      "renamed_docx_rejected": true,
+      "incorrect_required_text_rejected": true
+    }
+  },
+  "format_references": [
+    {
+      "title": "LibreOffice File Conversion Filters Tables",
+      "url": "https://help.libreoffice.org/latest/en-US/text/shared/guide/convertfilters.html"
+    },
+    {
+      "title": "Microsoft MS-DOC FibBase",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/26fb6c06-4e5c-4778-ab4e-edbf26a545bb"
+    },
+    {
+      "title": "Microsoft MS-DOC How to read the FIB",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/acb08ace-f268-4879-a998-de592103a70e"
+    },
+    {
+      "title": "Microsoft MS-DOC FibRgFcLcb97",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/0c9df81f-98d0-454e-ad84-b612cd05b1a4"
+    },
+    {
+      "title": "Microsoft MS-DOC Retrieving Text",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/01d5d8c4-cf9c-4ef9-80fd-439e763cfe01"
+    }
+  ]
+}

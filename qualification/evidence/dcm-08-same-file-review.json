@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "app": "DCM QuickSort",
+  "step_id": "DCM-08",
+  "review_date": "2026-11-09",
+  "evidence_kind": "review_of_existing_native_run",
+  "new_native_execution": false,
+  "product_source_changed": false,
+  "tested_commit": "26eeaed3b9041a31b17c197ef2a095f53ee2a9e6",
+  "reviewed_branch_head": "290b4b6dc78929a49dc83ece0e11de49b29862ce",
+  "source_comparison": "Only five qualification/tracker files differ; no product, installer, test or runner source changes.",
+  "test_file": "app-src/d1_d6_file_safety_regression_test.go",
+  "test_blob": "79bc7d105fd96b7c018ba181381795cdbe4c9bb4",
+  "test_source_lines": [
+    1,
+    78
+  ],
+  "native_report": "C:\\FlowverseReports\\dcm-quicksort-regressions-20261109-151557-80d9f368",
+  "raw_log": "app-regressions.stdout.log",
+  "raw_log_reviewed_lines_1_based": [
+    1,
+    66
+  ],
+  "receipt": "receipt.json",
+  "receipt_reviewed_lines_1_based": [
+    185,
+    239
+  ],
+  "source_manifest_sha256": "3f9dd6e0f9fe7d518dbeaea6be8f2a1c8b3bda62d7e22231f06deea885af296d",
+  "source_unchanged": true,
+  "runtime": "go1.27.0 windows/amd64",
+  "selected_group": {
+    "top_level_tests": 21,
+    "passed": 21,
+    "failed": 0,
+    "skipped": 0,
+    "exit_code": 0,
+    "timed_out": false
+  },
+  "identity_matrix": {
+    "subtests": 15,
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0,
+    "included_in_selected_group": true
+  },
+  "assertions": [
+    "Every conflict action must return a non-nil error.",
+    "Read source and target after each action; both must contain exactly the original fixture bytes."
+  ],
+  "case_setup": [
+    "same-path uses the exact source path.",
+    "hard-link is created with os.Link and setup failure is fatal.",
+    "case-alias uses ORIGINAL.TXT for original.txt; this branch is Windows-only and none of its five cases skipped."
+  ],
+  "pass_events_transcribed_from_raw_log": [
+    {
+      "test": "TestD1ConflictActionsRefuseSameFileIdentity/same-path/inspect",
+      "action": "pass",
+      "time": "2026-11-09T20:46:36.3870208+05:30"
+    },
+    {
+      "test": "TestD1ConflictActionsRefuseSameFileIdentity/same-path/duplicate",
+      "action": "pass",
+      "time": "2026-11-09T20:46:36.3979765+05:30"
+    },
+    {
+      "test": "TestD1ConflictActionsRefuseSameFileIdentity/same-path/journaled-duplicate",
+      "action": "pass",
+      "time": "2026-11-09T20:46:36.4120866+05:30"
+    },
+    {
+      "test": "TestD1ConflictActionsRefuseSameFileIdentity/same-path/replace",
+      "action": "pass",
+      "time": "2026-11-09T20:46:36.4299485+05:30"
+    },
+    {
+      "test": "TestD1ConflictActionsRefuseSameFileIdentity/same-path/journaled-replace",
+      "action": "pass",
+      "time": "2026-11-09T20:46:36.4468897+05:30"
+    },
+    {
+      "test": "TestD1ConflictActionsRefuseSameFileIdentity/hard-link/inspect",
+      "action": "pass",
+      "time": "2026-11-09T20:46:36.4613179+05:30"
+    },
+    {
+      "test": "TestD1ConflictActionsRefuseSameFileIdentity/hard-link/duplicate",
+      "action": "pass",
+      "time": "2026-11-09T20:46:36.4811155+05:30"
+    },
+    {
+      "test": "TestD1ConflictActionsRefuseSameFileIdentity/hard-link/journaled-duplicate",
+      "action": "pass",
+      "time": "2026-11-09T20:46:36.4944301+05:30"
+    },
+    {
+      "test": "TestD1ConflictActionsRefuseSameFileIdentity/hard-link/replace",
+      "action": "pass",
+      "time": "2026-11-09T20:46:36.517583+05:30"
+    },
+    {
+      "test": "TestD1ConflictActionsRefuseSameFileIdentity/hard-link/journaled-replace",
+      "action": "pass",
+      "time": "2026-11-09T20:46:36.5432679+05:30"
+    },
+    {
+      "test": "TestD1ConflictActionsRefuseSameFileIdentity/case-alias/inspect",
+      "action": "pass",
+      "time": "2026-11-09T20:46:36.5520007+05:30"
+    },
+    {
+      "test": "TestD1ConflictActionsRefuseSameFileIdentity/case-alias/duplicate",
+      "action": "pass",
+      "time": "2026-11-09T20:46:36.5767681+05:30"
+    },
+    {
+      "test": "TestD1ConflictActionsRefuseSameFileIdentity/case-alias/journaled-duplicate",
+      "action": "pass",
+      "time": "2026-11-09T20:46:36.5954766+05:30"
+    },
+    {
+      "test": "TestD1ConflictActionsRefuseSameFileIdentity/case-alias/replace",
+      "action": "pass",
+      "time": "2026-11-09T20:46:36.6035299+05:30"
+    },
+    {
+      "test": "TestD1ConflictActionsRefuseSameFileIdentity/case-alias/journaled-replace",
+      "action": "pass",
+      "time": "2026-11-09T20:46:36.6153846+05:30"
+    }
+  ],
+  "parent_pass": {
+    "test": "TestD1ConflictActionsRefuseSameFileIdentity",
+    "action": "pass",
+    "time": "2026-11-09T20:46:36.6153846+05:30"
+  },
+  "limitations": [
+    "This compact transcription is not the complete raw report.",
+    "These 15 subtests are not 15 additional top-level tests.",
+    "No new product code or test run was needed for this review.",
+    "No visible UI, successful case-only Rename, standalone journal-state assertion, full-suite, installer, package or user acceptance is claimed."
+  ],
+  "next_step": "DCM-09"
+}

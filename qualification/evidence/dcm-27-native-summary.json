@@ -1,0 +1,299 @@
+{
+  "schema": 1,
+  "feature": "DCM-27",
+  "checkpoint_date_ist": "2026-11-11",
+  "tested_commit": "b92c9abdac87e7f9c937e51ca8e7023eae5e3417",
+  "product_fix_commit": "4043f3e564d5c22dbac8a318f4c7fc07de970a6f",
+  "newly_completed_steps": [
+    "DCM-27"
+  ],
+  "status": "complete_at_defined_acceptance_boundary",
+  "ui": {
+    "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-image-20261111-180336-6ac29363",
+    "passed": true,
+    "case_count": 23,
+    "rendered_pixel_cases": 19,
+    "error_state_cases": 3,
+    "source_handle_case": 1,
+    "fixture_count": 12,
+    "valid_image_fixtures": 10,
+    "invalid_image_fixtures": 2,
+    "app_exit_code": 0,
+    "children_drained": true,
+    "fixtures_unchanged": true,
+    "source_unchanged": true,
+    "destination_empty": true,
+    "operation_journal_empty": true,
+    "finished_utc": "2026-11-11T18:04:11.7237343Z"
+  },
+  "baseline": {
+    "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-baseline-20261111-180442-7445a134",
+    "commit": "b92c9abdac87e7f9c937e51ca8e7023eae5e3417",
+    "count": 363,
+    "passed": 362,
+    "failed": 0,
+    "skipped": [
+      "TestRealGeneratedPPTXIntegration"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "source_unchanged": true
+  },
+  "regressions": [
+    {
+      "selector": "ui-text",
+      "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-text-20261111-180536-a3ca65d5",
+      "passed": true,
+      "case_count": 17,
+      "new_images_reviewed": false,
+      "source_unchanged": true
+    },
+    {
+      "selector": "ui-navigation",
+      "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-navigation-20261111-180557-b7ac0fc1",
+      "passed": true,
+      "case_count": 22,
+      "new_images_reviewed": false,
+      "source_unchanged": true
+    }
+  ],
+  "build": {
+    "receipt": "D:\\FlowverseReportsRepo\\dcm-quicksort-build-20261111-180146-fc67e68b\\receipt.json",
+    "receipt_sha256": "af23dfbaeaf5356ae4c152cd23e1ffe12fe0d354a427c87f52a783bfdbfddd5e",
+    "app_sha256": "2f579ceba816c1f48853a688fe18ba0e48589f0877deaca3ca836dd47b25d5c2",
+    "size_bytes": 7185920,
+    "source_manifest_files": 286,
+    "source_manifest_sha256": "78c26e8b8cbcb1486dcf422096d383077c4832ecab4cee9e9dcfeba2cfff97e3"
+  },
+  "visual_review": {
+    "method": "All 22 final captures individually opened and inspected through the remote image reader. No OCR. Raw visual_reviewed flags were not changed.",
+    "raw_visual_reviewed": false,
+    "reviewed_images": [
+      {
+        "name": "DCM-27-11-empty.png",
+        "file": "DCM-27-11-empty.png-attempt-1.png",
+        "sha256": "bced0f581fe5c0430adb0848a1439f6054473e44ff6ba608e27dc28dd609e053",
+        "reviewed": true
+      },
+      {
+        "name": "DCM-27-12-corrupt.jpg",
+        "file": "DCM-27-12-corrupt.jpg-attempt-1.png",
+        "sha256": "57f42aa2b3228c97a573673e0e9116b84f8c98a813ba7f09f0803d9616818be8",
+        "reviewed": true
+      },
+      {
+        "name": "DCM-27-fit-01-landscape.png",
+        "file": "DCM-27-fit-01-landscape.png-attempt-1.png",
+        "sha256": "d0dad4ad034696fd61e2cefba250e5dce837435be5eeac4efdabcb4824991778",
+        "reviewed": true
+      },
+      {
+        "name": "DCM-27-fit-02-portrait.jpg",
+        "file": "DCM-27-fit-02-portrait.jpg-attempt-1.png",
+        "sha256": "364e4b937a4ae57704a6f803c9fb69b9fd88f41ed875f2b6ea5c30479c85dbfe",
+        "reviewed": true
+      },
+      {
+        "name": "DCM-27-fit-03-square.jpeg",
+        "file": "DCM-27-fit-03-square.jpeg-attempt-1.png",
+        "sha256": "1e7c8eeb0cc7817dc2be6c391d90bddb37ef8638417f28eb9b29a45fe74741b2",
+        "reviewed": true
+      },
+      {
+        "name": "DCM-27-fit-04-landscape.bmp",
+        "file": "DCM-27-fit-04-landscape.bmp-attempt-1.png",
+        "sha256": "b64ba227f1b320b78b9f3a8d4221fddd2cbe532d74e19bd5205c96999882d6e3",
+        "reviewed": true
+      },
+      {
+        "name": "DCM-27-fit-05-static.gif",
+        "file": "DCM-27-fit-05-static.gif-attempt-1.png",
+        "sha256": "b0eeb4435c7bb48e9360cad55469fb0856c1b93539ee1c4b3efe9aa08a14c6c4",
+        "reviewed": true
+      },
+      {
+        "name": "DCM-27-fit-06-portrait.tif",
+        "file": "DCM-27-fit-06-portrait.tif-attempt-1.png",
+        "sha256": "326111467cb21e4c49f7a2178449f1c90a01c8a2d17a9949185903a5283bc3c4",
+        "reviewed": true
+      },
+      {
+        "name": "DCM-27-fit-07-square.tiff",
+        "file": "DCM-27-fit-07-square.tiff-attempt-1.png",
+        "sha256": "ee4ea845f298aefdd72b3548d4af2d16c93cfa0058e7658dad17d3b330946faf",
+        "reviewed": true
+      },
+      {
+        "name": "DCM-27-fit-08-alpha.PNG",
+        "file": "DCM-27-fit-08-alpha.PNG-attempt-1.png",
+        "sha256": "2cc11c3506745ab113c9475ee69d8e246a704ad2743b62a83d4008fe4dbd6f3b",
+        "reviewed": true
+      },
+      {
+        "name": "DCM-27-fit-09-large.png",
+        "file": "DCM-27-fit-09-large.png-attempt-1.png",
+        "sha256": "45f15a710c25935edce4db0be54de4ef055b092be66b67910a564010c8179144",
+        "reviewed": true
+      },
+      {
+        "name": "DCM-27-fit-10-next.png",
+        "file": "DCM-27-fit-10-next.png-attempt-1.png",
+        "sha256": "16de9d245eebdd5940597a9506ef11c41c69f44624a9b2a43a3a4e5803be8d6e",
+        "reviewed": true
+      },
+      {
+        "name": "DCM-27-portrait-fit-width-top",
+        "file": "DCM-27-portrait-fit-width-top-attempt-1.png",
+        "sha256": "259a5c5dfc0fe50b5dfaf4df2ec10b051b0da6c9dd15ea4fb885a3a99dde39e2",
+        "reviewed": true
+      },
+      {
+        "name": "DCM-27-100-percent",
+        "file": "DCM-27-100-percent-attempt-1.png",
+        "sha256": "7eb142d304ed91826376626da373f92ec51479304b8a2bcd4731cd9cb62c9941",
+        "reviewed": true
+      },
+      {
+        "name": "DCM-27-110-percent",
+        "file": "DCM-27-110-percent-attempt-1.png",
+        "sha256": "ee890d3bd5eefcfeaba5426bbf5d3b9c71511d6495c79754bb50c78063cb5b62",
+        "reviewed": true
+      },
+      {
+        "name": "DCM-27-minus-back-to-100",
+        "file": "DCM-27-minus-back-to-100-attempt-1.png",
+        "sha256": "ecc0ad40b480da4066166322988b0f1b5b6658fd3e89eea956e439aecee363b2",
+        "reviewed": true
+      },
+      {
+        "name": "DCM-27-fit-restored",
+        "file": "DCM-27-fit-restored-attempt-1.png",
+        "sha256": "70bb876a8c3e60e4b084c96febfd68b81e206da9f394d66d2773658f5ceb18bd",
+        "reviewed": true
+      },
+      {
+        "name": "DCM-27-large-100-centered",
+        "file": "DCM-27-large-100-centered-attempt-1.png",
+        "sha256": "bcac2411dc148379e155d75518df2b6ec5280ab82e3181fc882d43afa335fdf6",
+        "reviewed": true
+      },
+      {
+        "name": "DCM-27-large-pan",
+        "file": "DCM-27-large-pan-attempt-1.png",
+        "sha256": "221feb2478bb620f63944413a581474190af5989fe21434029cc6fd4a896e894",
+        "reviewed": true
+      },
+      {
+        "name": "DCM-27-next-resets-zoom-pan",
+        "file": "DCM-27-next-resets-zoom-pan-attempt-1.png",
+        "sha256": "0ae424e91fc4eec76ec5580dba73842c85d2a846daa194d3a516b1dd25f9c4b1",
+        "reviewed": true
+      },
+      {
+        "name": "DCM-27-sharing-violation",
+        "file": "DCM-27-sharing-violation-attempt-1.png",
+        "sha256": "c4ed141f217b8d59b2be40989b766e46bbb45f3512a2672ca451c3c9bf5dbbdc",
+        "reviewed": true
+      },
+      {
+        "name": "DCM-27-read-recovery",
+        "file": "DCM-27-read-recovery-attempt-1.png",
+        "sha256": "01e2338458d8a6988ef41a259ee571c6b118f0f6668f8c0fb2f32242b1e3ac31",
+        "reviewed": true
+      }
+    ],
+    "capture_attempts": 22,
+    "failed_capture_attempts": 0,
+    "capture_retries_used": 0,
+    "remaining_findings": [
+      "DCM-UI-LABEL-01"
+    ]
+  },
+  "retained_product_red": {
+    "commit": "2dc099d51efc17aafc7ebe46ee40e322fefc2876",
+    "original_report": "C:\\FlowverseReports\\dcm-quicksort-ui-image-20261111-163352-b5f8d3b3",
+    "current_location": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-image-20261111-163352-b5f8d3b3",
+    "error": "DCM27_TRUTHFUL_ERROR_MISSING: DCM-27-11-empty.png",
+    "failure_image_sha256": "a71cba6e8930b3795a539d801ecd2f789ed6510c9ea39af7a7ad79c3e5042c9a",
+    "failure_image_reviewed": true,
+    "observed": "Empty PNG misreported as no installed Windows PNG preview handler, with stale image-fit footer."
+  },
+  "prior_unsuccessful_reports": [
+    {
+      "suffix": "20261111-162119-9f5ce0d5",
+      "error": "Expected owned image renderer status.",
+      "cause": "not independently classified in this retry"
+    },
+    {
+      "suffix": "20261111-162652-248acfbc",
+      "error": "Window minimized during capture"
+    },
+    {
+      "suffix": "20261111-162746-90307cb9",
+      "error": "Window text deadline"
+    },
+    {
+      "suffix": "20261111-162931-fdfa175a",
+      "error": "Refusing minimized/hidden capture"
+    },
+    {
+      "suffix": "20261111-164121-de968742",
+      "error": "Window minimized during capture"
+    },
+    {
+      "suffix": "20261111-164401-7b26194d",
+      "error": "Refusing minimized/hidden capture"
+    }
+  ],
+  "scope": {
+    "formats": [
+      "PNG",
+      "JPG/JPEG",
+      "BMP",
+      "static GIF",
+      "single-page TIF/TIFF"
+    ],
+    "sizing": [
+      "Fit",
+      "Fit Width top alignment",
+      "100%",
+      "110%",
+      "minus back to 100%",
+      "Fit recovery"
+    ],
+    "pan": "Owned native drag messages, not physical mouse-input qualification.",
+    "navigation": "Next resets image zoom/pan; separate full navigation regression passes.",
+    "not_certified": [
+      "animated GIF playback",
+      "multi-page TIFF navigation",
+      "every codec variant",
+      "all EXIF orientation/color-profile cases",
+      "all DPI/window-size combinations",
+      "physical-input or human acceptance",
+      "final package/installer",
+      "DCM-28 PDF UI"
+    ],
+    "transparency": "One PNG fixture with a fully transparent quadrant; no general semi-transparent blending certification."
+  },
+  "retry_changes": {
+    "product_code_changed": false,
+    "test_code_changed": false,
+    "checkpoint_metadata_only": true,
+    "canonical_workspace": "D:\\FlowverseReportsRepo",
+    "old_workspace_alias": "C:\\FlowverseReports",
+    "old_path_update_error": "not a repository root",
+    "old_path_attempt_changed_files": false
+  },
+  "open_gates": [
+    "DCM-19",
+    "DCM-UI-LABEL-01",
+    "external DCM_REAL_PPTX fixture",
+    "remaining workflow and preview checks",
+    "final package and installer lifecycle",
+    "human user acceptance"
+  ],
+  "user_acceptance": "not_recorded",
+  "merged": false,
+  "published": false,
+  "next_step": "DCM-28"
+}

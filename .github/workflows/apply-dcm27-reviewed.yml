@@ -1,0 +1,51 @@
+name: Apply reviewed DCM-27 patch
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths:
+      - qualification/proposed-fixes/dcm27-reviewed.json
+      - .github/workflows/apply-dcm27-reviewed.yml
+permissions:
+  contents: write
+concurrency:
+  group: dcm27-reviewed-patch
+  cancel-in-progress: false
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/v1.0.71
+      - name: Apply exact locally authored replacements
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 - <<'PY'
+          import hashlib,json,pathlib,subprocess
+          proposal=json.loads(pathlib.Path('qualification/proposed-fixes/dcm27-reviewed.json').read_text())
+          allowed={'app-src/main_windows.go','tools/test-ui-image.ps1','tests/native/dcm-image-probe.cs'}
+          paths=[item['path'] for item in proposal['files']]
+          assert paths and len(paths)==len(set(paths)) and set(paths)<=allowed
+          pending=[]
+          for item in proposal['files']:
+              p=pathlib.Path(item['path']);raw=p.read_bytes()
+              assert hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()==item['before_blob'], ('base changed',str(p))
+              text=raw.decode('utf-8')
+              for change in item['replacements']:
+                  assert text.count(change['old'])==1, ('ambiguous replacement',str(p))
+                  text=text.replace(change['old'],change['new'])
+              data=text.encode('utf-8')
+              assert hashlib.sha256(data).hexdigest()==item['after_sha256'], ('output mismatch',str(p))
+              pending.append((p,data))
+          for p,data in pending:p.write_bytes(data)
+          assert set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines())==set(paths)
+          PY
+          git diff --check
+          git config user.name 'DCM reviewed-patch automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app-src/main_windows.go tools/test-ui-image.ps1 tests/native/dcm-image-probe.cs
+          git commit -m 'fix: apply exact reviewed DCM-27 changes'
+          git push origin HEAD:refs/heads/release/v1.0.71

@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "feature": "DCM-SUMATRA-LIFECYCLE-01",
+  "date_ist": "2026-11-12",
+  "source": "deb8373dbb52c44d963f20fce49b9ea074f7d59e",
+  "product_code_changed": false,
+  "numbered_steps_closed": [],
+  "lifecycle_runs": [
+    {"report":"D:\\FlowverseReportsRepo\\dcm-quicksort-ui-sumatra-lifecycle-20261112-093613-56838102","receipt_sha256":"f3191f9bbcfd419cbfc2f9167020034a3395cdc679249faa39023415e83a3d6d","passed":true,"case_count":11,"selections":40,"observed_loading_cancellations":10,"attached_switch_cycles":4,"recorded_attached_viewers":11,"capture_count":10,"reviewed_captures":10,"exit_code":0,"close_ms":393,"source_unchanged":true,"fixtures_preserved":true,"private_viewers_remaining":0,"session_profiles_remaining":0,"journal_empty":true},
+    {"report":"D:\\FlowverseReportsRepo\\dcm-quicksort-ui-sumatra-lifecycle-20261112-093758-712f52cb","receipt_sha256":"bbf390605052dea48ede19b3ff5a2453a4e19dff826df4ea0e1dba294dc57dec","passed":true,"case_count":11,"selections":40,"observed_loading_cancellations":10,"attached_switch_cycles":4,"recorded_attached_viewers":11,"capture_count":10,"reviewed_captures":0,"exit_code":0,"close_ms":374,"source_unchanged":true,"fixtures_preserved":true,"private_viewers_remaining":0,"session_profiles_remaining":0,"journal_empty":true}
+  ],
+  "baseline": {"report":"D:\\FlowverseReportsRepo\\dcm-quicksort-baseline-20261112-093728-3abdf19f","receipt_sha256":"6ec266c1d0e81f22b811ca92756d1208f6c008694cb24452588b36654c9797aa","count":368,"passed":367,"failed":0,"skipped":["TestRealGeneratedPPTXIntegration"],"exit_code":0,"timed_out":false,"source_unchanged":true},
+  "existing_sumatra_regression": {"report":"D:\\FlowverseReportsRepo\\dcm-quicksort-ui-sumatra-20261112-093827-5a51793c","receipt_sha256":"42f7a2ae8f935ac39db7d3027d9779dec2bdfc2c2a471abd6c569b36b6d60ea7","passed":true,"case_count":23,"exit_code":0,"source_unchanged":true,"images_reviewed":false},
+  "build": {"receipt":"D:\\FlowverseReportsRepo\\dcm-quicksort-build-20261112-093555-d16a9c40\\receipt.json","receipt_sha256":"d15f6b024c9cc893e1f916813cbaeb930880408d75170e6e24f06b1f2a9cd3ab","app_sha256":"a2bd4063a063431b8267a0ff50ed9157caea74ef3b965b391a6adc08d393a463","bytes":7230464,"manifest_files":311,"manifest_sha256":"5d6677651bf3ab112f45f048c4d1bd86afb01216234a03bd2b8a096920563d51"},
+  "visual_review": {
+    "full_images":7,"content_crops":3,"raw_flags_modified":false,
+    "image_sha256": {
+      "01-pdf-A.png":"d61efedbeb30be48a3f3670929516b4dd5f6261feda0b48eee460a7333b01e57",
+      "01-pdf-A-content.png":"9aeb5833208aae2b0c555dcafae79b7e6a3840b667582f79d64f9d77ae98ed23",
+      "02-direct-switch-B.png":"7b353afe78c409b642d02bd829a35b8bb3b866fc90152375c9547cb26576b2c0",
+      "02-direct-switch-B-content.png":"e3b5c70e2c5e204a72f7a2a5c9e387687e47153b31ed3057aae04b98ae974f7a",
+      "03-text-after-PDF.png":"0b9140bfca5485b85599af838155f69d37745a9fe29ad7e7d5a5aea7b07d4fb4",
+      "04-loading-cancelled-to-text.png":"0b9140bfca5485b85599af838155f69d37745a9fe29ad7e7d5a5aea7b07d4fb4",
+      "05-empty-PDF-error.png":"08e438db3574d709d7a3915a087c45a507b3d25f58c5211678c32aa58e0cca6a",
+      "06-invalid-PDF-error.png":"84783ce86f69f1d6278baac42399f4c3d92448ec65d31475d8c0f7b4805f3ed4",
+      "07-valid-PDF-recovery-before-close.png":"7b353afe78c409b642d02bd829a35b8bb3b866fc90152375c9547cb26576b2c0",
+      "07-valid-PDF-recovery-before-close-content.png":"e3b5c70e2c5e204a72f7a2a5c9e387687e47153b31ed3057aae04b98ae974f7a"
+    }
+  },
+  "limits":["bounded two-PDF fixture, not long-run stress or physical-user acceptance","cancel by changing selection while host reports loading; no Cancel button implied","no valid-header corrupt/password PDF, crash or denied-release coverage","Undo, 100% readable-text scrolling and final packaging remain pending"],
+  "default_changed":false,"runtime_bundled":false,"user_acceptance":"not_recorded","merged":false,"published":false
+}
