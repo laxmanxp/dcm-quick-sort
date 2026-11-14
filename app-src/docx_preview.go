@@ -333,22 +333,45 @@ func parseDOCXTable(dec *xml.Decoder, start xml.StartElement, styles map[string]
 }
 
 func parseDOCXDocument(data []byte, styles map[string]string, rels map[string]OpenXMLRelationship) ([]docxBlock, DOCXPreviewStats, error) {
+	// XML permits one UTF-8 byte-order mark before the document.
+	data = bytes.TrimPrefix(data, []byte{0xef, 0xbb, 0xbf})
 	dec := xml.NewDecoder(bytes.NewReader(data))
 	blocks := []docxBlock{}
 	stats := DOCXPreviewStats{}
 	inBody := false
+	documentSeen, bodySeen := false, false
+	documentNamespace := ""
+	depth := 0
 	for {
 		tok, err := dec.Token()
 		if err != nil {
 			if err == io.EOF {
+				if !documentSeen || !bodySeen {
+					return nil, stats, fmt.Errorf("parse DOCX document: document and body elements are required")
+				}
 				return blocks, stats, nil
 			}
 			return nil, stats, fmt.Errorf("parse DOCX document: %w", err)
 		}
 		switch t := tok.(type) {
 		case xml.StartElement:
+			depth++
+			if depth == 1 {
+				if documentSeen || t.Name.Local != "document" ||
+					(t.Name.Space != "http://schemas.openxmlformats.org/wordprocessingml/2006/main" &&
+						t.Name.Space != "http://purl.oclc.org/ooxml/wordprocessingml/main") {
+					return nil, stats, fmt.Errorf("parse DOCX document: expected one Word document root")
+				}
+				documentSeen = true
+				documentNamespace = t.Name.Space
+				continue
+			}
 			switch t.Name.Local {
 			case "body":
+				if depth != 2 || t.Name.Space != documentNamespace || bodySeen {
+					return nil, stats, fmt.Errorf("parse DOCX document: expected one body directly inside the document")
+				}
+				bodySeen = true
 				inBody = true
 			case "p":
 				if inBody {
@@ -356,6 +379,7 @@ func parseDOCXDocument(data []byte, styles map[string]string, rels map[string]Op
 					if err != nil {
 						return nil, stats, err
 					}
+					depth-- // parseDOCXParagraph consumed </p>
 					stats.Paragraphs++
 					stats.Images += p.Images
 					if p.HeadingLevel > 0 {
@@ -369,6 +393,7 @@ func parseDOCXDocument(data []byte, styles map[string]string, rels map[string]Op
 					if err != nil {
 						return nil, stats, err
 					}
+					depth-- // parseDOCXTable consumed </tbl>
 					stats.Paragraphs += tableStats.Paragraphs
 					stats.Headings += tableStats.Headings
 					stats.Tables += tableStats.Tables
@@ -377,8 +402,13 @@ func parseDOCXDocument(data []byte, styles map[string]string, rels map[string]Op
 				}
 			}
 		case xml.EndElement:
-			if t.Name.Local == "body" {
+			if depth == 2 && t.Name.Local == "body" {
 				inBody = false
+			}
+			depth--
+		case xml.CharData:
+			if depth == 0 && len(bytes.TrimSpace(t)) != 0 {
+				return nil, stats, fmt.Errorf("parse DOCX document: text outside the document root")
 			}
 		}
 	}

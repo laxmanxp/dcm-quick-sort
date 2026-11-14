@@ -3,13 +3,15 @@ param(
     [ValidateSet('baseline','regressions','installer-unit','installer-regressions','installer-integration','build','package','format')]
     [string]$Mode = 'baseline',
     [string]$Run = '^Test(D[1-6]|Release)',
-    [string]$ExpectedBranch = 'release/v1.0.71'
+    [string]$ExpectedBranch = 'release/v1.0.71',
+    [switch]$CaptureDOCXComponent
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 if ($env:OS -ne 'Windows_NT') { throw 'DCM qualification must run natively on Windows through FlowDev.' }
 if (-not [Environment]::Is64BitProcess) { throw 'Use 64-bit PowerShell for the Windows amd64 candidate.' }
 if (-not $env:FLOWDEV_WORKSPACE_ROOT) { throw 'FLOWDEV_WORKSPACE_ROOT must be set by the selected FlowDev profile.' }
+if ($CaptureDOCXComponent -and ($Mode -ne 'regressions' -or $Run -cne '^TestDCM34DOCXFallbackComponent$')) { throw 'DOCX component capture requires its exact focused native test.' }
 
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $workspace = [IO.Path]::GetFullPath($env:FLOWDEV_WORKSPACE_ROOT)
@@ -67,6 +69,10 @@ function Invoke-OwnedCommand([string]$Name, [string]$File, [string[]]$Arguments,
     $psi.EnvironmentVariables['APPDATA'] = Join-Path $report 'profile\roaming'
     $psi.EnvironmentVariables['DCM_QUICKSORT_BACKUP_DIR'] = Join-Path $report 'configuration-backups'
     $psi.EnvironmentVariables['DCM_INSTALLER_EVIDENCE_ROOT'] = Join-Path $report 'installer-engine'
+    # Test-binary output only; the production application does not consume this.
+    # Other selectors keep component assertions hidden and do not claim images.
+    $psi.EnvironmentVariables.Remove('DCM_DOCX_COMPONENT_EVIDENCE_ROOT')
+    if ($CaptureDOCXComponent) { $psi.EnvironmentVariables['DCM_DOCX_COMPONENT_EVIDENCE_ROOT'] = Join-Path $report 'docx-component' }
     $proc = New-Object Diagnostics.Process
     $proc.StartInfo = $psi
     $entry = [ordered]@{name=$Name; file=$File; arguments=$Arguments; directory=$Directory; started_utc=[DateTime]::UtcNow.ToString('o'); stdout=$outPath; stderr=$errPath; timed_out=$false}

@@ -4927,6 +4927,10 @@ func loadPreview(path string) {
 		return
 	}
 
+	loadOfficeFallbackPreview(path, hasHandler)
+}
+
+func loadOfficeFallbackPreview(path string, handlerRegistered bool) {
 	// Prefer Windows' native Office preview when available. If it is missing or
 	// fails, DCM renders the actual DOCX body locally from the Open XML package.
 	// XLSX now has a built-in grid fallback with sheet switching; PPTX now has a built-in slide renderer with navigation, text, tables and embedded images.
@@ -4953,7 +4957,7 @@ func loadPreview(path string) {
 		}
 	}
 
-	showPreviewUnavailable(path, hasHandler)
+	showPreviewUnavailable(path, handlerRegistered)
 }
 
 func showPreviewUnavailable(path string, handlerRegistered bool) {

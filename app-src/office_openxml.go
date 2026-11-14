@@ -406,6 +406,13 @@ func officeFoundationPreviewText(path string) (string, bool) {
 	if err != nil {
 		return "", false
 	}
+	if info.Kind == OpenXMLWord {
+		// Package metadata cannot turn a rejected DOCX body into a successful
+		// preview. Use the same bounded renderer contract, including blank files.
+		if _, _, err := renderDOCXPreview(path); err != nil {
+			return "", false
+		}
+	}
 
 	lines := []string{
 		"DCM Office Preview",

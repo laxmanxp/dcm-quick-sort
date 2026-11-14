@@ -18,3 +18,12 @@ and retain exact source manifests, JSON test events and failure receipts.
 policy. A successful Word preview in that workflow does not certify the built-in
 fallback on a missing-handler machine; record that scope separately. These
 selectors do not change Office registrations or introduce a provider override.
+
+`flowdev test dcm-quicksort docx-fallback-component` runs the exact production
+fallback function and preview painter in a visible, owned test window. It saves
+screen captures, control state, fixture hashes and the test executable identity
+under the native report's `docx-component/` directory. A separate image review
+is required. This is Windows component acceptance, not normal-application
+installed/absent-provider qualification. It does not invoke Office or modify
+registry keys. In other selectors the same assertions use hidden controls and
+do not capture images or claim headed acceptance.
