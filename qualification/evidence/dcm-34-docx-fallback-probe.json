@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "feature": "DCM-34-DOCX-FALLBACK-01",
+  "status": "OPEN_UNFIXED",
+  "source": "9afb15b120befcf11aba5aa5b83e4ab39e598934",
+  "native_execution": false,
+  "production_source_modified": false,
+  "top_level": {
+    "pass": 1,
+    "fail": 1,
+    "skip": 0
+  },
+  "leaf": {
+    "pass": 13,
+    "fail": 10,
+    "skip": 0
+  },
+  "diagnostic_test_sha256": "1a8a927fb5eaec2f8ff005934e5bbb86183cb032543f7da1659b8ff6520a6d1b",
+  "observed": [
+    "Empty main XML, missing document element and missing body incorrectly return successful zero-body DOCX preview and foundation metadata.",
+    "Malformed XML is rejected by the DOCX renderer/wrapper, then officeFoundationPreviewText returns success and Open XML package validated."
+  ],
+  "passing_controls": [
+    "Valid blank document",
+    "Missing main part rejected",
+    "All five valid DOCX after-damage controls recover expected body content"
+  ],
+  "scope": "Function-level fallback diagnosis only; no installed Word handler or headed Windows recovery claim.",
+  "smallest_next_fix": "Do not convert rejected DOCX content into metadata-only success; preserve valid blank content and native-first behavior.",
+  "report_evidence_pending_publication": true
+}

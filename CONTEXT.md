@@ -22,6 +22,24 @@ The DCM-31 completion record is now published at
 that exact commit. Its production tests remain bound to `ec7a0234`, and its
 report bundle is confirmed at `69fee755a94468165018b499fe7d876779e57ec8`.
 
+### DCM-34 in progress: default PDF damage and recovery
+
+The first new slice targets a header-valid damaged PDF through the default
+Windows.Data.Pdf path, including its real Windows-handler fallback and exact
+TXT/valid-PDF recovery. Existing text/image and optional Sumatra error evidence
+remains at its recorded provider/source scope. Local focused PDF tests pass
+14 top-level tests, including three new parents with 23 subcases. The Windows
+test binary also cross-compiles; the new native milestone is pending. No renderer change is asserted by those tests.
+
+A separate local probe at `9afb15b` confirms open defect
+`DCM-34-DOCX-FALLBACK-01`: malformed DOCX rejected by the body renderer can regain
+success through the metadata foundation fallback; empty/missing document/body
+also reports zero-body success. The retained probe has 10 failing and 13 passing
+leaf cases. Valid blank and recovery controls pass. This remains unfixed and
+is not a claim about the installed Word handler. See
+[the DCM-34 checkpoint](qualification/dcm34-preview-failures.md).
+**DCM-34 remains PARTIAL; 32 complete / 18 remaining.**
+
 ### DCM-33 accepted DOC milestone
 
 **The shared unavailable-footer fix and representative native DOC milestone

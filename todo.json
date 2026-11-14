@@ -38,7 +38,7 @@
       "DCM-33"
     ],
     "next_step": "DCM-34",
-    "checkpoint": "qualification/dcm33-legacy-office.md",
+    "checkpoint": "qualification/dcm34-preview-failures.md",
     "blocked_steps": ["DCM-19"],
     "active_blockers": ["DCM-EXPLORER-ISOLATION-01"],
     "next_runnable_step": "DCM-34",
@@ -65,6 +65,20 @@
     "native_regression_commit": "4619e0ef2bed51b7685c5f84d0fc0f87702bb1ca",
     "native_regression_result": "23 top-level app regressions: 23 passed, 0 failed, 0 skipped, exit 0, no timeout, source unchanged. DCM-12 adds invalid-template-package coverage; all three D4 parent tests and five nested cases passed. All earlier safety tests remain GREEN. Full app/installer/UI/package qualification remains open.",
     "last_native_attempt": "DCM-33 complete within bounded representative DOC/XLS/PPT and shared unavailable-contract scope. At 8704a1bdd930886a9ae4d0849822add0088603d8, ui-tooling 143912-47769611 passes 32 script parses, native helper compilation, 9 binding guards and 2 exact title contracts; build 143916-26f42fd5 binds 468 source files and the unchanged 7367168-byte app hash d8df2a791b736ecbee517f7efaff742a5b64271516c97fed96cc604a7ee45b7b. ui-legacy-ppt 143934-8e80521d passes 8 records, 18 captures, 8 native attempts and 2 scoped PageDown/PageUp actions. All 18 final images are separately reviewed (10 full-window frames and 8 same-frame crops): Bridge Inspection/September 2026/image, Payments 125000 / 86000, 1 -> 2 -> 1, TXT recovery and reopening are correct. Native source/archive audit passes 68 checks and image-integrity audit 185 checks. Initial 87788e3 legacy units 143403-3dcb113d pass 4 top-level / 33 leaf cases, with zero failures/skips; these units were not rerun after the final helper/tooling-only correction. Initial UI 143622-814c1f0b retains its exact-title harness failure, 2 reviewed history images, no navigation and normal exit 0; the observed legacy Compatibility Mode suffix is now pinned without relaxing ownership guards. No product defect or production fix is claimed. Source/fixtures/registry unchanged, journal empty, presentation released, final host exit 0; raw feature/format/review flags remain false. Complete for representative installed-handler DOC/XLS/PPT at the observed Lenovo geometry, supported by the unchanged all-format missing/failed-handler routing and presenter units plus the separately reviewed shared unavailable UI control in the DOC milestone. This closes only DCM-33: 32 complete/18 remaining; next DCM-34. DCM-19 remains blocked. Separate headed absent/failing-provider environments, broader damaged/protected/cancellation/lifecycle coverage, arbitrary fidelity, user acceptance and release remain open.",
+    "dcm34_progress_checkpoint": {
+      "status": "PARTIAL",
+      "milestone": "Default PDF damaged-file preview and recovery",
+      "starting_source": "9afb15b120befcf11aba5aa5b83e4ab39e598934",
+      "local_pdf_units": "14 top-level tests pass, including 3 new parents with 23 subcases and 11 standalone existing PDF tests (34 terminal leaves); no failures/skips; protocol-only checks",
+      "native_acceptance": "pending",
+      "production_renderer_changed": false,
+      "separate_open_defect": "DCM-34-DOCX-FALLBACK-01",
+      "numbered_plan": {
+        "complete": 32,
+        "remaining": 18
+      },
+      "evidence": "qualification/dcm34-preview-failures.md"
+    },
     "dcm33_native_acceptance_checkpoint": {
       "status": "passed_with_separate_image_review",
       "completion": "complete",
@@ -748,6 +762,8 @@
     "dcm31_initial_summary": "qualification/evidence/dcm-31-initial-summary.json",
     "dcm31_completion": "qualification/dcm31-complete.md",
     "dcm31_native_summary": "qualification/evidence/dcm-31-native-summary.json",
+    "dcm34_checkpoint": "qualification/dcm34-preview-failures.md",
+    "dcm34_docx_fallback_probe": "qualification/evidence/dcm-34-docx-fallback-probe.json",
     "dcm33_checkpoint": "qualification/dcm33-legacy-office.md",
     "dcm33_doc_native_summary": "qualification/evidence/dcm-33-doc-native-summary.json",
     "dcm33_xls_native_summary": "qualification/evidence/dcm-33-xls-native-summary.json",
@@ -759,6 +775,7 @@
     "dcm31_outer_fix_reports": "https://github.com/laxmanxp/flowverse-reports/tree/main/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023"
   },
   "items": [
+    {"id": "DCM-34-DOCX-FALLBACK-01", "feature": "Prevent damaged DOCX content from regaining success through the metadata fallback", "status": "planned", "ui_test": "not_run", "user_test": "not_recorded", "release_gate": true, "existing_evidence": "Local probe at9afb15b:2parents(1pass/1fail),23leaves(13pass/10fail). Empty/missing document/body report success; malformed XML is rejected by renderer then accepted by foundation. Valid blank/missing-part guards and5valid-after-damage controls pass. No production fix or native provider claim.", "acceptance": "Rejected DOCX content must not be presented as a validated/ready document by the later metadata fallback. Preserve legitimate blank documents, normal body rendering and native-first handler policy; add source-bound unit and Windows acceptance evidence.", "evidence_refs": ["dcm34_checkpoint", "dcm34_docx_fallback_probe"], "parent_ids": ["DCM-PREVIEW-01"]},
     {
       "id": "DCM-SOURCE-01",
       "feature": "Establish canonical source and installer provenance",

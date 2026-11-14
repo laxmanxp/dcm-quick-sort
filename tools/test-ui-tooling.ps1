@@ -64,6 +64,19 @@ try{
     $receipt['native_presentation_title_contracts']=$nativeTitleContracts
     Add-Type -Path (Join-Path $repo 'tests/native/dcm-preview-geometry.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')
     $receipt['preview_geometry_compiled']=$true
+    # Dependencies used by the focused default-PDF failure/recovery gate.
+    # These are read-only observations and owned-list input; no app is launched.
+    Add-Type -Path (Join-Path $repo 'tests/native/dcm-undo-input.cs')
+    Add-Type -AssemblyName UIAutomationClient;Add-Type -AssemblyName UIAutomationTypes;Add-Type -AssemblyName WindowsBase
+    Add-Type -Path (Join-Path $repo 'tests/native/dcm-docx-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll',([Windows.Automation.AutomationElement]).Assembly.Location,([Windows.Automation.AutomationPattern]).Assembly.Location,([Windows.Point]).Assembly.Location)
+    $receipt['pdf_failure_dependencies_compiled']=$true
+    $damagedPath=Join-Path $repo 'tests/fixtures/dcm34-damaged.pdf'
+    $damagedManifest=Get-Content -LiteralPath (Join-Path $repo 'tests/fixtures/dcm34-damaged.manifest.json') -Raw -Encoding UTF8|ConvertFrom-Json
+    $damagedBytes=[IO.File]::ReadAllBytes($damagedPath)
+    $damagedHash=(Get-FileHash -LiteralPath $damagedPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    $damagedPayload="%PDF-1.7`n1 0 obj`n<< /Type /Catalog /Pages 99 0 R >>`nendobj`n"
+    if($damagedManifest.schema_version -ne 1 -or $damagedManifest.file -cne 'dcm34-damaged.pdf' -or $damagedManifest.bytes -ne $damagedBytes.Length -or $damagedManifest.sha256 -cne $damagedHash -or [Text.Encoding]::ASCII.GetString($damagedBytes) -cne $damagedPayload){throw 'Pinned damaged PDF fixture differs from the existing header-valid incomplete-catalog case.'}
+    $receipt['damaged_pdf_fixture']=[ordered]@{path=$damagedPath;bytes=$damagedBytes.Length;sha256=$damagedHash;header_valid=$true;missing_page_tree_and_trailer=$true}
     $receipt['native_adapter_compiled']=$true
     . (Join-Path $repo 'tests\native\new-fixtures.ps1')
     $fixture=New-DcmFixtures $report
