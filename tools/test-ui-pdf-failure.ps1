@@ -23,7 +23,7 @@ $validFooterPattern='^'+[regex]::Escape($validFooterPrefix)+'[0-9]+%$'
 $sizingKeys=@('zoom_out','zoom_actual','zoom_in','fit','width')
 # Complete explicit error phrases only, read from the owned preview subtree.
 # A generic word such as "error" or the host's fallback footer is insufficient.
-$nativeErrorPhrases=@("This file can't be previewed",'This file cannot be previewed','This file could not be previewed','This file could not be opened','This document could not be opened','Failed to load PDF document','Unable to load PDF','Unable to open this document','There was an error opening this document','This file is damaged','The file is damaged','This document is damaged','The document is damaged','Invalid PDF file','Invalid PDF document','PDF preview unavailable')
+$nativeErrorPhrases=@("This file can't be previewed","We can't open this file",'This file cannot be previewed','This file could not be previewed','This file could not be opened','This document could not be opened','Failed to load PDF document','Unable to load PDF','Unable to open this document','There was an error opening this document','This file is damaged','The file is damaged','This document is damaged','The document is damaged','Invalid PDF file','Invalid PDF document','PDF preview unavailable')
 function Hash([string]$p){return (Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash.ToLowerInvariant()}
 function Json([string]$p,$value){[IO.File]::WriteAllText($p,(ConvertTo-Json -InputObject $value -Depth 30),$utf8)}
 function Git([string[]]$arguments){$s=(& git.exe -C $repo @arguments|Out-String).Trim();if($LASTEXITCODE){throw 'Git query failed'};return $s}

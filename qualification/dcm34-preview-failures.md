@@ -76,6 +76,31 @@ correction, not a production PDF defect or a successful damaged-file run.
 A newly pushed correction needs its own update, tooling, build and UI gates.
 The unchanged Go units retain their `499b015` source attribution.
 
+## Second attempt retained: explicit native error phrase missing from the harness
+
+At pushed correction `dd1f03ae42b44d0003df176a79eb591ac2a08f06`, the registered
+update, tooling and fresh build pass. Unchanged Go/unit/fixture/helper inputs
+retain the passing units at `499b015`; no unit rerun is claimed.
+
+UI `172254-9e118143` passes the initial TXT baseline and valid PDF, then stops
+on the first damaged PDF. Its 66 original captures and 31 readiness attempts
+(4 valid-PDF attempts and 27 damaged-PDF attempts) are retained. From damaged
+attempt 3 onward the state identifies the real Windows fallback. The scoped
+Edge/WebView accessibility text and the reviewed original full frame both show
+`We can't open this file`, followed by `Something went wrong.` and `Refresh`.
+The prior teal PDF is absent. On the final attempt, the sole failed condition
+is that the harness's explicit-error allowlist omits that exact phrase; pixel
+and identity conditions pass, with zero sampled differences from the previous
+frame. Only the exact observed phrase is added. The footer alone and
+`Something went wrong.` alone remain insufficient.
+
+The original failure remains failed, with two accepted cases; the full recovery
+sequence is still pending. Native source/fixtures/registry remain unchanged,
+the journal is empty and the host exits normally with code 0. Four generic
+host sizing controls remain enabled on the native error while Width is disabled;
+this is recorded separately and is not accepted as loaded-document readiness.
+No production PDF bug or renderer change is inferred from the phrase mismatch.
+
 ## Separate confirmed DOCX fallback defect
 
 `DCM-34-DOCX-FALLBACK-01` is **open and unfixed**. A deterministic local probe
