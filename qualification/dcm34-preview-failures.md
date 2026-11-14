@@ -51,6 +51,31 @@ in `CONTEXT.md`. Run only one headed/native qualification at a time.
 **Native acceptance for this new milestone is pending.** No production renderer
 change or default-PDF defect is asserted by the local protocol checks.
 
+## Initial headed attempt retained: TXT colour-oracle false positive
+
+Published candidate `499b015ee11c3554f65c3a1bc9368888c16542fc` passed the registered
+update, native PDF units (14 top-level tests, zero failures/skips/timeouts),
+`ui-tooling` and exact-source build. An unrelated FlowDev test started after
+the PDF units, so the sequence stopped at its concurrency guard and resumed
+with the remaining gates after the other test finished; the units were not
+rerun.
+
+UI attempt `171254-482555d5` failed before any PDF selection, with zero accepted
+cases and four retained captures. The original full frame shows the three
+correct TXT lines and no PDF content. Its 905 x 490 preview crop contains 274
+teal samples and 89 orange samples in the text rendering; the harness's
+absolute 100-sample colour threshold incorrectly rejects the clean baseline.
+The failure and original flags remain unchanged. Source, fixtures and registry
+were preserved, the journal was empty, and the host closed normally with exit 0.
+
+The correction uses the verified initial TXT image as the recovery baseline,
+retaining exact text, control, ownership and provider checks. Recovery crops
+must match that baseline within the existing tolerance of 30 changed sampled pixels.
+The valid-PDF and damaged-PDF requirements are unchanged. This is a harness
+correction, not a production PDF defect or a successful damaged-file run.
+A newly pushed correction needs its own update, tooling, build and UI gates.
+The unchanged Go units retain their `499b015` source attribution.
+
 ## Separate confirmed DOCX fallback defect
 
 `DCM-34-DOCX-FALLBACK-01` is **open and unfixed**. A deterministic local probe

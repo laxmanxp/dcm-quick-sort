@@ -70,14 +70,16 @@
       "milestone": "Default PDF damaged-file preview and recovery",
       "starting_source": "9afb15b120befcf11aba5aa5b83e4ab39e598934",
       "local_pdf_units": "14 top-level tests pass, including 3 new parents with 23 subcases and 11 standalone existing PDF tests (34 terminal leaves); no failures/skips; protocol-only checks",
-      "native_acceptance": "pending",
+      "native_acceptance": "pending_after_initial_TXT_harness_false_positive",
       "production_renderer_changed": false,
       "separate_open_defect": "DCM-34-DOCX-FALLBACK-01",
       "numbered_plan": {
         "complete": 32,
         "remaining": 18
       },
-      "evidence": "qualification/dcm34-preview-failures.md"
+      "evidence": "qualification/dcm34-preview-failures.md",
+      "initial_native_source": "499b015ee11c3554f65c3a1bc9368888c16542fc",
+      "initial_native_result": "Registered update, PDF units (14 top-level, zero failures/skips/timeouts), tooling and build pass. UI 171254-482555d5 stops before PDF selection: clean TXT font-edge colours exceed an invalid absolute threshold. Zero accepted cases; four retained captures; normal exit 0 and preservation pass. Baseline-image oracle correction pending its own native qualification; no production defect claimed."
     },
     "dcm33_native_acceptance_checkpoint": {
       "status": "passed_with_separate_image_review",

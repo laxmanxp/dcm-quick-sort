@@ -14,7 +14,7 @@ $lab=Join-Path $env:FLOWDEV_WORKSPACE_ROOT ('dcm-quicksort-ui-pdf-failure-'+[Dat
 if($lab.StartsWith($repo+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)){throw 'Test lab must be outside source'}
 $null=New-Item -ItemType Directory $lab;$utf8=New-Object Text.UTF8Encoding($false)
 $cases=New-Object 'Collections.Generic.List[object]';$shots=New-Object 'Collections.Generic.List[object]'
-$receipt=[ordered]@{schema=1;feature='DCM-34';format_scope='default_PDF_damage_and_recovery_only';report=$lab;started_utc=[DateTime]::UtcNow.ToString('o');passed=$false;machine_checks_passed=$false;feature_accepted=$false;visual_accepted=$false;visual_review_required=$true;user_test='not_recorded';cases=$cases;captures=$shots;observations=(New-Object 'Collections.Generic.List[object]');native_error_control_readiness_accepted=$false;interruption_or_cancellation_tested=$false}
+$receipt=[ordered]@{schema=1;feature='DCM-34';format_scope='default_PDF_damage_and_recovery_only';report=$lab;started_utc=[DateTime]::UtcNow.ToString('o');passed=$false;machine_checks_passed=$false;feature_accepted=$false;visual_accepted=$false;visual_review_required=$true;user_test='not_recorded';cases=$cases;captures=$shots;observations=(New-Object 'Collections.Generic.List[object]');native_error_control_readiness_accepted=$false;interruption_or_cancellation_tested=$false;txt_pixel_contract='initial_baseline_difference_le_30'}
 $app=$null;$hwnd=[IntPtr]::Zero;$owned=$null;$head='';$manifest=@();$fixture=$null;$expected=@{};$exe='';$build=$null;$selectedName='';$controlRefs=@();$basePaneHandles=@{};$registrations=$null
 $fallbackFooter='DCM PDF renderer unavailable; using Windows PDF preview fallback'
 $unavailablePrefix='PDF preview unavailable: '
@@ -173,7 +173,9 @@ function ReadyPreview([string]$name,[string]$kind,$baseline=$null){
  if($accepted.state -ceq 'windows_fallback'){$detail['native_error_control_readiness']='review_required: attachment may enable generic sizing without a loaded page';$receipt['native_fallback_observed']=$true;if($accepted.native_error_with_enabled_sizing_controls){$receipt['native_error_with_enabled_sizing_controls']=$true}}
  Record $name $detail;return $accepted
 }
-function TextBody([string]$name,[string]$plain){
+function TextBody([string]$name,[string]$plain,$baseline=$null){
+ $initial=$name -ceq '01-initial-text'
+ if(($initial -and $null -ne $baseline) -or (-not $initial -and ($name -cnotin @('04-first-text-recovery','07-final-text-recovery') -or $null -eq $baseline))){throw 'TXT recovery requires its initial captured baseline'}
  Wait ('exact text '+$name) {$nodes=@([DcmDocxProbe]::Snapshot($hwnd,$app.Id));$edits=@($nodes|Where-Object {$_.Visible -and $_.PID -eq $app.Id -and $_.Class -ieq 'Edit' -and $basePaneHandles.ContainsKey([string]$_.Handle)});$edits.Count -eq 1 -and ([DcmNative]::Text([IntPtr]$edits[0].Handle,$app.Id)) -ceq $plain}
  $before=ObservePreview;$c=$before.controls
  if($before.state -cne 'text' -or $before.native_windows.Count -or $before.visible_owned_text_edits.Count -ne 1){throw 'TXT recovery retains wrong provider or native subtree'}
@@ -182,10 +184,24 @@ function TextBody([string]$name,[string]$plain){
  $actual=[DcmNative]::Text([IntPtr]$before.visible_owned_text_edits[0].Handle,$app.Id);if($actual -cne $plain){throw 'TXT exact body changed'}
  $textPath=Join-Path $lab ($name+'.displayed.txt');[IO.File]::WriteAllText($textPath,$actual,$utf8)
  $frame=CaptureFrame $name;$after=ObservePreview
- if((ObservationSignature $before) -cne (ObservationSignature $after)){throw 'TXT readback changed across capture'}
- if($frame.pixels.TealPixels -ge 100 -or $frame.pixels.OrangePixels -ge 100){throw 'TXT recovery retains coloured PDF content'}
- $statePath=Join-Path $lab ($name+'.state.json');Json $statePath ([ordered]@{before=$before;after=$after;displayed_text_sha256=(Hash $textPath);capture=$frame.path;pixels=$frame.pixels})
- Record $name ([ordered]@{displayed_sha256=(Hash $textPath);exact_txt_body=$true;native_subtree_absent=$true;pdf_controls_hidden=$true;state=$statePath;accepted_capture=$frame.path;semantic_image_review_required=$true})
+ # ClearType text can contain teal/orange fringes. Bind the original exact TXT
+ # image once, then compare recoveries with that saved frame instead of using
+ # an absolute colour limit. Preserve readbacks before any pixel failure.
+ $reference=if($initial){[pscustomobject]@{path=$frame.path;sha256=(Hash $frame.path);pixels=$frame.pixels}}else{$baseline}
+ $geometryMatch=$frame.pixels.Width -eq $reference.pixels.Width -and $frame.pixels.Height -eq $reference.pixels.Height
+ $baselineHashVerified=$false;$difference=$null;$pixelError=''
+ try{
+  if($reference.path -cne (Join-Path $lab '01-initial-text.preview.png')){throw 'TXT baseline path differs from the initial owned capture'}
+  $baselineHashVerified=(Hash $reference.path) -ceq $reference.sha256;if(-not $baselineHashVerified){throw 'Initial TXT baseline bytes changed'}
+  if(-not $geometryMatch){throw 'TXT recovery geometry differs from its initial baseline'}
+  $difference=if($initial){0}else{[DcmPptxInput]::PixelDifference($reference.path,$frame.path)}
+  if($difference -gt 30){throw 'TXT recovery differs from its initial captured pixels'}
+ }catch{$pixelError=$_.Exception.Message}
+ $readbackStable=(ObservationSignature $before) -ceq (ObservationSignature $after);$pixelCondition=$pixelError -ceq ''
+ $statePath=Join-Path $lab ($name+'.state.json');Json $statePath ([ordered]@{before=$before;after=$after;displayed_text_sha256=(Hash $textPath);capture=$frame.path;pixels=$frame.pixels;pixel_contract=$receipt.txt_pixel_contract;comparison=$(if($initial){'bind_initial'}else{'compare_recovery'});baseline_path=$reference.path;baseline_sha256=$reference.sha256;baseline_hash_verified=$baselineHashVerified;baseline_geometry_match=$geometryMatch;changed_from_initial_txt=$difference;maximum_changed_samples=30;readback_stable=$readbackStable;pixel_condition=$pixelCondition;pixel_error=$pixelError})
+ if(-not $readbackStable){throw 'TXT readback changed across capture'};if(-not $pixelCondition){throw $pixelError}
+ Record $name ([ordered]@{displayed_sha256=(Hash $textPath);exact_txt_body=$true;native_subtree_absent=$true;pdf_controls_hidden=$true;state=$statePath;accepted_capture=$frame.path;pixel_contract=$receipt.txt_pixel_contract;baseline_path=$reference.path;baseline_sha256=$reference.sha256;changed_from_initial_txt=$difference;semantic_image_review_required=$true})
+ return $reference
 }
 function Registration {
  $extension='.pdf';$key='{8895b1c6-b41f-4c1c-a562-0d564250836f}';$reg=[Microsoft.Win32.Registry]::ClassesRoot;$r=$reg.OpenSubKey($extension);$prog=''
@@ -288,14 +304,14 @@ try {
  Wait 'fixture list' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq $expected.Count}
  SelectFile '01-alpha.txt';BindDefaultControls;$plain=[IO.File]::ReadAllText((Join-Path $fixture.inbox '01-alpha.txt'))
  NoDialog;$screen=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea;[DcmNative]::Restore($hwnd,$app.Id,$screen.Left+8,$screen.Top+8);Start-Sleep -Milliseconds 300
- TextBody '01-initial-text' $plain
+ $initialText=TextBody '01-initial-text' $plain
  SelectFile '08-preview.pdf';$firstValid=ReadyPreview '02-valid-before-damage' 'valid'
  SelectFile '10-damaged.pdf';$firstError=ReadyPreview '03-first-damaged' 'error' $firstValid
- SelectFile '01-alpha.txt';TextBody '04-first-text-recovery' $plain;ExclusivePDFs
+ SelectFile '01-alpha.txt';$null=TextBody '04-first-text-recovery' $plain $initialText;ExclusivePDFs
  SelectFile '08-preview.pdf';$recovered=ReadyPreview '05-valid-pdf-recovery' 'valid' $firstValid
  SelectFile '10-damaged.pdf';$secondError=ReadyPreview '06-second-damaged' 'error' $recovered
  if($firstError.state -cne $secondError.state){throw 'Natural damaged-PDF terminal state differs on repeat opening'}
- SelectFile '01-alpha.txt';TextBody '07-final-text-recovery' $plain;ExclusivePDFs
+ SelectFile '01-alpha.txt';$null=TextBody '07-final-text-recovery' $plain $initialText;ExclusivePDFs
  Record '08-both-pdfs-exclusively-released' ([ordered]@{files=@('08-preview.pdf','10-damaged.pdf');exclusive_read_open=$true})
  StopApp;Source;Files;ExclusivePDFs
  if((Hash $damagedSource) -cne $definition.sha256 -or (Hash $exe) -cne $build.app_artifact.sha256){throw 'Original fixture/application bytes changed'}

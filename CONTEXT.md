@@ -29,7 +29,13 @@ Windows.Data.Pdf path, including its real Windows-handler fallback and exact
 TXT/valid-PDF recovery. Existing text/image and optional Sumatra error evidence
 remains at its recorded provider/source scope. Local focused PDF tests pass
 14 top-level tests, including three new parents with 23 subcases. The Windows
-test binary also cross-compiles; the new native milestone is pending. No renderer change is asserted by those tests.
+test binary also cross-compiles. At `499b015`, native PDF units (14 top-level
+tests), tooling and build pass. The first headed attempt stops before any PDF
+selection because the harness mistakes coloured TXT font-edge pixels for PDF
+content. The original TXT is visually correct; source/fixtures are preserved
+and the host exits normally. A baseline-image recovery comparison is being
+qualified. Native milestone acceptance remains pending; no renderer defect or
+production change is asserted.
 
 A separate local probe at `9afb15b` confirms open defect
 `DCM-34-DOCX-FALLBACK-01`: malformed DOCX rejected by the body renderer can regain
