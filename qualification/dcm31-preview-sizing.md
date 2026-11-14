@@ -220,6 +220,45 @@ preview intact without sending a zero rectangle. Other providers keep their
 existing logical policy. Unchanged upper/lower native bounds and image review
 must establish first-open/reopen GREEN before this trial can be called a repair.
 
+## Uniform physical coordinates oversize the inner worksheet
+
+Pushed source `9881724b25695ca154c2ab9d4aae02c614ace296` passes31 focused local
+units and the Windows app cross-build. Native build passes with app SHA-256
+`a53791f85645abf1c2d1c007d0c94d72f632f87bed444f7574825b7a43ae13b4`.
+The unchanged registered `ui-xlsx-layout` gate (`20261114-004947-cef87ff6`) rejects
+all ten workbook observations for a different reason: the outerEXCEL9 now fits
+at903x488, but innerEXCEL7 is1128x609 against the902x487 pane client. All twelve
+images were reviewed; workbook content fills the pane, while tabs and scrollbars
+remain outside the visible area. Both sessions trace physical902x487 arguments
+for SetWindow and SetRect, with S_OK returns and restored caller contexts. Six
+ordinary workflow records and preserved bytes/source/normal close still pass.
+A uniform scale does not size both observed levels correctly. This candidate is
+not a fix and the upper-bound assertions must not be relaxed to accept it.
+
+The failed physical COM wiring is now reverted to the exact147bf909 main source:
+normal logical SetWindow/SetRect, the post-DoPreview resize and opt-in trace.
+The next TDD boundary is an initially unused outer-window repair helper. Its native
+unit uses hidden, owned test windows to require correct outer physical bounds,
+unchanged inner geometry, preserved window identity/context and caller-context
+restoration across three parent by three caller DPI modes. Wrong, missing,
+ambiguous, nested or invalid child identities must be refused without mutation.
+After actual native RED and correction, the proposed app integration is restricted
+to the active selected Excel handler: one asynchronous SetWindowPos request for
+its verified EXCEL9 direct child, scoped to the owned pane DPI context, after a
+successful normal SetRect. It must not resize EXCEL7, activate or reparent windows,
+or change process-wide awareness. Revalidate active handler/pane/policy after COM
+and disable the repair policy when unload starts. Actual Excel geometry and
+reviewed images remain the acceptance authority; request acceptance alone is not
+feature success. No repair is implemented or qualified by this checkpoint.
+
+Microsoft documents different-DPI cross-process parenting as a possible cause of
+forced awareness resets, and explains that SetWindowPos may post across input
+queues. Those rules support this bounded compatibility experiment; there is no
+recorded proof of Excel's internal reset or a guaranteed provider response.
+References: [SetParent](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setparent),
+[SetWindowPos](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowpos),
+and [Office DPI guidance](https://learn.microsoft.com/en-us/office/client-developer/ddpi/handle-high-dpi-and-dpi-scaling-in-your-office-solution).
+
 ## Coverage limits and durable material
 
 The diagnostic at147bf909 added bounded, opt-in native-call records to the existing

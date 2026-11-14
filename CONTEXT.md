@@ -32,9 +32,12 @@ caller context on both opens; all ten diagnostic workbook views still clip.
 At `bcee0759`, physical measurement passes2 top-level/12 leaf native cases with no
 skips, but initial-only physical SetWindow still leaves all ten workbook frames
 clipped. Trace shows902x487 SetWindow followed by722x390 SetRect, both successful.
-Next apply the verified physical policy consistently to the active Excel handler's
-SetWindow/SetRect, clearing it on unload; prove both outer and inner bounds before
-closure. Other native providers retain their existing policy.
+Consistent physical policy at `9881724b` fits the outer window but oversizes the
+inner worksheet to1128x609; all ten bounds checks still fail. That wiring is
+reverted to147bf909 logical COM behavior. Next establish nativeRED for a guarded
+outer-only window repair using owned hidden test windows, then qualify Excel's
+actual response without relaxing inner/outer bounds. Other providers retain their
+existing policy. No numbered step closes.
 See [the sizing checkpoint](qualification/dcm31-preview-sizing.md).
 
 DCM-30's fresh registered Lenovo run at production source
@@ -62,6 +65,8 @@ final installer/package and publication remain open.
 - XLSX selectors: `xlsx-unit`, `ui-xlsx` and diagnostic `ui-xlsx-layout`.
 - `native-preview-rect-unit` is the isolated real-HWND DPI measurement gate;
   its initial logical scaffold established native RED at147bf909 before correction.
+- `excel-preview-layout-unit` covers the guarded outer-window repair boundary;
+  its inactive scaffold awaits native RED before implementation and app wiring.
 - Completed DOCX selector: `ui-docx` → `tools/test-ui-docx.ps1`.
 
 Code locally, unit test, commit/push, then use Desktop Commander for
