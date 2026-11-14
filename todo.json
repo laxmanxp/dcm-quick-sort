@@ -2,7 +2,7 @@
   "schema_version": 1,
   "app": "DCM QuickSort",
   "suite": "FileFlow Suite",
-  "updated_on": "2026-11-14",
+  "updated_on": "2026-11-15",
   "scope": "Independent native Go application/window alongside Flow Search, DeepSearch and FileFlow. Reuse existing behavior; a Walk/Rust migration, new PDF engine or shared launcher is not a DCM release prerequisite.",
   "completion_plan": {
     "path": "qualification/completion-50.json",
@@ -64,22 +64,70 @@
     "archive_sha256": "64e1cb1666acc9a70aeeb9656b4f30ca26fc30ad142ea32e154cb7a63dc7b5aa",
     "native_regression_commit": "4619e0ef2bed51b7685c5f84d0fc0f87702bb1ca",
     "native_regression_result": "23 top-level app regressions: 23 passed, 0 failed, 0 skipped, exit 0, no timeout, source unchanged. DCM-12 adds invalid-template-package coverage; all three D4 parent tests and five nested cases passed. All earlier safety tests remain GREEN. Full app/installer/UI/package qualification remains open.",
-    "last_native_attempt": "DCM-33 complete within bounded representative DOC/XLS/PPT and shared unavailable-contract scope. At 8704a1bdd930886a9ae4d0849822add0088603d8, ui-tooling 143912-47769611 passes 32 script parses, native helper compilation, 9 binding guards and 2 exact title contracts; build 143916-26f42fd5 binds 468 source files and the unchanged 7367168-byte app hash d8df2a791b736ecbee517f7efaff742a5b64271516c97fed96cc604a7ee45b7b. ui-legacy-ppt 143934-8e80521d passes 8 records, 18 captures, 8 native attempts and 2 scoped PageDown/PageUp actions. All 18 final images are separately reviewed (10 full-window frames and 8 same-frame crops): Bridge Inspection/September 2026/image, Payments 125000 / 86000, 1 -> 2 -> 1, TXT recovery and reopening are correct. Native source/archive audit passes 68 checks and image-integrity audit 185 checks. Initial 87788e3 legacy units 143403-3dcb113d pass 4 top-level / 33 leaf cases, with zero failures/skips; these units were not rerun after the final helper/tooling-only correction. Initial UI 143622-814c1f0b retains its exact-title harness failure, 2 reviewed history images, no navigation and normal exit 0; the observed legacy Compatibility Mode suffix is now pinned without relaxing ownership guards. No product defect or production fix is claimed. Source/fixtures/registry unchanged, journal empty, presentation released, final host exit 0; raw feature/format/review flags remain false. Complete for representative installed-handler DOC/XLS/PPT at the observed Lenovo geometry, supported by the unchanged all-format missing/failed-handler routing and presenter units plus the separately reviewed shared unavailable UI control in the DOC milestone. This closes only DCM-33: 32 complete/18 remaining; next DCM-34. DCM-19 remains blocked. Separate headed absent/failing-provider environments, broader damaged/protected/cancellation/lifecycle coverage, arbitrary fidelity, user acceptance and release remain open.",
+    "last_native_attempt": "At 3847a157feba71b4d34dd2c2ba35ed2f0214cc0d, the bounded default-PDF damaged-file and completed-state recovery milestone is accepted with limits: registered update/tooling/build/UI pass; 9 UI cases, 34 original captures, 14 attempts and 7 semantically accepted preview states. All 17 full frames and 17 crops are separately reviewed; transitions stay transitions. Both TXT recovery deltas are 0. Native units remain at 499b015ee11c3554f65c3a1bc9368888c16542fc: 14 top-level / 23 nested / 11 standalone / 34 terminal, zero failures/skips, reused with verified unchanged inputs. Source/archive audit: 172 PASS / 0 FAIL / 1 LIMIT (first failed wrapper CLI row absent; original envelope and receipt retained). Concurrency hold, initial 0-case/4-capture TXT harness failure and dd1 2-case/66-capture phrase miss remain failed history. Source/fixtures/registry unchanged, journal empty, PDFs exclusively released, normal exit 0; raw acceptance flags remain false. Four enabled generic sizing controls on native error remain unaccepted. No production fix or full baseline rerun. DCM-34 stays PARTIAL, 32 complete / 18 remaining; protected PDF, observed in-flight cancellation, broader Office failures and open DOCX fallback defect remain.",
+    "dcm33_last_native_attempt_history": "DCM-33 complete within bounded representative DOC/XLS/PPT and shared unavailable-contract scope. At 8704a1bdd930886a9ae4d0849822add0088603d8, ui-tooling 143912-47769611 passes 32 script parses, native helper compilation, 9 binding guards and 2 exact title contracts; build 143916-26f42fd5 binds 468 source files and the unchanged 7367168-byte app hash d8df2a791b736ecbee517f7efaff742a5b64271516c97fed96cc604a7ee45b7b. ui-legacy-ppt 143934-8e80521d passes 8 records, 18 captures, 8 native attempts and 2 scoped PageDown/PageUp actions. All 18 final images are separately reviewed (10 full-window frames and 8 same-frame crops): Bridge Inspection/September 2026/image, Payments 125000 / 86000, 1 -> 2 -> 1, TXT recovery and reopening are correct. Native source/archive audit passes 68 checks and image-integrity audit 185 checks. Initial 87788e3 legacy units 143403-3dcb113d pass 4 top-level / 33 leaf cases, with zero failures/skips; these units were not rerun after the final helper/tooling-only correction. Initial UI 143622-814c1f0b retains its exact-title harness failure, 2 reviewed history images, no navigation and normal exit 0; the observed legacy Compatibility Mode suffix is now pinned without relaxing ownership guards. No product defect or production fix is claimed. Source/fixtures/registry unchanged, journal empty, presentation released, final host exit 0; raw feature/format/review flags remain false. Complete for representative installed-handler DOC/XLS/PPT at the observed Lenovo geometry, supported by the unchanged all-format missing/failed-handler routing and presenter units plus the separately reviewed shared unavailable UI control in the DOC milestone. This closes only DCM-33: 32 complete/18 remaining; next DCM-34. DCM-19 remains blocked. Separate headed absent/failing-provider environments, broader damaged/protected/cancellation/lifecycle coverage, arbitrary fidelity, user acceptance and release remain open.",
     "dcm34_progress_checkpoint": {
       "status": "PARTIAL",
       "milestone": "Default PDF damaged-file preview and recovery",
       "starting_source": "9afb15b120befcf11aba5aa5b83e4ab39e598934",
       "local_pdf_units": "14 top-level tests pass, including 3 new parents with 23 subcases and 11 standalone existing PDF tests (34 terminal leaves); no failures/skips; protocol-only checks",
-      "native_acceptance": "pending_after_initial_TXT_harness_false_positive",
+      "native_acceptance": "accepted_with_limits_for_default_pdf_damage_recovery",
       "production_renderer_changed": false,
       "separate_open_defect": "DCM-34-DOCX-FALLBACK-01",
       "numbered_plan": {
         "complete": 32,
         "remaining": 18
       },
-      "evidence": "qualification/dcm34-preview-failures.md",
+      "evidence": "qualification/evidence/dcm-34-pdf-damage-native-summary.json",
       "initial_native_source": "499b015ee11c3554f65c3a1bc9368888c16542fc",
-      "initial_native_result": "Registered update, PDF units (14 top-level, zero failures/skips/timeouts), tooling and build pass. UI 171254-482555d5 stops before PDF selection: clean TXT font-edge colours exceed an invalid absolute threshold. Zero accepted cases; four retained captures; normal exit 0 and preservation pass. Baseline-image oracle correction pending its own native qualification; no production defect claimed."
+      "initial_native_result": "Registered update, PDF units (14 top-level, zero failures/skips/timeouts), tooling and build pass. UI 171254-482555d5 stops before PDF selection: clean TXT font-edge colours exceed an invalid absolute threshold. Zero accepted cases; four retained captures; normal exit 0 and preservation pass. This failed run remains historical; the later accepted milestone is recorded separately. No production defect claimed.",
+      "final_native_source": "3847a157feba71b4d34dd2c2ba35ed2f0214cc0d",
+      "native_unit_source": "499b015ee11c3554f65c3a1bc9368888c16542fc",
+      "native_unit_reused_without_rerun": true,
+      "native_unit_inputs_unchanged": true,
+      "native_unit_counts": {
+        "top_level": 14,
+        "nested_subcases": 23,
+        "standalone_tests": 11,
+        "terminal_leaf_tests": 34,
+        "failed": 0,
+        "skipped": 0
+      },
+      "final_ui_counts": {
+        "cases": 9,
+        "captures": 34,
+        "readiness_attempts": 14,
+        "accepted_preview_states": 7
+      },
+      "semantic_review": "All 34 original final captures covered; seven accepted preview states pass bounded semantics; transitions and raw false flags preserved.",
+      "native_error_control_readiness_accepted": false,
+      "remaining_scope": [
+        "Native-error generic sizing readiness/click behavior",
+        "Protected default PDF",
+        "Observed in-flight interruption/cancellation",
+        "Office damaged/protected coverage including open DOCX fallback defect"
+      ],
+      "report_publication": {
+        "repository": "laxmanxp/flowverse-reports",
+        "branch": "main",
+        "path": "apps/dcm-quicksort/dcm34-20261114-173102/default-pdf-3847a15",
+        "commit": "d65d3bae8cd5e9e5db773d93cace361ac8c361d3",
+        "immutable_pin_status": "published_and_tree_verified",
+        "readme_url": "https://github.com/laxmanxp/flowverse-reports/blob/d65d3bae8cd5e9e5db773d93cace361ac8c361d3/apps/dcm-quicksort/dcm34-20261114-173102/default-pdf-3847a15/README.md"
+      },
+      "retained_second_native_failure": {
+        "source": "dd1f03ae42b44d0003df176a79eb591ac2a08f06",
+        "ui_report": "172254-9e118143",
+        "cases": 2,
+        "captures": 66,
+        "readiness_attempts": 31,
+        "reason": "Exact observed native error phrase missing from harness allowlist; original failure retained."
+      },
+      "native_source_audit": {
+        "passed": 172,
+        "failed": 0,
+        "limits": 1
+      }
     },
     "dcm33_native_acceptance_checkpoint": {
       "status": "passed_with_separate_image_review",
@@ -774,7 +822,8 @@
     "dcm32_native_summary": "qualification/evidence/dcm-32-native-summary.json",
     "dcm32_progress_summary": "qualification/evidence/dcm-32-progress-summary.json",
     "dcm32_preliminary_reports": "https://github.com/laxmanxp/flowverse-reports/tree/86d0e95a02f60098f34a17d6450473d8f4c2757a/apps/dcm-quicksort/dcm32-20261114-070938/preliminary-7f46906",
-    "dcm31_outer_fix_reports": "https://github.com/laxmanxp/flowverse-reports/tree/main/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023"
+    "dcm31_outer_fix_reports": "https://github.com/laxmanxp/flowverse-reports/tree/main/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023",
+    "dcm34_pdf_damage_native_summary": "qualification/evidence/dcm-34-pdf-damage-native-summary.json"
   },
   "items": [
     {"id": "DCM-34-DOCX-FALLBACK-01", "feature": "Prevent damaged DOCX content from regaining success through the metadata fallback", "status": "planned", "ui_test": "not_run", "user_test": "not_recorded", "release_gate": true, "existing_evidence": "Local probe at9afb15b:2parents(1pass/1fail),23leaves(13pass/10fail). Empty/missing document/body report success; malformed XML is rejected by renderer then accepted by foundation. Valid blank/missing-part guards and5valid-after-damage controls pass. No production fix or native provider claim.", "acceptance": "Rejected DOCX content must not be presented as a validated/ready document by the later metadata fallback. Preserve legitimate blank documents, normal body rendering and native-first handler policy; add source-bound unit and Windows acceptance evidence.", "evidence_refs": ["dcm34_checkpoint", "dcm34_docx_fallback_probe"], "parent_ids": ["DCM-PREVIEW-01"]},

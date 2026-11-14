@@ -1,6 +1,6 @@
 # DCM QuickSort — project context
 
-## Current checkpoint — 14 November 2026 (Asia/Kolkata)
+## Current checkpoint — 15 November 2026 (Asia/Kolkata)
 
 The active application is **standalone DCM QuickSort v1.0.71**, repository
 `https://github.com/laxmanxp/dcm-quick-sort.git`, branch `release/v1.0.71`.
@@ -22,29 +22,53 @@ The DCM-31 completion record is now published at
 that exact commit. Its production tests remain bound to `ec7a0234`, and its
 report bundle is confirmed at `69fee755a94468165018b499fe7d876779e57ec8`.
 
-### DCM-34 in progress: default PDF damage and recovery
+### DCM-34 partial: bounded default PDF damage and recovery accepted
 
-The first new slice targets a header-valid damaged PDF through the default
-Windows.Data.Pdf path, including its real Windows-handler fallback and exact
-TXT/valid-PDF recovery. Existing text/image and optional Sumatra error evidence
-remains at its recorded provider/source scope. Local focused PDF tests pass
-14 top-level tests, including three new parents with 23 subcases. The Windows
-test binary also cross-compiles. At `499b015`, native PDF units (14 top-level
-tests), tooling and build pass. The first headed attempt stops before any PDF
-selection because the harness mistakes coloured TXT font-edge pixels for PDF
-content. The original TXT is visually correct; source/fixtures are preserved
-and the host exits normally. A baseline-image recovery comparison is being
-qualified. Native milestone acceptance remains pending; no renderer defect or
-production change is asserted.
+**The representative default-PDF damaged-file and completed-state recovery
+milestone is accepted with limits at pushed, Lenovo-tested source
+`3847a157feba71b4d34dd2c2ba35ed2f0214cc0d`. Full DCM-34 remains PARTIAL.** The
+registered update, tooling, exact build and `ui-pdf-failure` gates pass.
+Native PDF units retain their actual tested source
+`499b015ee11c3554f65c3a1bc9368888c16542fc`: **14 top-level tests, 23 nested
+subcases, 11 standalone tests and 34 terminal cases**, with zero failures/skips.
+They were reused after verifying unchanged application/unit/fixture/helper
+inputs; no unit rerun or full baseline rerun is claimed.
 
-A separate local probe at `9afb15b` confirms open defect
-`DCM-34-DOCX-FALLBACK-01`: malformed DOCX rejected by the body renderer can regain
-success through the metadata foundation fallback; empty/missing document/body
-also reports zero-body success. The retained probe has 10 failing and 13 passing
-leaf cases. Valid blank and recovery controls pass. This remains unfixed and
-is not a claim about the installed Word handler. See
-[the DCM-34 checkpoint](qualification/dcm34-preview-failures.md).
-**DCM-34 remains PARTIAL; 32 complete / 18 remaining.**
+The final UI records **nine cases, 34 original captures and 14 readiness
+attempts**. All 17 full frames and 17 same-frame crops are separately reviewed
+through exact-hash groups; seven accepted preview states show clean TXT,
+readable valid PDF, explicit native damaged-file error, TXT/PDF recovery and
+reopening. Both TXT recovery pixel deltas are zero. Blank/loading transitions
+remain recorded transitions. Source/fixture/registry preservation, empty
+journal, exclusive PDF release and normal host exit 0 pass. Raw acceptance and
+visual-review flags remain unchanged and false.
+
+The native source/archive audit passes **172 checks, zero failures, with one
+explicit evidence limit**: the first failed UI wrapper stopped before saving
+its CLI command row/stdout; its original FlowDev envelope and failed receipt
+are retained. Keep the preceding concurrency hold, initial TXT colour-check
+false positive (0 cases / 4 captures), and `dd1f03a` error-phrase miss
+(2 cases / 66 captures / 31 attempts) as failed history. The corrections affect
+the harness and qualification documentation, with no production renderer fix.
+All three builds record the unchanged 7,367,168-byte application hash.
+
+Four generic sizing controls remain enabled on the native error; Width is
+disabled. Their loaded-document readiness and click behavior are **not
+accepted**. Protected PDF, observed in-flight interruption/cancellation, broader
+Office failure coverage and open defect `DCM-34-DOCX-FALLBACK-01` remain. The
+DOCX probe at `9afb15b` retains 13 passing / 10 failing leaf cases; it is unfixed
+and makes no installed-Word or headed-recovery claim.
+
+See [the DCM-34 checkpoint](qualification/dcm34-preview-failures.md) and
+[the bounded PDF native summary](qualification/evidence/dcm-34-pdf-damage-native-summary.json).
+The report is published in `laxmanxp/flowverse-reports` at
+`apps/dcm-quicksort/dcm34-20261114-173102/default-pdf-3847a15`, commit
+`d65d3bae8cd5e9e5db773d93cace361ac8c361d3`. On 15 November, all 398 published file
+identities were independently matched to the reviewed local bundle. This
+documentation closeout records the existing native result; it is not a new
+application acceptance run.
+**32 complete / 18 remaining; next DCM-34.** DCM-19, physical user acceptance
+and release publication retain their existing limits.
 
 ### DCM-33 accepted DOC milestone
 

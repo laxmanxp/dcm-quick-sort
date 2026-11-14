@@ -27,5 +27,15 @@
   ],
   "scope": "Function-level fallback diagnosis only; no installed Word handler or headed Windows recovery claim.",
   "smallest_next_fix": "Do not convert rejected DOCX content into metadata-only success; preserve valid blank content and native-first behavior.",
-  "report_evidence_pending_publication": true
+  "report_evidence_pending_publication": false,
+  "report_publication": {
+    "repository": "laxmanxp/flowverse-reports",
+    "branch": "main",
+    "path": "apps/dcm-quicksort/dcm34-20261114-173102/default-pdf-3847a15",
+    "commit": "d65d3bae8cd5e9e5db773d93cace361ac8c361d3",
+    "immutable_pin_status": "published_and_tree_verified",
+    "readme_url": "https://github.com/laxmanxp/flowverse-reports/blob/d65d3bae8cd5e9e5db773d93cace361ac8c361d3/apps/dcm-quicksort/dcm34-20261114-173102/default-pdf-3847a15/README.md",
+    "evidence_subdirectory": "local/docx-probe"
+  },
+  "publication_note": "Original local RED evidence is published in the shared PDF milestone report at the pinned commit, independently verified on 15 November. This does not fix the DOCX defect or supply native DOCX acceptance."
 }
