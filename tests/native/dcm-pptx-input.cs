@@ -122,8 +122,15 @@ public static class DcmPptxInput {
         public uint ThreadId;
         public string Class,WindowTitle,ProcessPath,StartedUtc,FixtureName;
     }
+    public static string ExpectedNativeTitle(string filename) {
+        if(filename=="07-slides.pptx")return "PowerPoint Slide Show  -  07-slides.pptx";
+        // The registered legacy-PPT run observed this exact compatibility title.
+        // Do not admit alternate suffixes, partial matches or arbitrary names.
+        if(filename=="07-slides.ppt")return "PowerPoint Slide Show  -  07-slides.ppt  -  Compatibility Mode";
+        throw new Exception("Only the pinned native PPTX or PPT fixture is allowed");
+    }
     private static IntPtr NativeWindow(IntPtr host,int pid,string filename) {
-        if(filename!="07-slides.pptx" && filename!="07-slides.ppt")throw new Exception("Only the pinned native PPTX or PPT fixture is allowed");
+        string expectedTitle=ExpectedNativeTitle(filename);
         IntPtr pane=Pane(host,pid);var found=new List<IntPtr>();int count=0;bool truncated=false;
         EnumProc callback=delegate(IntPtr h,IntPtr p) {
             if(++count>100){truncated=true;return false;}
@@ -135,7 +142,7 @@ public static class DcmPptxInput {
         IntPtr window=found[0];var title=new StringBuilder(512);GetWindowText(window,title,title.Capacity);
         if(GetParent(window)!=pane || !IsChild(pane,window) || GetAncestor(window,2)!=host || !IsWindowEnabled(window)
             || (WindowStyle(window,-16).ToInt64() & 0x40000000)==0
-            || title.ToString()!="PowerPoint Slide Show  -  "+filename)
+            || title.ToString()!=expectedTitle)
             throw new Exception("Native PPTX target does not match the observed fixture hierarchy/title");
         return window;
     }
@@ -152,7 +159,7 @@ public static class DcmPptxInput {
             if(process.HasExited || !String.Equals(Path.GetFileName(path),"POWERPNT.EXE",StringComparison.OrdinalIgnoreCase))
                 throw new Exception("Native slide is not rendered by the observed PowerPoint process");
             var target=new NativeTarget{Host=host.ToInt64(),HostPID=pid,Pane=GetParent(window).ToInt64(),Hwnd=window.ToInt64(),ProcessId=(int)actual,ThreadId=thread,
-                Class=Class(window),WindowTitle="PowerPoint Slide Show  -  "+filename,ProcessPath=path,StartedUtc=process.StartTime.ToUniversalTime().ToString("o"),FixtureName=filename};
+                Class=Class(window),WindowTitle=ExpectedNativeTitle(filename),ProcessPath=path,StartedUtc=process.StartTime.ToUniversalTime().ToString("o"),FixtureName=filename};
             ValidateNativeSlide(host,pid,target);return target;
         }
     }

@@ -49,6 +49,19 @@ try{
         $nativeBindingGuards+=[ordered]@{fixture_name=$name;expected_guard='owned_host';passed=$true}
     }
     $receipt['native_presentation_binding_guards']=$nativeBindingGuards
+    # Contract evidence: the first registered legacy-PPT attempt at 87788e3
+    # captured the compatibility suffix. Preserve the previously accepted PPTX
+    # title separately; this checks title selection without sending any input.
+    $nativeTitleContracts=@()
+    foreach($expectation in @(
+        [pscustomobject]@{file='07-slides.pptx';title='PowerPoint Slide Show  -  07-slides.pptx'},
+        [pscustomobject]@{file='07-slides.ppt';title='PowerPoint Slide Show  -  07-slides.ppt  -  Compatibility Mode'}
+    )){
+        $actual=[DcmPptxInput]::ExpectedNativeTitle($expectation.file)
+        if($actual -cne $expectation.title){throw ('Native presentation title differs from its observed contract: '+$expectation.file)}
+        $nativeTitleContracts+=[ordered]@{fixture_name=$expectation.file;expected_title=$expectation.title;actual_title=$actual;passed=$true}
+    }
+    $receipt['native_presentation_title_contracts']=$nativeTitleContracts
     Add-Type -Path (Join-Path $repo 'tests/native/dcm-preview-geometry.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')
     $receipt['preview_geometry_compiled']=$true
     $receipt['native_adapter_compiled']=$true
