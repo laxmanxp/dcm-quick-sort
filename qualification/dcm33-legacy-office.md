@@ -4,11 +4,14 @@ Started 14 November 2026 (Asia/Kolkata). Standalone DCM QuickSort v1.0.71,
 repository `laxmanxp/dcm-quick-sort`, branch `release/v1.0.71`.
 
 **PARTIAL overall: the shared unavailable-footer fix and representative native
-DOC milestone are complete; legacy XLS/PPT remain pending.** The numbered plan
-remains **31 complete / 19 remaining**. The accepted source is
-`b3d46b9e2003dbbfa2ae431e134e0692b8168d34`, pushed before the registered Lenovo
-update and native gates. DOC alone does not close DCM-33 or certify the final
-package. The smallest next baby step is genuine legacy XLS, followed by PPT.
+DOC and XLS milestones are complete; legacy PPT remains pending.** The numbered
+plan remains **31 complete / 19 remaining**. DOC acceptance is bound to
+`b3d46b9e2003dbbfa2ae431e134e0692b8168d34`; the later XLS qualification is bound to
+`e19ff30b1663a4b5bb385a3667ab6342f299cc1e`, with unchanged application/installer
+source and app bytes. Both candidates were pushed before their registered
+Lenovo gates. The XLS review explicitly accepts equivalent en-IN numeric
+grouping for two cells. These milestones do not close DCM-33 or certify the
+final package. The smallest next baby step is genuine legacy PPT.
 
 ## Starting identity and observed contract
 
@@ -156,7 +159,7 @@ host exits normally with code 0. The installed Word DOC handler is present;
 unavailable display, not headed behavior on a machine lacking a DOC handler.
 Registry observations before and after match; no Office registrations changed.
 
-## Evidence, limits and next step
+## DOC evidence and limits
 
 The [DOC native summary](evidence/dcm-33-doc-native-summary.json) binds the exact
 source/build/fixture identities, native receipts, raw RED and GREEN, separate
@@ -172,31 +175,127 @@ fidelity, legacy XLS/PPT, protected/damaged files or all display scales. Broad
 failure and lifecycle qualification remain DCM-34/35; final workflow/layout,
 package and user acceptance remain open under DCM-46/47 and the release gates.
 
-**DCM-33 remains PARTIAL; no numbered step closes.** Continue with a genuine
-legacy XLS fixture and the smallest native/unavailable gate, then legacy PPT
-in a separate baby step. DCM-19's Explorer-isolation blocker is unchanged.
+The subsequent XLS milestone is recorded below without changing the DOC
+receipts or their acceptance scope. DCM-19's Explorer-isolation blocker is
+unchanged.
 
-## Legacy XLS baby step in progress
+## Accepted native XLS milestone at e19ff30
 
 The XLS milestone starts from `cb3b2ffabe598915d2184f7a0bbdb716a7b0bea4`.
-Application and installer source are unchanged from accepted `b3d46b9`.
+The tested candidate is `e19ff30b1663a4b5bb385a3667ab6342f299cc1e`.
+Application and installer source remain unchanged from accepted `b3d46b9`.
 Read-only Lenovo lookup finds `Excel.Sheet.8` and the exact Excel preview CLSID
 `{00020827-0000-0000-C000-000000000046}`. The existing outer-window repair is
-selected by that handler identity, including XLS; no new rendering path or
-production fix is planned without a reproduced defect.
+selected by that handler identity, including XLS. This change adds the fixture
+and qualification tooling. No new production defect, fix, rendering path or
+native RED is claimed.
 
-The scope is a pinned synthetic BIFF8/CFBF workbook, one visible sheet, known
-labels/date/numeric cells and a formula total. Local fixture generation and
-validation precede the focused native units, tooling and exact build. The new
-`ui-legacy-xls` gate will exercise TXT -> first XLS open -> TXT recovery ->
-exclusive release -> XLS reopening -> normal close, retaining every full frame,
-same-frame crop and strict four-pixel EXCEL9/EXCEL7 bounds result. Acceptance
-requires separate semantic review of the fixture cells; a nonblank Excel grid,
-provider footer or accessibility readback alone is insufficient.
+### Genuine binary fixture and cell contract
 
-The DOC milestone already exercises the shared generic unavailable control.
-The XLS gate uses the naturally selected native/unavailable route without
-changing live Office registrations. Missing-XLS-provider behavior will remain
-explicitly unexercised if the installed handler succeeds. Native sheet
-navigation, arbitrary workbook fidelity and the larger DCM-34/35/46/47 gates
-remain separate. No XLS acceptance or numbered closure is claimed here.
+The [XLS fixture manifest](../tests/fixtures/dcm33-legacy-xls.manifest.json) pins a
+**6,656-byte** original synthetic workbook, SHA-256
+`aac8c2cacf614339bb743d0e7da6e2d06dfc155a0a44626832e740907318721f`.
+The source XLSX was authored with the bundled artifact-tool and exported locally
+with LibreOffice's `MS Excel 97` filter. Independent xlrd and raw-record checks
+prove CFBF, the BIFF8 Workbook/worksheet BOFs, one visible `Inspection` sheet,
+typed cells and the real B8 formula record. Renamed XLSX, an incorrect numeric
+cell and an incorrect formula with the unchanged cache are rejected. Native
+qualification consumes the committed XLS; no Lenovo conversion is used.
+
+| Cell or range | Pinned meaning | Observed native display |
+|---|---|---|
+| A2 | `DCM-33 LEGACY XLS` | Exact title, readable. |
+| A3 / B3 | Inspection date; typed 2026-11-14, serial 46340 | `Inspection date` / `14 November 2026`, exact. |
+| A5 / B5 | Description / Amount | Both headings exact. |
+| A6 / B6 | Bridge inspection; numeric 125000 | Label exact; `1,25,000`, numerically equal to manifest `125,000`. |
+| A7 / B7 | Road repair; numeric 86000 | `Road repair` / `86,000`, exact. |
+| A8 / B8 | Total; `=SUM(B6:B7)`, numeric cache 211000 | Label exact; `2,11,000`, numerically equal to manifest `211,000`. |
+
+All **11 cell meanings are correct; 9 pinned display strings match exactly and
+2 differ**. A separate read-only Lenovo observation confirms culture `en-IN`,
+number group sizes `[3, 2]` and matching formatting examples. The `#,##0` format
+depends on locale, so the review explicitly accepts the two numeric equivalents.
+It does not claim that all 11 required-text literals matched. The original
+manifest, raw UI receipt and images remain unchanged. Binary validation proves
+the formula and cached value; screenshots prove the visible total and do not
+independently establish native Excel recalculation.
+
+### Registered gates and evidence provenance
+
+The registered `flowdev update dcm-quicksort` console PASS for `e19ff30` was
+observed through Desktop Commander before the native gates. No native update
+JSON was available. The report's `execution-observation.json` preserves the
+observed command/output and states that limit; it is not a reconstructed native
+update receipt. All five test receipts are retained byte-exactly and independently
+bind clean candidate source `e19ff30`.
+
+| Gate | Native report suffix | Result |
+|---|---|---|
+| `legacy-preview-unit` | `131559-93a60d28` | 4 top-level tests / 33 leaf cases pass; zero failures/skips. |
+| `excel-preview-layout-unit` | `131705-b50e60c8` | 2 top-level tests / 48 leaf cases pass; zero failures/skips. |
+| `ui-tooling` | `131742-34c89720` | All 31 PowerShell scripts parse; native helpers compile. |
+| `build` | `131747-caf81c29` | Exact clean candidate; 461 source-manifest files. |
+| `ui-legacy-xls` | `132721-e381a696` | 6 workflow records, 12 captures, 5 native attempts and 5 strict bounds records pass. |
+
+The UI report is
+`D:\FlowverseReportsRepo\dcm-quicksort-ui-legacy-xls-20261114-132721-e381a696`
+and consumes
+`D:\FlowverseReportsRepo\dcm-quicksort-build-20261114-131747-caf81c29\receipt.json`.
+The app remains **7,367,168 bytes**, SHA-256
+`d8df2a791b736ecbee517f7efaff742a5b64271516c97fed96cc604a7ee45b7b`, identical to
+the accepted DOC build. The independent native evidence audit passes all
+**54 checks**. The full **388 / 0 / 0** baseline remains the historical
+`b3d46b9` run above; it was not rerun or rebound to `e19ff30`.
+
+The initial occupied-slot guard and a queue timeout occurred before a UI
+feature invocation. After an idle native slot became available, the single
+`ui-legacy-xls` invocation passed. No unrelated process was terminated.
+
+### Separate review of all 12 images
+
+The run retains two TXT full-window frames and five native full-window/crop
+pairs. Every original PNG was separately reviewed, including readiness frames.
+Each crop uses pixels from the saved full-window frame and recorded physical
+pane geometry. Every native attempt passes the unchanged four-pixel
+EXCEL9/EXCEL7 bounds gate.
+
+First open has **three attempts**, with only attempt 3 classified stable and
+named by `accepted_capture`. Reopening has **two attempts**, with only attempt 2
+stable and accepted. In the first first-open frame, the required cells are
+already readable but the sheet-tab bar has not painted. That frame remains
+unstable; semantic content review does not promote its readiness classification.
+The later frames show the `Inspection` tab and scrollbars without claiming
+sheet navigation was exercised.
+
+The title, full date, labels and numeric meanings in the table above are visible
+at first open and reopening with `Windows preview: XLS` and an intact host shell.
+Initial TXT and TXT recovery show the exact plain-text content and correct
+footer, with no stale Excel pane. Source and fixture bytes are unchanged,
+the journal is empty, exclusive workbook release succeeds after recovery and
+after close, and the owned host exits normally with code 0. Office registrations
+before/after match; no live registrations were changed.
+
+Raw `feature_accepted=false`, `format_accepted=false`, capture
+`visual_reviewed=false` and the semantic-review requirement remain unchanged.
+The machine does not assert the rendered cell meanings. The separate
+[XLS native summary](evidence/dcm-33-xls-native-summary.json) records semantic
+acceptance with the explicit locale equivalence, exact receipts, complete image
+review, audit and report publication identity. Its report prefix is
+`apps/dcm-quicksort/dcm33-20261114-132721/legacy-xls-e19ff30` in
+`laxmanxp/flowverse-reports`. Publishing the completion record documents this
+tested candidate and does not create another native acceptance run.
+
+### Limits and next baby step
+
+The installed Excel handler was present and succeeded;
+`missing_handler_case_exercised=false`. The XLS gate did not repeat the shared
+unsupported-extension control already accepted in the DOC milestone, and does
+not qualify a headed absent/failing XLS-provider environment. No sheet input,
+arbitrary workbook fidelity, damaged/protected files, broader lifecycle or
+physical user acceptance is claimed. DCM-34/35/46/47 and final release gates
+remain open.
+
+**DCM-33 remains PARTIAL; no numbered step closes: 31 complete / 19 remaining.**
+Continue with a genuine legacy PPT fixture and the smallest native/unavailable
+gate in a separate baby step. Preserve the accepted DOC/XLS milestones and
+DCM-19's Explorer-isolation blocker.

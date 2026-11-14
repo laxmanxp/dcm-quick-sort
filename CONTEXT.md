@@ -11,8 +11,8 @@ and the numbered qualification plan is [completion-50.json](qualification/comple
 **31 of 50 steps are complete; 19 remain.** Complete: DCM-01–18 and DCM-20–32.
 DCM-19 remains blocked on a disposable Windows Explorer integration environment.
 **Next runnable step: DCM-33 — legacy Office handler behavior**, continuing with
-representative legacy XLS, then legacy PPT. The footer fix and representative
-DOC milestone are accepted; DCM-33 as a whole remains PARTIAL. These counts
+representative legacy PPT. The footer fix and representative DOC and XLS
+milestones are accepted; DCM-33 as a whole remains PARTIAL. These counts
 include setup work and are not a product-completion percentage or user acceptance.
 
 The DCM-31 completion record is now published at
@@ -20,13 +20,13 @@ The DCM-31 completion record is now published at
 that exact commit. Its production tests remain bound to `ec7a0234`, and its
 report bundle is confirmed at `69fee755a94468165018b499fe7d876779e57ec8`.
 
-### DCM-33 active qualification
+### DCM-33 accepted DOC milestone
 
 **The shared unavailable-footer fix and representative native DOC milestone
 are complete at pushed and Lenovo-tested source
-`b3d46b9e2003dbbfa2ae431e134e0692b8168d34`. DCM-33 remains PARTIAL because legacy
-XLS/PPT are still open.** The registered update received that source before the
-focused gates. The unavailable presenter now replaces the previous file's
+`b3d46b9e2003dbbfa2ae431e134e0692b8168d34`. The later XLS milestone below leaves
+legacy PPT pending, so DCM-33 remains PARTIAL.** The registered update received
+that source before the focused gates. The unavailable presenter now replaces the previous file's
 success footer with the current type and missing/failed-handler outcome while
 retaining the fallback body and ordinary file actions.
 
@@ -39,7 +39,7 @@ top-level tests and 33 leaf cases**, with zero failures/skips. `ui-tooling`
 Exact build `122409-a7d930fc` has a 454-file source manifest; its 7,367,168-byte
 app SHA-256 is `d8df2a791b736ecbee517f7efaff742a5b64271516c97fed96cc604a7ee45b7b`.
 
-The new full native baseline `122523-cf1f5a00` is **388 passed / 0 failed /
+The full native baseline `122523-cf1f5a00` is **388 passed / 0 failed /
 0 skipped**, including the unchanged real-PPTX integration with the pinned
 fixture supplied. This is a new result at `b3d46b9`; DCM-31's historical
 383/0/1 baseline remains unchanged, and final package qualification stays open.
@@ -59,35 +59,66 @@ exclusive DOC release succeeds and the host closes normally with exit code 0.
 The installed Word DOC handler was present. The harmless `.dcm33unsupported`
 control exercises the shared generic unavailable path; it does not qualify a
 headed missing-DOC-provider environment. No Office registrations were changed.
-The result is limited to this synthetic DOC and observed geometry. Legacy
-XLS/PPT, broader damaged/protected files and lifecycle gates, final workflow/
+The DOC result is limited to this synthetic document and observed geometry;
+it did not qualify legacy XLS/PPT. The later XLS result is recorded separately
+below. Broader damaged/protected files and lifecycle gates, final workflow/
 package, and user acceptance remain open.
 
 See [the DCM-33 checkpoint](qualification/dcm33-legacy-office.md) and
 [the DOC native summary](qualification/evidence/dcm-33-doc-native-summary.json)
 for receipts, separate image review and report publication identity. The
-completion documentation records the tested `b3d46b9` source; publishing it
+DOC completion documentation records the tested `b3d46b9` source; publishing it
 does not imply another native application acceptance run. The numbered count
 stays **31 complete / 19 remaining**.
 
-### DCM-33 legacy XLS baby step in progress
+### DCM-33 accepted XLS milestone
 
-The next focused qualification starts from pushed completion record
-`cb3b2ffabe598915d2184f7a0bbdb716a7b0bea4`. Lenovo is clean at the same commit
-and the FlowDev app/profile still maps to this repository and branch. A
-read-only lookup resolves `.xls` to Excel's existing preview-handler CLSID
-`{00020827-0000-0000-C000-000000000046}`; the accepted outer-window repair is
-handler-based and already applies. No new application defect or production
-change has been identified.
+**The representative legacy XLS milestone is accepted at pushed and
+Lenovo-tested source `e19ff30b1663a4b5bb385a3667ab6342f299cc1e`, with explicit
+numeric equivalence for the observed locale.** It starts from completion record
+`cb3b2ffabe598915d2184f7a0bbdb716a7b0bea4`. Application and installer source are
+unchanged from `b3d46b9`; no new product defect, fix or RED is claimed. The
+registered `flowdev update` PASS was observed in the Desktop Commander console.
+No native update JSON was available; the execution observation records that
+limit, while all five native test receipts bind the clean candidate source.
 
-Prepare the pinned genuine binary workbook and `ui-legacy-xls` gate, then run
-`legacy-preview-unit`, `excel-preview-layout-unit`, `ui-tooling`, `build` and
-`ui-legacy-xls` through registered FlowDev. Use the exact current build receipt,
-retain every readiness frame and the unchanged four-pixel native bounds checks,
-and separately review visible cells/date/total before acceptance. The existing
-388/0/0 baseline remains a historical result at `b3d46b9` unless a production
-fix requires a fresh baseline. Legacy XLS is not yet accepted at this checkpoint;
-legacy PPT follows it. The numbered count stays 31 complete / 19 remaining.
+Registered `legacy-preview-unit` run `131559-93a60d28` passes **4 top-level /
+33 leaf cases**, and `excel-preview-layout-unit` run `131705-b50e60c8` passes
+**2 top-level / 48 leaf cases**, with zero failures/skips. `ui-tooling`
+`131742-34c89720` passes all 31 scripts and native helper compilation. Exact build
+`131747-caf81c29` has a 461-file source manifest and the same 7,367,168-byte app
+SHA-256 `d8df2a791b736ecbee517f7efaff742a5b64271516c97fed96cc604a7ee45b7b`
+as the accepted DOC build. The independent native evidence audit passes all
+54 checks. The full 388/0/0 baseline remains the historical `b3d46b9` run and
+was not rerun for this fixture/harness qualification.
+
+Registered `ui-legacy-xls` run `132721-e381a696` passes **6 workflow records,
+12 captures, 5 native attempts and 5 strict Excel bounds records**, retaining
+the unchanged four-pixel tolerance. All 12 images were separately reviewed:
+two TXT frames and five full-window/same-frame-crop pairs. First open becomes
+stable only on attempt 3; reopening becomes stable only on attempt 2. The first
+readiness frame already shows the cells, but its sheet-tab bar has not painted;
+it remains unstable and is not relabeled as a stable completion frame.
+
+All **11 cell meanings are correct; 9 display strings match exactly**. The date
+reads `14 November 2026`, B7 reads `86,000`, and the labels and title are readable.
+B6 displays `1,25,000` instead of the manifest's `125,000`; B8 displays
+`2,11,000` instead of `211,000`. A separate read-only Lenovo observation confirms
+`en-IN` grouping `[3, 2]`. Acceptance explicitly recognizes the same numeric
+values, 125000 and 211000; it does not claim all 11 pinned literals matched.
+The genuine BIFF8 fixture independently proves `=SUM(B6:B7)` and cache 211000;
+the screenshots prove the displayed total, not a separate native recalculation.
+
+Source and fixture bytes are unchanged, the journal is empty, exclusive workbook
+release succeeds, the host exits normally with code 0 and Office registrations
+are unchanged. The installed Excel handler succeeds; headed missing/failing XLS
+providers and sheet navigation remain unqualified. Raw `feature_accepted=false`,
+`format_accepted=false` and capture `visual_reviewed=false` remain intact;
+semantic acceptance is recorded separately in the
+[XLS native summary](qualification/evidence/dcm-33-xls-native-summary.json).
+Publishing this documentation records the tested `e19ff30` qualification and
+does not constitute another native run. **DCM-33 stays PARTIAL, 31 complete /
+19 remaining; legacy PPT is the next baby step.**
 
 ### DCM-32 qualified result
 
@@ -234,12 +265,15 @@ open under DCM-46, preserving the earlier bounded queued-layout fix history.
   `tests/fixtures/dcm32-slides.pptx` fixture and a matching exact build receipt.
 - Completed DOC milestone selectors: `legacy-preview-unit` and `ui-legacy-doc`,
   using the pinned `tests/fixtures/dcm33-legacy.doc` and matching exact build.
+- Completed XLS milestone selector: `ui-legacy-xls`, using the pinned
+  `tests/fixtures/dcm33-legacy-xls.xls`, focused legacy/Excel units and matching
+  exact build. The separate image review records the observed en-IN grouping.
 
-The smallest next task is DCM-33 legacy XLS: prepare a genuine binary workbook
-with pinned representative cells and inspect the existing native-handler/
-unavailable contract, then add the smallest focused gate. Legacy PPT follows
-in a separate baby step. Preserve the accepted DOC and shared unavailable
-coverage; do not rerun the broad `ui-previews` workflow first. DCM-19's
+The smallest next task is DCM-33 legacy PPT: prepare a genuine binary presentation
+with pinned representative content and inspect the existing native-handler/
+unavailable contract, then add the smallest focused gate. Preserve the accepted
+DOC and XLS milestones and shared unavailable coverage; do not rerun the broad
+`ui-previews` workflow first. DCM-19's
 Explorer-isolation blocker is unchanged.
 
 Code locally, unit test, commit/push, then use Desktop Commander for
