@@ -46,6 +46,26 @@ filesystem evidence, screenshots and cleanup outcome. No installed DCM files cha
   Every captured full image and same-frame physical crop requires a separate
   semantic review. Raw feature/review flags stay false. This DOC-only gate does
   not close DCM-33's legacy XLS/PPT scope or qualify headed DOC without Office.
+- `ui-legacy-xls`: the next DCM-33 headed baby step uses pinned binary
+  `tests/fixtures/dcm33-legacy-xls.xls` and its manifest with an exact clean
+  build. Its six records cover TXT, first XLS preview, TXT recovery, exclusive
+  workbook release, reopening and normal close. The installed provider or
+  honest unavailable path is selected naturally; registry registrations are
+  read before and after and must remain unchanged. Shared unsupported-control
+  coverage stays in `ui-legacy-doc` and is not repeated here. Every native
+  capture checks the direct `EXCEL9`/`EXCEL7` hierarchy and both viewport sizes
+  and origins against the owned pane in PMv2 coordinates, using the unchanged
+  four-pixel tolerance from `ui-xlsx`. Every attempt, its geometry and its
+  full-window image plus crop from that same saved frame are retained; bounds
+  failures are reported after recovery and normal close. Initial placement
+  occurs during TXT only, with no post-attachment Restore or Excel input.
+  Separate image review must confirm the manifest's sheet, labels, complete
+  date, numeric amounts and formula result. Nonblank pixels, accessible text
+  and provider captions do not certify cell readability. Raw feature/format
+  acceptance and capture review flags remain false. This representative XLS
+  gate does not close the pending PPT scope. Installed-handler results do not
+  qualify a missing-handler environment, other providers, damaged/protected
+  files or arbitrary workbook fidelity.
 - `pptx-unit`: focused DCM-32 PPTX/Open XML parser qualification with the committed
   synthetic `tests/fixtures/dcm32-slides.pptx` and its manifest (31,109 bytes,
   SHA-256 `af42fff55297109195b95039d2ac39c5d53b1fae23b59e7b40a7184d679b93f1`).

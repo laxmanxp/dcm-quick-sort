@@ -64,6 +64,25 @@
     "native_regression_commit": "4619e0ef2bed51b7685c5f84d0fc0f87702bb1ca",
     "native_regression_result": "23 top-level app regressions: 23 passed, 0 failed, 0 skipped, exit 0, no timeout, source unchanged. DCM-12 adds invalid-template-package coverage; all three D4 parent tests and five nested cases passed. All earlier safety tests remain GREEN. Full app/installer/UI/package qualification remains open.",
     "last_native_attempt": "DCM-33 remains PARTIAL overall at pushed and Lenovo-tested source b3d46b9e2003dbbfa2ae431e134e0692b8168d34. The shared unavailable-footer fix and representative installed-handler DOC milestone are accepted. Native GREEN 122305-046d0bcc passes 4 top-level tests / 33 leaf cases, zero failures/skips, after the retained cc094810 RED with nine intended footer failures. Tooling passes 30 scripts and native helper compilation; exact build 122409-a7d930fc passes. The new full baseline 122523-cf1f5a00 is 388 passed / 0 failed / 0 skipped, including the real-PPTX integration; historical DCM-31 383/0/1 is unchanged. UI 122655-7ff7ee3e passes 8 records; all 15 images were separately reviewed for DOC content, shared unavailable body/footer, TXT recovery and reopening. Raw feature/format/review flags stay false. Source and fixtures unchanged, journal empty, DOC released and host exit 0. The DOC handler is installed; headed missing-DOC-provider behavior is not qualified. 31 complete / 19 remaining; next legacy XLS, then PPT.",
+    "dcm33_xls_progress_checkpoint": {
+      "status": "PARTIAL",
+      "starting_commit": "cb3b2ffabe598915d2184f7a0bbdb716a7b0bea4",
+      "application_change": "None identified; existing legacy routing/footer and CLSID-gated Excel outer repair apply",
+      "fixture": "tests/fixtures/dcm33-legacy-xls.xls",
+      "fixture_manifest": "tests/fixtures/dcm33-legacy-xls.manifest.json",
+      "workflow": [
+        "legacy-preview-unit",
+        "excel-preview-layout-unit",
+        "ui-tooling",
+        "build",
+        "ui-legacy-xls"
+      ],
+      "acceptance": "Pending focused native gates and separate XLS image review",
+      "scope": "One genuine binary workbook, native first open/reopening, TXT recovery, file release, source preservation and strict Excel bounds; no registry mutation or broad fidelity claim",
+      "numbered_steps_closed": [],
+      "evidence": "qualification/dcm33-legacy-office.md",
+      "next_after_xls": "Legacy PPT qualification"
+    },
     "dcm33_progress_checkpoint": {
       "status": "PARTIAL",
       "milestone": "Shared unavailable-footer fix and representative native DOC accepted; overall DCM-33 PARTIAL with legacy XLS/PPT pending",

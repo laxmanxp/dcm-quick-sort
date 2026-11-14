@@ -175,3 +175,28 @@ package and user acceptance remain open under DCM-46/47 and the release gates.
 **DCM-33 remains PARTIAL; no numbered step closes.** Continue with a genuine
 legacy XLS fixture and the smallest native/unavailable gate, then legacy PPT
 in a separate baby step. DCM-19's Explorer-isolation blocker is unchanged.
+
+## Legacy XLS baby step in progress
+
+The XLS milestone starts from `cb3b2ffabe598915d2184f7a0bbdb716a7b0bea4`.
+Application and installer source are unchanged from accepted `b3d46b9`.
+Read-only Lenovo lookup finds `Excel.Sheet.8` and the exact Excel preview CLSID
+`{00020827-0000-0000-C000-000000000046}`. The existing outer-window repair is
+selected by that handler identity, including XLS; no new rendering path or
+production fix is planned without a reproduced defect.
+
+The scope is a pinned synthetic BIFF8/CFBF workbook, one visible sheet, known
+labels/date/numeric cells and a formula total. Local fixture generation and
+validation precede the focused native units, tooling and exact build. The new
+`ui-legacy-xls` gate will exercise TXT -> first XLS open -> TXT recovery ->
+exclusive release -> XLS reopening -> normal close, retaining every full frame,
+same-frame crop and strict four-pixel EXCEL9/EXCEL7 bounds result. Acceptance
+requires separate semantic review of the fixture cells; a nonblank Excel grid,
+provider footer or accessibility readback alone is insufficient.
+
+The DOC milestone already exercises the shared generic unavailable control.
+The XLS gate uses the naturally selected native/unavailable route without
+changing live Office registrations. Missing-XLS-provider behavior will remain
+explicitly unexercised if the installed handler succeeds. Native sheet
+navigation, arbitrary workbook fidelity and the larger DCM-34/35/46/47 gates
+remain separate. No XLS acceptance or numbered closure is claimed here.

@@ -70,6 +70,25 @@ completion documentation records the tested `b3d46b9` source; publishing it
 does not imply another native application acceptance run. The numbered count
 stays **31 complete / 19 remaining**.
 
+### DCM-33 legacy XLS baby step in progress
+
+The next focused qualification starts from pushed completion record
+`cb3b2ffabe598915d2184f7a0bbdb716a7b0bea4`. Lenovo is clean at the same commit
+and the FlowDev app/profile still maps to this repository and branch. A
+read-only lookup resolves `.xls` to Excel's existing preview-handler CLSID
+`{00020827-0000-0000-C000-000000000046}`; the accepted outer-window repair is
+handler-based and already applies. No new application defect or production
+change has been identified.
+
+Prepare the pinned genuine binary workbook and `ui-legacy-xls` gate, then run
+`legacy-preview-unit`, `excel-preview-layout-unit`, `ui-tooling`, `build` and
+`ui-legacy-xls` through registered FlowDev. Use the exact current build receipt,
+retain every readiness frame and the unchanged four-pixel native bounds checks,
+and separately review visible cells/date/total before acceptance. The existing
+388/0/0 baseline remains a historical result at `b3d46b9` unless a production
+fix requires a fresh baseline. Legacy XLS is not yet accepted at this checkpoint;
+legacy PPT follows it. The numbered count stays 31 complete / 19 remaining.
+
 ### DCM-32 qualified result
 
 **DCM-32 is complete for the representative two-slide presentation through the
