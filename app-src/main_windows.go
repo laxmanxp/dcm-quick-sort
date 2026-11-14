@@ -4953,7 +4953,11 @@ func loadPreview(path string) {
 		}
 	}
 
-	app.fallback = previewFallbackText(path, hasHandler)
+	showPreviewUnavailable(path, hasHandler)
+}
+
+func showPreviewUnavailable(path string, handlerRegistered bool) {
+	app.fallback = previewFallbackText(path, handlerRegistered)
 	procInvalidateRect.Call(app.previewHwnd, 0, 1)
 }
 
