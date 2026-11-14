@@ -19,6 +19,29 @@ The DCM-31 completion record is now published at
 that exact commit. Its production tests remain bound to `ec7a0234`, and its
 report bundle is confirmed at `69fee755a94468165018b499fe7d876779e57ec8`.
 
+### DCM-33 active qualification
+
+The first legacy Office baby step is a pinned genuine Word 97 binary `.doc`
+fixture and a focused `ui-legacy-doc` flow. The existing `.doc` handler is
+registered on Lenovo; its visible result still requires the new acceptance run.
+Legacy XLS/PPT and a naturally absent DOC-provider environment remain separate.
+The numbered count stays **31 complete / 19 remaining**.
+
+Inspection found a shared unavailable-preview defect: `loadPreview` updates the
+pane's fallback message without replacing the previous file's status footer.
+The native `legacy-preview-unit` regression at `cc094810` reproduced all nine
+blank/prior-TXT/prior-native footer failures across missing/failed handlers and
+extensionless files. Both existing-behavior tests passed; hidden-control setup
+succeeded and source bytes stayed unchanged. Report `121711-6f555113` retains
+that RED. The smallest footer fix is now being integrated; native GREEN and
+visible DOC acceptance remain pending.
+A harmless `.dcm33unsupported` control file will exercise the visible generic
+unavailable path without changing any Office association or registration.
+
+See [the DCM-33 checkpoint](qualification/dcm33-legacy-office.md). Development
+and fixture generation happen locally; commits are pushed before the registered
+Lenovo update and tests. Do not mark DCM-33 complete after DOC alone.
+
 ### DCM-32 qualified result
 
 **DCM-32 is complete for the representative two-slide presentation through the

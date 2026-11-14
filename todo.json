@@ -37,7 +37,7 @@
       "DCM-32"
     ],
     "next_step": "DCM-33",
-    "checkpoint": "qualification/dcm32-pptx.md",
+    "checkpoint": "qualification/dcm33-legacy-office.md",
     "blocked_steps": ["DCM-19"],
     "active_blockers": ["DCM-EXPLORER-ISOLATION-01"],
     "next_runnable_step": "DCM-33",
@@ -64,6 +64,34 @@
     "native_regression_commit": "4619e0ef2bed51b7685c5f84d0fc0f87702bb1ca",
     "native_regression_result": "23 top-level app regressions: 23 passed, 0 failed, 0 skipped, exit 0, no timeout, source unchanged. DCM-12 adds invalid-template-package coverage; all three D4 parent tests and five nested cases passed. All earlier safety tests remain GREEN. Full app/installer/UI/package qualification remains open.",
     "last_native_attempt": "DCM-32 is complete for representative installed-handler PPTX at pushed and updated source b3be3a016a92759ed88eeb364645f56fb5cc7916. Registered ui-tooling passes 29 script parses and native C# compilation; pptx-unit passes 29 tests / 0 failures / 0 skips and 1 real-test run / 1 pass. Exact build 093918-4f66ddaf passes with 444 source-manifest entries audited against Git. ui-pptx 094009-df395f56 passes 8 records with 18 images, 8 native capture attempts, 2 scoped queued Page keys and all_fixture_slides_captured=true. All 18 images were separately reviewed for slide 1, Payments table, return, TXT recovery, reopening and full shell/crop content. Raw feature/review flags remain false. All six preliminary images are now reviewed; retain the old crop title clipping and original 3b2978 core PASS / wrapper FAIL. Connectivity recovered for the final run; application source remains ec7a023. 31 complete / 19 remaining; next DCM-33 legacy DOC native/unavailable behavior.",
+    "dcm33_progress_checkpoint": {
+      "status": "PARTIAL",
+      "milestone": "DOC native preview and honest generic unavailable status; legacy XLS/PPT still pending",
+      "starting_commit": "d4edf54b60b4ce86b6642df43547a77506bc7c4a",
+      "local_change": "Minimal footer fix is being integrated after observed native RED; genuine binary DOC and focused headed gate prepared",
+      "native_regression": {
+        "source": "cc0948108bff8c6ccc7721a4dfda69faac59bc91",
+        "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-regressions-20261114-121711-6f555113",
+        "result": "Observed RED",
+        "top_level_passed": 2,
+        "top_level_failed": 1,
+        "skipped": 0,
+        "intended_status_failures": 9,
+        "source_unchanged": true,
+        "log_sha256": "8a33ebc502337b9388153a8df85b1ec153517d20509c593890ca2368602116d4"
+      },
+      "defect": "Generic unavailable pane updates but status footer can retain prior TXT/native-success caption",
+      "workflow": [
+        "legacy-preview-unit",
+        "ui-tooling",
+        "build",
+        "ui-legacy-doc"
+      ],
+      "scope": "Genuine pinned DOC and shared unsupported control; no Office registration changes, no new renderer, no legacy XLS/PPT or headed absent-DOC-provider claim",
+      "evidence": "qualification/dcm33-legacy-office.md",
+      "numbered_steps_closed": [],
+      "acceptance": "Native GREEN, baseline and headed DOC review pending; no numbered closure"
+    },
     "dcm32_native_acceptance_checkpoint": {
       "status": "passed_with_separate_image_review",
       "commit": "b3be3a016a92759ed88eeb364645f56fb5cc7916",
@@ -453,6 +481,7 @@
     "dcm31_initial_summary": "qualification/evidence/dcm-31-initial-summary.json",
     "dcm31_completion": "qualification/dcm31-complete.md",
     "dcm31_native_summary": "qualification/evidence/dcm-31-native-summary.json",
+    "dcm33_checkpoint": "qualification/dcm33-legacy-office.md",
     "dcm32_checkpoint": "qualification/dcm32-pptx.md",
     "dcm32_native_summary": "qualification/evidence/dcm-32-native-summary.json",
     "dcm32_progress_summary": "qualification/evidence/dcm-32-progress-summary.json",

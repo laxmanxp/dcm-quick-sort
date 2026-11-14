@@ -34,6 +34,18 @@ filesystem evidence, screenshots and cleanup outcome. No installed DCM files cha
 
 ## Behavioral gates
 
+- `legacy-preview-unit`: focused DCM-33 legacy routing/body coverage and native
+  unavailable-status transitions. Hidden owned controls exercise blank, prior
+  TXT-success and prior native-success footers with missing/failed handlers;
+  the tests do not instantiate Office or modify registry associations.
+- `ui-legacy-doc`: the first DCM-33 headed baby step. It uses the pinned genuine
+  Word 97 `tests/fixtures/dcm33-legacy.doc` and manifest, a matching clean build,
+  a harmless unsupported-extension control, TXT recovery, native DOC or an
+  honest unavailable state, exclusive release, reopening and normal close.
+  Missing-provider simulation by changing live Office registrations is forbidden.
+  Every captured full image and same-frame physical crop requires a separate
+  semantic review. Raw feature/review flags stay false. This DOC-only gate does
+  not close DCM-33's legacy XLS/PPT scope or qualify headed DOC without Office.
 - `pptx-unit`: focused DCM-32 PPTX/Open XML parser qualification with the committed
   synthetic `tests/fixtures/dcm32-slides.pptx` and its manifest (31,109 bytes,
   SHA-256 `af42fff55297109195b95039d2ac39c5d53b1fae23b59e7b40a7184d679b93f1`).
@@ -58,8 +70,9 @@ filesystem evidence, screenshots and cleanup outcome. No installed DCM files cha
   path and start time before each posted Page Down/Up. It checks slide 1 → 2 → 1
   using stable changed/restored pixels and retains every bounded capture attempt.
   Native crops derive from the same full-window image using physical coordinates.
-  This adapter still requires its own registered native tooling/feature run;
-  the earlier first-slide-only run does not qualify its navigation. The fallback
+  Native navigation passed at `b3be3a0` with separate 18-image review; see
+  `qualification/evidence/dcm-32-native-summary.json`. The earlier first-slide-only
+  run remains partial historical evidence. The fallback
   uses owned combo 1025 for the same sequence. A provider caption or slide label alone
   cannot prove the visible slide content. Protected/damaged presentations remain
   DCM-34, and broad repeated-switching lifecycle remains DCM-35.

@@ -839,6 +839,17 @@ func previewFallbackText(path string, handlerRegistered bool) string {
 	return heading + "\n\n" + reason + "\n\n" + strings.Join(metadata, "\n") + "\n\n" + hint
 }
 
+func previewFallbackStatus(path string, handlerRegistered bool) string {
+	kind := strings.ToUpper(strings.TrimPrefix(filepath.Ext(path), "."))
+	if kind == "" {
+		return "Preview unavailable: file has no extension"
+	}
+	if handlerRegistered {
+		return fmt.Sprintf("Preview unavailable: %s (Windows handler failed)", kind)
+	}
+	return fmt.Sprintf("Preview unavailable: %s (no Windows preview handler installed)", kind)
+}
+
 const defaultTextPreviewLimit int64 = 256 * 1024
 
 func readTextPreview(path string, limit int64) (string, error) {

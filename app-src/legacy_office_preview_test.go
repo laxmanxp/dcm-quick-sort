@@ -90,3 +90,29 @@ func TestDCM33LegacyOfficeUnavailableText(t *testing.T) {
 		}
 	}
 }
+
+func TestDCM33UnavailablePreviewStatus(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		path       string
+		registered bool
+		want       string
+	}{
+		{"doc-missing", "report.doc", false, "Preview unavailable: DOC (no Windows preview handler installed)"},
+		{"doc-failed-mixed-case", "report.DoC", true, "Preview unavailable: DOC (Windows handler failed)"},
+		{"xls-missing", "book.xls", false, "Preview unavailable: XLS (no Windows preview handler installed)"},
+		{"xls-failed-mixed-case", "book.XlS", true, "Preview unavailable: XLS (Windows handler failed)"},
+		{"ppt-missing", "slides.ppt", false, "Preview unavailable: PPT (no Windows preview handler installed)"},
+		{"ppt-failed-mixed-case", "slides.PpT", true, "Preview unavailable: PPT (Windows handler failed)"},
+		{"generic-missing", "unavailable.dcm33unsupported", false, "Preview unavailable: DCM33UNSUPPORTED (no Windows preview handler installed)"},
+		{"extensionless-dotted-parent", filepath.Join("archive.doc", "report"), false, "Preview unavailable: file has no extension"},
+		{"extensionless-ignores-handler", "report", true, "Preview unavailable: file has no extension"},
+		{"blank-path", "", false, "Preview unavailable: file has no extension"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := previewFallbackStatus(tc.path, tc.registered); got != tc.want {
+				t.Fatalf("unavailable footer = %q; want %q", got, tc.want)
+			}
+		})
+	}
+}

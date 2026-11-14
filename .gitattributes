@@ -1,1 +1,3 @@
 tests/fixtures/sumatra-scroll.pdf -text
+tests/fixtures/dcm33-legacy.doc -text
+tests/fixtures/dcm33-legacy.source.docx -text
