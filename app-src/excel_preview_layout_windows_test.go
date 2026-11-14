@@ -287,8 +287,10 @@ func TestDCM31ExcelPreviewLayoutGuards(t *testing.T) {
 					outer := f.window(t, f.pane, "EXCEL9", 0x80000000, 240, 180)
 					f.child(t, outer, "EXCEL7", 320, 240)
 				case "non-child-inner":
-					outer := f.child(t, f.pane, "EXCEL9", 240, 180)
-					f.window(t, outer, "EXCEL7", 0x80000000, 320, 240)
+					f.child(t, f.pane, "EXCEL9", 240, 180)
+					// Windows normalizes popup ownership to a top-level window.
+					// This matching popup must not count as an inner child.
+					f.window(t, f.pane, "EXCEL7", 0x80000000, 320, 240)
 				}
 				before := f.snapshot(t)
 				restoreCaller := dcm31RectEnterContext(t, caller.value)

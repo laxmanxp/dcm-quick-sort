@@ -66,7 +66,8 @@ final installer/package and publication remain open.
 - `native-preview-rect-unit` is the isolated real-HWND DPI measurement gate;
   its initial logical scaffold established native RED at147bf909 before correction.
 - `excel-preview-layout-unit` covers the guarded outer-window repair boundary;
-  its inactive scaffold awaits native RED before implementation and app wiring.
+  its inactive scaffold produces nine native geometry failures. Three popup-owner
+  guard fixtures were corrected after setup failures; clean RED rerun is pending.
 - Completed DOCX selector: `ui-docx` → `tools/test-ui-docx.ps1`.
 
 Code locally, unit test, commit/push, then use Desktop Commander for

@@ -261,6 +261,16 @@ and [Office DPI guidance](https://learn.microsoft.com/en-us/office/client-develo
 
 ## Coverage limits and durable material
 
+The first outer-layout native unit run at `5c608ca01a73c3416c2a5f5a8bd4a3f1ac3e8039`
+(`20261114-010342-30a77344`) produces all nine intended geometry assertion failures
+with the unused false helper. Thirty-six guard cases pass; three `non-child-inner`
+fixtures fail before calling the helper because Windows assigns the matching
+popup's owner to the top-level pane instead of the requested child. The fixture
+now explicitly uses that top-level owner; the popup still must not count as an
+inner child. All assertions and nine-plus39 case counts are unchanged. Windows
+test compilation passes; a clean focused native RED rerun is pending. This first
+run is not described as a clean guard qualification.
+
 The diagnostic at147bf909 added bounded, opt-in native-call records to the existing
 `DCM_LAYOUT_TRACE=1` output. It preserves the first 128 activation/GetClientRect/
 SetWindow/DoPreview/SetRect records, including the selected CLSID, caller and pane
