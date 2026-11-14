@@ -50,7 +50,9 @@ try {
     $runs = @($native.test_runs | Where-Object { $_.name -eq 'app-regressions' })
     if ($runs.Count -ne 1 -or $runs[0].pattern -cne $pattern -or $runs[0].passed_count -lt 1 -or @($runs[0].failures).Count -ne 0 -or @($runs[0].skipped).Count -ne 0) { throw 'DCM32_PPTX_TARGETED_COVERAGE: required targeted tests failed, were skipped or did not execute.' }
     if ((Get-FileHash -LiteralPath $native.source_hash_manifest.path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $native.source_hash_manifest.sha256) { throw 'DCM32_PPTX_SOURCE_MANIFEST: native source manifest identity changed.' }
-    $manifest = @(Get-Content -LiteralPath $native.source_hash_manifest.path -Raw -Encoding UTF8 | ConvertFrom-Json)
+    # Windows PowerShell 5.1 emits a parsed JSON array as one pipeline object.
+    # Assign it directly so later filtering enumerates its actual source entries.
+    $manifest = Get-Content -LiteralPath $native.source_hash_manifest.path -Raw -Encoding UTF8 | ConvertFrom-Json
     $fixtureEntries = @($manifest | Where-Object { $_.path -ceq $fixtureRelative })
     if ($fixtureEntries.Count -ne 1 -or $fixtureEntries[0].sha256 -cne $expectedHash) { throw 'DCM32_PPTX_TRACKED_FIXTURE: pinned fixture must belong to the native source manifest.' }
     $manifestEntries = @($manifest | Where-Object { $_.path -ceq $fixtureManifestRelative })
