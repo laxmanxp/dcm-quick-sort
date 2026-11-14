@@ -180,7 +180,7 @@ func TestReadZipEntryLimitedRejectsOversizedXML(t *testing.T) {
 func TestOfficeFoundationPreviewSummary(t *testing.T) {
 	p := writeOpenXMLFixture(t, ".docx", map[string]string{
 		"/word/document.xml": contentTypeWordDocument,
-	}, map[string]string{"word/document.xml": `<w:document/>`})
+	}, map[string]string{"word/document.xml": `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body/></w:document>`})
 	text, ok := officeFoundationPreviewText(p)
 	if !ok {
 		t.Fatal("expected built-in Office foundation preview")

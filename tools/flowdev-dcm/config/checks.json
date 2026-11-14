@@ -36,6 +36,8 @@
         "ui-refresh": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-refresh.ps1"],
         "text-unit": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "regressions", "-Run", "^TestDCM26"],
         "pdf-failure-unit": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "regressions", "-Run", "^Test(DCM34PDFRenderer|PDF)"],
+        "docx-failure-unit": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "regressions", "-Run", "^TestDCM34DOCX"],
+        "docx-unit": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "regressions", "-Run", "^Test(DOCX|RenderDOCX|ParseDOCX|TextPreviewFontPixelHeight|OpenXML|InspectOpenXML|ResolveOpenXML|ReadOpenXML|ReadZipEntryLimited|OfficeFoundation)"],
         "xlsx-unit": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "regressions", "-Run", "^(Test(XLSX|RenderXLSX)|Test(OpenXML|InspectOpenXML|ResolveOpenXML|ReadOpenXML|ReadZipEntryLimited|OfficeFoundation))"],
         "pptx-unit": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-pptx-unit.ps1"],
         "legacy-preview-unit": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "regressions", "-Run", "^TestDCM33"],
