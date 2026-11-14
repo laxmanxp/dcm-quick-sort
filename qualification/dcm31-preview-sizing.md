@@ -193,21 +193,50 @@ not a universal COM coordinate convention or a proven clipping repair. The same
 upper/lower bounds gate must reject oversizing as well as clipping. Native
 measurement GREEN and first-open/reopen feature acceptance remain pending.
 
+## Physical initial rectangle alone is ineffective
+
+At pushed source `bcee0759ab95d01a6563d2d0a79a8ad80ae14959`, native
+`native-preview-rect-unit` run `20261114-004101-9b8149b0` passes both top-level tests
+and all twelve leaf cases, with zero skips. Physical dimensions, invalid handles,
+unchanged HWND awareness/geometry and restored caller context are now qualified
+on the observed 125% Lenovo display. The existing31 local units and Windows app/
+test cross-builds also pass. Native build SHA-256 is
+`443e57ddaa35bb358c984158a511bc4e384833810633a9f2707b6fca268d4df2`.
+
+However, registered `ui-xlsx-layout` run `20261114-004206-3cfa9591` still fails all
+ten workbook viewport observations. Both sessions trace successful physical
+902x487 initial SetWindow followed by successful logical722x390 SetRect, with the
+original unaware caller context restored before COM. The final observed outer
+window remains723x390 and the inner903x488 against902x487 pane client. These data
+do not show geometry between the two COM methods, so they do not prove exactly
+when Excel applies the wrong size. The initial-only policy does not fix clipping.
+All six ordinary records, source/fixture preservation and normal close still pass.
+
+The next trial retains the verified physical measurement and applies it to both
+SetWindow and SetRect for the active Excel handler. Its policy is latched with the
+successfully initialized handler and cleared on unload; it is not inferred from
+the currently selected filename. A failed live measurement leaves the current
+preview intact without sending a zero rectangle. Other providers keep their
+existing logical policy. Unchanged upper/lower native bounds and image review
+must establish first-open/reopen GREEN before this trial can be called a repair.
+
 ## Coverage limits and durable material
 
-The next diagnostic adds bounded, opt-in native-call records to the existing
+The diagnostic at147bf909 added bounded, opt-in native-call records to the existing
 `DCM_LAYOUT_TRACE=1` output. It preserves the first 128 activation/GetClientRect/
 SetWindow/DoPreview/SetRect records, including the selected CLSID, caller and pane
 DPI contexts, rectangle arguments and exact HRESULTs. It does not alter DPI
-contexts or native call ordering. A separate, currently unwired measurement
-boundary deliberately retains logical GetClientRect behavior so the registered
-`native-preview-rect-unit` can establish a real RED on Lenovo before correction.
+contexts or native call ordering. A separate, initially unwired measurement
+boundary deliberately retained logical GetClientRect behavior so the registered
+`native-preview-rect-unit` could establish a real RED on Lenovo before correction.
 The hidden owned HWND tests cover nine creator/caller DPI combinations, invalid
 handles, unchanged window geometry/awareness and caller-context restoration.
 An unavailable API or absent non-100% scaling is an explicit unqualified skip.
 The combined diagnostic/scaffold passes the existing 24 XLSX/Open XML and seven
 DOCX/font local units; both the Windows app and Windows test binary cross-compile.
-Native execution of this diagnostic/scaffold remains pending at this checkpoint.
+Native RED and subsequent helper GREEN are recorded above. The consistent-policy
+candidate also passes all31 focused local units and the Windows GUI cross-build;
+its native bounds and visual acceptance remain pending.
 
 The fallback parser/grid has focused unit coverage for blank/sparse sheets,
 shared/inline strings, dates, cached formulas, bounds and malformed packages.

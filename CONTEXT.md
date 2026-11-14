@@ -29,9 +29,12 @@ failure. It is not a clipping fix. At `147bf909`, the real Windows measurement g
 establishes RED in all three unaware-caller cases (320x240 logical versus400x300
 physical), with no skips. COM trace confirms successful722x390 calls and stable
 caller context on both opens; all ten diagnostic workbook views still clip.
-The next candidate uses a scoped/restored physical measurement only for initial
-SetWindow of the parsed Excel CLSID. Native unit GREEN and UI acceptance remain
-pending. Other native providers retain their existing policy.
+At `bcee0759`, physical measurement passes2 top-level/12 leaf native cases with no
+skips, but initial-only physical SetWindow still leaves all ten workbook frames
+clipped. Trace shows902x487 SetWindow followed by722x390 SetRect, both successful.
+Next apply the verified physical policy consistently to the active Excel handler's
+SetWindow/SetRect, clearing it on unload; prove both outer and inner bounds before
+closure. Other native providers retain their existing policy.
 See [the sizing checkpoint](qualification/dcm31-preview-sizing.md).
 
 DCM-30's fresh registered Lenovo run at production source

@@ -598,6 +598,7 @@ type appState struct {
 	image                                                                                                                                              uintptr
 	imageStream                                                                                                                                        *iUnknown
 	preview                                                                                                                                            *iPreviewHandler
+	previewPhysicalRect                                                                                                                                bool
 	previewActive                                                                                                                                      bool
 	fallback                                                                                                                                           string
 	updatingSuggestions, updatingFileList, updatingProcessedList                                                                                       bool
@@ -5017,9 +5018,9 @@ func unloadPreview() {
 		syscall.SyscallN(app.preview.Vtbl.Unload, self)
 		procIUnknownSetSite.Call(self, 0)
 		syscall.SyscallN(app.preview.Vtbl.Release, self)
-		app.preview = nil
-		setNativePreviewTraceActive(0, nativePreviewTraceSession{})
 	}
+	app.preview, app.previewPhysicalRect = nil, false
+	setNativePreviewTraceActive(0, nativePreviewTraceSession{})
 	app.previewActive = false
 	releasePreviewImage()
 	resetPreviewZoomState()
@@ -5661,11 +5662,30 @@ func resizePreviewHandler() {
 		return
 	}
 	handler := uintptr(unsafe.Pointer(app.preview))
+	physicalRect := app.previewPhysicalRect
 	traceSession := nativePreviewTraceSessionFor(handler)
-	traceCall := beginNativePreviewTrace(traceSession, "GetClientRect", app.previewHwnd, handler, 0, nil)
+	rectMethod := "GetClientRect"
+	if physicalRect {
+		rectMethod = "MeasurePhysicalClientRectForSetRect"
+	}
+	traceCall := beginNativePreviewTrace(traceSession, rectMethod, app.previewHwnd, handler, 0, nil)
 	var rc RECT
-	rectOK, _, _ := procGetClientRect.Call(app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
+	var rectOK uintptr
+	if physicalRect {
+		var ok bool
+		rc, ok = nativePreviewPhysicalClientRect(app.previewHwnd)
+		if ok {
+			rectOK = 1
+		}
+	} else {
+		rectOK, _, _ = procGetClientRect.Call(app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
+	}
 	endNativePreviewTraceClientRect(traceCall, rectOK, rc)
+	if physicalRect && rectOK == 0 {
+		// Leave the current viewer intact when its physical bounds cannot be
+		// measured. Never replace the last valid rectangle with a failed read.
+		return
+	}
 	traceCall = beginNativePreviewTrace(traceSession, "SetRect", app.previewHwnd, handler, 0, &rc)
 	hr, _, _ := syscall.SyscallN(app.preview.Vtbl.SetRect, uintptr(unsafe.Pointer(app.preview)), uintptr(unsafe.Pointer(&rc)))
 	endNativePreviewTraceHRESULT(traceCall, hr, handler)
@@ -5710,19 +5730,18 @@ func loadWindowsPreviewHandler(path string) bool {
 		return false
 	}
 	var rc RECT
-	// Limit this initial-geometry compatibility candidate to the selected Excel
-	// handler. Post-DoPreview and subsequent SetRect calls retain their existing
-	// caller-coordinate measurements in resizePreviewHandler.
-	excelInitialPhysicalRect := clsid == clsidExcelPreviewHandler
+	// Scope this rectangle compatibility candidate to the selected Excel
+	// handler. Publish the policy with that handler after successful DoPreview.
+	excelPhysicalRect := clsid == clsidExcelPreviewHandler
 	rectMethod := "GetClientRect"
-	if excelInitialPhysicalRect {
+	if excelPhysicalRect {
 		// These before/after contexts surround the helper; its physical query
 		// occurs in a temporary DPI context which is restored before SetWindow.
 		rectMethod = "MeasurePhysicalClientRectForSetWindow"
 	}
 	traceCall := beginNativePreviewTrace(traceSession, rectMethod, app.previewHwnd, self, 0, nil)
 	var rectOK uintptr
-	if excelInitialPhysicalRect {
+	if excelPhysicalRect {
 		var ok bool
 		rc, ok = nativePreviewPhysicalClientRect(app.previewHwnd)
 		if ok {
@@ -5732,7 +5751,7 @@ func loadWindowsPreviewHandler(path string) bool {
 		rectOK, _, _ = procGetClientRect.Call(app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
 	}
 	endNativePreviewTraceClientRect(traceCall, rectOK, rc)
-	if excelInitialPhysicalRect && rectOK == 0 {
+	if excelPhysicalRect && rectOK == 0 {
 		procIUnknownSetSite.Call(self, 0)
 		syscall.SyscallN(ph.Vtbl.Release, self)
 		return false
@@ -5754,7 +5773,7 @@ func loadWindowsPreviewHandler(path string) bool {
 		syscall.SyscallN(ph.Vtbl.Release, self)
 		return false
 	}
-	app.preview = ph
+	app.preview, app.previewPhysicalRect = ph, excelPhysicalRect
 	setNativePreviewTraceActive(self, traceSession)
 	app.previewFit = true
 	app.previewFitWidth = false
