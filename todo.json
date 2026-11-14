@@ -349,19 +349,19 @@
       "id": "DCM-XLSX-SIZE-01",
       "feature": "Resolve initial native Excel preview sizing",
       "status": "implemented",
-      "ui_test": "native_bounds_RED_at_45679e0_and_33cbe3c; cause_not_resolved",
+      "ui_test": "native_bounds_RED_at_147bf909; exact_COM_calls_succeed; physical_initial_rect_trial_pending",
       "user_test": "not_recorded",
       "release_gate": true,
       "parent_steps": [
         "DCM-31"
       ],
       "acceptance": "Diagnose the first-open clipped Excel viewport using synchronized DPI-context geometry and unforced adjacent images; resolve the observed sizing cause and verify first open, text recovery and reopen through the exact-source registered workflow. Do not claim a longer wait or reopening is a product fix.",
-      "native_test": "At3d3af0fc, run225846-094bf40a passes6 rawrecords but02-native-workbook.png has white right/bottom bands and missing sheet tabs;06-native-workbook-reopened.png fills the pane. All4 images reviewed. Preserved source/workbook bytes and normal host exit0. Diagnostic atb437ba2a run231011-787600e7 retains12 images/24pairedobservations; first/reopen clipping persists beforeRestore and after5.43s withhostSequence2Depth0Pendingfalse. PMv2 paneclient902x487, outerEXCEL9723x390, innerEXCEL7903x488. Rootcauseinsideinitializationnotfullyproven; requireboundsRED beforefix. Registered bounds gate at 45679e0, run 231926-395a05c1, exits 1 with DCM31_XLSX_NATIVE_BOUNDS for first open; reopened viewport passes. Six workflow records, fixture/source preservation and normal host exit pass. Candidate adds post-DoPreview resize; native GREEN pending. Candidate 33cbe3c passes 31 focused local units and cross-build but native run 232554-5572d8ff repeats first-open bounds RED. Native app SHA-256 2f230b189c49289cbcce6c48adea2c9b8acddf94083f047a08fa6cda5f7cbaf2. Post-DoPreview call is not the clipping fix; measure COM boundary and preserve other provider policies.",
+      "native_test": "At3d3af0fc, run225846-094bf40a passes6 rawrecords but02-native-workbook.png has white right/bottom bands and missing sheet tabs;06-native-workbook-reopened.png fills the pane. All4 images reviewed. Preserved source/workbook bytes and normal host exit0. Diagnostic atb437ba2a run231011-787600e7 retains12 images/24pairedobservations; first/reopen clipping persists beforeRestore and after5.43s withhostSequence2Depth0Pendingfalse. PMv2 paneclient902x487, outerEXCEL9723x390, innerEXCEL7903x488. Rootcauseinsideinitializationnotfullyproven; requireboundsRED beforefix. Registered bounds gate at 45679e0, run 231926-395a05c1, exits 1 with DCM31_XLSX_NATIVE_BOUNDS for first open; reopened viewport passes. Six workflow records, fixture/source preservation and normal host exit pass. Candidate adds post-DoPreview resize; native GREEN pending. Candidate 33cbe3c passes 31 focused local units and cross-build but native run 232554-5572d8ff repeats first-open bounds RED. Native app SHA-256 2f230b189c49289cbcce6c48adea2c9b8acddf94083f047a08fa6cda5f7cbaf2. Post-DoPreview call is not the clipping fix; measure COM boundary and preserve other provider policies. At147bf909, actual physical-measurement unit RED:1pass1fail0skip, three unaware-caller mismatches. Trace run003449-c091c991 retains12 successful logical722x390 calls with stable caller/pane context24592 and LOCAL_SERVER activation; all10workbookbounds fail. Next candidate uses scoped/restored physical measurement for initial Excel SetWindow only; later SetRect unchanged.",
       "evidence_refs": [
         "qualification/dcm31-preview-sizing.md",
         "qualification/evidence/dcm-31-initial-summary.json"
       ],
-      "resolution_state": "post_initialization_resize_ineffective; trace_and_measurement_unit_next"
+      "resolution_state": "native_measurement_RED_and_COM_trace_recorded; Excel_initial_physical_rectangle_trial_pending"
     }
   ]
 }

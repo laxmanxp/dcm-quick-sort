@@ -163,6 +163,36 @@ reopen; the currently correct inner/reopened windows must not become oversized.
 The preview-handler documentation specifies an area in the parent HWND but does
 not establish an unconditional physical-pixel contract for all providers.
 
+## Native call trace and measurement RED
+
+At pushed source `147bf90977d1a9162b3e5fc12a88364dcf68b244`, registered
+`native-preview-rect-unit` run `20261113-234157-ea8a13d9` produced one top-level
+pass, one assertion failure and zero skips. The actual scale witness was an
+unaware 320x240 client versus a 400x300 PMv2 borderless physical window. All three
+unaware-caller matrix cases returned logical dimensions and failed; the six other
+matrix cases and all three invalid-handle context cases passed. This establishes
+actual RED for the deliberately logical measurement boundary.
+
+The exact native build passed (app SHA-256
+`e37ec98fd1c16a37629e865e7121e73a6943f589c4f40fa41191a7deaa77a7ec`).
+Registered `ui-xlsx-layout` run `20261114-003449-c091c991` again fails all ten
+workbook bounds observations while its six ordinary workflow records, preserved
+source/fixture bytes, empty journal and normal close pass. The COM trace has all
+12 records, below its 128-record cap. Both sessions activate the selected Excel
+CLSID via LOCAL_SERVER, return true for GetClientRect (722x390), and return S_OK
+from SetWindow, DoPreview and SetRect. Caller thread and pane remain context24592,
+awareness0 before and after every observed call. The physical pane is902x487;
+outerEXCEL9 is723x390 and innerEXCEL7 is903x488 throughout. A failed COM HRESULT
+or differing caller context does not explain these observed sessions.
+
+The next candidate scopes PMv2 to physical client measurement only and restores
+its caller before returning. Initial SetWindow uses that result only for the
+parsed Excel CLSID; the existing logical post-DoPreview and later SetRect policy
+is retained for the first compatibility experiment. This is a bounded trial,
+not a universal COM coordinate convention or a proven clipping repair. The same
+upper/lower bounds gate must reject oversizing as well as clipping. Native
+measurement GREEN and first-open/reopen feature acceptance remain pending.
+
 ## Coverage limits and durable material
 
 The next diagnostic adds bounded, opt-in native-call records to the existing

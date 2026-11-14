@@ -662,6 +662,7 @@ var previewSiteVtbl = previewHostSiteVtbl{
 var previewSite = previewHostSite{Vtbl: &previewSiteVtbl, refs: 1}
 var iidIUnknown = GUID{Data1: 0x00000000, Data2: 0x0000, Data3: 0x0000, Data4: [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
 var iidPreviewHandlerFrame = GUID{Data1: 0xFEC87AAF, Data2: 0x35F9, Data3: 0x447A, Data4: [8]byte{0xAD, 0xB7, 0x20, 0x23, 0x44, 0x91, 0x40, 0x1A}}
+var clsidExcelPreviewHandler = GUID{Data1: 0x00020827, Data2: 0x0000, Data3: 0x0000, Data4: [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
 
 func wstr(s string) *uint16               { p, _ := syscall.UTF16PtrFromString(s); return p }
 func loword(v uintptr) uint16             { return uint16(v & 0xffff) }
@@ -5709,9 +5710,33 @@ func loadWindowsPreviewHandler(path string) bool {
 		return false
 	}
 	var rc RECT
-	traceCall := beginNativePreviewTrace(traceSession, "GetClientRect", app.previewHwnd, self, 0, nil)
-	rectOK, _, _ := procGetClientRect.Call(app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
+	// Limit this initial-geometry compatibility candidate to the selected Excel
+	// handler. Post-DoPreview and subsequent SetRect calls retain their existing
+	// caller-coordinate measurements in resizePreviewHandler.
+	excelInitialPhysicalRect := clsid == clsidExcelPreviewHandler
+	rectMethod := "GetClientRect"
+	if excelInitialPhysicalRect {
+		// These before/after contexts surround the helper; its physical query
+		// occurs in a temporary DPI context which is restored before SetWindow.
+		rectMethod = "MeasurePhysicalClientRectForSetWindow"
+	}
+	traceCall := beginNativePreviewTrace(traceSession, rectMethod, app.previewHwnd, self, 0, nil)
+	var rectOK uintptr
+	if excelInitialPhysicalRect {
+		var ok bool
+		rc, ok = nativePreviewPhysicalClientRect(app.previewHwnd)
+		if ok {
+			rectOK = 1
+		}
+	} else {
+		rectOK, _, _ = procGetClientRect.Call(app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
+	}
 	endNativePreviewTraceClientRect(traceCall, rectOK, rc)
+	if excelInitialPhysicalRect && rectOK == 0 {
+		procIUnknownSetSite.Call(self, 0)
+		syscall.SyscallN(ph.Vtbl.Release, self)
+		return false
+	}
 	traceCall = beginNativePreviewTrace(traceSession, "SetWindow", app.previewHwnd, self, 0, &rc)
 	hr, _, _ := syscall.SyscallN(ph.Vtbl.SetWindow, self, app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
 	endNativePreviewTraceHRESULT(traceCall, hr, self)
