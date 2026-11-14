@@ -3,9 +3,12 @@
 Recorded 14 November 2026 (Asia/Kolkata). Standalone DCM QuickSort v1.0.71,
 repository `laxmanxp/dcm-quick-sort`, branch `release/v1.0.71`.
 
-**PARTIAL: the existing PPTX preview is under focused qualification.** The
-numbered plan remains 30 complete / 20 remaining. No new numbered step closes
-until the exact-source native tests and actual slide captures are reviewed.
+**PARTIAL: native parser qualification passed; two-slide visual acceptance is
+unfinished.** The numbered plan remains **30 complete / 20 remaining**, with
+DCM-32 next and DCM-19 still blocked on a disposable Explorer integration
+environment. The last confirmed Lenovo checkout is
+`7f4690616cc50d206b3d43953a3c2a509fa8c928`. The application source is unchanged
+from `ec7a02349e9f53c6fcfd889cf21f800f36c68b4a`.
 
 ## Recovered starting point
 
@@ -37,9 +40,54 @@ Qualification consumes the committed file instead of regenerating it on Lenovo.
 - Slide 2: `Payments` and a real table containing `Scheme` / `Amount`,
   `Bridge` / `125000`, and `Road` / `86000`.
 
-The existing local parser/Open XML gate passes **29 top-level tests, 0 failures,
-0 skips**, including the unchanged real-file integration test. This is parser
-coverage; it does not establish visible native rendering.
+The local and corrected native parser/Open XML gates each pass **29 top-level
+tests, 0 failures, 0 skips**, including the unchanged real-file integration
+test. This is parser coverage; visible native rendering has its own gate.
+
+## Confirmed native progress and retained failure
+
+| Phase | Source / native report suffix | Result and limit |
+|---|---|---|
+| First `pptx-unit` wrapper | `3b2978fb50d207de9b96dec29ba535483e1fcbb3` / `070557-4c20ba28` | Core tests passed, but the wrapper failed while handling the source-manifest array on Windows PowerShell 5.1. Preserve both outcomes. |
+| Corrected `pptx-unit` | `7f4690616cc50d206b3d43953a3c2a509fa8c928` / `070759-9c7fff5a` | 29 native tests passed, zero failures/skips; the real-file test emitted exactly one run and one pass. The separate fixture-verification wrapper passed. |
+| Exact native build | `7f46906` / `070857-05f16c29` | PASS. This receipt belongs to that checkout and cannot be reused after the harness changes. |
+| Initial `ui-pptx` observation | `7f46906` / `070938-51df3033` | Raw PASS: six machine records and six captures. `all_fixture_slides_captured=false`; native slide navigation was not exercised. |
+
+All report paths are under `D:\FlowverseReportsRepo`. The unit reports use
+`dcm-quicksort-regressions-20261114-`, the build uses
+`dcm-quicksort-build-20261114-`, and the UI report uses
+`dcm-quicksort-ui-pptx-20261114-` before the suffixes above.
+
+Commit `7f46906` changes only the wrapper's enumeration of the parsed JSON source
+manifest. It preserves the original test assertions and the raw core receipt.
+The earlier wrapper failure is a tooling failure, not a failed parser test, and
+is not retrospectively relabeled as success.
+
+The old full-suite result at `ec7a0234` remains 383 passed, zero failed and one
+external-PPTX skip. The focused 29/0/0 result resolves that fixture prerequisite
+for this parser gate; it does not change the historical baseline or certify a
+zero-skip final package.
+
+## Image review is incomplete
+
+Only two of the initial run's six captures were retrieved and reviewed:
+
+- `02-native-slide1.png`: the full window shows the actual main-slide title
+  `Bridge Inspection`, date `September 2026`, and the bridge picture correctly.
+- `02-native-slide1.preview.png`: the image is retained, but the old preview crop
+  cuts off the title. It is not a complete slide-content capture.
+
+Both available PNGs were hash-verified. The other four images have not been
+retrieved or reviewed. No visual acceptance is claimed for slide 2, return to
+slide 1, text recovery or reopening from unreviewed images. The raw six-record
+PASS and its false feature/review flags remain unchanged.
+
+The locally implemented continuation binds native input to the provider
+hierarchy observed in the initial run and adds 1 -> 2 -> 1 navigation. It also
+derives the preview crop from the saved full-window screenshot rather than a
+separate fixed-offset capture. Native compilation, deployment and execution of
+this continuation remain pending; a source change alone does not resolve the
+observed crop limitation or establish navigation acceptance.
 
 ## Focused registered gates
 
@@ -54,14 +102,24 @@ pixels and file bytes, and captures TXT → PPTX → TXT → PPTX reopening and 
 close. The first-slide colour counters reject absent picture pixels but do not
 establish text semantics or full fidelity. Every image needs separate review.
 
-The built-in fallback branch checks its owned slide selector through 1 → 2 → 1
-and requires visible change/restoration. The initial installed-handler branch
-records the real native window hierarchy and first/reopened slide without
-guessing foreign controls. Its native slide navigation remains unexercised;
-that branch alone cannot close the two-slide gate. Any further native navigation
-adapter must be based on the actual observed embedded provider.
+The built-in fallback branch implements owned-selector 1 -> 2 -> 1 checks with
+visible change/restoration; it was not the observed route in this initial run.
+The installed-handler branch at `7f46906` records first/reopened slide state and
+the real native hierarchy. The local continuation adds scoped native navigation
+from that observation, but has not yet passed the native compile/feature gates.
 
-Run in order from the registered profile:
+## Blocker and restart
+
+Desktop Commander stopped returning the requested observations: a three-image
+read and a metadata `start_process` call timed out. The final single read-only
+`.git/HEAD` probe also returned `Timeout - no response from device` at
+07:18:14 UTC (12:48:14 IST) on 14 November 2026. The connection is a confirmed
+current blocker. No newer device revision, update, build, compile or feature
+run is inferred from these timeouts. No further production source edits were
+made on Lenovo.
+
+After connectivity is restored and the device responds, publish the local
+harness continuation if not already pushed, then run from the registered profile:
 
 ```text
 flowdev update dcm-quicksort
@@ -71,10 +129,22 @@ flowdev test dcm-quicksort build
 flowdev test dcm-quicksort ui-pptx
 ```
 
-Set `DCM_BUILD_RECEIPT` to the exact successful build receipt before the final
-command. Native execution and image review are pending at this preparation
-checkpoint. Raw `feature_accepted` / `visual_reviewed` values stay false; later
-review decisions belong in a separate evidence record.
+Set `DCM_BUILD_RECEIPT` to the new exact successful build receipt before the final
+command. Review every full frame and crop for slide 1, slide 2, return, text
+recovery and reopening. Raw `feature_accepted` / `visual_reviewed` values stay
+false; later review decisions belong in a separate evidence record. DCM-33 is a
+future step; DCM-32 is not complete.
+
+## Evidence retained and gaps
+
+The [progress summary](evidence/dcm-32-progress-summary.json) records the exact
+known run identities and the partial review. The
+[preliminary report bundle](https://github.com/laxmanxp/flowverse-reports/tree/86d0e95a02f60098f34a17d6450473d8f4c2757a/apps/dcm-quicksort/dcm32-20261114-070938/preliminary-7f46906)
+contains normalized receipt and native-window-tree exports, the two original
+hash-verified PNGs, the local 29-test log, and the summary. These exported text
+records are not represented as byte-exact native originals. The other four PNGs
+and a complete exact native evidence archive have not been recovered. Their
+absence is retained as an evidence gap, not filled by a successful raw flag.
 
 ## Scope limits
 

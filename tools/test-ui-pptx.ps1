@@ -1,9 +1,9 @@
 [CmdletBinding()]
 param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT)
 # DCM-32: natural installed-handler/fallback routing, exact committed fixture.
-# Native navigation is not guessed. This first gate records the installed tree
-# and first/reopened slide pixels for review; a qualified native input adapter is
-# a separate requirement before certifying native slide navigation.
+# Native input is scoped to the observed unique PowerPoint childClass directly
+# inside the owned preview pane. Posted Page Down/Up never uses global input.
+# Screen pixels corroborate navigation; exact slide wording requires review.
 $ErrorActionPreference='Stop';Set-StrictMode -Version Latest
 if($env:OS -ne 'Windows_NT' -or -not [Environment]::Is64BitProcess){throw 'Native Windows x64 required'}
 if(-not $BuildReceipt -or -not $env:FLOWDEV_WORKSPACE_ROOT){throw 'Exact build and workspace required'}
@@ -14,8 +14,8 @@ $lab=Join-Path $env:FLOWDEV_WORKSPACE_ROOT ('dcm-quicksort-ui-pptx-'+[DateTime]:
 if($lab.StartsWith($repo+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)){throw 'Test lab must be outside source'}
 $null=New-Item -ItemType Directory $lab;$utf8=New-Object Text.UTF8Encoding($false)
 $cases=New-Object 'Collections.Generic.List[object]';$shots=New-Object 'Collections.Generic.List[object]'
-$receipt=[ordered]@{schema=1;feature='DCM-32';report=$lab;started_utc=[DateTime]::UtcNow.ToString('o');passed=$false;feature_accepted=$false;cases=$cases;captures=$shots;visual_review_required=$true;user_test='not_recorded';provider='not_observed';native_slide_navigation='not_exercised';fallback_slide_navigation='not_exercised';all_fixture_slides_captured=$false}
-$app=$null;$hwnd=[IntPtr]::Zero;$owned=$null;$head='';$manifest=@();$fixture=$null;$expected=@{};$exe='';$presentationHash=''
+$receipt=[ordered]@{schema=1;feature='DCM-32';report=$lab;started_utc=[DateTime]::UtcNow.ToString('o');passed=$false;feature_accepted=$false;cases=$cases;captures=$shots;visual_review_required=$true;user_test='not_recorded';provider='not_observed';native_slide_navigation='not_exercised';fallback_slide_navigation='not_exercised';all_fixture_slides_captured=$false;native_input_actions=(New-Object 'Collections.Generic.List[object]');native_capture_attempts=(New-Object 'Collections.Generic.List[object]')}
+$app=$null;$hwnd=[IntPtr]::Zero;$owned=$null;$head='';$manifest=@();$fixture=$null;$expected=@{};$exe='';$presentationHash='';$nativeTarget=$null
 function Hash([string]$p){return (Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash.ToLowerInvariant()}
 function Json([string]$p,$v){[IO.File]::WriteAllText($p,($v|ConvertTo-Json -Depth 25),$utf8)}
 function Git([string[]]$arguments){$s=(& git.exe -C $repo @arguments|Out-String).Trim();if($LASTEXITCODE){throw 'Git query failed'};return $s}
@@ -58,32 +58,55 @@ function TextBody([string]$name,[string]$plain){
  [IO.File]::WriteAllText((Join-Path $lab ($name+'.displayed.txt')),$p.Text,$utf8)
  Record $name ([ordered]@{displayed_sha256=(Hash (Join-Path $lab ($name+'.displayed.txt')))})
 }
-function CaptureFrame([string]$name,[bool]$slide){
- Own;$s=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'.png')),$false)
- $shots.Add([ordered]@{name=$name;path=$s.Path;sha256=(Hash $s.Path);visual_reviewed=$false;kind='full_window'})
+function CaptureFrame([string]$name,[bool]$slide,[bool]$requireInk=$true){
+ Own;if($slide -and $null -ne $nativeTarget){[DcmPptxInput]::ValidateNativeSlide($hwnd,$app.Id,$nativeTarget)};$s=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'.png')),$false)
+ $shots.Add([ordered]@{name=$name;path=$s.Path;sha256=(Hash $s.Path);visual_reviewed=$false;kind='full_window';left=$s.Left;top=$s.Top;width=$s.Width;height=$s.Height})
  if(-not $slide){return $null}
- $crop=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'.preview.png')),$true)
+ # Crop the exact full-window pixels with physical HWND coordinates. This
+ # preserves native slide titles and avoids a second capture with mismatched DPI.
+ $crop=[DcmPptxInput]::CropFromFull($hwnd,$app.Id,$nativeTarget,$s.Path,$s.Left,$s.Top,(Join-Path $lab ($name+'.preview.png')))
  $ink=[DcmPptxInput]::InspectPixels($crop.Path)
- $shots.Add([ordered]@{name=($name+'.preview');path=$crop.Path;sha256=(Hash $crop.Path);visual_reviewed=$false;kind='preview_pixels';pixels=$ink})
+ $shots.Add([ordered]@{name=($name+'.preview');path=$crop.Path;sha256=(Hash $crop.Path);visual_reviewed=$false;kind='same_frame_preview_pixels';left=$crop.Left;top=$crop.Top;width=$crop.Width;height=$crop.Height;pixels=$ink})
  # These conservative counters reject an empty/single-colour pane. They cannot
  # prove words, correct slide order or Office fidelity; every frame is reviewed.
- if($ink.DarkPixels -lt 20 -or $ink.LightPixels -lt 100){throw ('DCM32_BLANK_PREVIEW: insufficient visible slide ink/light background in '+$name)}
+ if($requireInk -and ($ink.DarkPixels -lt 20 -or $ink.LightPixels -lt 100)){throw ('DCM32_BLANK_PREVIEW: insufficient visible slide ink/light background in '+$name)}
  return [pscustomobject]@{path=$crop.Path;pixels=$ink}
 }
 function Shot([string]$name,[bool]$slide=$false){Own;$screen=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea;[DcmNative]::Restore($hwnd,$app.Id,$screen.Left+8,$screen.Top+8);Start-Sleep -Milliseconds 300;return (CaptureFrame $name $slide)}
-function NativeShot([string]$name){
+function NativePageKey([string]$name,[uint32]$key){
+ Own;RequireStatus 'Windows preview: PPTX';[DcmPptxInput]::ValidateNativeSlide($hwnd,$app.Id,$nativeTarget)
+ $action=[ordered]@{name=$name;virtual_key=$key;method='WM_KEYDOWN/WM_KEYUP to bound native childClass only';target=$nativeTarget;queued=$false;started_utc=[DateTime]::UtcNow.ToString('o')}
+ $receipt.native_input_actions.Add($action)
+ [DcmPptxInput]::QueueNativePageKey($hwnd,$app.Id,$nativeTarget,$key)
+ $action.queued=$true;$action['queued_utc']=[DateTime]::UtcNow.ToString('o')
+}
+function NativeShot([string]$name,[int]$slideNumber=1,[string]$comparison='initial',[string]$baseline=''){
+ if($slideNumber -notin @(1,2) -or $comparison -notin @('initial','different','restore')){throw 'Invalid native slide expectation'}
+ if($comparison -ne 'initial' -and -not $baseline){throw 'Native slide comparison requires its first-frame baseline'}
  Wait 'native PPTX provider and visible subtree' {((HostCaptions) -ccontains 'Windows preview: PPTX') -and @(NativeNodes).Count -gt 0}
- Own;$nodes=@([DcmDocxProbe]::Snapshot($hwnd,$app.Id));$native=@(NativeNodes)
- Json (Join-Path $lab ($name+'.native-windows.json')) $nodes
- $identities=@($native|Select-Object -ExpandProperty PID -Unique|ForEach-Object {$p=Get-Process -Id $_;[ordered]@{pid=$p.Id;path=$p.Path;start=$p.StartTime.ToUniversalTime().ToString('o');is_host=($p.Id -eq $app.Id)}})
+ Own;[DcmPptxInput]::ValidateNativeSlide($hwnd,$app.Id,$nativeTarget)
+ Json (Join-Path $lab ($name+'.native-windows.json')) @([DcmDocxProbe]::Snapshot($hwnd,$app.Id))
+ # No Restore, resize, repaint or synthetic refresh follows provider attachment
+ # or key input. Save every bounded readiness attempt; a later frame never
+ # overwrites the first observation. Numeric slide index is not exposed here.
+ $frame=$null;$ready=$false;$previous='';$until=[DateTime]::UtcNow.AddSeconds(8)
+ for($attempt=1;$attempt -le 8 -and [DateTime]::UtcNow -lt $until;$attempt++){
+  Own;[DcmPptxInput]::ValidateNativeSlide($hwnd,$app.Id,$nativeTarget);Start-Sleep -Milliseconds 200
+  $frame=CaptureFrame ($name+'-attempt-'+$attempt.ToString('00')) $true $false
+  RequireStatus 'Windows preview: PPTX';$changed=$null;$settling=$null
+  $pixelCondition=$frame.pixels.DarkPixels -ge 20 -and $frame.pixels.LightPixels -ge 100
+  $expectedColours=if($slideNumber -eq 1){$frame.pixels.TealPixels -ge 30 -and $frame.pixels.OrangePixels -ge 30}else{$frame.pixels.OrangePixels -lt 30}
+  $pixelCondition=$pixelCondition -and $expectedColours
+  if($baseline){$changed=[DcmPptxInput]::PixelDifference($baseline,$frame.path);if($comparison -eq 'different'){$pixelCondition=$pixelCondition -and $changed -ge [Math]::Max(100,[Math]::Ceiling($frame.pixels.SampledPixels*0.005))}elseif($comparison -eq 'restore'){$pixelCondition=$pixelCondition -and $changed -le 30}}
+  if($previous){$settling=[DcmPptxInput]::PixelDifference($previous,$frame.path)}
+  $ready=$pixelCondition -and $null -ne $settling -and $settling -le 30
+  $receipt.native_capture_attempts.Add([ordered]@{stage=$name;attempt=$attempt;expected_slide=$slideNumber;capture=$frame.path;target=$nativeTarget;pixels=$frame.pixels;comparison=$comparison;changed_samples=$changed;changed_since_previous=$settling;pixel_condition=[bool]$pixelCondition;stable=[bool]$ready;utc=[DateTime]::UtcNow.ToString('o')})
+  if($ready){break};$previous=if($pixelCondition){$frame.path}else{''}
+ }
+ if(-not $ready){throw ('DCM32_NATIVE_SLIDE_PIXELS: expected stable '+$comparison+' slide '+$slideNumber+' content for '+$name)}
  $text=[DcmDocxProbe]::ReadAccessibleText($hwnd,$app.Id);[IO.File]::WriteAllText((Join-Path $lab ($name+'.accessible.txt')),$text,$utf8)
- # Initial TXT capture already positions the owned host. Observe native pixels
- # without another Restore, resize or repaint request after provider attachment.
- Start-Sleep -Milliseconds 500;$frame=CaptureFrame $name $true;RequireStatus 'Windows preview: PPTX'
- # A supplied two-colour picture should be visibly present on the first slide.
- # Pixel evidence corroborates image rendering, not the picture's identity.
- if($frame.pixels.TealPixels -lt 30 -or $frame.pixels.OrangePixels -lt 30){throw ('DCM32_PICTURE_NOT_VISIBLE: first-slide image colours absent in '+$name)}
- Record $name ([ordered]@{native_identities=$identities;accessible_text_sha256=(Hash (Join-Path $lab ($name+'.accessible.txt')));rendered_text_machine_asserted=$false;rendered_content_review='required_separately';native_slide_navigation='not_exercised; observations retained for an exact scoped input adapter';status='Windows preview: PPTX';pixels=$frame.pixels})
+ [DcmPptxInput]::ValidateNativeSlide($hwnd,$app.Id,$nativeTarget)
+ Record $name ([ordered]@{native_target=$nativeTarget;expected_slide=$slideNumber;programmatic_slide_index_available=$false;accessible_text_sha256=(Hash (Join-Path $lab ($name+'.accessible.txt')));rendered_text_machine_asserted=$false;rendered_content_review='required_separately';status='Windows preview: PPTX';accepted_capture=$frame.path;pixels=$frame.pixels;changed_samples=$changed;changed_since_previous=$settling})
  return $frame
 }
 function FallbackSlide([string]$name,[int]$index,[string]$label){
@@ -149,7 +172,13 @@ try {
  }
  $native=(HostCaptions) -ccontains 'Windows preview: PPTX'
  if($native){
-  $receipt.provider='Installed Windows PPTX preview handler';$receipt['native_slide_navigation']='not_exercised; exact visible hierarchy retained before authoring provider input';$first=NativeShot '02-native-slide1'
+  $receipt.provider='Installed Windows PPTX preview handler'
+  $nativeTarget=[DcmPptxInput]::BindNativeSlide($hwnd,$app.Id);$receipt['initial_native_target']=$nativeTarget
+  $first=NativeShot '02-native-slide1'
+  NativePageKey 'page-down' 0x22;$second=NativeShot '03-native-slide2' 2 'different' $first.path
+  NativePageKey 'page-up' 0x21;$returned=NativeShot '04-native-slide1-return' 1 'restore' $first.path
+  $receipt.native_slide_navigation='Bound PowerPoint childClass PageDown/PageUp; 1 -> 2 -> 1 pixel change/restoration and stable captures pass; semantic slide identity requires review'
+  $receipt.all_fixture_slides_captured=$true
  }else{
   $receipt.provider='Built-in PPTX Open XML slide fallback'
   $labels=@([DcmPptxInput]::SlideNames($hwnd,$app.Id));if($labels.Count -ne 2 -or -not $labels[0].StartsWith('Slide 1',[StringComparison]::Ordinal) -or -not $labels[0].Contains('Bridge Inspection') -or -not $labels[1].StartsWith('Slide 2',[StringComparison]::Ordinal) -or -not $labels[1].Contains('Payments')){throw 'Fallback slide labels/order differ'}
@@ -164,14 +193,19 @@ try {
   $receipt.fallback_slide_navigation='owned selector 1 -> 2 -> 1 readback and visible change/return pass; semantic images still require review'
   $receipt.all_fixture_slides_captured=$true
  }
+ $nativeTarget=$null
  SelectFile '01-alpha.txt';TextBody '05-text-recovery' $plain;$null=Shot '05-text-recovery'
  if(@(NativeNodes).Count){throw 'Native PPTX subtree retained after text selection'}
  Exclusive;Record '06-presentation-released' $null
  SelectFile '07-slides.pptx'
- if($native){$reopened=NativeShot '07-native-slide1-reopened'}else{$reopened=FallbackSlide '07-fallback-slide1-reopened' 0 $labels[0]}
+ if($native){
+  Wait 'reopened native PPTX subtree' {((HostCaptions) -ccontains 'Windows preview: PPTX') -and @(NativeNodes).Count -gt 0}
+  $nativeTarget=[DcmPptxInput]::BindNativeSlide($hwnd,$app.Id);$receipt['reopened_native_target']=$nativeTarget
+  $reopened=NativeShot '07-native-slide1-reopened'
+ }else{$reopened=FallbackSlide '07-fallback-slide1-reopened' 0 $labels[0]}
  Files;StopApp;Source;Exclusive
  if((Hash $presentation) -cne $presentationHash -or (Hash $exe) -ne $build.app_artifact.sha256){throw 'Original presentation/app changed'}
- if($cases.Count -lt 5 -or $shots.Count -lt 6){throw 'Incomplete PPTX qualification records/captures'}
+ if(-not $receipt.all_fixture_slides_captured -or $cases.Count -lt 7 -or $shots.Count -lt 10){throw 'Incomplete two-slide PPTX qualification records/captures'}
  Record '08-normal-close-and-original-bytes' $null;$receipt['source_unchanged']=$true;$receipt['fixtures_preserved']=$true;$receipt['journal_empty']=$true;$receipt.passed=$true
 }catch{
  $receipt['error']=$_.Exception.Message;$receipt['error_position']=$_.InvocationInfo.PositionMessage;Write-Output ('FAIL='+$_.Exception.Message)

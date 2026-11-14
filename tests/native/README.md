@@ -53,11 +53,14 @@ filesystem evidence, screenshots and cleanup outcome. No installed DCM files cha
   altered. Actual text/image readability must be reviewed in the captures.
   The harness also checks text recovery, reopening, unchanged source/fixture
   bytes, an empty operation journal, file release and normal host close.
-  The initial native-handler branch observes the first slide and reopening; it
-  does not navigate the foreign provider. That branch alone cannot close the
-  two-slide visual gate. The fallback uses owned combo 1025 under the preview
-  pane for slide 1 → 2 → 1, corroborated by distinct content captures and the
-  first slide's image colors. A provider caption or selected slide label alone
+  The native branch binds the observed unique PowerPoint `childClass` directly
+  beneath the owned preview pane and revalidates its HWND, PID, thread, executable
+  path and start time before each posted Page Down/Up. It checks slide 1 → 2 → 1
+  using stable changed/restored pixels and retains every bounded capture attempt.
+  Native crops derive from the same full-window image using physical coordinates.
+  This adapter still requires its own registered native tooling/feature run;
+  the earlier first-slide-only run does not qualify its navigation. The fallback
+  uses owned combo 1025 for the same sequence. A provider caption or slide label alone
   cannot prove the visible slide content. Protected/damaged presentations remain
   DCM-34, and broad repeated-switching lifecycle remains DCM-35.
 - Built-in PPTX fidelity is bounded: it renders text, tables as tab-separated

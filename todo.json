@@ -40,6 +40,7 @@
     "blocked_steps": ["DCM-19"],
     "active_blockers": ["DCM-EXPLORER-ISOLATION-01"],
     "next_runnable_step": "DCM-32",
+    "continuation_blocker": "Desktop Commander is not responding; the final read-only HEAD probe timed out at 2026-11-14T07:18:14Z. No newer Lenovo revision is confirmed.",
     "rule": "The first five completed steps are setup/diagnostic work, not product acceptance. Preserve all original defect IDs and prior evidence."
   },
   "status_values": ["planned", "implemented", "tested", "fixed"],
@@ -61,7 +62,76 @@
     "archive_sha256": "64e1cb1666acc9a70aeeb9656b4f30ca26fc30ad142ea32e154cb7a63dc7b5aa",
     "native_regression_commit": "4619e0ef2bed51b7685c5f84d0fc0f87702bb1ca",
     "native_regression_result": "23 top-level app regressions: 23 passed, 0 failed, 0 skipped, exit 0, no timeout, source unchanged. DCM-12 adds invalid-template-package coverage; all three D4 parent tests and five nested cases passed. All earlier safety tests remain GREEN. Full app/installer/UI/package qualification remains open.",
-    "last_native_attempt": "ec7a0234: DCM-31 qualified for representative installed-handler XLSX content and reproduced sizing. Helper 2 top-level / 48 leaf GREEN; ui-xlsx-layout six records, ten strict bounds and 12 reviewed captures; ordinary XLSX six records/two bounds and DOCX seven records pass, with all four XLSX and five DOCX regression captures separately reviewed. All 21 current captures pass their bounded review. Native baseline 383 passed / 0 failed / 1 retained external-PPTX skip. Prior failed trials and DCM-46 host-paint observation remain recorded; user/package/publication remain pending.",
+    "last_native_attempt": "DCM-32 remains PARTIAL. Last confirmed Lenovo source: 7f4690616cc50d206b3d43953a3c2a509fa8c928. Focused native units: 29 passed / 0 failed / 0 skipped, with real-test verification of 1 run / 1 pass. Build 070857-05f16c29 passed. Initial UI 070938-51df3033 reports raw PASS for 6 records / 6 captures, with all_fixture_slides_captured=false. Only 02-native-slide1.png and its crop were reviewed: the full title, date and bridge are visible, but the old crop clips the title. Four captures remain unretrieved and unreviewed. The new local native 1 -> 2 -> 1 / same-frame crop harness awaits native compilation, deployment and testing. Desktop Commander image/metadata calls and the final HEAD probe timed out. Preserve the prior 3b2978 core PASS / wrapper FAIL separately. Application source is unchanged from ec7a023; no numbered step closes.",
+    "dcm32_progress_checkpoint": {
+      "status": "PARTIAL",
+      "last_confirmed_lenovo_source": "7f4690616cc50d206b3d43953a3c2a509fa8c928",
+      "unchanged_application_source": "ec7a02349e9f53c6fcfd889cf21f800f36c68b4a",
+      "wrapper_initial": {
+        "commit": "3b2978fb50d207de9b96dec29ba535483e1fcbb3",
+        "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-regressions-20261114-070557-4c20ba28",
+        "core_passed": true,
+        "wrapper_passed": false,
+        "failure": "Windows PowerShell 5.1 JSON source-manifest array handling; raw core PASS is retained"
+      },
+      "focused_unit": {
+        "commit": "7f4690616cc50d206b3d43953a3c2a509fa8c928",
+        "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-regressions-20261114-070759-9c7fff5a",
+        "passed": 29,
+        "failed": 0,
+        "skipped": 0,
+        "real_test_events": {
+          "run": 1,
+          "pass": 1,
+          "fail_or_skip": 0
+        },
+        "fixture_verification_passed": true
+      },
+      "build": {
+        "commit": "7f4690616cc50d206b3d43953a3c2a509fa8c928",
+        "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-build-20261114-070857-05f16c29",
+        "passed": true,
+        "scope": "Exact-source initial UI build; a new checkout requires a new receipt"
+      },
+      "initial_ui": {
+        "commit": "7f4690616cc50d206b3d43953a3c2a509fa8c928",
+        "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-pptx-20261114-070938-51df3033",
+        "raw_passed": true,
+        "case_count": 6,
+        "capture_count": 6,
+        "all_fixture_slides_captured": false,
+        "feature_accepted": false,
+        "reviewed_captures": [
+          "02-native-slide1.png",
+          "02-native-slide1.preview.png"
+        ],
+        "unretrieved_unreviewed_capture_count": 4,
+        "review": "The full frame shows the main title, date and bridge correctly; the old preview crop clips the title. Slide 2, native navigation and complete workflow image review are not accepted."
+      },
+      "local_continuation": {
+        "native_navigation": "Scoped 1 -> 2 -> 1 input implemented from the observed provider hierarchy",
+        "crop": "saved-full-frame crop implemented",
+        "native_compilation": "pending",
+        "lenovo_deployment": "not_confirmed",
+        "feature_test": "not_run"
+      },
+      "connection": {
+        "status": "blocked_no_response_from_device",
+        "failed_calls": [
+          "three-image read",
+          "metadata start_process",
+          "read-only .git/HEAD probe"
+        ],
+        "last_probe_result": "Timeout - no response from device",
+        "last_probe_utc": "2026-11-14T07:18:14Z"
+      },
+      "retained_evidence": "Normalized receipt/tree exports, two original hash-verified PNGs, the local 29-test log and progress summary; a full byte-exact native archive is unavailable",
+      "evidence": "qualification/evidence/dcm-32-progress-summary.json",
+      "reports_commit": "86d0e95a02f60098f34a17d6450473d8f4c2757a",
+      "reports_url": "https://github.com/laxmanxp/flowverse-reports/tree/86d0e95a02f60098f34a17d6450473d8f4c2757a/apps/dcm-quicksort/dcm32-20261114-070938/preliminary-7f46906",
+      "restart": "After connection recovers: flowdev update dcm-quicksort, then ui-tooling, pptx-unit, build and ui-pptx with the new exact build receipt; review every slide/full frame/crop before completion",
+      "numbered_steps_closed": []
+    },
     "app_baseline_dcm14_checkpoint": {"commit": "13f52cb0ed5e494bd838062c6b7e3fcca424f068", "report": "20261110-030347-e80c1e53", "count": 352, "passed": 351, "failed": 0, "skipped": ["TestRealGeneratedPPTXIntegration"], "exit_code": 0, "timed_out": false, "source_unchanged": true, "skip_disposition": "DCM_REAL_PPTX not set; not executed, not passed. External fixture remains required under DCM-32 / DCM-PREVIEW-01 / DCM-47."},
     "app_baseline_dcm20_checkpoint": {"commit": "ded8595377d4cf187a07624b3a869cdd05494fb7", "report": "C:\\FlowverseReports\\dcm-quicksort-baseline-20261111-005651-f0924008", "count": 355, "passed": 354, "failed": 0, "skipped": ["TestRealGeneratedPPTXIntegration"], "exit_code": 0, "timed_out": false, "source_unchanged": true, "skip_disposition": "External DCM_REAL_PPTX fixture still required under DCM-32/47; not executed or passed."},
     "app_baseline_dcm21_checkpoint": {"commit": "a363333ede3243ead62ce11f5a22c8665205ffe5", "report": "20261111-025742-6ba62701", "count": 358, "passed": 357, "failed": 0, "skipped": ["TestRealGeneratedPPTXIntegration"], "exit_code": 0, "timed_out": false, "source_unchanged": true, "skip_disposition": "DCM_REAL_PPTX still required under DCM-32 / DCM-PREVIEW-01 / DCM-47; not executed, not passed."},
@@ -322,6 +392,8 @@
     "dcm31_completion": "qualification/dcm31-complete.md",
     "dcm31_native_summary": "qualification/evidence/dcm-31-native-summary.json",
     "dcm32_checkpoint": "qualification/dcm32-pptx.md",
+    "dcm32_progress_summary": "qualification/evidence/dcm-32-progress-summary.json",
+    "dcm32_preliminary_reports": "https://github.com/laxmanxp/flowverse-reports/tree/86d0e95a02f60098f34a17d6450473d8f4c2757a/apps/dcm-quicksort/dcm32-20261114-070938/preliminary-7f46906",
     "dcm31_outer_fix_reports": "https://github.com/laxmanxp/flowverse-reports/tree/main/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023"
   },
   "items": [
@@ -384,20 +456,22 @@
     },
     {"id": "DCM-PDF-01", "feature": "Resolve manual PDF zoom visual qualification", "status": "tested", "ui_test": "current_default_provider_visual_qualification_passed_once; two_repeat_capture_failures_preserved", "user_test": "not_recorded", "release_gate": true, "existing_evidence": "Nov3 100%/110% captures were blank despite passing footer assertions; Fit Width restored content. Rendering versus capture/focus cause remains unknown.", "acceptance": "Verify visible page content after manual zoom and Fit Width in a restored, identified window. Resolve any rendering or capture defect; footer text alone is not a visual PASS.", "blocked_by": [], "evidence_refs": ["native_1069_report", "default_pdf_completion", "qualification/evidence/default-pdf-completion-summary.json"], "previous_ui_test": "initial_and_fit_width_pass_on_v1.0.69; manual_zoom_unresolved", "previous_blocked_by": ["DCM-SOURCE-01"], "native_test": "9a2ed85a: default Windows.Data.Pdf enhanced workflow19 action/readback records passes once; ten full images reviewed. Actual pages1/2, disabled boundary controls,100/110/return100,Fit Page/Fit Width and readable native pan verified; files/journal/close intact. Two unchanged repeats failed capture visibility guards and remain incomplete. Baseline379/0/1 and optional Sumatra23 pass. App byte-identical to2cafe818; historical blank cause unknown, no product fix claimed. Close only DCM28/29 within demonstrated two-page scope; human/package/default states unchanged.", "disposition": "Current build meets the bounded page/zoom visual acceptance. Old v1.0.69 blank cause is unresolved historically, not a newly fixed product defect. Final-candidate/manual gates remain separate."},
     {
-      "id": "DCM-PREVIEW-01", "feature": "Qualify advertised preview formats and failure states", "status": "planned", "ui_test": "representative_native_DOCX_DCM30_and_XLSX_DCM31_pass; remaining_formats_and_failure_states_open", "user_test": "not_recorded", "release_gate": true,
+      "id": "DCM-PREVIEW-01", "feature": "Qualify advertised preview formats and failure states", "status": "planned", "ui_test": "representative_native_DOCX_DCM30_and_XLSX_DCM31_pass; PPTX_DCM32_partial_two_of_six_images_reviewed; remaining_formats_and_failure_states_open", "user_test": "not_recorded", "release_gate": true,
       "existing_evidence": "TXT, PNG and lightweight DOCX/XLSX/PPTX fallbacks passed the Nov3 fixture checks. Legacy DOC/XLS/PPT, complex Office fidelity and protected/damaged files were not certified.",
-      "external_fixture_status": "DCM-32 now has tracked synthetic text/image/table fixture af42fff55297109195b95039d2ac39c5d53b1fae23b59e7b40a7184d679b93f1; unchanged real integration passes in29/0/0local focused tests. Native focused wrapper requires actual run/pass and zero skip; native execution pending.",
+      "external_fixture_status": "Tracked synthetic fixture af42fff55297109195b95039d2ac39c5d53b1fae23b59e7b40a7184d679b93f1 passes the unchanged real integration and focused local/native tests: 29 passed / 0 failed / 0 skipped. The corrected native wrapper at 7f46906 confirms 1 run / 1 pass / no skips. Historical full-suite skips remain unchanged; two-slide visual acceptance and the fixture-bound final package remain open.",
       "acceptance": "Record visible success, blank/error and cancellation behavior for the formats advertised by the selected release. State fallback fidelity limits explicitly.", "blocked_by": ["DCM-SOURCE-01"], "evidence_refs": [
         "native_1069_report",
         "dcm30_completion",
         "dcm31_sizing_checkpoint",
         "dcm31_completion",
         "dcm31_native_summary",
-        "dcm32_checkpoint"
+        "dcm32_checkpoint",
+        "dcm32_progress_summary",
+        "dcm32_preliminary_reports"
       ],
       "docx_checkpoint": "DCM-30 complete for two representative documents through installed Word handler at 8eb1470a; seven native records and five reviewed captures. Other formats/error states and native fallback remain separate.",
       "xlsx_checkpoint": "DCM-31 complete at ec7a0234 for representative installed-handler XLSX content and reproduced sizing: ten strict outer/inner bounds plus 12 reviewed diagnostic captures; ordinary workflow six records/two bounds and four reviewed captures also pass. 24 focused XLSX/OpenXML units pass; native sheet navigation and headed fallback remain unqualified. DCM-34/35, user acceptance and final package remain separate.",
-      "pptx_checkpoint": "Focused fixture, pptx-unit and ui-pptx prepared. Existing product preview routing unchanged. Initial native harness observes first/reopened slide; actual provider navigation must be qualified after inspection. DCM-32 remains PARTIAL."
+      "pptx_checkpoint": "DCM-32 is PARTIAL at last confirmed Lenovo source 7f46906: native parser tests pass 29 / 0 / 0 and the build passes. Initial UI reports raw PASS for 6 cases / 6 captures, but all_fixture_slides_captured=false. Only the first-slide full frame and crop were reviewed: the full title, date and bridge are correct; the crop clips the title. Four images remain unretrieved and unreviewed. The local native 1 -> 2 -> 1 / same-frame crop continuation awaits compilation, deployment and feature testing; Desktop Commander is not responding and blocks continuation. Application source is unchanged from ec7a023."
     },
     {
       "id": "DCM-RELEASE-01", "feature": "Qualify and publish the exact packaged release candidate", "status": "planned", "ui_test": "not_run_on_release_candidate", "user_test": "not_recorded", "release_gate": true,

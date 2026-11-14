@@ -65,6 +65,9 @@ registered update. Set `DCM_BUILD_RECEIPT` to that exact build receipt, then run
 handler or built-in fallback selected by the application. It does not change
 Office registration. Review the actual slide captures separately before recording
 DCM-32 acceptance; parser success and a ready provider footer are insufficient.
+Native Page Down/Up input is confined to the observed embedded PowerPoint slide
+window with revalidated process/window identity. Every capture attempt is retained;
+separate image review must confirm both slides, their order, and restored content.
 
 See `../tests/native/README.md` for `ui-tooling`, `ui-move`, `ui-batch`, `ui-pdf`,
 `ui-previews`, `ui-pptx`, their exact artifact binding, and the isolated installer test plan.
