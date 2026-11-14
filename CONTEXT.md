@@ -10,9 +10,10 @@ and the numbered qualification plan is [completion-50.json](qualification/comple
 
 **31 of 50 steps are complete; 19 remain.** Complete: DCM-01–18 and DCM-20–32.
 DCM-19 remains blocked on a disposable Windows Explorer integration environment.
-**Next runnable step: DCM-33 — legacy Office handler behavior**, starting with
-representative DOC native/unavailable behavior. These counts include setup work
-and are not a product-completion percentage or user acceptance.
+**Next runnable step: DCM-33 — legacy Office handler behavior**, continuing with
+representative legacy XLS, then legacy PPT. The footer fix and representative
+DOC milestone are accepted; DCM-33 as a whole remains PARTIAL. These counts
+include setup work and are not a product-completion percentage or user acceptance.
 
 The DCM-31 completion record is now published at
 `8671cc7bc9557ffca65de53ca79ace1156f65d00`; the registered Lenovo update received
@@ -21,26 +22,53 @@ report bundle is confirmed at `69fee755a94468165018b499fe7d876779e57ec8`.
 
 ### DCM-33 active qualification
 
-The first legacy Office baby step is a pinned genuine Word 97 binary `.doc`
-fixture and a focused `ui-legacy-doc` flow. The existing `.doc` handler is
-registered on Lenovo; its visible result still requires the new acceptance run.
-Legacy XLS/PPT and a naturally absent DOC-provider environment remain separate.
-The numbered count stays **31 complete / 19 remaining**.
+**The shared unavailable-footer fix and representative native DOC milestone
+are complete at pushed and Lenovo-tested source
+`b3d46b9e2003dbbfa2ae431e134e0692b8168d34`. DCM-33 remains PARTIAL because legacy
+XLS/PPT are still open.** The registered update received that source before the
+focused gates. The unavailable presenter now replaces the previous file's
+success footer with the current type and missing/failed-handler outcome while
+retaining the fallback body and ordinary file actions.
 
-Inspection found a shared unavailable-preview defect: `loadPreview` updates the
-pane's fallback message without replacing the previous file's status footer.
-The native `legacy-preview-unit` regression at `cc094810` reproduced all nine
-blank/prior-TXT/prior-native footer failures across missing/failed handlers and
-extensionless files. Both existing-behavior tests passed; hidden-control setup
-succeeded and source bytes stayed unchanged. Report `121711-6f555113` retains
-that RED. The smallest footer fix is now being integrated; native GREEN and
-visible DOC acceptance remain pending.
-A harmless `.dcm33unsupported` control file will exercise the visible generic
-unavailable path without changing any Office association or registration.
+The native RED at `cc0948108bff8c6ccc7721a4dfda69faac59bc91`, report
+`121711-6f555113`, preserves the nine intended blank/prior-TXT/prior-native footer
+failures across missing/failed handlers and extensionless files. Setup and
+fallback-body assertions passed. Native GREEN `122305-046d0bcc` passes **four
+top-level tests and 33 leaf cases**, with zero failures/skips. `ui-tooling`
+`122402-1c30522d` passes all 30 PowerShell scripts and native helper compilation.
+Exact build `122409-a7d930fc` has a 454-file source manifest; its 7,367,168-byte
+app SHA-256 is `d8df2a791b736ecbee517f7efaff742a5b64271516c97fed96cc604a7ee45b7b`.
 
-See [the DCM-33 checkpoint](qualification/dcm33-legacy-office.md). Development
-and fixture generation happen locally; commits are pushed before the registered
-Lenovo update and tests. Do not mark DCM-33 complete after DOC alone.
+The new full native baseline `122523-cf1f5a00` is **388 passed / 0 failed /
+0 skipped**, including the unchanged real-PPTX integration with the pinned
+fixture supplied. This is a new result at `b3d46b9`; DCM-31's historical
+383/0/1 baseline remains unchanged, and final package qualification stays open.
+
+Registered `ui-legacy-doc` run `122655-7ff7ee3e` passes **eight records** and
+retains **15 separately reviewed images**: three TXT frames and six
+full-window/crop pairs across the unavailable control, first DOC open and
+reopening. Both DOC attempts show all four required lines, including
+`Inspection date: 14 November 2026`, `Bridge count: 7` and
+`Status: Ready for review`. TXT initial/recovery content is correct, and the
+unsupported control shows the exact unavailable body and footer. Raw
+`feature_accepted=false`, `format_accepted=false` and capture
+`visual_reviewed=false` remain intact; semantic acceptance is recorded
+separately. Source and fixture bytes are unchanged, the journal is empty,
+exclusive DOC release succeeds and the host closes normally with exit code 0.
+
+The installed Word DOC handler was present. The harmless `.dcm33unsupported`
+control exercises the shared generic unavailable path; it does not qualify a
+headed missing-DOC-provider environment. No Office registrations were changed.
+The result is limited to this synthetic DOC and observed geometry. Legacy
+XLS/PPT, broader damaged/protected files and lifecycle gates, final workflow/
+package, and user acceptance remain open.
+
+See [the DCM-33 checkpoint](qualification/dcm33-legacy-office.md) and
+[the DOC native summary](qualification/evidence/dcm-33-doc-native-summary.json)
+for receipts, separate image review and report publication identity. The
+completion documentation records the tested `b3d46b9` source; publishing it
+does not imply another native application acceptance run. The numbered count
+stays **31 complete / 19 remaining**.
 
 ### DCM-32 qualified result
 
@@ -185,13 +213,15 @@ open under DCM-46, preserving the earlier bounded queued-layout fix history.
 - Completed DOCX selector: `ui-docx` → `tools/test-ui-docx.ps1`.
 - Completed PPTX selectors: `pptx-unit` and `ui-pptx`, with the tracked
   `tests/fixtures/dcm32-slides.pptx` fixture and a matching exact build receipt.
+- Completed DOC milestone selectors: `legacy-preview-unit` and `ui-legacy-doc`,
+  using the pinned `tests/fixtures/dcm33-legacy.doc` and matching exact build.
 
-The smallest next task is DCM-33: identify a representative legacy DOC fixture
-and the existing handler/unavailable contract, then add the smallest focused
-qualification gate for visible native content or an honest unavailable state.
-Inspect the current units and registered workflows before choosing that gate;
-keep legacy XLS/PPT for subsequent baby steps. Do not rerun the broad
-`ui-previews` workflow first. DCM-19's Explorer-isolation blocker is unchanged.
+The smallest next task is DCM-33 legacy XLS: prepare a genuine binary workbook
+with pinned representative cells and inspect the existing native-handler/
+unavailable contract, then add the smallest focused gate. Legacy PPT follows
+in a separate baby step. Preserve the accepted DOC and shared unavailable
+coverage; do not rerun the broad `ui-previews` workflow first. DCM-19's
+Explorer-isolation blocker is unchanged.
 
 Code locally, unit test, commit/push, then use Desktop Commander for
 `flowdev update dcm-quicksort` followed by the focused `flowdev test` selector.
