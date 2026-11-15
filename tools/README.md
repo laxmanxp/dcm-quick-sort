@@ -92,3 +92,17 @@ completion disposal across different-file and same-file-reopen selections, the
 blank/text state, and worker-generation ownership used by queued zoom/page work.
 The Windows tests call production stop/completion code with owned controls;
 this gate is not full normal-app observed in-flight selection or cancellation.
+
+### Observed PDF interruption
+
+Use `flowdev test dcm-quicksort pdf-trace-unit`, `pdf-interruption-unit`,
+`ui-tooling`, then a fresh exact-source `build`. Bind `DCM_BUILD_RECEIPT` and run
+`flowdev test dcm-quicksort ui-pdf-inflight` on an idle shared desktop.
+The normal application alone receives `DCM_PDF_TRACE=<absolute report path>`.
+The harness requires worker-started < selection-stopped < worker-finished <
+result-discarded, and checks the real child is alive after switching. The
+same-file reopen additionally requires overlapping old/new workers, a preserved
+new busy/generation state, and only the new result being applied.
+An already-finished render is a failed observation, never interruption acceptance.
+No worker suspension, artificial delay, renderer substitution or process
+cancellation is used. Complete-state damage/protected gates run without tracing.

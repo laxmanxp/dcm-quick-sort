@@ -211,7 +211,13 @@ func startPDFPreview(path string) bool {
 	return true
 }
 
+func tracePDFPreview(event string, req PDFRenderRequest, failed bool) {
+	recordPDFTrace(PDFTraceEvent{Event: event, Generation: req.Generation, InputPath: req.InputPath, OutputPath: req.OutputPath, Failed: failed,
+		State: &PDFTraceState{Generation: pdfPreview.generation, WorkerGeneration: pdfPreview.workerGeneration, Active: pdfPreview.active, Busy: pdfPreview.busy, Pending: pdfPreview.pending, Path: pdfPreview.path}})
+}
+
 func stopPDFPreview() {
+	previous := PDFRenderRequest{Generation: pdfPreview.generation, InputPath: pdfPreview.path}
 	pdfPreview.generation++ // makes any in-flight renderer result stale
 	pdfPreview.active = false
 	pdfPreview.path = ""
@@ -224,6 +230,7 @@ func stopPDFPreview() {
 	pdfPreview.lastHeight = 0
 	pdfPreview.lastScalePercent = 0
 	hidePDFPreviewControls()
+	tracePDFPreview("selection-stopped", previous, false)
 }
 
 func goToPDFPage(delta int) {
@@ -307,7 +314,18 @@ func requestPDFPreviewRender() {
 	go func() {
 		cmd := exec.Command(powershell, pdfRendererArgs(script, req)...)
 		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: createNoWindow}
-		output, runErr := cmd.CombinedOutput()
+		var combined bytes.Buffer
+		cmd.Stdout = &combined
+		cmd.Stderr = &combined
+		runErr := cmd.Start()
+		childPID := 0
+		if runErr == nil {
+			childPID = cmd.Process.Pid
+			recordPDFTrace(PDFTraceEvent{Event: "worker-started", Generation: req.Generation, InputPath: req.InputPath, OutputPath: req.OutputPath, RendererPID: childPID})
+			runErr = cmd.Wait()
+		}
+		output := combined.Bytes()
+		recordPDFTrace(PDFTraceEvent{Event: "worker-finished", Generation: req.Generation, InputPath: req.InputPath, OutputPath: req.OutputPath, RendererPID: childPID, Failed: runErr != nil})
 		result := PDFRenderResult{Request: req}
 		if runErr != nil {
 			result.Err = fmt.Errorf("%w: %s", runErr, strings.TrimSpace(string(output)))
@@ -346,6 +364,7 @@ func finishPDFRender() {
 						requestPDFPreviewRender()
 					}
 				}
+				tracePDFPreview("result-discarded", result.Request, result.Err != nil)
 				return
 			}
 			pdfPreview.busy = false
@@ -353,6 +372,7 @@ func finishPDFRender() {
 			pdfPreview.pending = false
 			if result.Err != nil {
 				_ = os.Remove(result.Request.OutputPath)
+				tracePDFPreview("result-unavailable", result.Request, true)
 				finishPDFRendererUnavailable(result.Err)
 				return
 			}
@@ -395,6 +415,7 @@ func finishPDFRender() {
 				mode = fmt.Sprintf("Fit Width · %d%%", app.previewZoom)
 			}
 			setText(app.statusLabel, fmt.Sprintf("DCM PDF Preview · Page %d/%d · %s", pdfPreview.page+1, pdfPreview.pageCount, mode))
+			tracePDFPreview("result-applied", result.Request, false)
 			return
 		default:
 			return

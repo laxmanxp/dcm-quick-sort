@@ -21,6 +21,8 @@ try{
         if($errors.Count){$receipt['scripts']=$parsed;throw "PowerShell syntax error: $($path.FullName)"}
     }
     $receipt['scripts']=$parsed
+    & (Join-Path $repo 'tools/test-pdf-inflight-contract.ps1')
+    $receipt['pdf_inflight_trace_contract_checks']=11
     $null=Get-Content -LiteralPath (Join-Path $repo 'tools\flowdev-dcm\config\checks.json') -Raw | ConvertFrom-Json
     Add-Type -AssemblyName System.Drawing
     Add-Type -Path (Join-Path $repo 'tests\native\dcm-native.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')

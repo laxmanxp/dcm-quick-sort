@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,[switch]$RequireErrorControls,[ValidateSet('damaged','protected')][string]$FailureFixture='damaged')
+param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,[switch]$RequireErrorControls,[ValidateSet('damaged','protected')][string]$FailureFixture='damaged',[switch]$InFlight)
 # DCM-34: one header-valid, unloadable PDF through the default Windows.Data.Pdf
 # renderer and its natural Windows fallback. No registry changes, fallback
 # suppression, foreign-window input, synthetic repaint or cancellation claim.
@@ -11,6 +11,7 @@ $repo=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $damagedSource=Join-Path $repo 'tests/fixtures/dcm34-damaged.pdf'
 $fixtureManifest=Join-Path $repo 'tests/fixtures/dcm34-damaged.manifest.json'
 $protected=$FailureFixture -ceq 'protected'
+if($InFlight -and $protected){throw 'In-flight gate uses the original valid and damaged fixtures'}
 $failureFile=if($protected){'12-protected.pdf'}else{'10-damaged.pdf'}
 if($protected){$fixtureManifest=Join-Path $repo 'tests/fixtures/sumatra-password.json';$RequireErrorControls=$true}
 $lab=Join-Path $env:FLOWDEV_WORKSPACE_ROOT ('dcm-quicksort-ui-pdf-failure-'+[DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss')+'-'+[Guid]::NewGuid().ToString('N').Substring(0,8))
@@ -19,6 +20,9 @@ $null=New-Item -ItemType Directory $lab;$utf8=New-Object Text.UTF8Encoding($fals
 $cases=New-Object 'Collections.Generic.List[object]';$shots=New-Object 'Collections.Generic.List[object]'
 $receipt=[ordered]@{schema=1;feature='DCM-34';format_scope='default_PDF_damage_and_recovery_only';report=$lab;started_utc=[DateTime]::UtcNow.ToString('o');passed=$false;machine_checks_passed=$false;feature_accepted=$false;visual_accepted=$false;visual_review_required=$true;user_test='not_recorded';cases=$cases;captures=$shots;observations=(New-Object 'Collections.Generic.List[object]');native_error_control_readiness_accepted=$false;interruption_or_cancellation_tested=$false;txt_pixel_contract='initial_baseline_difference_le_30'}
 if($protected){$receipt.format_scope='default_PDF_protected_refusal_and_recovery_only';$receipt.feature='DCM-34-PDF-PROTECTED-01';$receipt['password_supplied']=$false;$receipt['password_dialog_input_performed']=$false}
+$tracePath=Join-Path $lab 'pdf-events.jsonl'
+if($InFlight){$receipt.feature='DCM-34-PDF-INTERRUPT-01';$receipt.format_scope='observed_real_renderer_interruption';$receipt['trace_path']=$tracePath}
+. (Join-Path $repo 'tests/native/dcm-pdf-inflight.ps1')
 $app=$null;$hwnd=[IntPtr]::Zero;$owned=$null;$head='';$manifest=@();$fixture=$null;$expected=@{};$exe='';$build=$null;$selectedName='';$controlRefs=@();$basePaneHandles=@{};$registrations=$null
 $fallbackFooter='DCM PDF renderer unavailable; using Windows PDF preview fallback'
 $unavailablePrefix='PDF preview unavailable: '
@@ -188,7 +192,7 @@ function ReadyPreview([string]$name,[string]$kind,$baseline=$null){
 }
 function TextBody([string]$name,[string]$plain,$baseline=$null){
  $initial=$name -ceq '01-initial-text'
- if(($initial -and $null -ne $baseline) -or (-not $initial -and ($name -cnotin @('04-first-text-recovery','07-final-text-recovery') -or $null -eq $baseline))){throw 'TXT recovery requires its initial captured baseline'}
+ if(($initial -and $null -ne $baseline) -or (-not $initial -and (($name -cnotin @('04-first-text-recovery','07-final-text-recovery') -and -not ($InFlight -and $name -cin @('inflight-valid-text','inflight-error-text','inflight-final-text'))) -or $null -eq $baseline))){throw 'TXT recovery requires its initial captured baseline'}
  Wait ('exact text '+$name) {$nodes=@([DcmDocxProbe]::Snapshot($hwnd,$app.Id));$edits=@($nodes|Where-Object {$_.Visible -and $_.PID -eq $app.Id -and $_.Class -ieq 'Edit' -and $basePaneHandles.ContainsKey([string]$_.Handle)});$edits.Count -eq 1 -and ([DcmNative]::Text([IntPtr]$edits[0].Handle,$app.Id)) -ceq $plain}
  $before=ObservePreview;$c=$before.controls
  if($before.state -cne 'text' -or $before.native_windows.Count -or $before.visible_owned_text_edits.Count -ne 1){throw 'TXT recovery retains wrong provider or native subtree'}
@@ -324,14 +328,25 @@ try {
  $temp=Join-Path $lab 'temp';$null=New-Item -ItemType Directory $temp
  $psi=New-Object Diagnostics.ProcessStartInfo;$psi.FileName=$exe;$psi.Arguments='"'+(Join-Path $fixture.inbox '01-alpha.txt')+'"';$psi.UseShellExecute=$false;$psi.WorkingDirectory=$lab
  $psi.EnvironmentVariables['LOCALAPPDATA']=$fixture.local;$psi.EnvironmentVariables['APPDATA']=$fixture.roaming;$psi.EnvironmentVariables['TEMP']=$temp;$psi.EnvironmentVariables['TMP']=$temp;$psi.EnvironmentVariables['DCM_QUICKSORT_BACKUP_DIR']=Join-Path $lab 'backups'
- foreach($var in @('DCM_PDF_PROVIDER','DCM_SUMATRA_EXE')){$psi.EnvironmentVariables.Remove($var)}
+ foreach($var in @('DCM_PDF_PROVIDER','DCM_SUMATRA_EXE','DCM_PDF_TRACE')){$psi.EnvironmentVariables.Remove($var)}
  $receipt['child_process_environment']=[ordered]@{pdf_provider_override_removed=$true;sumatra_executable_override_removed=$true;default_pdf_view='fit_width';registry_mutated=$false;fallback_suppressed=$false}
+ if($InFlight){$psi.EnvironmentVariables['DCM_PDF_TRACE']=$tracePath;$receipt['scope_limit']='Normal application with opt-in event logging only. Real unmodified renderer, no delays, suspension, injected completion or cancellation. Valid/error to TXT and same-file reopen overlap; no broad Office interruption or close-during-render acceptance.'}
  $app=New-Object Diagnostics.Process;$app.StartInfo=$psi;if(-not $app.Start()){throw 'Host launch failed'};$owned=[ordered]@{pid=$app.Id;path=$exe;start=$app.StartTime.ToUniversalTime().ToString('o')};$receipt['owned_process']=$owned
  $until=[DateTime]::UtcNow.AddSeconds(20);do{$app.Refresh();if($app.HasExited){throw 'Host exited before window'};$hwnd=$app.MainWindowHandle;if($hwnd -ne [IntPtr]::Zero){break};Start-Sleep -Milliseconds 100}while([DateTime]::UtcNow -lt $until)
  Wait 'fixture list' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq $expected.Count}
  SelectFile '01-alpha.txt';BindDefaultControls;$plain=[IO.File]::ReadAllText((Join-Path $fixture.inbox '01-alpha.txt'))
  NoDialog;$screen=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea;[DcmNative]::Restore($hwnd,$app.Id,$screen.Left+8,$screen.Top+8);Start-Sleep -Milliseconds 300
  $initialText=TextBody '01-initial-text' $plain
+ if($InFlight){
+  Invoke-DcmPdfInFlightSwitch '08-preview.pdf' 'inflight-valid-worker' $false
+  $null=TextBody 'inflight-valid-text' $plain $initialText
+  Invoke-DcmPdfInFlightSwitch $failureFile 'inflight-error-worker' $true
+  $null=TextBody 'inflight-error-text' $plain $initialText
+  Invoke-DcmPdfInFlightSwitch '08-preview.pdf' 'inflight-same-reopen' $false -Reopen
+  $null=ReadyPreview 'inflight-reopened-pdf' 'valid'
+  SelectFile '01-alpha.txt';$null=TextBody 'inflight-final-text' $plain $initialText
+  $receipt.interruption_or_cancellation_tested=$true;$receipt['process_cancellation_tested']=$false
+ }else{
  SelectFile '08-preview.pdf';$firstValid=ReadyPreview '02-valid-before-damage' 'valid'
  SelectFile $failureFile;$firstError=ReadyPreview ('03-first-'+$FailureFixture) 'error' $firstValid
  SelectFile '01-alpha.txt';$null=TextBody '04-first-text-recovery' $plain $initialText;ExclusivePDFs
@@ -339,11 +354,13 @@ try {
  SelectFile $failureFile;$secondError=ReadyPreview ('06-second-'+$FailureFixture) 'error' $recovered
  if($firstError.state -cne $secondError.state){throw 'Natural failure-PDF terminal state differs on repeat opening'}
  SelectFile '01-alpha.txt';$null=TextBody '07-final-text-recovery' $plain $initialText;ExclusivePDFs
+ }
+ ExclusivePDFs
  Record '08-both-pdfs-exclusively-released' ([ordered]@{files=@('08-preview.pdf',$failureFile);exclusive_read_open=$true})
  StopApp;Source;Files;ExclusivePDFs
  if((Hash (Join-Path $fixture.inbox $failureFile)) -cne $definition.sha256 -or (Hash $exe) -cne $build.app_artifact.sha256){throw 'Original fixture/application bytes changed'}
  Record '09-normal-close-and-original-bytes' ([ordered]@{exit_code=$owned.exit_code;original_fixture_bytes_preserved=$true;source_unchanged=$true;journal_empty=$true})
- if($cases.Count -ne 9 -or $shots.Count -lt 22){throw 'Incomplete PDF failure/recovery cases or original captures'}
+ if($InFlight){if($cases.Count -ne 10 -or $shots.Count -lt 12){throw 'Incomplete observed interruption cases or captures'}}elseif($cases.Count -ne 9 -or $shots.Count -lt 22){throw 'Incomplete PDF failure/recovery cases or original captures'}
  if($RequireErrorControls){if($receipt.error_control_checks.Count -ne 2){throw 'Both failure openings require control checks'};$receipt['host_error_controls_machine_checked']=$true}
  $receipt['machine_checks_passed']=$true;$receipt.passed=$true
 }catch{

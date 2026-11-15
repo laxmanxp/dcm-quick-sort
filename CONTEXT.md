@@ -1,5 +1,16 @@
 # DCM QuickSort — project context
 
+## 15 November 2026 - observed in-flight harness prepared
+
+New `ui-pdf-inflight` uses opt-in `DCM_PDF_TRACE` JSONL events in its disposable report.
+It requires a live real renderer spanning the owned selection change, followed
+by a consumed/discarded old result. It covers late success/error to TXT and an
+overlapping same-file reopen. No worker delay, suspension, injected completion
+or process cancellation is used. The bundled renderer is unchanged. Native
+acceptance remains pending; prior milestones and 32/50 count are unchanged.
+The trace is disabled by default, bounded to 4 MiB, and records request paths
+and lifecycle state, not document contents. Errors do not affect preview flow.
+
 ## 15 November 2026 - PDF worker ownership fix accepted; interruption remains partial
 
 Native RED at `92a5023` reproduced four old success/error completions clearing a
