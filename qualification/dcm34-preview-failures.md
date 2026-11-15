@@ -1,5 +1,42 @@
 # DCM-34 — preview failure and interruption states
 
+## 15 November 2026 - PDF error controls accepted with limits
+
+`DCM-34-PDF-CONTROLS-01` is **fixed** at `c20ad2649df9f78847dab2058c27ab8852e0062e`.
+The registered native RED at `4f29d69` displayed an explicit failed PDF but
+left minus, 100%, plus and Fit enabled. The production correction is
+`bece916`; `c20ad26` only corrects thread ownership in the new native test.
+
+Fresh registered Lenovo gates pass: 4 control tests, 14 PDF failure tests,
+**399 baseline tests / 0 failures / 0 skips**, tooling, exact build,
+9 error/recovery UI records, 19 normal-PDF records and 7 DOCX records.
+All 34 GREEN full-window frames are covered by separate visual review of
+25 exact-hash groups; the original RED image was also inspected. Preview
+crops remain preserved but were not separately reviewed. Raw flags are unchanged.
+
+Both damaged openings have all five host sizing controls disabled. Direct
+and WM_COMMAND sizing routes preserve the error footer/viewport and make
+no native sizing/focus calls in the owned component test. TXT and primary
+PDF recovery restore their supported controls.
+
+**Conservative limit:** host sizing is disabled for all attached native PDF
+fallbacks, even valid PDFs, until readiness can be established. The primary
+Windows.Data.Pdf renderer, native-provider controls and ordinary SetRect layout
+are unchanged. Valid native-fallback rendering was not separately requalified.
+Zoom/pan captures demonstrate a bounded viewport, not whole-page visibility.
+
+[Immutable RED/GREEN evidence](https://github.com/laxmanxp/flowverse-reports/tree/acf8d7287a227f2cbd9703afcbfe7f71f55954fa/apps/dcm-quicksort/dcm34-20261115-pdf-controls/c20ad26) preserves 405 original files; all
+410 publication blobs were verified before push. The 489-file source manifest
+and built executable were independently rehashed. See
+[`dcm-34-pdf-controls-native-summary.json`](evidence/dcm-34-pdf-controls-native-summary.json).
+
+Earlier open-control/DOCX statements below are historical and superseded by
+this milestone and the DOCX closeout; their original evidence is not rewritten.
+**Full DCM-34 remains PARTIAL: 32/50 complete.** Next is default-PDF protected-file
+refusal/recovery, followed by observed in-flight interruption and remaining
+Office failures. Human acceptance is not recorded. Final suite packaging and
+installation still wait for Flow Search and DeepSearch readiness.
+
 ## 15 November 2026 - DOCX closeout and suite release decision
 
 DCM-34-DOCX-FALLBACK-01 is fixed at bfbb731 within the built-in fallback contract: native RED preserved; 5 focused and 23 existing DOCX/Open XML tests pass; baseline 396/0/0; 16 headed component states and 7 normal-app DOCX records pass with all 21 captures separately reviewed. The missing/failed-handler inputs are owned component boundary inputs, not separate absent/failing Word environments. Raw visual/acceptance flags remain unchanged. Existing PDF milestone remains separately attributed. Full DCM-34 is PARTIAL, 32 complete / 18 remaining; protected PDF, in-flight interruption, PDF error-control readiness and broader Office failure coverage remain. User acceptance and release remain open.

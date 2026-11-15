@@ -9,10 +9,20 @@ until readiness can be established. Provider-owned controls, SetRect resizing,
 primary Windows.Data.Pdf and existing Office sizing are retained. Disabled direct
 and WM_COMMAND routes must preserve the error footer and viewport.
 
-New selectors: `pdf-control-unit` and `ui-pdf-error-controls`. Implementation is
-pending its exact-source Lenovo GREEN and image review; no acceptance is claimed
-by this checkpoint. Keep 32/50 complete and full DCM-34 PARTIAL. Final suite
-packaging remains gated on Flow Search and DeepSearch readiness.
+New selectors: `pdf-control-unit` and `ui-pdf-error-controls`. Accepted with
+limits at `c20ad2649df9f78847dab2058c27ab8852e0062e`: 4 control tests, 14 PDF tests,
+399/0/0 native baseline, exact build/tooling, and UI records 9 error/recovery,
+19 normal PDF and 7 DOCX pass. Separate review covers 34 full-window frames in
+25 exact-hash groups; crops are not separately reviewed and raw flags are unchanged.
+Source/fixtures are preserved and owned hosts close normally.
+
+Evidence: [`dcm-34-pdf-controls-native-summary.json`](qualification/evidence/dcm-34-pdf-controls-native-summary.json),
+[immutable reports `acf8d728`](https://github.com/laxmanxp/flowverse-reports/tree/acf8d7287a227f2cbd9703afcbfe7f71f55954fa/apps/dcm-quicksort/dcm34-20261115-pdf-controls/c20ad26). Earlier open-control
+statements below are historical and superseded here. Keep 32/50 complete and full
+DCM-34 PARTIAL. Next: default-PDF protected-file refusal/recovery. Human acceptance
+is unrecorded; final suite packaging waits for Flow Search and DeepSearch.
+Valid native-fallback rendering is not separately requalified; host sizing stays
+disabled for that fallback, including valid PDFs. Primary-PDF controls remain supported.
 
 ## 15 November 2026 - DOCX closeout and suite release decision
 
