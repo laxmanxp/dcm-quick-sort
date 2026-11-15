@@ -593,6 +593,14 @@
           "-File",
           "tools/test-ui-pdf-failure.ps1",
           "-ActiveMaximize"
+        ],
+        "ui-docx-active-maximize": [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "tools/test-ui-docx.ps1",
+          "-ActiveMaximize"
         ]
       }
     }

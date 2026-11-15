@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,[string]$Letter='D:\FlowverseReportsRepo\dcm-flowuivision-20261103\inbox\05-letter.docx')
+param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,[string]$Letter='D:\FlowverseReportsRepo\dcm-flowuivision-20261103\inbox\05-letter.docx',[switch]$ActiveMaximize)
 # DCM-30. Natural installed-handler/fallback selection; never alter registrations.
 # Native handler content requires separate screenshot review; fallback text is asserted.
 $ErrorActionPreference='Stop';Set-StrictMode -Version Latest
@@ -10,7 +10,7 @@ $lab=Join-Path $env:FLOWDEV_WORKSPACE_ROOT ('dcm-quicksort-ui-docx-'+[DateTime]:
 if($lab.StartsWith($repo+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)){throw 'Test lab must be outside source'}
 $null=New-Item -ItemType Directory $lab;$utf8=New-Object Text.UTF8Encoding($false)
 $cases=New-Object 'Collections.Generic.List[object]';$shots=New-Object 'Collections.Generic.List[object]'
-$receipt=[ordered]@{schema=1;feature='DCM-30';report=$lab;started_utc=[DateTime]::UtcNow.ToString('o');passed=$false;cases=$cases;captures=$shots;user_test='not_recorded';provider='not_observed'}
+$receipt=[ordered]@{schema=1;feature=$(if($ActiveMaximize){'DCM-WINDOW-MAXIMIZE-01'}else{'DCM-30'});report=$lab;started_utc=[DateTime]::UtcNow.ToString('o');passed=$false;cases=$cases;captures=$shots;user_test='not_recorded';provider='not_observed'}
 $app=$null;$hwnd=[IntPtr]::Zero;$owned=$null;$head='';$manifest=@();$fixture=$null;$expected=@{};$exe=''
 function Hash([string]$p){return (Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash.ToLowerInvariant()}
 function Json([string]$p,$v){[IO.File]::WriteAllText($p,($v|ConvertTo-Json -Depth 25),$utf8)}
@@ -61,6 +61,72 @@ function NativeShot([string]$name){
  if(-not ($captions -ccontains 'Windows preview: DOCX')){throw 'DCM30_STALE_PROVIDER_STATUS: native DOCX preview is active but its provider/type is not identified'}
  Record $name ([ordered]@{native_identities=$identities;accessible_text_sha256=(Hash (Join-Path $lab ($name+'.accessible.txt')));rendered_content_review='required_separately';status='Windows preview: DOCX'})
 }
+function ActiveDocxSnapshot([string]$kind,[string]$expectedToken){
+ Own
+ $nodes=@([DcmDocxProbe]::Snapshot($hwnd,$app.Id))
+ $native=@($nodes|Where-Object {$_.Visible -and $_.PID -ne $app.Id})
+ $provider=if($native.Count){'native'}else{'fallback'}
+ if($provider -cne $kind){throw ('DOCX preview provider changed during resize: expected '+$kind+' observed '+$provider)}
+ $selected=[DcmUndoInput]::TryText($hwnd,$app.Id,1005)
+ if($selected -cne '05-letter'){throw ('DOCX selection changed during resize: '+$selected)}
+ if($kind -ceq 'fallback'){
+  $preview=Preview
+  if($null -eq $preview -or -not $preview.Text.Contains($expectedToken)){throw 'DOCX built-in body lost during resize'}
+  $bodyHash=[Security.Cryptography.SHA256]::Create()
+  try{$hash=([BitConverter]::ToString($bodyHash.ComputeHash([Text.Encoding]::UTF8.GetBytes($preview.Text)))).Replace('-','').ToLowerInvariant()}finally{$bodyHash.Dispose()}
+  $status=CheckStatus 'DCM DOCX Preview:'
+  return [pscustomobject]@{provider=$kind;selected=$selected;body_sha256=$hash;body_length=$preview.Text.Length;status=$status;native_window_count=0}
+ }
+ if(-not $native.Count){throw 'DOCX native handler subtree vanished during resize'}
+ $status=CheckStatus 'Windows preview: DOCX'
+ $pids=@($native|Select-Object -ExpandProperty PID -Unique|Sort-Object)
+ if(-not $pids.Count){throw 'No native DOCX provider PID'}
+ return [pscustomobject]@{provider=$kind;selected=$selected;native_window_count=$native.Count;native_pids=$pids;status=$status}
+}
+function ActiveDocxCapture([string]$name){
+ Own
+ $screen=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($name+'.png')),$false)
+ $shots.Add([ordered]@{name=$name;path=$screen.Path;sha256=(Hash $screen.Path);width=$screen.Width;height=$screen.Height;visual_reviewed=$false;kind='active_docx_full_window'})
+ return $screen
+}
+function Test-ActiveDocxMaximize([string]$provider,[string]$expectedToken){
+ if(-not $ActiveMaximize){return}
+ $style=[DcmDocxResize]::GetWindowLongPtr($hwnd,-16).ToInt64()
+ if(($style -band 0x00050000) -ne 0x00050000){throw 'Main DOCX window lacks maximize and resize styles'}
+ $before=ActiveDocxSnapshot $provider $expectedToken
+ $original=New-Object DcmDocxResize+Rect
+ if(-not [DcmDocxResize]::GetWindowRect($hwnd,[ref]$original)){throw 'Cannot read original DOCX window bounds'}
+ $area=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea
+ [DcmDocxResize]::ShowWindow($hwnd,3)|Out-Null
+ Wait 'active DOCX maximized' {[DcmDocxResize]::IsZoomed($hwnd)}
+ Start-Sleep -Milliseconds 600
+ $large=New-Object DcmDocxResize+Rect
+ if(-not [DcmDocxResize]::GetWindowRect($hwnd,[ref]$large)){throw 'Cannot read maximized DOCX window bounds'}
+ if(($large.Right-$large.Left) -lt ($area.Width-24) -or ($large.Bottom-$large.Top) -lt ($area.Height-24)){throw 'DOCX window fails to fill screen work area'}
+ if(($large.Right-$large.Left)-($original.Right-$original.Left) -lt 50){throw 'DOCX window did not actually grow on maximize'}
+ $max=ActiveDocxSnapshot $provider $expectedToken
+ if($provider -ceq 'fallback' -and $max.body_sha256 -cne $before.body_sha256){throw 'DOCX fallback body changed when maximized'}
+ $maxshot=ActiveDocxCapture 'active-docx-maximized'
+ [DcmDocxResize]::ShowWindow($hwnd,9)|Out-Null
+ Wait 'active DOCX restored' {-not [DcmDocxResize]::IsZoomed($hwnd)}
+ Start-Sleep -Milliseconds 600
+ $restored=New-Object DcmDocxResize+Rect
+ if(-not [DcmDocxResize]::GetWindowRect($hwnd,[ref]$restored)){throw 'Cannot read restored DOCX window bounds'}
+ if([Math]::Abs(($original.Right-$original.Left)-($restored.Right-$restored.Left)) -gt 8 -or [Math]::Abs(($original.Bottom-$original.Top)-($restored.Bottom-$restored.Top)) -gt 8){throw 'DOCX restore dimensions changed'}
+ $after=ActiveDocxSnapshot $provider $expectedToken
+ if($provider -ceq 'fallback' -and $after.body_sha256 -cne $before.body_sha256){throw 'DOCX fallback body changed after restoring'}
+ $restoredshot=ActiveDocxCapture 'active-docx-restored'
+ $receipt['active_docx_resize']=[ordered]@{
+  provider=$provider;source_selection='05-letter.docx'
+  original=@($original.Left,$original.Top,$original.Right,$original.Bottom)
+  maximized=@($large.Left,$large.Top,$large.Right,$large.Bottom)
+  restored=@($restored.Left,$restored.Top,$restored.Right,$restored.Bottom)
+  work_area=@($area.Left,$area.Top,$area.Right,$area.Bottom)
+  before=$before;during=$max;after=$after
+  maximized_capture=$maxshot.Path;restored_capture=$restoredshot.Path;visual_review_required=$true
+ }
+ Record 'active-docx-maximize-restore' ([ordered]@{provider=$provider;native_maximized=$true;restored_size=$true;selected_document_stable=$true;fallback_content_hash_stable=$(if($provider -ceq 'fallback'){$true}else{$null});maximized_capture=$maxshot.Path;restored_capture=$restoredshot.Path})
+}
 function Exclusive([string]$name){$h=[IO.File]::Open((Join-Path $fixture.inbox $name),[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::None);$h.Dispose()}
 function StopApp {
  if(-not $app){return};Own
@@ -80,6 +146,19 @@ try {
  $receipt['commit']=$head;$receipt['build_receipt']=$BuildReceipt;$receipt['app_sha256']=$build.app_artifact.sha256
  if((Hash $Letter) -ne '11ca20995a5da66033c8dd75cc55a145bc6179bf189ac7d8bfaf9d90562a72a7'){throw 'Historical letter fixture identity changed'}
  Add-Type -AssemblyName System.Drawing;Add-Type -AssemblyName System.Windows.Forms;Add-Type -AssemblyName System.IO.Compression;Add-Type -AssemblyName System.IO.Compression.FileSystem
+ if($ActiveMaximize){
+  Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class DcmDocxResize {
+ [StructLayout(LayoutKind.Sequential)] public struct Rect { public int Left, Top, Right, Bottom; }
+ [DllImport("user32.dll", EntryPoint="GetWindowLongPtrW")] public static extern IntPtr GetWindowLongPtr(IntPtr hwnd,int index);
+ [DllImport("user32.dll")] [return:MarshalAs(UnmanagedType.Bool)] public static extern bool GetWindowRect(IntPtr hwnd,out Rect rect);
+ [DllImport("user32.dll")] [return:MarshalAs(UnmanagedType.Bool)] public static extern bool IsZoomed(IntPtr hwnd);
+ [DllImport("user32.dll")] [return:MarshalAs(UnmanagedType.Bool)] public static extern bool ShowWindow(IntPtr hwnd,int command);
+}
+'@
+ }
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-native.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-text-probe.cs')
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-undo-input.cs')
@@ -113,6 +192,7 @@ try {
  if($native){
   $receipt.provider='Installed Windows DOCX preview handler';$receipt['native_visual_review_required']=$true
   NativeShot '02-native-letter'
+  if($ActiveMaximize){Test-ActiveDocxMaximize 'native' ''}
   SelectFile '06-structured.DOCX';NativeShot '04-native-structured'
   SelectFile '01-alpha.txt';$p=ExpectBody '08-text-recovery' @($plain) @('DCM-30 FIELD REPORT');Shot '08-text-recovery'
   if(@([DcmDocxProbe]::Snapshot($hwnd,$app.Id)|Where-Object {$_.Visible -and $_.PID -ne $app.Id}).Count){throw 'Native viewer retained after text selection'}
@@ -120,7 +200,7 @@ try {
   SelectFile '05-letter.docx';NativeShot '10-native-letter-reopened'
  }else{
  $letterTokens=@('DCM DOCX Preview','Title: FlowDoc P3 Acceptance','Government of Odisha - Gurundia Block','Subject: Road Repair',('Sanctioned amount: '+[char]0x20B9+'25,000'),'Generated by FlowDoc.','Block Development Officer','Rendered locally from DOCX Open XML')
- $p=ExpectBody '02-letter-content' $letterTokens @('DCM disposable native qualification fixture','DCM-30 FIELD REPORT');$receipt.provider='Built-in DOCX Open XML structured-text fallback';$receipt['letter_status']=CheckStatus 'DCM DOCX Preview:';Shot '02-letter-content';Exclusive '05-letter.docx';Record '03-letter-exclusive-access' $null
+ $p=ExpectBody '02-letter-content' $letterTokens @('DCM disposable native qualification fixture','DCM-30 FIELD REPORT');$receipt.provider='Built-in DOCX Open XML structured-text fallback';$receipt['letter_status']=CheckStatus 'DCM DOCX Preview:';Shot '02-letter-content';if($ActiveMaximize){Test-ActiveDocxMaximize 'fallback' 'Subject: Road Repair'};Exclusive '05-letter.docx';Record '03-letter-exclusive-access' $null
  SelectFile '06-structured.DOCX'
  $tokens=@('DCM DOCX Preview','Title: DCM-30 structured preview','DCM-30 FIELD REPORT','Alpha parcel: 31 units.','Formatting is intentionally mixed.',('Unicode: Caf'+[char]233),'Measurements','TABLE 1','| Item','Quantity','| Bolts','12','| Panels','3','[Image: Green sample square','green-square.png]','END DCM-30 ALPHA','Rendered locally from DOCX Open XML')
  $p=ExpectBody '04-structured-content' $tokens @('Subject: Road Repair','Block Development Officer');$structured=$p.Text;$receipt['structured_status']=CheckStatus 'DCM DOCX Preview:';Shot '04-structured-top'
@@ -134,6 +214,7 @@ try {
  }
  Files;StopApp;Source;Exclusive '05-letter.docx';Exclusive '06-structured.DOCX'
  if((Hash $Letter) -ne $expected['05-letter.docx'] -or (Hash $exe) -ne $build.app_artifact.sha256){throw 'Original fixture/app changed'}
+ if($ActiveMaximize -and ($cases.Count -lt 8 -or $shots.Count -lt 7 -or -not $receipt.Contains('active_docx_resize'))){throw 'Incomplete active DOCX qualification'}
  Record '11-normal-close-and-original-bytes' $null;$receipt['source_unchanged']=$true;$receipt['fixtures_preserved']=$true;$receipt['journal_empty']=$true;$receipt.passed=$true
 }catch{$receipt['error']=$_.Exception.Message;$receipt['error_position']=$_.InvocationInfo.PositionMessage;Write-Output ('FAIL='+$_.Exception.Message);if($app){try{Shot 'failure'}catch{$receipt['capture_error']=$_.Exception.Message}}}
 finally{try{StopApp}catch{$receipt.passed=$false;$receipt['cleanup_error']=$_.Exception.Message};$receipt['finished_utc']=[DateTime]::UtcNow.ToString('o');Json (Join-Path $lab 'receipt.json') $receipt;Write-Output ('RECEIPT='+(Join-Path $lab 'receipt.json'))}
