@@ -1,5 +1,14 @@
 # DCM QuickSort — project context
 
+## 15 November 2026 - maximize headed test passed, provider transitions pending
+
+Source-bound candidate `572b39a481c168811a7c1d7425bd3575aba65e29` on Lenovo successfully ran `flowdev test dcm-quicksort ui-maximize` on an idle shared desktop: 13 cases passed, including native maximize style, working-area geometry at 1536x816, five child controls inside the client boundary, restore, empty-state and text-sentinel activity. The original full maximized and restored-text screenshots were separately visually inspected; major controls are visible and no clipping was found in those captures. No UnoEmbed test was disturbed. Four further registered headed regressions passed at the **same exact candidate**: `ui-pdf` (19 cases), `ui-docx` (7), `ui-xlsx` (6), and `ui-pptx` (8). Total **53/53 machine-accepted headed cases**, source unchanged and clean checkout.
+
+Published receipts, original captures and SHA-256 manifest: [flowverse-reports commit `6cab2667`](https://github.com/laxmanxp/flowverse-reports/tree/6cab26679c4dc08c1892f23b82802c4b1aec3822/apps/dcm-quicksort/maximize-20261115/accepted-572b39a). Build receipt points to executable SHA-256 `38076e13f1737b36250a9b76e434b74f6ee1454f58ccf13320469dc6a88dbd6c`. Prior exact-source full baseline: 411 pass, 0 fail, 0 skip (with bound committed PPTX fixture).
+
+**Qualification limit:** the Maximize/Restore flow itself used empty and TXT sentinel states; normal PDF/DOCX/XLSX/PPTX headed regressions ran separately, not through *active content while maximizing and restoring*. Mark `DCM-WINDOW-MAXIMIZE-01` **tested/PARTIAL** pending one focused active-provider resize transition and user acceptance. This does not change parent DCM-34 PARTIAL, numbered plan 32/50, Explorer environment gate, independent PDF 612x1000 versus decoded 765x1250 observation, or suite release gate waiting for Flow Search and DeepSearch.
+
+
 ## 15 November 2026 - maximize implemented; headed acceptance pending
 
 `DCM-WINDOW-MAXIMIZE-01` is implemented on candidate source `0e453fdd8ffef409adb6d1f14698adcc2a6e82a7`: main `CreateWindowExW` retains the standard Windows resize frame and Maximize box, and `WM_GETMINMAXINFO` sets a minimum outer track size of 1100x740. Auxiliary utility dialogs remain fixed-size. The original unit-test RED failed for missing main-window chrome helpers; portable tests then passed including `TestPDFMainWindow*`; Windows test compilation passed. GitHub exact reviewed patch workflow also passed.
