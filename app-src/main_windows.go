@@ -5733,7 +5733,7 @@ func resizePreviewHandler() {
 	// Read a physical client rect without retaining a changed thread DPI mode.
 	if repairOuter && rectOK != 0 {
 		if physical, ok := excelLayoutPhysicalClientRect(pane); ok {
-			rc.Right, rc.Bottom = excelCOMRectSize(rc.Right, rc.Bottom, physical.Right, physical.Bottom, true, true)
+			rc.Right, rc.Bottom = excelCOMRectForCall("SetRect", rc.Right, rc.Bottom, physical.Right, physical.Bottom, true, true)
 		}
 	}
 	traceCall = beginNativePreviewTrace(traceSession, "SetRect", pane, handler, 0, &rc)
@@ -5812,9 +5812,12 @@ func loadWindowsPreviewHandler(path string) bool {
 		return false
 	}
 
+	// SetWindow is an initial logical-coordinate contract for this Excel handler.
+	// Supplying pre-scaled physical pixels would scale EXCEL7 a second time.
+	// Later SetRect updates keep using measured physical pane pixels.
 	if excelOuterRepair && rectOK != 0 {
 		if physical, ok := excelLayoutPhysicalClientRect(app.previewHwnd); ok {
-			rc.Right, rc.Bottom = excelCOMRectSize(rc.Right, rc.Bottom, physical.Right, physical.Bottom, true, true)
+			rc.Right, rc.Bottom = excelCOMRectForCall("SetWindow", rc.Right, rc.Bottom, physical.Right, physical.Bottom, true, true)
 		}
 	}
 	traceCall = beginNativePreviewTrace(traceSession, "SetWindow", app.previewHwnd, self, 0, &rc)
