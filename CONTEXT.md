@@ -1,5 +1,14 @@
 # DCM QuickSort — project context
 
+## 15 November 2026 - XLSX active maximize harness pushed; Lenovo status unverified
+
+`DCM-WINDOW-MAXIMIZE-01` remains **tested/PARTIAL**. An opt-in native/fallback XLSX active-preview resize scenario was added in source commit `b022b707742ab35d9f412e48e4be41a3f5b854a5` on `release/v1.0.71`. It registers `ui-xlsx-active-maximize` through the existing XLSX headed harness; tests the pinned Orders workbook selected while maximizing and restoring the real main window; inspects provider identity, selected filename and Excel native EXCEL9/EXCEL7 topology, records raw native preview bounds and full original screenshots without automatically restoring before capture, and preserves the ordinary TXT recovery, reopen, exclusive file access and normal close workflow. For a built-in fallback provider, it checks selected worksheet and exact UTF-8 body digest before/during/after. `ui-xlsx` normal behavior is unchanged outside the opt-in flag.
+
+**Not tested/accepted yet:** Remote Desktop Commander could not reach Lenovo during the initial guarded FlowDev update/build call (ambiguous whether command started), and a subsequent read-only status inspection also timed out. Therefore **do not claim** PowerShell parsing, build, any FlowDev selector PASS, or a headed XLSX outcome at `b022b70`. The last independently verified Lenovo checkout was `015660a`, with native DOCX acceptance on prior `5a6d559`. No direct Lenovo production source edit was attempted. The correct next action is to recover the device connection, verify active processes and current checkout before rerunning any update/build, then use exact-source `flowdev update dcm-quicksort`, `flowdev test dcm-quicksort build`, `flowdev test dcm-quicksort ui-xlsx-active-maximize`, followed by `ui-xlsx` and retained screenshot/geometry review. Diagnose a failing bounds check rather than weakening the contract; never interrupt an unrelated UnoEmbed GUI owner.
+
+Maintain DCM-34 PARTIAL; 32 of 50 numbered steps done, 18 remain. Active PPTX and PDF bitmap DPI-size analysis are separate next tasks. Windows VM setup remains deferred until Explorer/installer isolation is needed per user direction.
+
+
 ## 15 November 2026 - native DOCX active maximize and restore accepted
 
 A new opt-in registered `ui-docx-active-maximize` selector qualifies the existing installed native DOCX handler while the real pinned `05-letter.docx` is displayed. Its source implementation and two test-harness corrections were committed/pushed on `release/v1.0.71` (`d7bfbd1` initial, `0c2fa5b` native provider status scoped to owned host statics rather than all foreign descendants, `5a6d55989e51487cacc0f08c506362fd670ea576` pre-close case-count fix). Two actual failing headed receipts remain failed and retained rather than retroactively passing: first cross-process `DcmTextProbe.Controls` ownership mismatch, then premature case-count guard. No production application or renderer source change.
