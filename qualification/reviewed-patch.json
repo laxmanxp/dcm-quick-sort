@@ -1,36 +1,63 @@
 {
   "schema": 1,
-  "message": "test: require disabled host sizing on stable PDF errors (DCM-34 RED gate)",
+  "message": "fix: refuse host sizing for unverified native PDF previews (DCM-34)",
   "edits": [
     {
-      "path": "tools/test-ui-pdf-failure.ps1",
-      "before_sha256": "9375512e495e284d7873ba81148ca389801d8f5a5fca56ea825d5c41a3c95785",
+      "path": "app-src/main_windows.go",
+      "before_sha256": "4f6c9016556a44a9a3ef51f0af65fc3619a463046d8f6f52ee26d94a4c6a35cd",
       "replacements": [
-        [
-          "param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT)",
-          "param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,[switch]$RequireErrorControls)"
-        ],
-        [
-          " Record $name $detail;return $accepted",
-          " if($RequireErrorControls -and $kind -ceq 'error'){\n  $enabled=@($sizingKeys|Where-Object {$accepted.readback.controls.$_.enabled})\n  $check=[ordered]@{stage=$name;state=$accepted.state;capture=$accepted.path;observation=$accepted.observation;enabled_controls=$enabled;passed=($enabled.Count -eq 0)}\n  if(-not $receipt.Contains('error_control_checks')){$receipt['error_control_checks']=@()}\n  $receipt.error_control_checks+=,$check\n  if($enabled.Count){throw ('DCM34_PDF_ERROR_CONTROLS: stable error retains enabled host sizing: '+($enabled -join ', '))}\n  $detail['host_error_sizing_controls_disabled']=$true\n }\n Record $name $detail;return $accepted"
-        ],
-        [
-          " $receipt['machine_checks_passed']=$true;$receipt.passed=$true",
-          " if($RequireErrorControls){if($receipt.error_control_checks.Count -ne 2){throw 'Both damaged openings require control checks'};$receipt['host_error_controls_machine_checked']=$true}\n $receipt['machine_checks_passed']=$true;$receipt.passed=$true"
-        ]
+        ["\tpreviewExcelOuterRepair ", "\tpreviewExcelOuterRepair, previewHostSizingAllowed "],
+        ["\tapp.previewExcelOuterRepair = false\n", "\tapp.previewExcelOuterRepair = false\n\tapp.previewHostSizingAllowed = false\n"],
+        ["return pdfPreview.active || app.image != 0 || app.preview != nil || app.textPreviewActive || app.xlsxPreviewActive || app.pptxPreviewActive", "return pdfPreview.active || app.image != 0 || (app.preview != nil && app.previewHostSizingAllowed) || app.textPreviewActive || app.xlsxPreviewActive || app.pptxPreviewActive"],
+        ["\treturn app.preview != nil\n", "\treturn app.preview != nil && app.previewHostSizingAllowed\n"],
+        ["func sendPreviewCtrlKey(vk uintptr, shift bool) bool {\n\tif app.preview == nil {", "func sendPreviewCtrlKey(vk uintptr, shift bool) bool {\n\tif app.preview == nil || !app.previewHostSizingAllowed {"],
+        ["func setPreviewZoom100() {\n", "func setPreviewZoom100() {\n\tif !previewSupportsZoom() {\n\t\treturn\n\t}\n"],
+        ["func fitPreview() {\n", "func fitPreview() {\n\tif !previewSupportsFit() {\n\t\treturn\n\t}\n"],
+        ["func fitPreviewWidth() {\n", "func fitPreviewWidth() {\n\tif !previewSupportsFitWidth() {\n\t\treturn\n\t}\n"],
+        ["func adjustPreviewZoom(detents int) {\n\tif detents == 0 {", "func adjustPreviewZoom(detents int) {\n\tif detents == 0 || !previewSupportsZoom() {"],
+        ["\tif app.preview == nil || !shouldAutoFitPreview(path, clsidText) {", "\tif app.preview == nil || !app.previewHostSizingAllowed || !shouldAutoFitPreview(path, clsidText) {"],
+        ["\tapp.preview, app.previewExcelOuterRepair = ph, excelOuterRepair\n", "\tapp.preview, app.previewExcelOuterRepair = ph, excelOuterRepair\n\tapp.previewHostSizingAllowed = nativePreviewHostSizingAllowed(path)\n"],
+        ["\t\t\tcase ID_ZOOM_OUT:\n\t\t\t\tapp.previewZoomWheelRemainder = 0", "\t\t\tcase ID_ZOOM_OUT:\n\t\t\t\tif !previewSupportsZoom() {\n\t\t\t\t\treturn 0\n\t\t\t\t}\n\t\t\t\tapp.previewZoomWheelRemainder = 0"],
+        ["\t\t\tcase ID_ZOOM_IN:\n\t\t\t\tapp.previewZoomWheelRemainder = 0", "\t\t\tcase ID_ZOOM_IN:\n\t\t\t\tif !previewSupportsZoom() {\n\t\t\t\t\treturn 0\n\t\t\t\t}\n\t\t\t\tapp.previewZoomWheelRemainder = 0"],
+        ["\t// A native IPreviewHandler does not expose one standard document-zoom API,\n\t// but DCM can always fit the handler's host rectangle to the preview pane.\n\t// Known handlers such as the Edge PDF fallback additionally receive their\n\t// native fit shortcut in fitPreview/autoFitPreviewIfSupported.", "\t// Native PDF attachment does not establish document readiness in DCM.\n\t// Keep those host commands disabled; provider-owned controls and normal\n\t// SetRect layout remain available. Retain existing Office sizing behavior."]
       ],
-      "after_sha256": "89c5c4b01c8c79adb58682a39a2a9e1de59b36c5fe9f18d48c7581d9386887ff"
+      "after_sha256": "b9cbc39e658a23344177136dbf89b8d0ead3a99733b569cc952c9577e79ceaab"
+    },
+    {
+      "path": "app-src/native_preview_sizing.go",
+      "before_sha256": null,
+      "new_content": "package main\n\nimport \"strings\"\n\n// DCM has no document-readiness signal for the native PDF fallback: a handler\n// can attach successfully yet display an error or password prompt. Do not send\n// host sizing shortcuts or report sizing success merely because it attached.\n// This deliberately also covers valid native PDFs until readiness is proven.\n// The primary Windows.Data.Pdf renderer and provider-owned controls are unchanged.\nfunc nativePreviewHostSizingAllowed(path string) bool {\n\treturn strings.TrimSpace(path) != \"\" && !isPDFPath(path)\n}\n",
+      "after_sha256": "d663788437531b73d6eb5099828045c329c3b67fecb1a9c22c985d62a7986500"
+    },
+    {
+      "path": "app-src/native_preview_sizing_test.go",
+      "before_sha256": null,
+      "new_content": "package main\n\nimport (\n\t\"strings\"\n\t\"testing\"\n)\n\nfunc TestDCM34NativeSizingPolicy(t *testing.T) {\n\tfor _, tc := range []struct {\n\t\tname, path string\n\t\tallowed    bool\n\t}{\n\t\t{\"blank\", \"\", false}, {\"whitespace\", \"  \", false},\n\t\t{\"pdf\", \"broken.pdf\", false}, {\"uppercase-pdf\", \"valid.PDF\", false},\n\t\t{\"spaced-path\", \"C:/test folder/report.pdf\", false},\n\t\t{\"word\", \"report.docx\", true}, {\"legacy-word\", \"report.DOC\", true},\n\t\t{\"excel\", \"report.xlsx\", true}, {\"powerpoint\", \"report.pptx\", true},\n\t\t{\"not-pdf-extension\", \"report.pdf.docx\", true},\n\t} {\n\t\tt.Run(tc.name, func(t *testing.T) {\n\t\t\tif got := nativePreviewHostSizingAllowed(tc.path); got != tc.allowed {\n\t\t\t\tt.Fatalf(\"host sizing for %q = %v; want %v\", tc.path, got, tc.allowed)\n\t\t\t}\n\t\t})\n\t}\n}\n\nfunc TestDCM34NativeSizingWiring(t *testing.T) {\n\tsrc := windowsMainSource(t)\n\tstart := strings.Index(src, \"func loadWindowsPreviewHandler(path string)\")\n\tend := strings.Index(src[start:], \"func createPreviewHandler\")\n\tif start < 0 || end < 0 {\n\t\tt.Fatal(\"native loader missing\")\n\t}\n\tloader := src[start : start+end]\n\tpolicy := strings.Index(loader, \"app.previewHostSizingAllowed = nativePreviewHostSizingAllowed(path)\")\n\tautoFit := strings.Index(loader, \"autoFitPreviewIfSupported(path, clsidText)\")\n\tif policy < 0 || autoFit < 0 || policy > autoFit {\n\t\tt.Fatal(\"native sizing permission must bind actual loaded path before automatic native sizing\")\n\t}\n\tstart = strings.Index(src, \"func unloadPreview()\")\n\tend = strings.Index(src[start:], \"func previewWindowProc\")\n\tunload := src[start : start+end]\n\tif !strings.Contains(unload, \"app.previewHostSizingAllowed = false\") {\n\t\tt.Fatal(\"native sizing permission must be cleared when preview retires\")\n\t}\n}\n",
+      "after_sha256": "72f503c500829911be314f41738af1969ba6768acdc75742f9a8566bfcebaebe"
+    },
+    {
+      "path": "app-src/native_preview_sizing_windows_test.go",
+      "before_sha256": null,
+      "new_content": "//go:build windows\n\npackage main\n\nimport (\n\t\"runtime\"\n\t\"syscall\"\n\t\"testing\"\n)\n\nfunc TestDCM34NativeSizingControls(t *testing.T) {\n\truntime.LockOSThread()\n\tdefer runtime.UnlockOSThread()\n\toldApp, oldPDF, oldView := app, pdfPreview, sumatraView\n\tdefer func() { app, pdfPreview, sumatraView = oldApp, oldPDF, oldView }()\n\tparent := controlTestParent(t)\n\tdefer user32.NewProc(\"DestroyWindow\").Call(parent)\n\tstatus := createControl(\"STATIC\", \"\", WS_CHILD, 0, 90, 580, 30, parent, 959)\n\tpane := createControl(\"STATIC\", \"\", WS_CHILD, 0, 130, 580, 300, parent, 960)\n\tif status == 0 || pane == 0 {\n\t\tt.Fatal(\"owned test controls unavailable\")\n\t}\n\tapp = appState{hwnd: parent, previewHwnd: pane, statusLabel: status}\n\tpdfPreview = pdfPreviewState{}\n\tsumatraView = nil\n\tbuttons := []*uintptr{&app.zoomOutBtn, &app.zoom100Btn, &app.zoomInBtn, &app.zoomFitBtn, &app.zoomFitWidthBtn}\n\tfor i, slot := range buttons {\n\t\t*slot = createControl(\"BUTTON\", \"Zoom\", WS_CHILD|WS_VISIBLE, int32(i*70), 20, 65, 25, parent, 970+i)\n\t\tif *slot == 0 {\n\t\t\tt.Fatal(\"owned button creation failed\")\n\t\t}\n\t}\n\t// These callbacks only count calls. SetFocus fails before any QueryFocus or\n\t// input injection, so a regressed guard cannot type into a foreign window.\n\tnativeCalls := 0\n\tvtbl := iPreviewHandlerVtbl{\n\t\tSetFocus: syscall.NewCallback(func(self uintptr) uintptr { nativeCalls++; return uintptr(0x80004005) }),\n\t\tSetRect:  syscall.NewCallback(func(self, rect uintptr) uintptr { nativeCalls++; return 0 }),\n\t}\n\thandler := &iPreviewHandler{Vtbl: &vtbl}\n\tfor _, scene := range []struct {\n\t\tname                       string\n\t\tnative, allowed, text, pdf bool\n\t\tenabled                    [5]bool\n\t}{\n\t\t{\"blank\", false, false, false, false, [5]bool{}},\n\t\t{\"native-pdf-unknown-or-error\", true, false, false, false, [5]bool{}},\n\t\t{\"native-office\", true, true, false, false, [5]bool{true, true, true, true, false}},\n\t\t{\"text-recovery\", false, false, true, false, [5]bool{true, true, true, true, false}},\n\t\t{\"owned-pdf-recovery\", false, false, false, true, [5]bool{true, true, true, true, true}},\n\t\t{\"native-error-after-recovery\", true, false, false, false, [5]bool{}},\n\t\t{\"empty-after-error\", false, false, false, false, [5]bool{}},\n\t} {\n\t\tt.Run(scene.name, func(t *testing.T) {\n\t\t\tapp.preview = nil\n\t\t\tif scene.native {\n\t\t\t\tapp.preview = handler\n\t\t\t}\n\t\t\tapp.previewHostSizingAllowed = scene.allowed\n\t\t\tapp.textPreviewActive = scene.text\n\t\t\tpdfPreview.active = scene.pdf\n\t\t\tfor repeat := 0; repeat < 2; repeat++ {\n\t\t\t\tupdatePreviewZoomControls()\n\t\t\t\tfor i, slot := range buttons {\n\t\t\t\t\tstyle, _, _ := spGetWindowStyle.Call(*slot, ^uintptr(15))\n\t\t\t\t\tif style&WS_VISIBLE == 0 || (style&0x08000000 == 0) != scene.enabled[i] {\n\t\t\t\t\t\tt.Fatalf(\"button %d wrong style %x; want enabled %v\", i, style, scene.enabled[i])\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t\tif !scene.native || scene.allowed {\n\t\t\t\treturn\n\t\t\t}\n\t\t\tsetText(status, \"DCM PDF renderer unavailable; using Windows PDF preview fallback\")\n\t\t\tfooter := getText(status)\n\t\t\tapp.previewZoom = 173\n\t\t\tapp.previewFit = false\n\t\t\tapp.previewFitWidth = false\n\t\t\tapp.previewPanX = 11\n\t\t\tapp.previewPanY = 22\n\t\t\tapp.previewZoomWheelRemainder = 17\n\t\t\tbeforeCalls := nativeCalls\n\t\t\tsetPreviewZoom100()\n\t\t\tfitPreview()\n\t\t\tfitPreviewWidth()\n\t\t\tadjustPreviewZoom(1)\n\t\t\tadjustPreviewZoom(-1)\n\t\t\tif sendPreviewCtrlKey(VK_0, false) {\n\t\t\t\tt.Error(\"native key injection allowed without sizing permission\")\n\t\t\t}\n\t\t\tautoFitPreviewIfSupported(\"test.pdf\", \"{3D3B1846-CC43-42AE-BFF9-D914083C2BA3}\")\n\t\t\tfor _, id := range []int{ID_ZOOM_OUT, ID_ZOOM_100, ID_ZOOM_IN, ID_ZOOM_FIT, ID_ZOOM_FIT_WIDTH} {\n\t\t\t\tmainWindowProc(parent, WM_COMMAND, uintptr(id), 0)\n\t\t\t}\n\t\t\tif nativeCalls != beforeCalls {\n\t\t\t\tt.Errorf(\"disabled sizing made %d native calls\", nativeCalls-beforeCalls)\n\t\t\t}\n\t\t\tif got := getText(status); got != footer {\n\t\t\t\tt.Errorf(\"error footer overwritten: %q\", got)\n\t\t\t}\n\t\t\tif app.previewZoom != 173 || app.previewFit || app.previewFitWidth || app.previewPanX != 11 || app.previewPanY != 22 || app.previewZoomWheelRemainder != 17 {\n\t\t\t\tt.Error(\"disabled direct/command sizing changed viewport state\")\n\t\t\t}\n\t\t})\n\t}\n}\n",
+      "after_sha256": "eaf20d532a02471c50f2b0a335583a09ee8d25fea8393da5a89fc0f70732a255"
     },
     {
       "path": "tools/flowdev-dcm/config/checks.json",
-      "before_sha256": "52d8808e92bb3c913ae6f3d59a8c68014ebd99332b7475249f2c5946c6a36bdc",
-      "replacements": [
-        [
-          "        \"ui-pdf-failure\": [\"powershell.exe\", \"-NoProfile\", \"-NonInteractive\", \"-File\", \"tools/test-ui-pdf-failure.ps1\"],",
-          "        \"ui-pdf-failure\": [\"powershell.exe\", \"-NoProfile\", \"-NonInteractive\", \"-File\", \"tools/test-ui-pdf-failure.ps1\"],\n        \"ui-pdf-error-controls\": [\"powershell.exe\", \"-NoProfile\", \"-NonInteractive\", \"-File\", \"tools/test-ui-pdf-failure.ps1\", \"-RequireErrorControls\"],"
-        ]
-      ],
-      "after_sha256": "ea01e65512a076ee4fc52309d814ae541e30f0678c245b1e164edde03ea0282a"
+      "before_sha256": "ea01e65512a076ee4fc52309d814ae541e30f0678c245b1e164edde03ea0282a",
+      "replacements": [["        \"pdf-failure-unit\": [\"powershell.exe\", \"-NoProfile\", \"-NonInteractive\", \"-File\", \"tools/run-native.ps1\", \"-Mode\", \"regressions\", \"-Run\", \"^Test(DCM34PDFRenderer|PDF)\"],", "        \"pdf-failure-unit\": [\"powershell.exe\", \"-NoProfile\", \"-NonInteractive\", \"-File\", \"tools/run-native.ps1\", \"-Mode\", \"regressions\", \"-Run\", \"^Test(DCM34PDFRenderer|PDF)\"],\n        \"pdf-control-unit\": [\"powershell.exe\", \"-NoProfile\", \"-NonInteractive\", \"-File\", \"tools/run-native.ps1\", \"-Mode\", \"regressions\", \"-Run\", \"^Test(DCM34NativeSizing|ControlUpdatePreviewTransitions)\"],"]],
+      "after_sha256": "88d70044b4da91d3a57164ec33204e4860aec5e62cd8aaf511d117f534742e65"
+    },
+    {
+      "path": "CONTEXT.md",
+      "before_sha256": "0532489079527e5fa3269e4456bc4da27ca542c671db366ed2e0e49badbc5730",
+      "replacements": [["# DCM QuickSort — project context\n", "# DCM QuickSort — project context\n\n## 15 November 2026 - DCM-34 PDF host-sizing guard\n\n`DCM-34-PDF-CONTROLS-01`: conservative host sizing permission is bound to the\nactual native-handler path and revoked on unload. Native PDF attachment is not\nreadiness; host zoom/100%/Fit stay disabled for native PDFs, including valid ones\nuntil readiness can be established. Provider-owned controls, SetRect resizing,\nprimary Windows.Data.Pdf and existing Office sizing are retained. Disabled direct\nand WM_COMMAND routes must preserve the error footer and viewport.\n\nNew selectors: `pdf-control-unit` and `ui-pdf-error-controls`. Implementation is\npending its exact-source Lenovo GREEN and image review; no acceptance is claimed\nby this checkpoint. Keep 32/50 complete and full DCM-34 PARTIAL. Final suite\npackaging remains gated on Flow Search and DeepSearch readiness.\n"]],
+      "after_sha256": "19d916a2c4de849510e0a8c9b93066dafa250f6fc98ae3b7d677df651299ff09"
+    },
+    {
+      "path": "todo.json",
+      "before_sha256": "d7632d1ccd276cb0dce36f9b1d87f8069a33cf17aaf8154f5f4c9c739b1fd21c",
+      "replacements": [["  \"items\": [", "  \"items\": [\n    {\"id\": \"DCM-34-PDF-CONTROLS-01\", \"feature\": \"Do not offer host sizing for unverified native PDF content\", \"status\": \"implemented\", \"ui_test\": \"pending_exact_source_GREEN_and_image_review\", \"user_test\": \"not_recorded\", \"release_gate\": true, \"parent_ids\": [\"DCM-PREVIEW-01\"], \"acceptance\": \"Stable native PDF errors disable all five host sizing controls. Direct sizing methods and WM_COMMAND routes make no native sizing/focus calls and preserve footer/viewport. TXT and primary-PDF recovery restore supported controls; provider-owned UI and Office behavior remain unchanged. Conservative limit: host sizing is also disabled for valid native PDFs until readiness is established.\"},"]],
+      "after_sha256": "53d5fe3787915cdce83b9dfd4dae32b16e4db740206cb627bef91ebfa5b5581f"
     }
   ]
 }
