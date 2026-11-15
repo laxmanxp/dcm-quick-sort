@@ -1,5 +1,38 @@
 # DCM QuickSort — project context
 
+## 15 November 2026 - live PDF observation recorded; corrected headed run pending
+
+`DCM-34-PDF-INTERRUPT-01` remains **PARTIAL**. Opt-in, bounded JSONL tracing
+and the registered `ui-pdf-inflight` harness are implemented. At `3f07fe2c0e60c63240101ef642100bba4a7dfb1c`,
+the real valid-PDF renderer starts, the selection changes to TXT while it is
+still running, and its later successful result is consumed and discarded. The
+original headed run still **failed** its external-process exit-code check after
+that observation; this is not full workflow or visual acceptance.
+
+A disposable diagnostic identified a null external ExitCode without a retained
+process handle. The observer correction at `32b906ed818bc8b9d57af751fd5c423a3555a8d5` retains the live handle
+and passes the native tooling regression: 11 trace-contract checks plus one
+process-observer check. The exact build and three worker-ownership tests pass.
+The **409 passed / 0 failed / 0 skipped** Windows baseline and four trace tests
+retain their actual source `3f07fe2c0e60c63240101ef642100bba4a7dfb1c`. Application/tests/fixtures/native
+runner identities are unchanged by the observer correction, and the rebuilt
+executable hash matches. No fresh baseline at the corrected source is claimed.
+
+The corrected headed retry **did not start**: `flowdev run unoembed` remained
+on the shared desktop through a bounded wait. No foreign process was stopped.
+Original failed receipts and raw visual flags remain unchanged. All 501 source
+files were rehashed; 185 raw evidence files are published in [report `f65c71c5`](https://github.com/laxmanxp/flowverse-reports/tree/f65c71c547ba4fafd8d48ed27683e5fd0a1fb7bd/apps/dcm-quicksort/dcm34-20261115-inflight/32b906e).
+See `qualification/evidence/dcm-34-pdf-inflight-progress.json` for exact source attribution and scope.
+
+**Next:** on an idle desktop, use a fresh exact-current-source FlowDev build, bind
+`DCM_BUILD_RECEIPT`, run `ui-pdf-inflight`, then the trace-disabled normal PDF,
+damaged-PDF and protected-PDF regressions. Retain every failed observation.
+No artificial renderer delay, suspension, substitution or process cancellation
+was added. Keep DCM-34 PARTIAL and **32/50 complete**. The bitmap-size observation,
+human acceptance and Flow Search/DeepSearch suite-readiness gate remain open.
+
+Earlier preparation and acceptance notes below retain their original scope.
+
 ### In-flight observer correction (native attempt retained)
 
 At `3f07fe2`, the first actual valid-PDF switch spans worker-started, selection
