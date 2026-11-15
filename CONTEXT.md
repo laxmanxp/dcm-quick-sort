@@ -1,5 +1,14 @@
 # DCM QuickSort — project context
 
+## 15 November 2026 - maximize-button and PDF bitmap-size investigation
+
+The main QuickSort window deliberately removes `WS_THICKFRAME` and `WS_MAXIMIZEBOX` from `WS_OVERLAPPEDWINDOW` in `app-src/main_windows.go` (main `CreateWindowExW` near line 5983). Its comment says v1 was fixed-size to avoid layout drift, so Windows correctly disables the Maximize button. The `WM_SIZE` handler already calls `layoutUI`, but some widths are fixed/clamped (including 220px file pane, 260px processed pane and at least 420px preview), and no `WM_GETMINMAXINFO` minimum-window contract is registered. Do not just enable the style without designing/test-driving minimum sizing, resize, maximized and restored layouts, controls, preview providers, and real DPI configurations. New backlog item: `DCM-WINDOW-MAXIMIZE-01`; source behavior unchanged.
+
+The separate `DCM-PDF-RENDER-SIZE-01` observation is exactly 1.25x on both axes (metadata 612x1000; actual PNG 765x1250). The existing `assets/pdf_render.ps1` sets `PdfPageRenderOptions.DestinationWidth/Height` to its calculated destination values; Microsoft's API documentation defines those options in device-independent pixels. Physical pixel scaling is a strong hypothesis, **not yet qualified** on Lenovo by a paired controlled DPI experiment. Do not equate dimensions, claim a fix, or remove the release gate. The read-only investigation did not change source or installer files.
+
+Next smallest production work: establish a safe responsive main-window style and minimum-size contract with a failing layout test first, then implement through OpenAI → GitHub → Lenovo FlowDev. Keep DCM-34 PARTIAL and the suite release gate for Flow Search/DeepSearch.
+
+
 ## 15 November 2026 - completed observed in-flight PDF qualification
 
 **DCM-34-PDF-INTERRUPT-01: bounded acceptance COMPLETE.** The real-application `ui-pdf-inflight` FlowDev selector passed at `37c9202d8864bafa9e2982b3281a44a11a819a96`: 10 retained cases cover in-flight successful PDF completion, in-flight failed/damaged PDF completion, and same-PDF reopen with overlapping generations. Old renderer output is discarded, the new selection retains the correct content, source files and fixtures are preserved, exclusive file access is released, and the host exits normally. Three further headed selectors passed at the same revision: `ui-pdf` (normal navigation/sizing), `ui-pdf-error-controls` (damaged/error recovery), and `ui-pdf-protected` (protected refusal/recovery). Fresh exact-source FlowDev build passed, with its receipt bound to the headed runs. The source checkout stayed clean.
