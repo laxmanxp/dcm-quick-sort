@@ -3,7 +3,8 @@ param(
  [string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,
  [string]$Workbook='D:\FlowverseReportsRepo\dcm-flowuivision-20261103\inbox\06-orders.xlsx',
  [switch]$ObserveNativeLayout,
- [switch]$RequireNativeBounds
+ [switch]$RequireNativeBounds,
+ [switch]$ActiveMaximize
 )
 # DCM-31: natural installed-handler/fallback selection; no registration changes.
 # Native cells require separate image review. Fallback sheet/cell readback is asserted.
@@ -15,9 +16,10 @@ $lab=Join-Path $env:FLOWDEV_WORKSPACE_ROOT ('dcm-quicksort-ui-xlsx-'+[DateTime]:
 if($lab.StartsWith($repo+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)){throw 'Test lab must be outside source'}
 $null=New-Item -ItemType Directory $lab;$utf8=New-Object Text.UTF8Encoding($false)
 $cases=New-Object 'Collections.Generic.List[object]';$shots=New-Object 'Collections.Generic.List[object]'
-$receipt=[ordered]@{schema=1;feature='DCM-31';report=$lab;started_utc=[DateTime]::UtcNow.ToString('o');passed=$false;feature_accepted=$false;cases=$cases;captures=$shots;visual_review_required=$true;user_test='not_recorded';provider='not_observed'}
+$receipt=[ordered]@{schema=1;feature=$(if($ActiveMaximize){'DCM-WINDOW-MAXIMIZE-01'}else{'DCM-31'});report=$lab;started_utc=[DateTime]::UtcNow.ToString('o');passed=$false;feature_accepted=$false;cases=$cases;captures=$shots;visual_review_required=$true;user_test='not_recorded';provider='not_observed'}
 $receipt['native_layout_diagnostic']=[bool]$ObserveNativeLayout
 $receipt['native_bounds_required']=[bool]$RequireNativeBounds
+if($ActiveMaximize){$RequireNativeBounds=$true}
 if($RequireNativeBounds){$receipt['native_bounds_checks']=New-Object 'Collections.Generic.List[object]'}
 if($ObserveNativeLayout){$receipt['layout_observations']=New-Object 'Collections.Generic.List[object]'}
 $app=$null;$hwnd=[IntPtr]::Zero;$owned=$null;$head='';$manifest=@();$fixture=$null;$expected=@{};$exe=''
@@ -133,6 +135,69 @@ function NativeShot([string]$name){
  RequireStatus 'Windows preview: XLSX'
  Record $name ([ordered]@{native_identities=$identities;accessible_text_sha256=(Hash (Join-Path $lab ($name+'.accessible.txt')));rendered_cells_machine_asserted=$false;rendered_content_review='required_separately';native_sheet_navigation='not_exercised';status='Windows preview: XLSX'})
 }
+function ActiveXlsxSnapshot([string]$provider,[string]$expectedToken){
+ Own
+ $selected=[DcmUndoInput]::TryText($hwnd,$app.Id,1005)
+ if($selected -cne '06-orders'){throw ('Active workbook selection changed: '+$selected)}
+ $native=(HostCaptions) -ccontains 'Windows preview: XLSX'
+ if($native -ne ($provider -ceq 'native')){throw 'Active XLSX provider switched during resize'}
+ if($native){
+  $nodes=@(NativeNodes)
+  if(-not $nodes.Count){throw 'Native Excel subtree missing during resize'}
+  $geometry=[DcmPreviewGeometry]::Observe($hwnd,$app.Id)
+  $ctx=@($geometry.Contexts|Where-Object {$_.CallerContextLabel -ceq 'per_monitor_aware_v2_requested_minus4'})
+  if($ctx.Count -ne 1){throw 'Physical Excel geometry context absent'}
+  $windows=@($ctx[0].Windows|Where-Object {$_.Available -and $_.Visible})
+  $outer=@($windows|Where-Object {$_.Class -ceq 'EXCEL9'})
+  $inner=@($windows|Where-Object {$_.Class -ceq 'EXCEL7'})
+  if($outer.Count -ne 1 -or $inner.Count -ne 1 -or $inner[0].Parent -ne $outer[0].Handle){throw 'Active Excel native preview subtree topology changed'}
+  return [pscustomobject]@{provider='native';selected=$selected;native_nodes=$nodes.Count;outer_handle=$outer[0].Handle;inner_handle=$inner[0].Handle;outer_pid=$outer[0].PID;inner_pid=$inner[0].PID;status='Windows preview: XLSX';rendered_cells_machine_asserted=$false}
+ }
+ $body=Preview
+ if($null -eq $body -or -not $body.Text.Contains($expectedToken)){throw 'Fallback XLSX grid lost during resize'}
+ if([DcmXlsxInput]::SelectedSheet($hwnd,$app.Id) -cne 'Orders'){throw 'Fallback selected worksheet changed'}
+ $sha=[Security.Cryptography.SHA256]::Create()
+ try{$hash=([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($body.Text)))).Replace('-','').ToLowerInvariant()}finally{$sha.Dispose()}
+ RequireStatus ('DCM XLSX Preview: Orders '+[char]0x00B7+' 21 rows '+[char]0x00D7+' 6 columns')
+ return [pscustomobject]@{provider='fallback';selected=$selected;sheet='Orders';body_sha256=$hash;body_characters=$body.Text.Length}
+}
+function Test-ActiveXlsxMaximize([string]$provider){
+ if(-not $ActiveMaximize){return}
+ $style=[DcmXlsxResize]::GetWindowLongPtr($hwnd,-16).ToInt64()
+ if(($style -band 0x00050000) -ne 0x00050000){throw 'Main XLSX window lacks maximize or resize frame'}
+ $initial=ActiveXlsxSnapshot $provider 'Sample Recipient 01'
+ $original=New-Object DcmXlsxResize+Rect
+ if(-not [DcmXlsxResize]::GetWindowRect($hwnd,[ref]$original)){throw 'Cannot read original XLSX host rect'}
+ $area=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea
+ [DcmXlsxResize]::ShowWindow($hwnd,3)|Out-Null
+ Wait 'active XLSX maximized' {[DcmXlsxResize]::IsZoomed($hwnd)}
+ Start-Sleep -Milliseconds 650
+ $large=New-Object DcmXlsxResize+Rect
+ if(-not [DcmXlsxResize]::GetWindowRect($hwnd,[ref]$large)){throw 'Cannot read maximized XLSX host rect'}
+ if(($large.Right-$large.Left) -lt ($area.Width-24) -or ($large.Bottom-$large.Top) -lt ($area.Height-24) -or ($large.Right-$large.Left)-($original.Right-$original.Left) -lt 50){throw 'XLSX host did not expand to the desktop work area'}
+ $max=ActiveXlsxSnapshot $provider 'Sample Recipient 01'
+ if($provider -ceq 'fallback' -and $max.body_sha256 -cne $initial.body_sha256){throw 'Fallback XLSX content changed while maximized'}
+ CaptureFrame 'active-xlsx-maximized'
+ [DcmXlsxResize]::ShowWindow($hwnd,9)|Out-Null
+ Wait 'active XLSX restored' {-not [DcmXlsxResize]::IsZoomed($hwnd)}
+ Start-Sleep -Milliseconds 650
+ $restored=New-Object DcmXlsxResize+Rect
+ if(-not [DcmXlsxResize]::GetWindowRect($hwnd,[ref]$restored)){throw 'Cannot read restored XLSX host rect'}
+ if([Math]::Abs(($original.Right-$original.Left)-($restored.Right-$restored.Left)) -gt 8 -or [Math]::Abs(($original.Bottom-$original.Top)-($restored.Bottom-$restored.Top)) -gt 8){throw 'XLSX host failed to restore original dimensions'}
+ $again=ActiveXlsxSnapshot $provider 'Sample Recipient 01'
+ if($provider -ceq 'fallback' -and $again.body_sha256 -cne $initial.body_sha256){throw 'Fallback XLSX content changed after restoration'}
+ CaptureFrame 'active-xlsx-restored'
+ $receipt['active_xlsx_resize']=[ordered]@{
+  provider=$provider;selected='06-orders.xlsx';original=@($original.Left,$original.Top,$original.Right,$original.Bottom)
+  maximized=@($large.Left,$large.Top,$large.Right,$large.Bottom)
+  restored=@($restored.Left,$restored.Top,$restored.Right,$restored.Bottom)
+  work_area=@($area.Left,$area.Top,$area.Right,$area.Bottom)
+  before=$initial;during=$max;after=$again
+  native_viewport_bounds_checked=($provider -ceq 'native')
+  screenshots_review_required=$true
+ }
+ Record 'active-xlsx-maximize-restore' ([ordered]@{provider=$provider;maximized=$true;restored=$true;selected_workbook_stable=$true;fallback_content_stable=$(if($provider -ceq 'fallback'){$true}else{$null});native_cells_machine_asserted=$false})
+}
 function Exclusive {$h=[IO.File]::Open((Join-Path $fixture.inbox '06-orders.xlsx'),[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::None);$h.Dispose()}
 function StopApp {
  if(-not $app){return};Own
@@ -152,10 +217,23 @@ try {
  $receipt['commit']=$head;$receipt['build_receipt']=$BuildReceipt;$receipt['app_sha256']=$build.app_artifact.sha256
  if((Hash $Workbook) -ne $workbookHash){throw 'Historical XLSX fixture identity changed'}
  Add-Type -AssemblyName System.Drawing;Add-Type -AssemblyName System.Windows.Forms
+ if($ActiveMaximize){
+  Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class DcmXlsxResize {
+ [StructLayout(LayoutKind.Sequential)] public struct Rect { public int Left, Top, Right, Bottom; }
+ [DllImport("user32.dll", EntryPoint="GetWindowLongPtrW")] public static extern IntPtr GetWindowLongPtr(IntPtr hwnd,int index);
+ [DllImport("user32.dll")] [return:MarshalAs(UnmanagedType.Bool)] public static extern bool GetWindowRect(IntPtr hwnd,out Rect rect);
+ [DllImport("user32.dll")] [return:MarshalAs(UnmanagedType.Bool)] public static extern bool IsZoomed(IntPtr hwnd);
+ [DllImport("user32.dll")] [return:MarshalAs(UnmanagedType.Bool)] public static extern bool ShowWindow(IntPtr hwnd,int command);
+}
+'@
+ }
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-native.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-undo-input.cs')
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-xlsx-input.cs')
- if($ObserveNativeLayout -or $RequireNativeBounds){
+ if($ObserveNativeLayout -or $RequireNativeBounds -or $ActiveMaximize){
   Add-Type -Path (Join-Path $repo 'tests/native/dcm-preview-geometry.cs')
  }
  if($ObserveNativeLayout){
@@ -187,12 +265,12 @@ try {
  }
  $native=(HostCaptions) -ccontains 'Windows preview: XLSX'
  if($native){
-  $receipt.provider='Installed Windows XLSX preview handler';$receipt['native_sheet_navigation']='not_exercised; no foreign input adapter';NativeShot '02-native-workbook'
+  $receipt.provider='Installed Windows XLSX preview handler';$receipt['native_sheet_navigation']='not_exercised; no foreign input adapter';NativeShot '02-native-workbook';if($ActiveMaximize){Test-ActiveXlsxMaximize 'native'}
  }else{
   $receipt.provider='Built-in XLSX Open XML grid fallback'
   $actual=@([DcmXlsxInput]::SheetNames($hwnd,$app.Id));if(($actual -join '|') -cne ($sheetNames -join '|')){throw 'Fallback worksheet names/order differ'}
   $receipt['observed_fallback_sheet_names']=$actual
-  Orders '02-orders-content';Shot '02-orders-content'
+  Orders '02-orders-content';Shot '02-orders-content';if($ActiveMaximize){Test-ActiveXlsxMaximize 'fallback'}
   [DcmXlsxInput]::SelectSheet($hwnd,$app.Id,'Read me')
   Wait 'Read me selection and body' {([DcmXlsxInput]::SelectedSheet($hwnd,$app.Id) -ceq 'Read me') -and $null -ne (Preview) -and (Preview).Text.StartsWith('Sheet: Read me',[StringComparison]::Ordinal)}
   $p=ExpectBody '03-readme-content' @('Sheet: Read me','FLOWDOC 0.10.0','Purpose','Demonstration only.','Data worksheet','Choose Orders','Template','Open the included') @('Sample Recipient 01','Sheet: Orders')
@@ -209,6 +287,7 @@ try {
  if($ObserveNativeLayout){$receipt['host_layout_trace_sha256']=Hash $receipt.host_layout_trace}
  if((Hash $Workbook) -ne $workbookHash -or (Hash $exe) -ne $build.app_artifact.sha256){throw 'Original workbook/app changed'}
  if($cases.Count -lt 5 -or $shots.Count -lt 4){throw 'Incomplete XLSX qualification records/captures'}
+ if($ActiveMaximize -and (-not $receipt.Contains('active_xlsx_resize') -or $cases.Count -lt 6 -or $shots.Count -lt 6)){throw 'Incomplete active XLSX resize acceptance evidence'}
  Record '07-normal-close-and-original-bytes' $null;$receipt['source_unchanged']=$true;$receipt['fixtures_preserved']=$true;$receipt['journal_empty']=$true
  if($RequireNativeBounds -and $native){
   if($receipt.native_bounds_checks.Count -lt 2){throw 'Native bounds checks incomplete'}

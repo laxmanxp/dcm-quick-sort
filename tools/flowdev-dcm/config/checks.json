@@ -601,6 +601,14 @@
           "-File",
           "tools/test-ui-docx.ps1",
           "-ActiveMaximize"
+        ],
+        "ui-xlsx-active-maximize": [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "tools/test-ui-xlsx.ps1",
+          "-ActiveMaximize"
         ]
       }
     }
