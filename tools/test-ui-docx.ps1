@@ -78,7 +78,9 @@ function ActiveDocxSnapshot([string]$kind,[string]$expectedToken){
   return [pscustomobject]@{provider=$kind;selected=$selected;body_sha256=$hash;body_length=$preview.Text.Length;status=$status;native_window_count=0}
  }
  if(-not $native.Count){throw 'DOCX native handler subtree vanished during resize'}
- $status=CheckStatus 'Windows preview: DOCX'
+ $captions=@([DcmDocxProbe]::HostStatics($hwnd,$app.Id)|ForEach-Object {[DcmNative]::Text([IntPtr]$_,$app.Id)})
+ if($captions -cnotcontains 'Windows preview: DOCX'){throw 'Native DOCX provider status lost during resize'}
+ $status='Windows preview: DOCX'
  $pids=@($native|Select-Object -ExpandProperty PID -Unique|Sort-Object)
  if(-not $pids.Count){throw 'No native DOCX provider PID'}
  return [pscustomobject]@{provider=$kind;selected=$selected;native_window_count=$native.Count;native_pids=$pids;status=$status}
