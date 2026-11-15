@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "message": "test: require disabled host sizing on stable PDF errors (DCM-34 RED gate)",
+  "edits": [
+    {
+      "path": "tools/test-ui-pdf-failure.ps1",
+      "before_sha256": "9375512e495e284d7873ba81148ca389801d8f5a5fca56ea825d5c41a3c95785",
+      "replacements": [
+        [
+          "param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT)",
+          "param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,[switch]$RequireErrorControls)"
+        ],
+        [
+          " Record $name $detail;return $accepted",
+          " if($RequireErrorControls -and $kind -ceq 'error'){\n  $enabled=@($sizingKeys|Where-Object {$accepted.readback.controls.$_.enabled})\n  $check=[ordered]@{stage=$name;state=$accepted.state;capture=$accepted.path;observation=$accepted.observation;enabled_controls=$enabled;passed=($enabled.Count -eq 0)}\n  if(-not $receipt.Contains('error_control_checks')){$receipt['error_control_checks']=@()}\n  $receipt.error_control_checks+=,$check\n  if($enabled.Count){throw ('DCM34_PDF_ERROR_CONTROLS: stable error retains enabled host sizing: '+($enabled -join ', '))}\n  $detail['host_error_sizing_controls_disabled']=$true\n }\n Record $name $detail;return $accepted"
+        ],
+        [
+          " $receipt['machine_checks_passed']=$true;$receipt.passed=$true",
+          " if($RequireErrorControls){if($receipt.error_control_checks.Count -ne 2){throw 'Both damaged openings require control checks'};$receipt['host_error_controls_machine_checked']=$true}\n $receipt['machine_checks_passed']=$true;$receipt.passed=$true"
+        ]
+      ],
+      "after_sha256": "89c5c4b01c8c79adb58682a39a2a9e1de59b36c5fe9f18d48c7581d9386887ff"
+    },
+    {
+      "path": "tools/flowdev-dcm/config/checks.json",
+      "before_sha256": "52d8808e92bb3c913ae6f3d59a8c68014ebd99332b7475249f2c5946c6a36bdc",
+      "replacements": [
+        [
+          "        \"ui-pdf-failure\": [\"powershell.exe\", \"-NoProfile\", \"-NonInteractive\", \"-File\", \"tools/test-ui-pdf-failure.ps1\"],",
+          "        \"ui-pdf-failure\": [\"powershell.exe\", \"-NoProfile\", \"-NonInteractive\", \"-File\", \"tools/test-ui-pdf-failure.ps1\"],\n        \"ui-pdf-error-controls\": [\"powershell.exe\", \"-NoProfile\", \"-NonInteractive\", \"-File\", \"tools/test-ui-pdf-failure.ps1\", \"-RequireErrorControls\"],"
+        ]
+      ],
+      "after_sha256": "ea01e65512a076ee4fc52309d814ae541e30f0678c245b1e164edde03ea0282a"
+    }
+  ]
+}

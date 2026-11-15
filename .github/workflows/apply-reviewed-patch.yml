@@ -1,0 +1,31 @@
+name: Apply exact OpenAI-reviewed DCM patch
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [qualification/reviewed-patch.json]
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.2'
+          cache: false
+      - run: python -m unittest -v qualification.test_reviewed_patch
+      - run: python tools/apply_reviewed_patch.py
+      - name: Focused portable tests and Windows test compilation
+        working-directory: app-src
+        run: |
+          go test -count=1 -run '^Test(PDF|DCM34|FitButton|EveryNewPreview|PreviewWheel)'
+          GOOS=windows GOARCH=amd64 go test -c -o "$RUNNER_TEMP/dcm-controls.test.exe"
+      - name: Commit exact reviewed outputs without force push
+        run: |
+          git diff --check
+          git config user.name 'DCM reviewed-patch automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          python tools/apply_reviewed_patch.py --stage
+          git push origin HEAD:release/v1.0.71
