@@ -1,5 +1,19 @@
 # DCM QuickSort — project context
 
+## 15 November 2026 - DCM-34 PDF host-sizing guard
+
+`DCM-34-PDF-CONTROLS-01`: conservative host sizing permission is bound to the
+actual native-handler path and revoked on unload. Native PDF attachment is not
+readiness; host zoom/100%/Fit stay disabled for native PDFs, including valid ones
+until readiness can be established. Provider-owned controls, SetRect resizing,
+primary Windows.Data.Pdf and existing Office sizing are retained. Disabled direct
+and WM_COMMAND routes must preserve the error footer and viewport.
+
+New selectors: `pdf-control-unit` and `ui-pdf-error-controls`. Implementation is
+pending its exact-source Lenovo GREEN and image review; no acceptance is claimed
+by this checkpoint. Keep 32/50 complete and full DCM-34 PARTIAL. Final suite
+packaging remains gated on Flow Search and DeepSearch readiness.
+
 ## 15 November 2026 - DOCX closeout and suite release decision
 
 DCM-34-DOCX-FALLBACK-01 is fixed at bfbb731 within the built-in fallback contract: native RED preserved; 5 focused and 23 existing DOCX/Open XML tests pass; baseline 396/0/0; 16 headed component states and 7 normal-app DOCX records pass with all 21 captures separately reviewed. The missing/failed-handler inputs are owned component boundary inputs, not separate absent/failing Word environments. Raw visual/acceptance flags remain unchanged. Existing PDF milestone remains separately attributed. Full DCM-34 is PARTIAL, 32 complete / 18 remaining; protected PDF, in-flight interruption, PDF error-control readiness and broader Office failure coverage remain. User acceptance and release remain open.

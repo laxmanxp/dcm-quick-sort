@@ -598,7 +598,7 @@ type appState struct {
 	image                                                                                                                                              uintptr
 	imageStream                                                                                                                                        *iUnknown
 	preview                                                                                                                                            *iPreviewHandler
-	previewExcelOuterRepair                                                                                                                            bool
+	previewExcelOuterRepair, previewHostSizingAllowed                                                                                                                            bool
 	previewActive                                                                                                                                      bool
 	fallback                                                                                                                                           string
 	updatingSuggestions, updatingFileList, updatingProcessedList                                                                                       bool
@@ -3264,11 +3264,17 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 				reloadSourceAliases()
 				reloadDestinationAliases()
 			case ID_ZOOM_OUT:
+				if !previewSupportsZoom() {
+					return 0
+				}
 				app.previewZoomWheelRemainder = 0
 				adjustPreviewZoom(-1)
 			case ID_ZOOM_100:
 				setPreviewZoom100()
 			case ID_ZOOM_IN:
+				if !previewSupportsZoom() {
+					return 0
+				}
 				app.previewZoomWheelRemainder = 0
 				adjustPreviewZoom(1)
 			case ID_ZOOM_FIT:
@@ -5018,6 +5024,7 @@ func unloadPreview() {
 	// A retiring handler may cause nested size messages during COM cleanup.
 	// Preserve its normal cleanup calls, but do not request an outer repair.
 	app.previewExcelOuterRepair = false
+	app.previewHostSizingAllowed = false
 	if err := stopSumatraPreview(); err != nil {
 		sumatraError(err)
 	}
@@ -5191,18 +5198,17 @@ func drawImagePreview(hdc uintptr, rc RECT) {
 }
 
 func previewSupportsZoom() bool {
-	return pdfPreview.active || app.image != 0 || app.preview != nil || app.textPreviewActive || app.xlsxPreviewActive || app.pptxPreviewActive
+	return pdfPreview.active || app.image != 0 || (app.preview != nil && app.previewHostSizingAllowed) || app.textPreviewActive || app.xlsxPreviewActive || app.pptxPreviewActive
 }
 
 func previewSupportsFit() bool {
 	if pdfPreview.active || app.image != 0 || app.textPreviewActive || app.xlsxPreviewActive || app.pptxPreviewActive {
 		return true
 	}
-	// A native IPreviewHandler does not expose one standard document-zoom API,
-	// but DCM can always fit the handler's host rectangle to the preview pane.
-	// Known handlers such as the Edge PDF fallback additionally receive their
-	// native fit shortcut in fitPreview/autoFitPreviewIfSupported.
-	return app.preview != nil
+	// Native PDF attachment does not establish document readiness in DCM.
+	// Keep those host commands disabled; provider-owned controls and normal
+	// SetRect layout remain available. Retain existing Office sizing behavior.
+	return app.preview != nil && app.previewHostSizingAllowed
 }
 
 func previewSupportsFitWidth() bool {
@@ -5302,7 +5308,7 @@ func setImageZoom(percent int) {
 }
 
 func sendPreviewCtrlKey(vk uintptr, shift bool) bool {
-	if app.preview == nil {
+	if app.preview == nil || !app.previewHostSizingAllowed {
 		return false
 	}
 	self := uintptr(unsafe.Pointer(app.preview))
@@ -5350,6 +5356,9 @@ func sendPreviewCtrlKey(vk uintptr, shift bool) bool {
 }
 
 func setPreviewZoom100() {
+	if !previewSupportsZoom() {
+		return
+	}
 	app.previewZoomWheelRemainder = 0
 	if pdfPreview.active {
 		app.previewFit = false
@@ -5383,6 +5392,9 @@ func setPreviewZoom100() {
 }
 
 func fitPreview() {
+	if !previewSupportsFit() {
+		return
+	}
 	app.previewZoomWheelRemainder = 0
 	if pdfPreview.active {
 		app.previewFit = true
@@ -5454,6 +5466,9 @@ func fitPreview() {
 }
 
 func fitPreviewWidth() {
+	if !previewSupportsFitWidth() {
+		return
+	}
 	app.previewZoomWheelRemainder = 0
 	if pdfPreview.active {
 		app.previewFit = false
@@ -5499,7 +5514,7 @@ func fitPreviewWidth() {
 }
 
 func adjustPreviewZoom(detents int) {
-	if detents == 0 {
+	if detents == 0 || !previewSupportsZoom() {
 		return
 	}
 	if pdfPreview.active {
@@ -5699,7 +5714,7 @@ func resizePreviewHandler() {
 }
 
 func toggleCurrentPDFPreviewFit(path, clsidText string) bool {
-	if app.preview == nil || !shouldAutoFitPreview(path, clsidText) {
+	if app.preview == nil || !app.previewHostSizingAllowed || !shouldAutoFitPreview(path, clsidText) {
 		return false
 	}
 	// Edge documents Ctrl+\ as the PDF fit-to-page / fit-to-width toggle.
@@ -5764,6 +5779,7 @@ func loadWindowsPreviewHandler(path string) bool {
 		return false
 	}
 	app.preview, app.previewExcelOuterRepair = ph, excelOuterRepair
+	app.previewHostSizingAllowed = nativePreviewHostSizingAllowed(path)
 	setNativePreviewTraceActive(self, traceSession)
 	app.previewFit = true
 	app.previewFitWidth = false
