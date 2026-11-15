@@ -1,5 +1,15 @@
 # DCM QuickSort — project context
 
+## 15 November 2026 - DOCX closeout and suite release decision
+
+DCM-34-DOCX-FALLBACK-01 is fixed at bfbb731 within the built-in fallback contract: native RED preserved; 5 focused and 23 existing DOCX/Open XML tests pass; baseline 396/0/0; 16 headed component states and 7 normal-app DOCX records pass with all 21 captures separately reviewed. The missing/failed-handler inputs are owned component boundary inputs, not separate absent/failing Word environments. Raw visual/acceptance flags remain unchanged. Existing PDF milestone remains separately attributed. Full DCM-34 is PARTIAL, 32 complete / 18 remaining; protected PDF, in-flight interruption, PDF error-control readiness and broader Office failure coverage remain. User acceptance and release remain open.
+
+Original RED/GREEN evidence: [f0caef5efb0f4f3ac370b412577d38ab94aa3fdb](https://github.com/laxmanxp/flowverse-reports/tree/f0caef5efb0f4f3ac370b412577d38ab94aa3fdb/apps/dcm-quicksort/dcm34-20261114-232225/docx-fallback-bfbb731). The separate acceptance and 21-image review are in [qualification/evidence/dcm-34-docx-fallback-native-summary.json](https://github.com/laxmanxp/dcm-quick-sort/blob/release/v1.0.71/qualification/evidence/dcm-34-docx-fallback-native-summary.json). This records existing tests; it does not claim a new application/UI run. Earlier DOCX open/unfixed statements below describe the pre-fix PDF/probe checkpoint and are superseded here.
+
+**Suite decision:** FileFlow Suite includes DCM QuickSort, Flow Search, DeepSearch and FileFlow as separate applications/windows. Final suite packaging and installation are deferred until Flow Search and DeepSearch are complete and accepted for the intended scope. Their readiness was not checked in this DCM step. QuickSort development, source-bound builds and focused tests continue independently. No UI/codebase merger or installer topology is assumed. Publication still requires explicit approval.
+
+**Next QuickSort work:** continue the remaining DCM-34 preview cases; do not recreate the already-pushed DOCX fix or restart completed source recovery.
+
 ## Current checkpoint — 15 November 2026 (Asia/Kolkata)
 
 The active application is **standalone DCM QuickSort v1.0.71**, repository
