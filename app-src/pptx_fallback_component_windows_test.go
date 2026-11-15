@@ -83,7 +83,7 @@ func TestPPTXFallbackComponentRecovery(t *testing.T) {
 					app.previewActive || len(app.pptxDeck.Slides) != 0 || len(app.pptxImages) != 0 {
 					t.Errorf("%s retained active/previous preview after corrupt PPTX", stage)
 				}
-				if got, _, _ := procSendMessageW.Call(app.pptxSlideCombo, CB_GETCOUNT, 0, 0); got != 0 {
+				if got, _, _ := procSendMessageW.Call(app.pptxSlideCombo, 0x0146 /* CB_GETCOUNT */, 0, 0); got != 0 {
 					t.Errorf("%s left %d stale PPTX slide options", stage, got)
 				}
 				if !strings.HasPrefix(app.fallback, body) ||
@@ -104,7 +104,7 @@ func TestPPTXFallbackComponentRecovery(t *testing.T) {
 					t.Errorf("%s failed to enter real PPTX fallback state", stage)
 					return
 				}
-				if got, _, _ := procSendMessageW.Call(app.pptxSlideCombo, CB_GETCOUNT, 0, 0); got != 2 {
+				if got, _, _ := procSendMessageW.Call(app.pptxSlideCombo, 0x0146 /* CB_GETCOUNT */, 0, 0); got != 2 {
 					t.Errorf("%s slide selector count %d, want 2", stage, got)
 				}
 				if app.pptxDeck.Slides[0].Title != "Bridge Inspection" ||
