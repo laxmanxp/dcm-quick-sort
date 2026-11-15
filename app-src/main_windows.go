@@ -19,6 +19,7 @@ const (
 	WM_CREATE                   = 0x0001
 	WM_DESTROY                  = 0x0002
 	WM_SIZE                     = 0x0005
+	WM_GETMINMAXINFO            = 0x0024
 	WM_SETFOCUS                 = 0x0007
 	WM_CLOSE                    = 0x0010
 	WM_PAINT                    = 0x000F
@@ -362,6 +363,9 @@ var (
 
 type POINT struct{ X, Y int32 }
 type RECT struct{ Left, Top, Right, Bottom int32 }
+type MINMAXINFO struct {
+	Reserved, MaxSize, MaxPosition, MinTrackSize, MaxTrackSize POINT
+}
 
 func pointInWindow(hwnd uintptr, pt POINT) bool {
 	if hwnd == 0 {
@@ -3118,6 +3122,12 @@ func showError(msg string) {
 
 func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 	switch msg {
+	case WM_GETMINMAXINFO:
+		if lParam != 0 {
+			info := (*MINMAXINFO)(unsafe.Pointer(lParam))
+			info.MinTrackSize.X, info.MinTrackSize.Y = minimumMainWindowTrackSize()
+		}
+		return 0
 	case WM_CREATE:
 		app.hwnd = hwnd
 		app.processedCollapsed = make(map[string]bool)
@@ -5978,9 +5988,9 @@ func main() {
 	if !registerClasses(hInst) {
 		return
 	}
-	// V1 is intentionally a fixed-size utility window. Removing the thick frame
-	// and maximize box prevents layout drift and keeps the preview pane stable.
-	windowStyle := uintptr((WS_OVERLAPPEDWINDOW &^ (WS_THICKFRAME | WS_MAXIMIZEBOX)) | WS_VISIBLE | WS_CLIPCHILDREN)
+	// Keep the main window resizable and maximizable. Auxiliary dialogs remain
+	// fixed-size; WM_GETMINMAXINFO protects the minimum usable main layout.
+	windowStyle := uintptr(mainWindowChromeStyle(WS_OVERLAPPEDWINDOW, WS_VISIBLE, WS_CLIPCHILDREN))
 	hwnd, _, _ := procCreateWindowExW.Call(0, uintptr(unsafe.Pointer(wstr("QuickSortMain"))), uintptr(unsafe.Pointer(wstr("DCM - Quick Sort (Downloaded Content Management) — "+currentAppVersion))), windowStyle, CW_USEDEFAULT, CW_USEDEFAULT, 1280, 820, 0, 0, hInst, 0)
 	if hwnd == 0 {
 		return
