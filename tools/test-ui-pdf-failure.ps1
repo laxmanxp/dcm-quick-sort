@@ -338,6 +338,7 @@ try {
  NoDialog;$screen=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea;[DcmNative]::Restore($hwnd,$app.Id,$screen.Left+8,$screen.Top+8);Start-Sleep -Milliseconds 300
  $initialText=TextBody '01-initial-text' $plain
  if($InFlight){
+  $receipt.sequence=@('initial TXT','live valid PDF to TXT then obsolete success discarded','live damaged PDF to TXT then obsolete failure discarded','live valid PDF to TXT and same-PDF reopen with overlapping workers','only replacement applied','final TXT recovery','exclusive release','normal close')
   Invoke-DcmPdfInFlightSwitch '08-preview.pdf' 'inflight-valid-worker' $false
   $null=TextBody 'inflight-valid-text' $plain $initialText
   Invoke-DcmPdfInFlightSwitch $failureFile 'inflight-error-worker' $true

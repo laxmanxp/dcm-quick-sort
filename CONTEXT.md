@@ -1,5 +1,16 @@
 # DCM QuickSort — project context
 
+### In-flight observer correction (native attempt retained)
+
+At `3f07fe2`, the first actual valid-PDF switch spans worker-started, selection
+invalidation, successful worker exit and obsolete-result discard. The harness
+then failed its external-process exit-code check. A disposable process probe
+reproduced a null Get-Process ExitCode without a retained Handle, and exit 7
+with the handle retained. The harness now pins that handle while alive and
+adds a native observer regression. This is not a product-renderer fix; the
+original failed UI receipt remains failed. Full headed acceptance is pending.
+
+
 ## 15 November 2026 - observed in-flight harness prepared
 
 New `ui-pdf-inflight` uses opt-in `DCM_PDF_TRACE` JSONL events in its disposable report.

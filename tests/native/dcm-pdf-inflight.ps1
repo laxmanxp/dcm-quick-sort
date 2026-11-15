@@ -1,5 +1,5 @@
 # Pure event contract used by the real-app harness and the tooling gate.
-# No timing sleeps, process suspension, injected completions or fake renderer.
+# No artificial worker delays, suspension, injected completions or fake renderer.
 function Assert-DcmPdfInFlightTrace($Events,[long]$Generation,[bool]$Failed,[long]$NewGeneration=0){
  $rows=@($Events);if(-not $rows.Count){throw 'INFLIGHT_TRACE: empty evidence'}
  $last=[long]0;$hostId=[long]$rows[0].host_pid
@@ -20,6 +20,14 @@ function Assert-DcmPdfInFlightTrace($Events,[long]$Generation,[bool]$Failed,[lon
   if($d.state.active -or $d.state.busy -or $d.state.pending -or $d.state.worker_generation -ne 0 -or $d.state.path -cne ''){throw 'INFLIGHT_TRACE: stale completion altered stopped PDF state'}
  }
  return [pscustomobject]@{generation=$Generation;renderer_pid=$s.renderer_pid;input_path=$s.input_path;output_path=$s.output_path;started_sequence=$s.sequence;stopped_sequence=$x.sequence;finished_sequence=$f.sequence;discarded_sequence=$d.sequence;replacement_generation=$NewGeneration;failed=$Failed;passed=$true}
+}
+
+# Keep a real process handle while the observed child is alive. Get-Process
+# without a retained handle can report HasExited=true but a null ExitCode.
+function Keep-DcmPdfProcessHandle($Process){
+ $handle=$Process.Handle
+ if($handle -eq [IntPtr]::Zero){throw 'Cannot retain renderer process identity'}
+ return $handle
 }
 
 function Read-DcmPdfTrace {
@@ -44,6 +52,7 @@ function Invoke-DcmPdfInFlightSwitch([string]$Name,[string]$Tag,[bool]$Failed,[s
  SelectFile $Name;$start=Wait-DcmPdfStarted $Name $after
  $p=Get-Process -Id $start.renderer_pid -ErrorAction Stop
  try{
+  $null=Keep-DcmPdfProcessHandle $p
   $p.Refresh();if($p.HasExited -or [IO.Path]::GetFileName($p.Path) -cnotin @('powershell.exe','pwsh.exe') -or $p.StartTime.ToUniversalTime() -lt $app.StartTime.ToUniversalTime()){throw 'Renderer no longer live before switch'}
   # Read the owned footer before switching, not merely a sleep-based estimate.
   $before=HostCaptions;if(-not @($before|Where-Object {$_.StartsWith('Rendering PDF page ',[StringComparison]::Ordinal)}).Count){throw 'Expected actual rendering footer before switch'}
@@ -59,7 +68,9 @@ function Invoke-DcmPdfInFlightSwitch([string]$Name,[string]$Tag,[bool]$Failed,[s
   }while([DateTime]::UtcNow -lt $until)
   if(-not $ready){throw 'Late completion was not consumed within deadline'}
   $newGen=if($new){[long]$new.generation}else{0};$proof=Assert-DcmPdfInFlightTrace $rows $start.generation $Failed $newGen
-  if(-not $p.WaitForExit(1000) -or $p.ExitCode -ne $(if($Failed){1}else{0})){throw 'Renderer did not exit with expected status'}
+  $exited=$p.WaitForExit(1000);$observed['wait_return']=$exited;$observed['exit_code']=$p.ExitCode;$observed['proof']=$proof;$observed['events']=$rows
+  Json (Join-Path $lab ($Tag+'.events.json')) $observed
+  if(-not $exited -or $null -eq $p.ExitCode -or $p.ExitCode -ne $(if($Failed){1}else{0})){throw 'Renderer did not exit with expected status'}
   if(Test-Path -LiteralPath $start.output_path){throw 'Obsolete output remains after discarded result'}
   $observed['exit_code']=$p.ExitCode;$observed['proof']=$proof;$observed['events']=$rows;$observed['renderer_delay_or_suspension_used']=$false
   Json (Join-Path $lab ($Tag+'.events.json')) $observed

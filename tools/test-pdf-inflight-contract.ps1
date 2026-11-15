@@ -20,5 +20,9 @@ $r=@((New-Event 'worker-started' 1),(New-Event 'selection-stopped' 2),(New-Event
 $r[4].state=[pscustomobject]@{active=$true;busy=$true;pending=$false;worker_generation=7;generation=7;path='synthetic.pdf'}
 $null=Assert-DcmPdfInFlightTrace $r 5 $false 7;$checks++
 $r[4].state.busy=$false;Reject $r 7
-if($checks -ne 11){throw 'Incomplete in-flight contract tests'}
-Write-Output 'PASS: 11 in-flight trace contract checks (no application launched)'
+# Exercise the same observer against an owned, windowless control process.
+$psi=New-Object Diagnostics.ProcessStartInfo;$psi.FileName='powershell.exe';$psi.Arguments='-NoProfile -NonInteractive -Command "Start-Sleep -Milliseconds 600; exit 7"';$psi.UseShellExecute=$false;$psi.CreateNoWindow=$true
+$child=[Diagnostics.Process]::Start($psi);$observer=Get-Process -Id $child.Id
+try{$null=Keep-DcmPdfProcessHandle $observer;if(-not $observer.WaitForExit(5000) -or $null -eq $observer.ExitCode -or $observer.ExitCode -ne 7){throw 'Retained observer exit-status regression'};$checks++}finally{$observer.Dispose();$child.Dispose()}
+if($checks -ne 12){throw 'Incomplete in-flight contract tests'}
+Write-Output 'PASS: 11 trace contracts and 1 owned process observer check (no product launched)'
