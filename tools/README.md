@@ -84,3 +84,11 @@ The headed gate retains the existing ownership, source, pixel/readback and
 cleanup checks; only the failure fixture is selected differently. An unexpected
 password dialog is a failure for investigation, never a target for blind input.
 Neither selector certifies password entry, unlocking or in-flight cancellation.
+
+### DCM-34 PDF completion ownership
+
+`flowdev test dcm-quicksort pdf-interruption-unit` checks obsolete success/error
+completion disposal across different-file and same-file-reopen selections, the
+blank/text state, and worker-generation ownership used by queued zoom/page work.
+The Windows tests call production stop/completion code with owned controls;
+this gate is not full normal-app observed in-flight selection or cancellation.

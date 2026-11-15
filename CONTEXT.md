@@ -6,7 +6,13 @@ Next baby step `DCM-34-PDF-INTERRUPT-01`: verify that an obsolete PDF completion
 cannot clear a newer request's busy state, including reopening the same file.
 The new `pdf-interruption-unit` selector exercises production stop/completion
 logic with an owned status control. It is a deterministic component regression,
-not yet a full normal-app in-flight/cancellation acceptance. Native RED is pending.
+not yet a full normal-app in-flight/cancellation acceptance. Native RED at
+`92a5023361eecf530cd7c3194c6e24c65ff38030` reproduced four obsolete completions
+clearing the replacement worker busy flag. The fix assigns worker-generation
+ownership separately from the desired-result generation; old selections only
+remove their own output. Same-selection coalesced requests retain their worker
+ownership until completion. Native GREEN and headed regressions are pending.
+No renderer-process cancellation is introduced or claimed.
 Keep the protected-PDF acceptance, open bitmap-size observation, 32/50 count and
 suite packaging gate unchanged.
 

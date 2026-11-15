@@ -107,3 +107,10 @@ func parsePDFRendererOutput(output string) (PDFRenderMetadata, error) {
 	}
 	return PDFRenderMetadata{}, fmt.Errorf("PDF renderer failed: %s", trimmed)
 }
+
+// pdfCompletionOwnsWorker is independent of the current desired generation:
+// a coalesced zoom/page change supersedes the desired result but not its worker.
+// Stopping/reopening a selection revokes that worker's scheduler ownership.
+func pdfCompletionOwnsWorker(busy bool, workerGeneration, completedGeneration uint64) bool {
+	return busy && workerGeneration != 0 && workerGeneration == completedGeneration
+}

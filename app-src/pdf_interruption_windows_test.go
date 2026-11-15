@@ -38,9 +38,12 @@ func TestDCM34PDFLateResultOwnership(t *testing.T) {
 	} {
 		app = appState{statusLabel: status, fallback: "Rendering the NEW selection", previewZoom: 137, previewPanX: 17, previewPanY: 29}
 		pdfRenderResults = make(chan PDFRenderResult, 8)
-		pdfPreview = pdfPreviewState{active: true, path: oldPath, generation: 41, busy: true}
+		pdfPreview = pdfPreviewState{active: true, path: oldPath, generation: 41, workerGeneration: 41, busy: true}
 		oldGeneration := pdfPreview.generation
 		stopPDFPreview() // actual production selection invalidation
+		if pdfPreview.workerGeneration != 0 {
+			t.Fatal("stopped worker retained ownership")
+		}
 		nextPath := filepath.Join(dir, "new.pdf")
 		if scene.samePath {
 			nextPath = oldPath
@@ -49,6 +52,7 @@ func TestDCM34PDFLateResultOwnership(t *testing.T) {
 		pdfPreview.path = nextPath
 		pdfPreview.generation++
 		pdfPreview.busy = true // newer asynchronous request is outstanding
+		pdfPreview.workerGeneration = pdfPreview.generation
 		beforePDF := pdfPreview
 		beforeApp := app
 		footer := getText(status)

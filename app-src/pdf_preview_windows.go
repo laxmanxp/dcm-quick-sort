@@ -32,6 +32,7 @@ type pdfPreviewState struct {
 	page             int
 	pageCount        int
 	generation       uint64
+	workerGeneration uint64 // identity of the request that owns busy/pending
 	busy             bool
 	pending          bool
 	prevBtn          uintptr
@@ -217,6 +218,7 @@ func stopPDFPreview() {
 	pdfPreview.page = 0
 	pdfPreview.pageCount = 0
 	pdfPreview.busy = false
+	pdfPreview.workerGeneration = 0
 	pdfPreview.pending = false
 	pdfPreview.lastWidth = 0
 	pdfPreview.lastHeight = 0
@@ -243,7 +245,8 @@ func requestPDFPreviewRender() {
 		return
 	}
 	// Coalesce rapid Ctrl+wheel/button clicks. Only one PowerShell/WinRT render
-	// runs at a time; changes made while it is running become one latest render.
+	// runs at a time per selection; changes during that run become one latest
+	// render. Workers from stopped selections can finish later but own no slot.
 	pdfPreview.generation++
 	if pdfPreview.busy {
 		pdfPreview.pending = true
@@ -291,6 +294,7 @@ func requestPDFPreviewRender() {
 		Generation:     generation,
 	}
 	pdfPreview.busy = true
+	pdfPreview.workerGeneration = req.Generation
 	mode := fmt.Sprintf("%d%%", clampPDFZoom(app.previewZoom))
 	if app.previewFit {
 		mode = "Fit"
@@ -330,14 +334,22 @@ func finishPDFRender() {
 		case result := <-pdfRenderResults:
 			if result.Request.Generation != pdfPreview.generation || !pdfPreview.active || !strings.EqualFold(filepath.Clean(result.Request.InputPath), filepath.Clean(pdfPreview.path)) {
 				_ = os.Remove(result.Request.OutputPath)
-				pdfPreview.busy = false
-				if pdfPreview.active && pdfPreview.pending {
-					pdfPreview.pending = false
-					requestPDFPreviewRender()
+				// A stopped selection may finish after its replacement has started.
+				// Only the completing worker can release its slot. A superseded
+				// zoom/page request still owns that slot and may start its queued
+				// successor; a prior selection must not touch the newer worker.
+				if pdfCompletionOwnsWorker(pdfPreview.busy, pdfPreview.workerGeneration, result.Request.Generation) {
+					pdfPreview.busy = false
+					pdfPreview.workerGeneration = 0
+					if pdfPreview.active && pdfPreview.pending {
+						pdfPreview.pending = false
+						requestPDFPreviewRender()
+					}
 				}
 				return
 			}
 			pdfPreview.busy = false
+			pdfPreview.workerGeneration = 0
 			pdfPreview.pending = false
 			if result.Err != nil {
 				_ = os.Remove(result.Request.OutputPath)
