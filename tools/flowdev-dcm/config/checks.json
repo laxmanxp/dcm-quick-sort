@@ -468,6 +468,21 @@
           "-File",
           "tools/test-ui-pptx.ps1"
         ],
+        "ui-pptx-active-maximize": [
+
+          "powershell.exe",
+
+          "-NoProfile",
+
+          "-NonInteractive",
+
+          "-File",
+
+          "tools/test-ui-pptx.ps1",
+
+          "-ActiveMaximize"
+
+        ],
         "ui-legacy-doc": [
           "powershell.exe",
           "-NoProfile",
