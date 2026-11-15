@@ -10,6 +10,13 @@ control/recovery) and `ui-pdf-protected` (explicit refusal and completed-state
 TXT/default-PDF recovery). No native pass or visual acceptance is claimed yet.
 Keep the 32/50 count, partial DCM-34, user-acceptance limit and suite release gate.
 
+First native renderer attempt at `728ec40` refused both protected openings, but
+failed all three valid-control assertions: reported 612x1000 versus decoded
+765x1250. Preserve `dcm-quicksort-regressions-20261115-073707-925e9175` as failed
+history. Recovery now compares fully decoded baseline/recovery pixels and page
+metadata independently; metadata-to-bitmap size equivalence is NOT accepted.
+Track `DCM-PDF-RENDER-SIZE-01` separately; no production sizing fix is claimed.
+
 ## 15 November 2026 - DCM-34 PDF host-sizing guard
 
 `DCM-34-PDF-CONTROLS-01`: conservative host sizing permission is bound to the
