@@ -5712,7 +5712,11 @@ func abs32(v int32) int32 {
 	return v
 }
 
-func resizePreviewHandler() {
+func resizePreviewHandler() { resizePreviewHandlerFor(false) }
+
+// Initial COM layout is resolved while Excel is creating EXCEL7. Subsequent
+// window-resize events use physical pane pixels after that child exists.
+func resizePreviewHandlerFor(initial bool) {
 	ph := app.preview
 	if ph == nil {
 		return
@@ -5733,7 +5737,11 @@ func resizePreviewHandler() {
 	// Read a physical client rect without retaining a changed thread DPI mode.
 	if repairOuter && rectOK != 0 {
 		if physical, ok := excelLayoutPhysicalClientRect(pane); ok {
-			rc.Right, rc.Bottom = excelCOMRectForCall("SetRect", rc.Right, rc.Bottom, physical.Right, physical.Bottom, true, true)
+			method := "SetRect"
+			if initial {
+				method = "InitialSetRect"
+			}
+			rc.Right, rc.Bottom = excelCOMRectForCall(method, rc.Right, rc.Bottom, physical.Right, physical.Bottom, true, true)
 		}
 	}
 	traceCall = beginNativePreviewTrace(traceSession, "SetRect", pane, handler, 0, &rc)
@@ -5844,9 +5852,10 @@ func loadWindowsPreviewHandler(path string) bool {
 	setNativePreviewTraceActive(self, traceSession)
 	app.previewFit = true
 	app.previewFitWidth = false
-	// Run the Excel compatibility request once after its viewer is initialized.
+	// Use a logical rectangle for the initial Excel SetRect while the native
+	// child is being created. All later host resize events use physical pixels.
 	if excelOuterRepair {
-		resizePreviewHandler()
+		resizePreviewHandlerFor(true)
 	}
 	autoFitPreviewIfSupported(path, clsidText)
 	updatePreviewZoomControls()
