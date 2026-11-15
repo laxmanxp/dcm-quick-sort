@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
     [string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,
-    [string]$VisionExe=$env:DCM_FLOWUIVISION_EXE
+    [string]$VisionExe=$env:DCM_FLOWUIVISION_EXE,
+    [switch]$Maximize
 )
 # DCM-17: use the existing owned native adapter and FlowUIVision, not host files.
 $ErrorActionPreference='Stop'
@@ -167,6 +168,37 @@ function Stop-App {
     $script:owned['children_drained']=$true
     $script:app.Dispose();$script:app=$null;$script:hwnd=[IntPtr]::Zero
 }
+
+function Assert-MaximizeMainWindow {
+    Assert-Owned
+    $style=[DcmMaximize]::GetWindowLongPtr($script:hwnd,-16).ToInt64()
+    if(($style -band 0x00050000) -ne 0x00050000){throw ('Main window lacks resize/maximize style: '+$style)}
+    $area=[Windows.Forms.Screen]::FromHandle($script:hwnd).WorkingArea
+    [DcmMaximize]::ShowWindow($script:hwnd,3) | Out-Null
+    Wait-For 'maximized main window' { [DcmMaximize]::IsZoomed($script:hwnd) }
+    Start-Sleep -Milliseconds 300
+    [DcmMaximize+R]$win=New-Object DcmMaximize+R
+    [DcmMaximize+R]$client=New-Object DcmMaximize+R
+    if(-not [DcmMaximize]::GetWindowRect($script:hwnd,[ref]$win) -or -not [DcmMaximize]::GetClientRect($script:hwnd,[ref]$client)){throw 'Cannot read maximized geometry'}
+    if(($win.Right-$win.Left) -lt ($area.Width-24) -or ($win.Bottom-$win.Top) -lt ($area.Height-24)){throw 'Maximized window fails to occupy screen working area'}
+    [DcmMaximize+P]$origin=New-Object DcmMaximize+P
+    if(-not [DcmMaximize]::ClientToScreen($script:hwnd,[ref]$origin)){throw 'Cannot map client to screen'}
+    $controls=@()
+    foreach($id in @(1016,1017,1005,1003,1041)){
+        $child=[DcmMaximize]::GetDlgItem($script:hwnd,$id)
+        if($child -eq [IntPtr]::Zero){throw ('Missing main control '+$id)}
+        [DcmMaximize+R]$r=New-Object DcmMaximize+R
+        if(-not [DcmMaximize]::GetWindowRect($child,[ref]$r)){throw ('Cannot read control '+$id)}
+        if($r.Left -lt ($origin.X-4) -or $r.Top -lt ($origin.Y-4) -or $r.Right -gt ($origin.X+$client.Right+4) -or $r.Bottom -gt ($origin.Y+$client.Bottom+4)){throw ('Clipped/off-client main control '+$id)}
+        $controls+= [ordered]@{id=$id;left=$r.Left;top=$r.Top;right=$r.Right;bottom=$r.Bottom}
+    }
+    $shot=[DcmNative]::Capture($script:hwnd,$script:app.Id,(Join-Path $lab 'DCM-main-maximized.png'),$false)
+    $captures.Add([ordered]@{name='DCM-main-maximized';path=$shot.Path;sha256=(Hash $shot.Path);width=$shot.Width;height=$shot.Height;visual_reviewed=$false})
+    [DcmNative]::Restore($script:hwnd,$script:app.Id,$area.Left+8,$area.Top+8)
+    Wait-For 'restored main window' { -not [DcmMaximize]::IsZoomed($script:hwnd) }
+    $receipt['maximize']=[ordered]@{style=$style;maximized=$true;restored=$true;work_area=@($area.X,$area.Y,$area.Width,$area.Height);window=@($win.Left,$win.Top,$win.Right,$win.Bottom);controls=$controls}
+    $cases.Add([ordered]@{name='DCM-MAXIMIZE-01';kind='native maximize, control geometry, restore';passed=$true;controls_checked=$controls.Count})
+}
 try{
     $build=Get-Content -LiteralPath $BuildReceipt -Raw -Encoding UTF8 | ConvertFrom-Json
     if($build.passed -ne $true -or $build.mode -notin @('build','package') -or -not $build.source_unchanged){throw 'Receipt is not a successful source-bound build.'}
@@ -183,6 +215,24 @@ try{
     $version=$Matches[1];$receipt['version']=$version
     Add-Type -AssemblyName System.Drawing
     Add-Type -AssemblyName System.Windows.Forms
+    if($Maximize){
+    Add-Type -TypeDefinition @'
+// Owned main-window maximum/restore state and desktop-relative control bounds.
+using System;
+using System.Runtime.InteropServices;
+public static class DcmMaximize {
+    [StructLayout(LayoutKind.Sequential)] public struct R { public int Left, Top, Right, Bottom; }
+    [StructLayout(LayoutKind.Sequential)] public struct P { public int X, Y; }
+    [DllImport("user32.dll", EntryPoint="GetWindowLongPtrW")] public static extern IntPtr GetWindowLongPtr(IntPtr hwnd, int index);
+    [DllImport("user32.dll")] [return:MarshalAs(UnmanagedType.Bool)] public static extern bool ShowWindow(IntPtr hwnd, int cmd);
+    [DllImport("user32.dll")] [return:MarshalAs(UnmanagedType.Bool)] public static extern bool IsZoomed(IntPtr hwnd);
+    [DllImport("user32.dll")] [return:MarshalAs(UnmanagedType.Bool)] public static extern bool GetWindowRect(IntPtr hwnd, out R rect);
+    [DllImport("user32.dll")] [return:MarshalAs(UnmanagedType.Bool)] public static extern bool GetClientRect(IntPtr hwnd, out R rect);
+    [DllImport("user32.dll")] [return:MarshalAs(UnmanagedType.Bool)] public static extern bool ClientToScreen(IntPtr hwnd, ref P point);
+    [DllImport("user32.dll")] public static extern IntPtr GetDlgItem(IntPtr hwnd, int id);
+}
+'@
+    }
     Add-Type -Path (Join-Path $repo 'tests\native\dcm-native.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
     $inbox=Join-Path $lab 'Empty Inbox';$vault=Join-Path $lab 'Vault';$destination=Join-Path $vault 'Accepted'
     $local=Join-Path $lab 'local';$config=Join-Path $local 'DCM Quick Sort'
@@ -193,6 +243,7 @@ try{
     $exe=Join-Path $lab ('DCM-QS-Launch-'+$id+'.exe');Copy-Item -LiteralPath $build.app_artifact.path -Destination $exe
     if((Hash $exe) -ne $build.app_artifact.sha256){throw 'Isolated copy hash mismatch.'}
     Start-App
+    if($Maximize){Assert-MaximizeMainWindow}
     Assert-Empty 'DCM-17-empty-launch';Save-State 'DCM-17-empty-launch'
     Invoke-Vision 'DCM-17-empty-responsive' "type destination `"Accepted`"`nexpect destination text=`"Accepted`""
     foreach($button in @(1006,1041,1007,1011)){
