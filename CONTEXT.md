@@ -1,5 +1,15 @@
 # DCM QuickSort — project context
 
+## 15 November 2026 - protected-PDF refusal qualification in progress
+
+`DCM-34-PDF-PROTECTED-01` is the next bounded DCM-34 task. Reuse the committed
+synthetic encrypted fixture (`sumatra-password.json`); do not supply a password
+in the application or change provider registration. New selectors:
+`pdf-protected-renderer` (actual bundled Windows.Data.Pdf refusal and valid
+control/recovery) and `ui-pdf-protected` (explicit refusal and completed-state
+TXT/default-PDF recovery). No native pass or visual acceptance is claimed yet.
+Keep the 32/50 count, partial DCM-34, user-acceptance limit and suite release gate.
+
 ## 15 November 2026 - DCM-34 PDF host-sizing guard
 
 `DCM-34-PDF-CONTROLS-01`: conservative host sizing permission is bound to the

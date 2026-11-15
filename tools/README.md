@@ -71,3 +71,16 @@ separate image review must confirm both slides, their order, and restored conten
 
 See `../tests/native/README.md` for `ui-tooling`, `ui-move`, `ui-batch`, `ui-pdf`,
 `ui-previews`, `ui-pptx`, their exact artifact binding, and the isolated installer test plan.
+
+## Protected PDF refusal and recovery
+
+After the registered update, run `pdf-protected-renderer`, `ui-tooling`, and
+`build`, then set `DCM_BUILD_RECEIPT` to that exact build and run
+`ui-pdf-protected`. This reuses the versioned synthetic encrypted fixture without
+supplying its test password. The renderer selector uses the embedded production
+script, successful valid-page controls before/after two refusal attempts,
+bounded owned processes, PNG validation and exclusive file-release checks.
+The headed gate retains the existing ownership, source, pixel/readback and
+cleanup checks; only the failure fixture is selected differently. An unexpected
+password dialog is a failure for investigation, never a target for blind input.
+Neither selector certifies password entry, unlocking or in-flight cancellation.

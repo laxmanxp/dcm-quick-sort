@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,[switch]$RequireErrorControls)
+param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,[switch]$RequireErrorControls,[ValidateSet('damaged','protected')][string]$FailureFixture='damaged')
 # DCM-34: one header-valid, unloadable PDF through the default Windows.Data.Pdf
 # renderer and its natural Windows fallback. No registry changes, fallback
 # suppression, foreign-window input, synthetic repaint or cancellation claim.
@@ -10,11 +10,15 @@ if(-not $BuildReceipt -or -not $env:FLOWDEV_WORKSPACE_ROOT){throw 'Exact build a
 $repo=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $damagedSource=Join-Path $repo 'tests/fixtures/dcm34-damaged.pdf'
 $fixtureManifest=Join-Path $repo 'tests/fixtures/dcm34-damaged.manifest.json'
+$protected=$FailureFixture -ceq 'protected'
+$failureFile=if($protected){'12-protected.pdf'}else{'10-damaged.pdf'}
+if($protected){$fixtureManifest=Join-Path $repo 'tests/fixtures/sumatra-password.json';$RequireErrorControls=$true}
 $lab=Join-Path $env:FLOWDEV_WORKSPACE_ROOT ('dcm-quicksort-ui-pdf-failure-'+[DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss')+'-'+[Guid]::NewGuid().ToString('N').Substring(0,8))
 if($lab.StartsWith($repo+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)){throw 'Test lab must be outside source'}
 $null=New-Item -ItemType Directory $lab;$utf8=New-Object Text.UTF8Encoding($false)
 $cases=New-Object 'Collections.Generic.List[object]';$shots=New-Object 'Collections.Generic.List[object]'
 $receipt=[ordered]@{schema=1;feature='DCM-34';format_scope='default_PDF_damage_and_recovery_only';report=$lab;started_utc=[DateTime]::UtcNow.ToString('o');passed=$false;machine_checks_passed=$false;feature_accepted=$false;visual_accepted=$false;visual_review_required=$true;user_test='not_recorded';cases=$cases;captures=$shots;observations=(New-Object 'Collections.Generic.List[object]');native_error_control_readiness_accepted=$false;interruption_or_cancellation_tested=$false;txt_pixel_contract='initial_baseline_difference_le_30'}
+if($protected){$receipt.format_scope='default_PDF_protected_refusal_and_recovery_only';$receipt.feature='DCM-34-PDF-PROTECTED-01';$receipt['password_supplied']=$false;$receipt['password_dialog_input_performed']=$false}
 $app=$null;$hwnd=[IntPtr]::Zero;$owned=$null;$head='';$manifest=@();$fixture=$null;$expected=@{};$exe='';$build=$null;$selectedName='';$controlRefs=@();$basePaneHandles=@{};$registrations=$null
 $fallbackFooter='DCM PDF renderer unavailable; using Windows PDF preview fallback'
 $unavailablePrefix='PDF preview unavailable: '
@@ -24,6 +28,7 @@ $sizingKeys=@('zoom_out','zoom_actual','zoom_in','fit','width')
 # Complete explicit error phrases only, read from the owned preview subtree.
 # A generic word such as "error" or the host's fallback footer is insufficient.
 $nativeErrorPhrases=@("This file can't be previewed","We can't open this file",'This file cannot be previewed','This file could not be previewed','This file could not be opened','This document could not be opened','Failed to load PDF document','Unable to load PDF','Unable to open this document','There was an error opening this document','This file is damaged','The file is damaged','This document is damaged','The document is damaged','Invalid PDF file','Invalid PDF document','PDF preview unavailable')
+if($protected){$nativeErrorPhrases+=@('This file is password protected','This document is password protected','This file is password-protected','This document is password-protected')}
 function Hash([string]$p){return (Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash.ToLowerInvariant()}
 function Json([string]$p,$value){[IO.File]::WriteAllText($p,(ConvertTo-Json -InputObject $value -Depth 30),$utf8)}
 function Git([string[]]$arguments){$s=(& git.exe -C $repo @arguments|Out-String).Trim();if($LASTEXITCODE){throw 'Git query failed'};return $s}
@@ -45,7 +50,7 @@ function Files {
 function Record([string]$name,$detail){Files;$cases.Add([ordered]@{name=$name;passed=$true;detail=$detail})}
 function SelectFile([string]$name){
  NoDialog
- if($name -cnotin @('01-alpha.txt','08-preview.pdf','10-damaged.pdf')){throw 'Only the three pinned qualification selections are allowed'}
+ if($name -cnotin @('01-alpha.txt','08-preview.pdf',$failureFile)){throw 'Only the three pinned qualification selections are allowed'}
  $items=@([DcmNative]::ListItems($hwnd,$app.Id,1016));$index=[Array]::IndexOf($items,$name);if($index -lt 0){throw 'Missing fixture in list'}
  [DcmUndoInput]::Select($hwnd,$app.Id,$index);$stem=[IO.Path]::GetFileNameWithoutExtension($name)
  Wait ('selection '+$name) {([DcmUndoInput]::TryText($hwnd,$app.Id,1005)) -ceq $stem}
@@ -220,7 +225,7 @@ function Registration {
  return [pscustomobject]@{extension=$extension;prog_id=$prog;candidates=$rows;selected_clsid=$selected;selected_key=$selectedKey;read_only=$true}
 }
 function ExclusivePDFs {
- foreach($name in @('08-preview.pdf','10-damaged.pdf')){$h=[IO.File]::Open((Join-Path $fixture.inbox $name),[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::None);$h.Dispose()}
+ foreach($name in @('08-preview.pdf',$failureFile)){$h=[IO.File]::Open((Join-Path $fixture.inbox $name),[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::None);$h.Dispose()}
 }
 function StopApp {
  if(-not $app){return};$app.Refresh();$receipt['normal_exit']=$false;$issues=New-Object 'Collections.Generic.List[string]'
@@ -281,11 +286,22 @@ try {
  $manifest=Get-Content -LiteralPath $build.source_hash_manifest.path -Raw -Encoding UTF8|ConvertFrom-Json;Source
  $receipt['commit']=$head;$receipt['build_receipt']=$BuildReceipt;$receipt['build_receipt_sha256']=Hash $BuildReceipt;$receipt['app_sha256']=$build.app_artifact.sha256
  $definition=Get-Content -LiteralPath $fixtureManifest -Raw -Encoding UTF8|ConvertFrom-Json
- foreach($field in @('schema_version','file','bytes','sha256')){if($null -eq $definition -or -not $definition.PSObject.Properties[$field]){throw ('Damaged PDF manifest field missing: '+$field)}}
- $payload="%PDF-1.7`n1 0 obj`n<< /Type /Catalog /Pages 99 0 R >>`nendobj`n";$bytes=[IO.File]::ReadAllBytes($damagedSource)
- if($definition.schema_version -ne 1 -or $definition.file -cne 'dcm34-damaged.pdf' -or $definition.bytes -ne $bytes.Length -or $definition.sha256 -cnotmatch '^[0-9a-f]{64}$' -or (Hash $damagedSource) -cne $definition.sha256 -or [Text.Encoding]::ASCII.GetString($bytes) -cne $payload){throw 'Damaged PDF differs from pinned header-valid incomplete catalog'}
- foreach($path in @('tests/fixtures/dcm34-damaged.pdf','tests/fixtures/dcm34-damaged.manifest.json')){$entries=@($manifest|Where-Object {$_.path -ceq $path});if($entries.Count -ne 1 -or $entries[0].sha256 -cne (Hash (Join-Path $repo $path))){throw 'Damaged PDF fixture/manifest missing from exact build snapshot'}}
- $receipt['damaged_fixture']=$definition;$receipt['damaged_manifest_sha256']=Hash $fixtureManifest
+ if($protected){
+  foreach($field in @('schema','file','sha256','base64')){if($null -eq $definition -or -not $definition.PSObject.Properties[$field]){throw ('Protected PDF manifest field missing: '+$field)}}
+  $bytes=[Convert]::FromBase64String($definition.base64)
+  $sha=[Security.Cryptography.SHA256]::Create();try{$fixtureHash=([BitConverter]::ToString($sha.ComputeHash($bytes))).Replace('-','').ToLowerInvariant()}finally{$sha.Dispose()}
+  if($definition.schema -ne 1 -or $definition.file -cne '12-protected.pdf' -or $definition.sha256 -cne 'cd167e6404f23dec6015d2897a9f7e462d0fec82f046c35f59afc7e9e774c24c' -or $fixtureHash -cne $definition.sha256 -or $bytes.Length -ne 2154){throw 'Protected PDF differs from the pinned encrypted synthetic fixture'}
+  $fixturePaths=@('tests/fixtures/sumatra-password.json')
+  $receipt['protected_fixture']=[ordered]@{file=$failureFile;bytes=$bytes.Length;sha256=$fixtureHash;password_supplied=$false;source='tests/fixtures/sumatra-password.json'}
+  $receipt['protected_manifest_sha256']=Hash $fixtureManifest
+ }else{
+  foreach($field in @('schema_version','file','bytes','sha256')){if($null -eq $definition -or -not $definition.PSObject.Properties[$field]){throw ('Damaged PDF manifest field missing: '+$field)}}
+  $payload="%PDF-1.7`n1 0 obj`n<< /Type /Catalog /Pages 99 0 R >>`nendobj`n";$bytes=[IO.File]::ReadAllBytes($damagedSource)
+  if($definition.schema_version -ne 1 -or $definition.file -cne 'dcm34-damaged.pdf' -or $definition.bytes -ne $bytes.Length -or $definition.sha256 -cnotmatch '^[0-9a-f]{64}$' -or (Hash $damagedSource) -cne $definition.sha256 -or [Text.Encoding]::ASCII.GetString($bytes) -cne $payload){throw 'Damaged PDF differs from pinned header-valid incomplete catalog'}
+  $fixturePaths=@('tests/fixtures/dcm34-damaged.pdf','tests/fixtures/dcm34-damaged.manifest.json')
+  $receipt['damaged_fixture']=$definition;$receipt['damaged_manifest_sha256']=Hash $fixtureManifest
+ }
+ foreach($path in $fixturePaths){$entries=@($manifest|Where-Object {$_.path -ceq $path});if($entries.Count -ne 1 -or $entries[0].sha256 -cne (Hash (Join-Path $repo $path))){throw 'Failure fixture/manifest missing from exact build snapshot'}}
  Add-Type -AssemblyName System.Drawing;Add-Type -AssemblyName System.Windows.Forms
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-native.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-undo-input.cs')
@@ -294,11 +310,14 @@ try {
  Add-Type -AssemblyName UIAutomationClient;Add-Type -AssemblyName UIAutomationTypes;Add-Type -AssemblyName WindowsBase
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-docx-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll',([Windows.Automation.AutomationElement]).Assembly.Location,([Windows.Automation.AutomationPattern]).Assembly.Location,([Windows.Point]).Assembly.Location)
  . (Join-Path $repo 'tests/native/new-fixtures.ps1');$fixture=New-DcmFixtures $lab
- Copy-Item -LiteralPath $damagedSource -Destination (Join-Path $fixture.inbox '10-damaged.pdf')
+ [IO.File]::WriteAllBytes((Join-Path $fixture.inbox $failureFile),$bytes)
+ if((Hash (Join-Path $fixture.inbox $failureFile)) -cne $definition.sha256){throw 'Materialized failure fixture hash mismatch'}
  Get-ChildItem -LiteralPath $fixture.inbox -File|ForEach-Object {$expected[$_.Name]=Hash $_.FullName};if($expected.Count -ne 5){throw 'Unexpected qualification fixture count'};$receipt['source_fixture_hashes']=$expected
  $registrations=Registration;$receipt['handler_registrations_before']=$registrations
  $receipt['scope_limit']='One deterministic damaged PDF using default Windows.Data.Pdf and natural installed-handler fallback. Completed-state recovery only; no protected/unsupported formats, cancellation, interruption or full DCM-34 acceptance. Direct GDI error wording and native error/control readiness require separate original-image review.'
+ if($protected){$receipt.scope_limit='One pinned password-encrypted PDF, opened without supplying a password, through the default renderer and natural installed-handler fallback. Requires explicit visible refusal, then TXT and valid-PDF recovery. No password entry, decryption, prompt cancellation, in-flight interruption, registry change or full DCM-34 acceptance.'}
  $receipt['sequence']=@('TXT','valid default PDF page 1','damaged PDF','TXT recovery','valid default PDF page 1 recovery','damaged PDF again','TXT recovery','exclusive release','normal close and source preservation')
+ if($protected){$receipt.sequence=@('TXT','valid default PDF page 1','protected PDF without password','TXT recovery','valid default PDF recovery','protected PDF again without password','TXT recovery','exclusive release','normal close and source preservation')}
  $receipt['native_error_phrase_allowlist']=$nativeErrorPhrases;$receipt['native_fallback_observed']=$false;$receipt['native_error_with_enabled_sizing_controls']=$false
  $exe=Join-Path $lab ('DCM-PDF-FAILURE-'+[Guid]::NewGuid().ToString('N')+'.exe');Copy-Item -LiteralPath $build.app_artifact.path -Destination $exe
  if((Hash $exe) -cne $build.app_artifact.sha256){throw 'Owned executable copy differs from exact build'}
@@ -314,18 +333,18 @@ try {
  NoDialog;$screen=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea;[DcmNative]::Restore($hwnd,$app.Id,$screen.Left+8,$screen.Top+8);Start-Sleep -Milliseconds 300
  $initialText=TextBody '01-initial-text' $plain
  SelectFile '08-preview.pdf';$firstValid=ReadyPreview '02-valid-before-damage' 'valid'
- SelectFile '10-damaged.pdf';$firstError=ReadyPreview '03-first-damaged' 'error' $firstValid
+ SelectFile $failureFile;$firstError=ReadyPreview ('03-first-'+$FailureFixture) 'error' $firstValid
  SelectFile '01-alpha.txt';$null=TextBody '04-first-text-recovery' $plain $initialText;ExclusivePDFs
  SelectFile '08-preview.pdf';$recovered=ReadyPreview '05-valid-pdf-recovery' 'valid' $firstValid
- SelectFile '10-damaged.pdf';$secondError=ReadyPreview '06-second-damaged' 'error' $recovered
- if($firstError.state -cne $secondError.state){throw 'Natural damaged-PDF terminal state differs on repeat opening'}
+ SelectFile $failureFile;$secondError=ReadyPreview ('06-second-'+$FailureFixture) 'error' $recovered
+ if($firstError.state -cne $secondError.state){throw 'Natural failure-PDF terminal state differs on repeat opening'}
  SelectFile '01-alpha.txt';$null=TextBody '07-final-text-recovery' $plain $initialText;ExclusivePDFs
- Record '08-both-pdfs-exclusively-released' ([ordered]@{files=@('08-preview.pdf','10-damaged.pdf');exclusive_read_open=$true})
+ Record '08-both-pdfs-exclusively-released' ([ordered]@{files=@('08-preview.pdf',$failureFile);exclusive_read_open=$true})
  StopApp;Source;Files;ExclusivePDFs
- if((Hash $damagedSource) -cne $definition.sha256 -or (Hash $exe) -cne $build.app_artifact.sha256){throw 'Original fixture/application bytes changed'}
+ if((Hash (Join-Path $fixture.inbox $failureFile)) -cne $definition.sha256 -or (Hash $exe) -cne $build.app_artifact.sha256){throw 'Original fixture/application bytes changed'}
  Record '09-normal-close-and-original-bytes' ([ordered]@{exit_code=$owned.exit_code;original_fixture_bytes_preserved=$true;source_unchanged=$true;journal_empty=$true})
- if($cases.Count -ne 9 -or $shots.Count -lt 22){throw 'Incomplete PDF damage/recovery cases or original captures'}
- if($RequireErrorControls){if($receipt.error_control_checks.Count -ne 2){throw 'Both damaged openings require control checks'};$receipt['host_error_controls_machine_checked']=$true}
+ if($cases.Count -ne 9 -or $shots.Count -lt 22){throw 'Incomplete PDF failure/recovery cases or original captures'}
+ if($RequireErrorControls){if($receipt.error_control_checks.Count -ne 2){throw 'Both failure openings require control checks'};$receipt['host_error_controls_machine_checked']=$true}
  $receipt['machine_checks_passed']=$true;$receipt.passed=$true
 }catch{
  $receipt['error']=$_.Exception.Message;$receipt['error_position']=$_.InvocationInfo.PositionMessage;Write-Output ('FAIL='+$_.Exception.Message)
