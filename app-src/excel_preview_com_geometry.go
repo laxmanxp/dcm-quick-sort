@@ -9,3 +9,15 @@ func excelCOMRectSize(logicalW, logicalH, physicalW, physicalH int32, excel, ava
 	}
 	return logicalW, logicalH
 }
+
+
+// Excel's initial SetWindow geometry is consumed under the host's logical DPI
+// context; passing pre-scaled pixels there makes Excel scale its EXCEL7 child
+// a second time. SetRect during an established preview has the opposite
+// contract on this native handler and needs physical pane pixels.
+func excelCOMRectForCall(method string, logicalW, logicalH, physicalW, physicalH int32, excel, available bool) (int32, int32) {
+	if method == "SetRect" {
+		return excelCOMRectSize(logicalW, logicalH, physicalW, physicalH, excel, available)
+	}
+	return logicalW, logicalH
+}
