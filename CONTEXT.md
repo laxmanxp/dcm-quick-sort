@@ -1,5 +1,36 @@
 # DCM QuickSort — project context
 
+## 15 November 2026 - protected-PDF path passes; regression still pending
+
+`DCM-34-PDF-PROTECTED-01` remains **PARTIAL**, with meaningful native progress:
+three focused renderer tests and five renderer phases pass at `0786a42342f99dd059cd41d1078bbc33c8a43a2b`;
+the final baseline at `1170e844c56ec019ae219abc8e3248092482e54d` passes **402/0/0**. The exact-source
+build/tooling and protected UI pass: **nine records, two refusals, valid TXT/PDF
+recovery, exclusive release and normal exit 0**. All seven accepted-state full
+frames were separately reviewed. No password was supplied to the application.
+The application binary is unchanged from the previously accepted implementation.
+
+The additional `ui-pdf-error-controls` damaged-fixture regression **did not run**:
+another UnoEmbed FlowDev GUI test held the shared session. The protected workflow
+had already passed; the final wrapper hold is not a failure of that result.
+No foreign process was stopped. Original native sizing-assertion and headed
+phrase-miss failures are preserved, not relabeled as passing runs.
+
+Evidence: [qualification/evidence/dcm-34-pdf-protected-progress.json](qualification/evidence/dcm-34-pdf-protected-progress.json); immutable raw report commit
+`0d0ca7b2871190bae66affd159d5f8fcf7c69b14` in `laxmanxp/flowverse-reports`, prefix `apps/dcm-quicksort/dcm34-20261115-protected/1170e84`.
+Raw visual flags remain unchanged. Transitions/crops are retained, not separately
+accepted. `DCM-PDF-RENDER-SIZE-01` remains open: reported 612x1000 versus decoded
+765x1250, with cause and production impact unestablished. No sizing fix is claimed.
+
+**Next:** obtain an exact FlowDev build of the current pushed checkpoint, bind
+`DCM_BUILD_RECEIPT`, then run `flowdev test dcm-quicksort ui-pdf-error-controls`
+when the shared desktop is idle. Do not use an older-revision build receipt.
+Keep **32/50 complete and DCM-34 PARTIAL**; password entry, in-flight interruption,
+user acceptance and final suite packaging are not accepted by this result.
+The Flow Search / DeepSearch suite-readiness gate is unchanged.
+
+Earlier preparation notes below are historical and superseded by this checkpoint.
+
 ## 15 November 2026 - protected-PDF refusal qualification in progress
 
 `DCM-34-PDF-PROTECTED-01` is the next bounded DCM-34 task. Reuse the committed

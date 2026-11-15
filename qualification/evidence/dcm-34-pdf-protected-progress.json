@@ -1,0 +1,112 @@
+{
+  "schema": 1,
+  "feature": "DCM-34-PDF-PROTECTED-01",
+  "status": "PARTIAL",
+  "recorded_on": "2026-11-15",
+  "tested_ui_and_baseline_source": "1170e844c56ec019ae219abc8e3248092482e54d",
+  "protected_path": "passed_one_fixture_refusal_recovery_and_separate_visual_review",
+  "pending_regression": "ui-pdf-error-controls",
+  "pending_reason": "The shared headed session was occupied by another UnoEmbed FlowDev test after the protected workflow passed. The damaged-file regression did not start; no foreign process was stopped.",
+  "focused_renderer": {
+    "source": "0786a42342f99dd059cd41d1078bbc33c8a43a2b",
+    "top_level_pass": 3,
+    "nested_renderer_phases_pass": 5,
+    "failed": 0,
+    "skipped": 0,
+    "reused_after_application_tests_fixtures_and_native_runner_identity_check": true
+  },
+  "windows_baseline": {
+    "source": "1170e844c56ec019ae219abc8e3248092482e54d",
+    "passed": 402,
+    "failed": 0,
+    "skipped": 0
+  },
+  "tooling_and_exact_build": {
+    "source": "1170e844c56ec019ae219abc8e3248092482e54d",
+    "passed": true,
+    "app_size": 7374848,
+    "app_sha256": "4b97b95da663d84fa2f8984b822303f773202baa738ed7d677822e6a3c896157",
+    "production_implementation_changed": false
+  },
+  "protected_ui": {
+    "source": "1170e844c56ec019ae219abc8e3248092482e54d",
+    "passed_cases": 9,
+    "captures": 32,
+    "readiness_attempts": 13,
+    "reviewed_full_window_accepted_states": 7,
+    "refusals": 2,
+    "password_supplied": false,
+    "all_five_host_sizing_controls_disabled_on_refusal": true,
+    "txt_recovery_pixel_deltas": [
+      0,
+      0
+    ],
+    "valid_pdf_recovery": true,
+    "exclusive_files_released": true,
+    "normal_host_exit_code": 0,
+    "source_unchanged": true,
+    "fixtures_preserved": true,
+    "handler_registrations_unchanged": true,
+    "journal_empty": true
+  },
+  "fixture": {
+    "file": "12-protected.pdf",
+    "sha256": "cd167e6404f23dec6015d2897a9f7e462d0fec82f046c35f59afc7e9e774c24c",
+    "bytes": 2154,
+    "source": "tests/fixtures/sumatra-password.json",
+    "local_validation": "PyMuPDF 1.26.7: blank and wrong passwords rejected; known synthetic fixture password authenticates and yields expected page. This was local fixture validation, not application unlocking acceptance."
+  },
+  "open_observation": {
+    "id": "DCM-PDF-RENDER-SIZE-01",
+    "metadata": [
+      612,
+      1000
+    ],
+    "decoded_png": [
+      765,
+      1250
+    ],
+    "cause": "not_established",
+    "production_impact": "not_established",
+    "size_equivalence_accepted": false
+  },
+  "failed_history": [
+    {
+      "source": "728ec40a5428a9a5e92cde8c74831730a9019ee3",
+      "report": "dcm-quicksort-regressions-20261115-073707-925e9175",
+      "result": "2 top-level pass / 1 fail; protected refusals pass but three valid image-size equality assertions fail. Scope corrected to exact decoded-pixel/bounds/metadata recovery; sizing question remains open."
+    },
+    {
+      "source": "0786a42342f99dd059cd41d1078bbc33c8a43a2b",
+      "report": "dcm-quicksort-ui-pdf-failure-20261115-074437-c19b0bf0",
+      "result": "2 initial cases pass; protected readiness fails because the explicit-phrase allowlist missed the actual reviewed provider sentence. Only the complete sentence was added in protected mode; no ownership, stability, stale-content or disabled-control checks relaxed."
+    }
+  ],
+  "publication": {
+    "repository": "laxmanxp/flowverse-reports",
+    "commit": "0d0ca7b2871190bae66affd159d5f8fcf7c69b14",
+    "prefix": "apps/dcm-quicksort/dcm34-20261115-protected/1170e84",
+    "raw_files": 360,
+    "publication_files": 365,
+    "source_files_verified": 492,
+    "identity": "Original-to-copy SHA-256 and exact unfiltered staged Git blob identities checked."
+  },
+  "visual_review": {
+    "accepted_state_full_frames": 7,
+    "failed_diagnostic_full_frames": 1,
+    "raw_flags_modified": false,
+    "other_transition_frames_and_crops": "retained_not_separately_visually_accepted",
+    "details": "visual-review.json in immutable report prefix"
+  },
+  "user_test": "not_recorded",
+  "numbered_complete": 32,
+  "numbered_remaining": 18,
+  "parent_DCM34": "PARTIAL",
+  "scope_limits": [
+    "One synthetic password-encrypted fixture, no password supplied to application.",
+    "No password entry/unlocking, prompt cancellation, in-flight interruption or universal protected-PDF/provider acceptance.",
+    "Pending damaged-fixture regression prevents full subtask sign-off.",
+    "Final suite packaging/installation/publication waits for Flow Search and DeepSearch readiness."
+  ],
+  "next": "On an idle shared desktop, obtain an exact build for the latest pushed checkpoint via FlowDev, bind its DCM_BUILD_RECEIPT, then run flowdev test dcm-quicksort ui-pdf-error-controls. Do not blindly reuse a build receipt from a different documentation revision."
+}
