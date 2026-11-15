@@ -1,4 +1,4 @@
-# Refresh exact source for the protected-PDF damaged-regression closeout.
+# Export current source and Git blob identities for DCM-34 interruption qualification.
 name: Export pinned DCM source for local review
 on:
   push:
