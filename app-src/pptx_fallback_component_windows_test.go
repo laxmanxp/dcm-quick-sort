@@ -9,12 +9,45 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 )
 
 // Exercises the actual local PPTX fallback presenter and native owned controls.
 // The registered/failed handler states are boundary inputs, not altered Office
 // registrations or evidence of a missing/failing handler installed on Lenovo.
 func TestPPTXFallbackComponentRecovery(t *testing.T) {
+	evidence := os.Getenv("DCM_PPTX_COMPONENT_EVIDENCE_ROOT")
+	headed := evidence != ""
+	if headed && !filepath.IsAbs(evidence) {
+		t.Fatal("component evidence root must be absolute")
+	}
+	if !headed {
+		evidence = t.TempDir()
+	}
+	if err := os.MkdirAll(evidence, 0700); err != nil {
+		t.Fatal(err)
+	}
+	receiptPath := filepath.Join(evidence, "receipt.json")
+	if _, err := os.Stat(receiptPath); err == nil {
+		t.Fatal("refusing to overwrite PPTX component receipt")
+	}
+	var records []map[string]any
+	receipt := map[string]any{
+		"schema": 1, "feature": "DCM-34-PPTX-FALLBACK-01",
+		"scope": "Owned Windows component using production loadOfficeFallbackPreview after simulated handler outcome; no real COM activation or Windows registry override",
+		"headed": headed, "passed": false, "feature_accepted": false,
+		"visual_review_required": headed, "user_test": "not_recorded",
+		"registry_mutation": false, "office_activation": false,
+		"started_utc": time.Now().UTC().Format(time.RFC3339Nano),
+	}
+	defer func() {
+		receipt["passed"] = !t.Failed()
+		receipt["cases"] = records
+		receipt["case_count"] = len(records)
+		receipt["finished_utc"] = time.Now().UTC().Format(time.RFC3339Nano)
+		dcm34ComponentJSON(t, receiptPath, receipt)
+		t.Logf("PPTX_COMPONENT_RECEIPT=%s", receiptPath)
+	}()
 	original, err := os.ReadFile(filepath.Join("..", "tests", "fixtures", "dcm32-slides.pptx"))
 	if err != nil {
 		t.Fatal(err)
@@ -50,12 +83,45 @@ func TestPPTXFallbackComponentRecovery(t *testing.T) {
 				t.Fatal("GDI+ unavailable for native PPTX component")
 			}
 			defer func() { procGdiplusShutdown.Call(app.gpToken) }()
-			destroy := dcm34ComponentWindow(t, false)
+			destroy := dcm34ComponentWindow(t, headed)
 			defer func() { hidePPTXPreview(); destroy() }()
+			if headed {
+				setText(app.hwnd, "DCM-34 PPTX fallback component | "+tc.name)
+				header, _, _ := user32.NewProc("GetDlgItem").Call(app.hwnd, 960)
+				if header == 0 {
+					t.Fatal("owned component header missing")
+				}
+				setText(header, "PPTX fallback | "+tc.name+" | malformed -> valid -> malformed -> valid")
+			}
 			app.pptxSlideCombo = createControl("COMBOBOX", "", WS_CHILD|WS_TABSTOP|CBS_DROPDOWNLIST|WS_VSCROLL,
 				6, 4, 700, 280, app.previewHwnd, ID_PPTX_SLIDE)
 			if app.pptxSlideCombo == 0 {
 				t.Fatal("owned PPTX slide control creation failed")
+			}
+			capture := func(stage string) {
+				t.Helper()
+				rec := map[string]any{
+					"name": tc.name + "/" + stage, "status": getText(app.statusLabel),
+					"pptx_active": app.pptxPreviewActive, "slide_index": app.pptxSlideIndex,
+					"slide_count": len(app.pptxDeck.Slides),
+					"native_office_activated": false, "visual_reviewed": false,
+				}
+				if headed {
+					group := filepath.Join(evidence, tc.name)
+					if err := os.MkdirAll(group, 0700); err != nil {
+						t.Error(err)
+					} else {
+						path := filepath.Join(group, stage+".png")
+						if err := dcm34ComponentCapture(app.hwnd, path); err != nil {
+							rec["capture_error"] = err.Error()
+							t.Errorf("%s headed capture: %v", stage, err)
+						} else {
+							rec["capture"] = path
+							rec["capture_sha256"] = dcm34ComponentHash(t, path)
+						}
+					}
+				}
+				records = append(records, rec)
 			}
 			load := func(path string) {
 				t.Helper()
@@ -91,6 +157,7 @@ func TestPPTXFallbackComponentRecovery(t *testing.T) {
 					strings.Contains(app.fallback, "Bridge Inspection") {
 					t.Errorf("%s misleading error body: %q", stage, app.fallback)
 				}
+				capture(stage)
 			}
 			assertGood := func(stage string) {
 				t.Helper()
@@ -111,16 +178,19 @@ func TestPPTXFallbackComponentRecovery(t *testing.T) {
 					app.pptxDeck.Slides[1].Title != "Payments" {
 					t.Errorf("%s wrong slide content/order", stage)
 				}
+				capture(stage+"-slide1")
 				showPPTXSlide(1)
 				if app.pptxSlideIndex != 1 ||
 					!strings.HasPrefix(getText(app.statusLabel), "DCM PPTX Preview: Slide 2 of 2") {
 					t.Errorf("%s slide-two selection/display failed", stage)
 				}
+				capture(stage+"-slide2")
 				showPPTXSlide(0)
 				if app.pptxSlideIndex != 0 ||
 					!strings.HasPrefix(getText(app.statusLabel), "DCM PPTX Preview: Slide 1 of 2") {
 					t.Errorf("%s slide-one return failed", stage)
 				}
+				capture(stage+"-slide1-return")
 			}
 			assertBad("initial-error")
 			assertGood("first-recovery")
