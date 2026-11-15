@@ -609,6 +609,15 @@
           "-File",
           "tools/test-ui-xlsx.ps1",
           "-ActiveMaximize"
+        ],
+        "ui-xlsx-active-layout-diagnostic": [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "tools/test-ui-xlsx.ps1",
+          "-ActiveMaximize",
+          "-ObserveNativeLayout"
         ]
       }
     }
