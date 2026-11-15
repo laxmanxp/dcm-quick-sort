@@ -1,4 +1,4 @@
-# Refresh source for DCM-34 PDF sizing control readiness; include restart context.
+# Export pinned source and Git blob identities for verified local development.
 name: Export pinned DCM source for local review
 on:
   push:
@@ -15,6 +15,7 @@ jobs:
       - name: Archive tracked source without host files or secrets
         run: |
           git rev-parse HEAD > source-commit.txt
+          git ls-tree -r HEAD > source-tree.txt
           git archive --format=zip --output=dcm-source.zip HEAD app-src installer-src tests tools qualification todo.json CONTEXT.md .gitattributes .gitignore .github
           sha256sum dcm-source.zip > source-sha256.txt
       - uses: actions/upload-artifact@v4
@@ -23,5 +24,6 @@ jobs:
           path: |
             dcm-source.zip
             source-commit.txt
+            source-tree.txt
             source-sha256.txt
           retention-days: 1
