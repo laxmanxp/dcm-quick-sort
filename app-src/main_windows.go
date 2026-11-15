@@ -47,6 +47,7 @@ const (
 	WM_BACKGROUND_ACTION_DONE   = 0x8003 // WM_APP + 3
 	WM_BACKGROUND_MOVE_PROGRESS = 0x8004 // WM_APP + 4
 	WM_BATCH_MOVE_NEXT          = 0x8005 // WM_APP + 5
+	WM_EXCEL_PREVIEW_RETRY       = 0x8010 // deferred native Excel COM call outside WM_SIZE
 	EM_SETLIMITTEXT             = 0x00C5
 	EM_SETSEL                   = 0x00B1
 	EM_SETCUEBANNER             = 0x1501
@@ -603,6 +604,8 @@ type appState struct {
 	imageStream                                                                                                                                        *iUnknown
 	preview                                                                                                                                            *iPreviewHandler
 	previewExcelOuterRepair, previewHostSizingAllowed                                                                                                                            bool
+	previewExcelRetryPending, previewExcelRetryRunning                                                                                                                            bool
+	previewExcelRetryEpoch                                                                                                                                                uint64
 	previewActive                                                                                                                                      bool
 	fallback                                                                                                                                           string
 	updatingSuggestions, updatingFileList, updatingProcessedList                                                                                       bool
@@ -3165,6 +3168,18 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 	case wmLayoutTraceFence:
 		layoutTraceFence(hwnd, wParam)
 		return 0
+	case WM_EXCEL_PREVIEW_RETRY:
+		// Posted from a nested WM_SIZE after Excel rejected COM SetRect in an
+		// input-synchronous call. It runs only after that window message unwinds.
+		if shouldRunExcelPreviewResizeRetry(app.previewExcelRetryPending,
+			app.preview != nil && app.previewExcelOuterRepair,
+			uint64(wParam), app.previewExcelRetryEpoch, lParam, app.previewHwnd) {
+			app.previewExcelRetryPending = false
+			app.previewExcelRetryRunning = true
+			resizePreviewHandler()
+			app.previewExcelRetryRunning = false
+		}
+		return 0
 	case WM_PAINT:
 		recordLayoutTrace(hwnd, "paint-enter", 0)
 		r, _, _ := procDefWindowProcW.Call(hwnd, uintptr(msg), wParam, lParam)
@@ -5035,6 +5050,9 @@ func unloadPreview() {
 	// Preserve its normal cleanup calls, but do not request an outer repair.
 	app.previewExcelOuterRepair = false
 	app.previewHostSizingAllowed = false
+	// Disarm queued retries for a retiring COM object and pane.
+	app.previewExcelRetryPending = false
+	app.previewExcelRetryEpoch++
 	if err := stopSumatraPreview(); err != nil {
 		sumatraError(err)
 	}
@@ -5712,6 +5730,19 @@ func resizePreviewHandler() {
 	traceCall = beginNativePreviewTrace(traceSession, "SetRect", pane, handler, 0, &rc)
 	hr, _, _ := syscall.SyscallN(ph.Vtbl.SetRect, handler, uintptr(unsafe.Pointer(&rc)))
 	endNativePreviewTraceHRESULT(traceCall, hr, handler)
+	// Office COM cannot be called out from certain synchronous window-input
+	// contexts (RPC_E_CANTCALLOUT_ININPUTSYNCCALL). Coalesce one safe posted
+	// retry for this still-active Excel viewer; never spin, delay or touch a
+	// foreign Excel child here. A stale epoch is rejected by the host WndProc.
+	if shouldPostExcelPreviewResize(hr,
+		repairOuter && app.preview == ph && app.previewHwnd == pane && app.previewExcelOuterRepair,
+		app.previewExcelRetryRunning, app.previewExcelRetryPending) {
+		posted, _, _ := procPostMessageW.Call(app.hwnd, WM_EXCEL_PREVIEW_RETRY,
+			uintptr(app.previewExcelRetryEpoch), pane)
+		if posted != 0 {
+			app.previewExcelRetryPending = true
+		}
+	}
 	// COM may reenter the host. Repair only the same still-active Excel viewer
 	// after its normal logical SetRect succeeded; the helper touches its outer
 	// window only and reports request acceptance, not asynchronous completion.
@@ -5789,6 +5820,8 @@ func loadWindowsPreviewHandler(path string) bool {
 		return false
 	}
 	app.preview, app.previewExcelOuterRepair = ph, excelOuterRepair
+	app.previewExcelRetryEpoch++
+	app.previewExcelRetryPending = false
 	app.previewHostSizingAllowed = nativePreviewHostSizingAllowed(path)
 	setNativePreviewTraceActive(self, traceSession)
 	app.previewFit = true
