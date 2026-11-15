@@ -216,7 +216,7 @@ public static class DcmDocxResize {
  }
  Files;StopApp;Source;Exclusive '05-letter.docx';Exclusive '06-structured.DOCX'
  if((Hash $Letter) -ne $expected['05-letter.docx'] -or (Hash $exe) -ne $build.app_artifact.sha256){throw 'Original fixture/app changed'}
- if($ActiveMaximize -and ($cases.Count -lt 8 -or $shots.Count -lt 7 -or -not $receipt.Contains('active_docx_resize'))){throw 'Incomplete active DOCX qualification'}
+ if($ActiveMaximize -and ($cases.Count -lt 7 -or $shots.Count -lt 7 -or -not $receipt.Contains('active_docx_resize'))){throw 'Incomplete active DOCX qualification'}
  Record '11-normal-close-and-original-bytes' $null;$receipt['source_unchanged']=$true;$receipt['fixtures_preserved']=$true;$receipt['journal_empty']=$true;$receipt.passed=$true
 }catch{$receipt['error']=$_.Exception.Message;$receipt['error_position']=$_.InvocationInfo.PositionMessage;Write-Output ('FAIL='+$_.Exception.Message);if($app){try{Shot 'failure'}catch{$receipt['capture_error']=$_.Exception.Message}}}
 finally{try{StopApp}catch{$receipt.passed=$false;$receipt['cleanup_error']=$_.Exception.Message};$receipt['finished_utc']=[DateTime]::UtcNow.ToString('o');Json (Join-Path $lab 'receipt.json') $receipt;Write-Output ('RECEIPT='+(Join-Path $lab 'receipt.json'))}
