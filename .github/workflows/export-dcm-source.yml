@@ -1,4 +1,4 @@
-# Export pinned source and Git blob identities for verified local development.
+# Refresh exact source for the protected-PDF damaged-regression closeout.
 name: Export pinned DCM source for local review
 on:
   push:
