@@ -25,6 +25,7 @@
         "ui-batch": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-ui.ps1", "-Suite", "batch"],
         "ui-pdf": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-ui.ps1", "-Suite", "pdf"],
         "ui-pdf-failure": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-pdf-failure.ps1"],
+        "ui-pdf-error-controls": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-pdf-failure.ps1", "-RequireErrorControls"],
         "ui-previews": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-ui.ps1", "-Suite", "previews"],
         "ui-folder-probe": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-folder.ps1", "-Probe"],
         "ui-folder": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-folder.ps1"],

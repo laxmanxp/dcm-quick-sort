@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT)
+param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,[switch]$RequireErrorControls)
 # DCM-34: one header-valid, unloadable PDF through the default Windows.Data.Pdf
 # renderer and its natural Windows fallback. No registry changes, fallback
 # suppression, foreign-window input, synthetic repaint or cancellation claim.
@@ -171,6 +171,14 @@ function ReadyPreview([string]$name,[string]$kind,$baseline=$null){
  $detail=[ordered]@{selected_file=$selectedName;state=$accepted.state;status=$accepted.readback.status;accepted_capture=$accepted.path;accepted_observation=$accepted.observation;pixels=$accepted.pixels;default_controls=$accepted.readback.controls;native_processes=$accepted.readback.native_processes;matched_explicit_error_phrases=$accepted.readback.matched_explicit_error_phrases;native_error_with_enabled_sizing_controls=$accepted.native_error_with_enabled_sizing_controls;visible_error_semantics_machine_accepted=$false;semantic_image_review_required=$true}
  if($accepted.state -ceq 'dcm_unavailable'){$detail['expected_gdi_body']='PDF preview unavailable'+"`n`n"+$accepted.readback.status.Substring($unavailablePrefix.Length);$detail['gdi_body_text_readback_available']=$false}
  if($accepted.state -ceq 'windows_fallback'){$detail['native_error_control_readiness']='review_required: attachment may enable generic sizing without a loaded page';$receipt['native_fallback_observed']=$true;if($accepted.native_error_with_enabled_sizing_controls){$receipt['native_error_with_enabled_sizing_controls']=$true}}
+ if($RequireErrorControls -and $kind -ceq 'error'){
+  $enabled=@($sizingKeys|Where-Object {$accepted.readback.controls.$_.enabled})
+  $check=[ordered]@{stage=$name;state=$accepted.state;capture=$accepted.path;observation=$accepted.observation;enabled_controls=$enabled;passed=($enabled.Count -eq 0)}
+  if(-not $receipt.Contains('error_control_checks')){$receipt['error_control_checks']=@()}
+  $receipt.error_control_checks+=,$check
+  if($enabled.Count){throw ('DCM34_PDF_ERROR_CONTROLS: stable error retains enabled host sizing: '+($enabled -join ', '))}
+  $detail['host_error_sizing_controls_disabled']=$true
+ }
  Record $name $detail;return $accepted
 }
 function TextBody([string]$name,[string]$plain,$baseline=$null){
@@ -317,6 +325,7 @@ try {
  if((Hash $damagedSource) -cne $definition.sha256 -or (Hash $exe) -cne $build.app_artifact.sha256){throw 'Original fixture/application bytes changed'}
  Record '09-normal-close-and-original-bytes' ([ordered]@{exit_code=$owned.exit_code;original_fixture_bytes_preserved=$true;source_unchanged=$true;journal_empty=$true})
  if($cases.Count -ne 9 -or $shots.Count -lt 22){throw 'Incomplete PDF damage/recovery cases or original captures'}
+ if($RequireErrorControls){if($receipt.error_control_checks.Count -ne 2){throw 'Both damaged openings require control checks'};$receipt['host_error_controls_machine_checked']=$true}
  $receipt['machine_checks_passed']=$true;$receipt.passed=$true
 }catch{
  $receipt['error']=$_.Exception.Message;$receipt['error_position']=$_.InvocationInfo.PositionMessage;Write-Output ('FAIL='+$_.Exception.Message)
