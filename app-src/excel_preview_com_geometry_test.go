@@ -25,6 +25,7 @@ func TestXLSXExcelCOMRectStagePolicy(t *testing.T) {
 	}{
 		{"initial-125percent-stays-logical", "SetWindow", 722, 390, 902, 487, true, true, 722, 390},
 		{"initial-100percent-stays-logical", "SetWindow", 902, 487, 902, 487, true, true, 902, 487},
+		{"initial-setrect-stays-logical", "InitialSetRect", 722, 390, 902, 487, true, true, 722, 390},
 		{"resize-125percent-uses-physical", "SetRect", 722, 390, 902, 487, true, true, 902, 487},
 		{"resize-nonexcel-stays-logical", "SetRect", 722, 390, 902, 487, false, true, 722, 390},
 		{"resize-failed-measurement-stays-logical", "SetRect", 722, 390, 0, 0, true, false, 722, 390},
