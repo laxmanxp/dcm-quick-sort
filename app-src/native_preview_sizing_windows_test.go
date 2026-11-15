@@ -51,7 +51,10 @@ func TestDCM34NativeSizingControls(t *testing.T) {
 		{"native-error-after-recovery", true, false, false, false, [5]bool{}},
 		{"empty-after-error", false, false, false, false, [5]bool{}},
 	} {
-		t.Run(scene.name, func(t *testing.T) {
+		t.Logf("native sizing state: %s", scene.name)
+		// Keep SendMessage/SetWindowText on the thread that owns these HWNDs.
+		// t.Run would move this work into a separate goroutine.
+		func() {
 			app.preview = nil
 			if scene.native {
 				app.preview = handler
@@ -101,6 +104,6 @@ func TestDCM34NativeSizingControls(t *testing.T) {
 			if app.previewZoom != 173 || app.previewFit || app.previewFitWidth || app.previewPanX != 11 || app.previewPanY != 22 || app.previewZoomWheelRemainder != 17 {
 				t.Error("disabled direct/command sizing changed viewport state")
 			}
-		})
+		}()
 	}
 }
