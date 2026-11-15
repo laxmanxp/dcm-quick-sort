@@ -1,5 +1,14 @@
 # DCM QuickSort — project context
 
+## 15 November 2026 - maximize implemented; headed acceptance pending
+
+`DCM-WINDOW-MAXIMIZE-01` is implemented on candidate source `0e453fdd8ffef409adb6d1f14698adcc2a6e82a7`: main `CreateWindowExW` retains the standard Windows resize frame and Maximize box, and `WM_GETMINMAXINFO` sets a minimum outer track size of 1100x740. Auxiliary utility dialogs remain fixed-size. The original unit-test RED failed for missing main-window chrome helpers; portable tests then passed including `TestPDFMainWindow*`; Windows test compilation passed. GitHub exact reviewed patch workflow also passed.
+
+Lenovo `flowdev update dcm-quicksort` received that exact implementation, followed by a passing full registered baseline. The registered headed selector `ui-maximize` was added at `25ef667f9bd3a83b3d28122d0e4f92b2737598be`; its source-bound build and 16 PDF-focused tests passed. PowerShell parser accepted the new selector script. The shared desktop was occupied by a separate `flowdev test unoembed tabmove` during the attempted acceptance window, so **actual maximize/restore UI acceptance has NOT run or passed**. No foreign process was stopped, and no application code was edited on Lenovo.
+
+**Next:** when the shared desktop is idle, bind `DCM_BUILD_RECEIPT` to a fresh successful build of the exact checkpoint, run `flowdev test dcm-quicksort ui-maximize`, inspect the full-window screenshot and child-control bounds, investigate any failed harness/geometry check, then run normal preview regressions. The installed historical app is separate from the candidate; do not claim it has this change. `DCM-PDF-RENDER-SIZE-01` is still a 1.25x pixel-dimension observation without a controlled DPI validation. Parent DCM-34 stays PARTIAL, 32/50 complete; suite installer still waits for Flow Search/DeepSearch readiness.
+
+
 ## 15 November 2026 - maximize-button and PDF bitmap-size investigation
 
 The main QuickSort window deliberately removes `WS_THICKFRAME` and `WS_MAXIMIZEBOX` from `WS_OVERLAPPEDWINDOW` in `app-src/main_windows.go` (main `CreateWindowExW` near line 5983). Its comment says v1 was fixed-size to avoid layout drift, so Windows correctly disables the Maximize button. The `WM_SIZE` handler already calls `layoutUI`, but some widths are fixed/clamped (including 220px file pane, 260px processed pane and at least 420px preview), and no `WM_GETMINMAXINFO` minimum-window contract is registered. Do not just enable the style without designing/test-driving minimum sizing, resize, maximized and restored layouts, controls, preview providers, and real DPI configurations. New backlog item: `DCM-WINDOW-MAXIMIZE-01`; source behavior unchanged.
