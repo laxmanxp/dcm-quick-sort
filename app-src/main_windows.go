@@ -48,6 +48,7 @@ const (
 	WM_BACKGROUND_MOVE_PROGRESS = 0x8004 // WM_APP + 4
 	WM_BATCH_MOVE_NEXT          = 0x8005 // WM_APP + 5
 	WM_EXCEL_PREVIEW_RETRY       = 0x8010 // deferred native Excel COM call outside WM_SIZE
+	WM_PPTX_PREVIEW_RETRY        = 0x8011 // deferred native PowerPoint COM outside WM_SIZE
 	EM_SETLIMITTEXT             = 0x00C5
 	EM_SETSEL                   = 0x00B1
 	EM_SETCUEBANNER             = 0x1501
@@ -605,6 +606,8 @@ type appState struct {
 	preview                                                                                                                                            *iPreviewHandler
 	previewExcelOuterRepair, previewHostSizingAllowed                                                                                                                            bool
 	previewExcelRetryPending, previewExcelRetryRunning                                                                                                                            bool
+ 	previewPptxPhysical, previewPptxRetryPending, previewPptxRetryRunning bool
+	previewPptxRetryEpoch uint64
 	previewExcelRetryEpoch                                                                                                                                                uint64
 	previewActive                                                                                                                                      bool
 	fallback                                                                                                                                           string
@@ -670,7 +673,9 @@ var previewSiteVtbl = previewHostSiteVtbl{
 var previewSite = previewHostSite{Vtbl: &previewSiteVtbl, refs: 1}
 var iidIUnknown = GUID{Data1: 0x00000000, Data2: 0x0000, Data3: 0x0000, Data4: [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
 var iidPreviewHandlerFrame = GUID{Data1: 0xFEC87AAF, Data2: 0x35F9, Data3: 0x447A, Data4: [8]byte{0xAD, 0xB7, 0x20, 0x23, 0x44, 0x91, 0x40, 0x1A}}
-var clsidExcelPreviewHandler = GUID{Data1: 0x00020827, Data2: 0x0000, Data3: 0x0000, Data4: [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
+var clsidExcelPreviewHandler = GUID{Data1: 0x00020827, Data2: 0x0000, Data3: 0x0000, Data4: [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
+// Observed native Office PowerPoint preview handler CLSID on qualified Lenovo.
+var clsidPptxPreviewHandler = GUID{Data1: 0x65235197, Data2: 0x874B, Data3: 0x4A07, Data4: [8]byte{0xBD, 0xC5, 0xE6, 0x5E, 0xA8, 0x25, 0xB7, 0x18}}
 
 func wstr(s string) *uint16               { p, _ := syscall.UTF16PtrFromString(s); return p }
 func loword(v uintptr) uint16             { return uint16(v & 0xffff) }
@@ -3180,6 +3185,18 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 			app.previewExcelRetryRunning = false
 		}
 		return 0
+	case WM_PPTX_PREVIEW_RETRY:
+		// PowerPoint rejects SetRect from nested WM_SIZE. A posted retry runs
+		// after the input-synchronous stack unwinds, for the same live pane.
+		if shouldRunPptxPreviewResizeRetry(app.previewPptxRetryPending,
+			app.preview != nil && app.previewPptxPhysical,
+			uint64(wParam), app.previewPptxRetryEpoch, lParam, app.previewHwnd) {
+			app.previewPptxRetryPending = false
+			app.previewPptxRetryRunning = true
+			resizePreviewHandler()
+			app.previewPptxRetryRunning = false
+		}
+		return 0
 	case WM_PAINT:
 		recordLayoutTrace(hwnd, "paint-enter", 0)
 		r, _, _ := procDefWindowProcW.Call(hwnd, uintptr(msg), wParam, lParam)
@@ -5053,6 +5070,9 @@ func unloadPreview() {
 	// Disarm queued retries for a retiring COM object and pane.
 	app.previewExcelRetryPending = false
 	app.previewExcelRetryEpoch++
+	app.previewPptxPhysical = false
+	app.previewPptxRetryPending = false
+	app.previewPptxRetryEpoch++
 	if err := stopSumatraPreview(); err != nil {
 		sumatraError(err)
 	}
@@ -5722,13 +5742,14 @@ func resizePreviewHandlerFor(initial bool) {
 		return
 	}
 	pane, repairOuter := app.previewHwnd, app.previewExcelOuterRepair
+	pptxPhysical := app.previewPptxPhysical
 	handler := uintptr(unsafe.Pointer(ph))
 	traceSession := nativePreviewTraceSessionFor(handler)
 	traceCall := beginNativePreviewTrace(traceSession, "GetClientRect", pane, handler, 0, nil)
 	var rc RECT
 	rectOK, _, _ := procGetClientRect.Call(pane, uintptr(unsafe.Pointer(&rc)))
 	endNativePreviewTraceClientRect(traceCall, rectOK, rc)
-	if repairOuter && rectOK == 0 {
+	if (repairOuter || pptxPhysical) && rectOK == 0 {
 		return
 	}
 
@@ -5742,6 +5763,13 @@ func resizePreviewHandlerFor(initial bool) {
 				method = "InitialSetRect"
 			}
 			rc.Right, rc.Bottom = excelCOMRectForCall(method, rc.Right, rc.Bottom, physical.Right, physical.Bottom, true, true)
+		}
+	}
+	// The registered PowerPoint preview instead consumes physical pixels even
+	// during initialization. The same helper safely measures only our owned pane.
+	if pptxPhysical && rectOK != 0 {
+		if physical, ok := excelLayoutPhysicalClientRect(pane); ok {
+			rc.Right, rc.Bottom = pptxCOMRectSize(rc.Right, rc.Bottom, physical.Right, physical.Bottom, true, true)
 		}
 	}
 	traceCall = beginNativePreviewTrace(traceSession, "SetRect", pane, handler, 0, &rc)
@@ -5758,6 +5786,17 @@ func resizePreviewHandlerFor(initial bool) {
 			uintptr(app.previewExcelRetryEpoch), pane)
 		if posted != 0 {
 			app.previewExcelRetryPending = true
+		}
+	}
+	// Separate guarded retry for the registered native PowerPoint provider.
+	// No timers, global input, direct renderer HWND resize, or repeated spins.
+	if shouldPostPptxPreviewResize(hr,
+		pptxPhysical && app.preview == ph && app.previewHwnd == pane && app.previewPptxPhysical,
+		app.previewPptxRetryRunning, app.previewPptxRetryPending) {
+		posted, _, _ := procPostMessageW.Call(app.hwnd, WM_PPTX_PREVIEW_RETRY,
+			uintptr(app.previewPptxRetryEpoch), pane)
+		if posted != 0 {
+			app.previewPptxRetryPending = true
 		}
 	}
 	// COM may reenter the host. Repair only the same still-active Excel viewer
@@ -5795,6 +5834,7 @@ func loadWindowsPreviewHandler(path string) bool {
 		return false
 	}
 	excelOuterRepair := clsid == clsidExcelPreviewHandler
+	pptxPhysical := clsid == clsidPptxPreviewHandler
 	traceSession := newNativePreviewTraceSession(clsid)
 	ph := createPreviewHandler(&clsid, &iidPreview, traceSession)
 	if ph == nil {
@@ -5814,7 +5854,7 @@ func loadWindowsPreviewHandler(path string) bool {
 	traceCall := beginNativePreviewTrace(traceSession, "GetClientRect", app.previewHwnd, self, 0, nil)
 	rectOK, _, _ := procGetClientRect.Call(app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
 	endNativePreviewTraceClientRect(traceCall, rectOK, rc)
-	if excelOuterRepair && rectOK == 0 {
+	if (excelOuterRepair || pptxPhysical) && rectOK == 0 {
 		procIUnknownSetSite.Call(self, 0)
 		syscall.SyscallN(ph.Vtbl.Release, self)
 		return false
@@ -5826,6 +5866,12 @@ func loadWindowsPreviewHandler(path string) bool {
 	if excelOuterRepair && rectOK != 0 {
 		if physical, ok := excelLayoutPhysicalClientRect(app.previewHwnd); ok {
 			rc.Right, rc.Bottom = excelCOMRectForCall("SetWindow", rc.Right, rc.Bottom, physical.Right, physical.Bottom, true, true)
+		}
+	}
+	// Unlike Excel, the observed PowerPoint SetWindow uses physical pixels.
+	if pptxPhysical && rectOK != 0 {
+		if physical, ok := excelLayoutPhysicalClientRect(app.previewHwnd); ok {
+			rc.Right, rc.Bottom = pptxCOMRectSize(rc.Right, rc.Bottom, physical.Right, physical.Bottom, true, true)
 		}
 	}
 	traceCall = beginNativePreviewTrace(traceSession, "SetWindow", app.previewHwnd, self, 0, &rc)
@@ -5846,6 +5892,9 @@ func loadWindowsPreviewHandler(path string) bool {
 		return false
 	}
 	app.preview, app.previewExcelOuterRepair = ph, excelOuterRepair
+	app.previewPptxPhysical = pptxPhysical
+	app.previewPptxRetryEpoch++
+	app.previewPptxRetryPending = false
 	app.previewExcelRetryEpoch++
 	app.previewExcelRetryPending = false
 	app.previewHostSizingAllowed = nativePreviewHostSizingAllowed(path)
@@ -5856,6 +5905,11 @@ func loadWindowsPreviewHandler(path string) bool {
 	// child is being created. All later host resize events use physical pixels.
 	if excelOuterRepair {
 		resizePreviewHandlerFor(true)
+	}
+	// Initialize the native PowerPoint child once, outside its SetWindow call.
+	// If COM is input-synchronous this requests one deferred resize retry.
+	if pptxPhysical {
+		resizePreviewHandler()
 	}
 	autoFitPreviewIfSupported(path, clsidText)
 	updatePreviewZoomControls()
