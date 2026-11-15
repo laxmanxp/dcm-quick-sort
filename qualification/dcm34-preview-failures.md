@@ -1,5 +1,28 @@
 # DCM-34 — preview failure and interruption states
 
+## 15 November 2026 - PDF worker ownership fix accepted; interruption remains partial
+
+Native RED at `92a5023` reproduced four old success/error completions clearing a
+newer worker's busy flag, including same-file reopen. The worker-generation fix
+is accepted at `594709d1277ec28f155a2a54162122414c48678c`: three focused tests,
+14 PDF failure tests, full Windows baseline 405 passed / 0 failed / 0 skipped,
+and exact build/tooling pass. Headed regression records: normal PDF 19, damaged
+PDF 9, protected PDF 9. These are normal completed-state regressions, not an
+observed normal-app in-flight switch. No process cancellation was added.
+
+The first baseline (404 passed / 1 skipped) remains retained; the full baseline
+was repeated with the committed PPTX fixture bound and its integration run/pass
+verified. Raw receipt and visual flags remain unchanged.
+
+Evidence: `qualification/evidence/dcm-34-pdf-interruption-worker.json`; immutable
+report commit `d1c44657fb9c27bb328e08d7950d56519a27c878` in `laxmanxp/flowverse-reports`,
+prefix `apps/dcm-quicksort/dcm34-20261115-interruption/594709d`.
+
+**Next:** observe the real application's rendering request in flight, switch
+selection, and prove that the obsolete completion cannot change the new preview.
+Keep DCM-34-PDF-INTERRUPT-01 and DCM-34 PARTIAL, 32/50 complete, the open
+DCM-PDF-RENDER-SIZE-01 observation, and the Flow Search/DeepSearch release gate.
+
 ## 15 November 2026 - bounded protected-PDF milestone accepted
 
 `DCM-34-PDF-PROTECTED-01` is **complete within its bounded no-password contract**. The pending `ui-pdf-error-controls` damaged-file regression passed at `42a6c1da83604284c2c2e97b341df98e93c62d0e` after the shared desktop became idle. It used the reverified exact-source build: 9 records, 34 retained captures, 14 readiness attempts, two native errors with all five host sizing controls disabled, correct TXT/PDF recovery, exclusive release and normal exit 0. Both TXT recovery pixel deltas are zero. Seven accepted-state full frames were separately reviewed; remaining transitions/crops are retained without separate acceptance and raw visual flags are unchanged.

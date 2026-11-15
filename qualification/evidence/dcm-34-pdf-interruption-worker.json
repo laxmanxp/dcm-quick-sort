@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "feature": "DCM-34-PDF-INTERRUPT-01",
+  "status": "PARTIAL",
+  "worker_guard_status": "fixed_and_native_regression_tested",
+  "scope": "deterministic_worker_ownership_fix_with_normal_UI_regressions",
+  "source": "594709d1277ec28f155a2a54162122414c48678c",
+  "red_source": "92a5023361eecf530cd7c3194c6e24c65ff38030",
+  "red": {
+    "top_level_passed": 1,
+    "top_level_failed": 1,
+    "skipped": 0,
+    "reproduced_cases": 4,
+    "failure": "Obsolete success/error completions clear the newer worker busy flag, including the same file reopened.",
+    "stale_image_overwrite_reproduced": false
+  },
+  "focused_native": {
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "pdf_regression_native": {
+    "passed": 14,
+    "failed": 0,
+    "skipped": 0
+  },
+  "baseline": {
+    "passed": 405,
+    "failed": 0,
+    "skipped": 0
+  },
+  "initial_baseline": {
+    "passed": 404,
+    "failed": 0,
+    "skipped": 1,
+    "skipped_test": "TestRealGeneratedPPTXIntegration",
+    "retained": true
+  },
+  "fixture_binding": {
+    "path": "tests/fixtures/dcm32-slides.pptx",
+    "sha256": "af42fff55297109195b95039d2ac39c5d53b1fae23b59e7b40a7184d679b93f1",
+    "integration_runs": 1,
+    "integration_passes": 1,
+    "integration_skips": 0
+  },
+  "local_validation": {
+    "portable_race_top_level_passed": 26,
+    "portable_race_nested_passed": 94,
+    "patch_guard_tests": 8,
+    "windows_test_compilation": "passed",
+    "full_Linux_suite_claimed": false
+  },
+  "registered_update_build_and_tooling": "passed",
+  "headed_regression_cases": {
+    "normal_PDF": 19,
+    "damaged_PDF": 9,
+    "protected_PDF": 9
+  },
+  "separate_visual_review": {
+    "normal_PDF_full_frames": 3,
+    "damaged_PDF_full_frames": 7,
+    "protected_PDF_full_frames": 7,
+    "total_full_frames": 17,
+    "raw_visual_flags_modified": false,
+    "other_captures_and_crops_separately_accepted": false,
+    "per_image_hashes_and_observations": "Report summary.json"
+  },
+  "app_sha256": "441a23870784c445db1bb5022500a4b44a9890bc5a8c5d0a6493e1be6cb2709d",
+  "app_bytes": 7373824,
+  "source_files_rehashed": 496,
+  "source_unchanged": true,
+  "full_inflight_UI_accepted": false,
+  "process_cancellation_added": false,
+  "user_test": "not_recorded",
+  "parent_DCM34": "PARTIAL",
+  "numbered_complete": 32,
+  "numbered_remaining": 18,
+  "open_observation": "DCM-PDF-RENDER-SIZE-01 unchanged",
+  "suite_gate": "FILEFLOW-SUITE-READY-01 unchanged",
+  "report_repository": "laxmanxp/flowverse-reports",
+  "report_commit": "d1c44657fb9c27bb328e08d7950d56519a27c878",
+  "report_prefix": "apps/dcm-quicksort/dcm34-20261115-interruption/594709d",
+  "raw_files": 373,
+  "published_files": 377,
+  "next": "Observe a real normal-app render in flight, switch selection, then verify the late completion cannot alter the new preview."
+}
