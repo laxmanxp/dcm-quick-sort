@@ -1,5 +1,14 @@
 # DCM QuickSort — project context
 
+## 15 November 2026 - completed observed in-flight PDF qualification
+
+**DCM-34-PDF-INTERRUPT-01: bounded acceptance COMPLETE.** The real-application `ui-pdf-inflight` FlowDev selector passed at `37c9202d8864bafa9e2982b3281a44a11a819a96`: 10 retained cases cover in-flight successful PDF completion, in-flight failed/damaged PDF completion, and same-PDF reopen with overlapping generations. Old renderer output is discarded, the new selection retains the correct content, source files and fixtures are preserved, exclusive file access is released, and the host exits normally. Three further headed selectors passed at the same revision: `ui-pdf` (normal navigation/sizing), `ui-pdf-error-controls` (damaged/error recovery), and `ui-pdf-protected` (protected refusal/recovery). Fresh exact-source FlowDev build passed, with its receipt bound to the headed runs. The source checkout stayed clean.
+
+Original failing observer evidence remains historical; no synthetic completion, renderer suspension/delay, process cancellation, password unlocking, or human acceptance is claimed. Acceptance receipts, trace JSONL, screenshots, and build identity are [published to flowverse-reports](https://github.com/laxmanxp/flowverse-reports/tree/696a76d0e2062f1f6ea30100b441473942226638/apps/dcm-quicksort/dcm34-20261115-inflight/accepted-37c9202). Screenshot captures are retained but have not all been separately human-reviewed.
+
+**Parent DCM-34 stays PARTIAL; numbered plan remains 32/50 complete, 18 pending.** The independent `DCM-PDF-RENDER-SIZE-01` mismatch (reported 612x1000 versus decoded 765x1250) and broader preview lifecycle/Office failure checks are still open. Next smallest work: investigate that renderer size observation in isolation, or finish remaining DCM-34 cleanup/lifecycle coverage before DCM-35. Final FileFlow Suite installer/release remains gated on Flow Search and DeepSearch readiness; no suite publication approval was given.
+
+
 ## 15 November 2026 - live PDF observation recorded; corrected headed run pending
 
 `DCM-34-PDF-INTERRUPT-01` remains **PARTIAL**. Opt-in, bounded JSONL tracing
