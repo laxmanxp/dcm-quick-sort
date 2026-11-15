@@ -17,6 +17,13 @@ history. Recovery now compares fully decoded baseline/recovery pixels and page
 metadata independently; metadata-to-bitmap size equivalence is NOT accepted.
 Track `DCM-PDF-RENDER-SIZE-01` separately; no production sizing fix is claimed.
 
+The first headed protected test at `0786a42` stopped after two successful
+controls because its explicit-phrase allowlist missed the actual reviewed
+provider sentence: "This is a password protected PDF file. Open this file with
+Microsoft Edge." Preserve `dcm-quicksort-ui-pdf-failure-20261115-074437-c19b0bf0`.
+Only that complete sentence is added for protected fixtures; owned-window,
+pixel stability, no-stale-content and disabled-control checks remain required.
+
 ## 15 November 2026 - DCM-34 PDF host-sizing guard
 
 `DCM-34-PDF-CONTROLS-01`: conservative host sizing permission is bound to the
