@@ -1,0 +1,32 @@
+name: Record bounded DOCX acceptance and suite release gate
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/closeout-dcm34-docx.yml]
+permissions:
+  contents: write
+jobs:
+  closeout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run documentation guard tests developed in OpenAI
+        working-directory: qualification
+        run: python -m unittest -v test_closeout_dcm34_docx
+      - name: Apply only to exact pre-closeout document identities
+        run: python qualification/closeout_dcm34_docx.py
+      - name: Commit only the bounded documentation update
+        run: |
+          git diff --check
+          python - <<'PY'
+          import subprocess
+          expected = {'CONTEXT.md', 'todo.json', 'qualification/completion-50.json', 'qualification/dcm34-preview-failures.md'}
+          changed = set(subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines())
+          assert changed == expected, changed
+          PY
+          git config user.name 'DCM reviewed-checkpoint automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CONTEXT.md todo.json qualification/completion-50.json qualification/dcm34-preview-failures.md qualification/evidence/dcm-34-docx-fallback-native-summary.json
+          git commit -m 'Record accepted DOCX fallback fix and defer final suite packaging until search apps are ready'
+          git push origin HEAD:release/v1.0.71
