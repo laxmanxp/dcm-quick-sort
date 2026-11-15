@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT)
+param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,[switch]$ActiveMaximize)
 # DCM-32: natural installed-handler/fallback routing, exact committed fixture.
 # Native input is scoped to the observed unique PowerPoint childClass directly
 # inside the owned preview pane. Posted Page Down/Up never uses global input.
@@ -109,6 +109,71 @@ function NativeShot([string]$name,[int]$slideNumber=1,[string]$comparison='initi
  Record $name ([ordered]@{native_target=$nativeTarget;expected_slide=$slideNumber;programmatic_slide_index_available=$false;accessible_text_sha256=(Hash (Join-Path $lab ($name+'.accessible.txt')));rendered_text_machine_asserted=$false;rendered_content_review='required_separately';status='Windows preview: PPTX';accepted_capture=$frame.path;pixels=$frame.pixels;changed_samples=$changed;changed_since_previous=$settling})
  return $frame
 }
+
+function NativePptxPhysicalGeometry {
+ Own;[DcmPptxInput]::ValidateNativeSlide($hwnd,$app.Id,$nativeTarget)
+ $pane=[DcmPptxResize]::PhysicalRect([IntPtr]$nativeTarget.Pane)
+ $child=[DcmPptxResize]::PhysicalRect([IntPtr]$nativeTarget.Hwnd)
+ # A 4-pixel allowance admits normal native window borders, not DPI scaling.
+ $fits=([Math]::Abs($child.Left-$pane.Left) -le 4 -and
+   [Math]::Abs($child.Top-$pane.Top) -le 4 -and
+   [Math]::Abs($child.Right-$pane.Right) -le 4 -and
+   [Math]::Abs($child.Bottom-$pane.Bottom) -le 4)
+ return [ordered]@{
+  pane=@($pane.Left,$pane.Top,$pane.Right,$pane.Bottom)
+  child=@($child.Left,$child.Top,$child.Right,$child.Bottom)
+  pane_size=@($pane.Width,$pane.Height);child_size=@($child.Width,$child.Height)
+  fills_pane=[bool]$fits;native_handle=$nativeTarget.Hwnd;native_pid=$nativeTarget.ProcessId
+ }
+}
+function Test-ActivePptxMaximize([string]$firstSlideCrop) {
+ if(-not $ActiveMaximize){return}
+ Own;RequireStatus 'Windows preview: PPTX'
+ [DcmPptxInput]::ValidateNativeSlide($hwnd,$app.Id,$nativeTarget)
+ if([DcmUndoInput]::TryText($hwnd,$app.Id,1005) -cne '07-slides'){throw 'Active PPTX selection changed'}
+ $style=[DcmPptxResize]::GetWindowLongPtr($hwnd,-16).ToInt64()
+ if(($style -band 0x00050000) -ne 0x00050000){throw 'Native PPTX host lacks maximize or resize frame'}
+ $before=NativePptxPhysicalGeometry
+ $original=[DcmPptxResize]::PhysicalRect($hwnd)
+ $area=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea
+ [DcmPptxResize]::ShowWindow($hwnd,3)|Out-Null
+ Wait 'active PPTX maximized' {[DcmPptxResize]::IsZoomed($hwnd)}
+ Start-Sleep -Milliseconds 650
+ $large=[DcmPptxResize]::PhysicalRect($hwnd)
+ if($large.Width -lt ($area.Width-24) -or $large.Height -lt ($area.Height-24) -or $large.Width-$original.Width -lt 50){throw 'PPTX host did not expand into desktop work area'}
+ $max=NativePptxPhysicalGeometry
+ $maxFrame=CaptureFrame 'active-pptx-maximized' $true
+ if($maxFrame.pixels.TealPixels -lt 30 -or $maxFrame.pixels.OrangePixels -lt 30){throw 'PPTX slide-one image disappeared on maximize'}
+ [DcmPptxResize]::ShowWindow($hwnd,9)|Out-Null
+ Wait 'active PPTX restored' {-not [DcmPptxResize]::IsZoomed($hwnd)}
+ Start-Sleep -Milliseconds 650
+ $restored=[DcmPptxResize]::PhysicalRect($hwnd)
+ if([Math]::Abs($original.Width-$restored.Width) -gt 8 -or [Math]::Abs($original.Height-$restored.Height) -gt 8){throw 'Native PPTX host failed to restore original bounds'}
+ $after=NativePptxPhysicalGeometry
+ $restoredFrame=CaptureFrame 'active-pptx-restored' $true
+ if($restoredFrame.pixels.TealPixels -lt 30 -or $restoredFrame.pixels.OrangePixels -lt 30){throw 'PPTX slide-one image disappeared after restore'}
+ $changed=[DcmPptxInput]::PixelDifference($firstSlideCrop,$restoredFrame.path)
+ $receipt['active_pptx_resize']=[ordered]@{
+  provider='Installed Windows PPTX preview handler';source_selection='07-slides.pptx'
+  original=@($original.Left,$original.Top,$original.Right,$original.Bottom)
+  maximized=@($large.Left,$large.Top,$large.Right,$large.Bottom)
+  restored=@($restored.Left,$restored.Top,$restored.Right,$restored.Bottom)
+  work_area=@($area.Left,$area.Top,$area.Right,$area.Bottom)
+  before=$before;during=$max;after=$after;slide1_restored_pixel_difference=$changed
+  preview_bounds_tolerance_pixels=4;screenshots_review_required=$true
+ }
+ if(-not $before.fills_pane -or -not $max.fills_pane -or -not $after.fills_pane) {
+  throw ('DCM34_PPTX_NATIVE_BOUNDS: PowerPoint childClass does not fill pane in '+
+    (@('initial','maximized','restored') | Where-Object {
+      if($_ -eq 'initial'){return -not $before.fills_pane}
+      if($_ -eq 'maximized'){return -not $max.fills_pane}
+      return -not $after.fills_pane
+    } | Out-String).Trim())
+ }
+ if($changed -gt 30){throw ('DCM34_PPTX_SLIDE_RESTORE: slide-one pixels differ after restoration: '+$changed)}
+ Record 'active-pptx-maximize-restore' ([ordered]@{native_provider=$true;pane_filled_at_all_three_sizes=$true;powerpoint_process_unchanged=$true;slide1_restored=$true;slide1_changed_samples=$changed;image_review_required=$true})
+}
+
 function FallbackSlide([string]$name,[int]$index,[string]$label){
  Wait ('fallback slide '+($index+1)) {([DcmPptxInput]::SelectedSlide($hwnd,$app.Id) -ceq $label) -and @((HostCaptions)|Where-Object {$_.StartsWith(('DCM PPTX Preview: Slide '+($index+1)+' of 2'),[StringComparison]::Ordinal)}).Count -eq 1}
  $status=StatusPrefix ('DCM PPTX Preview: Slide '+($index+1)+' of 2')
@@ -146,6 +211,7 @@ try {
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-native.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-undo-input.cs')
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-pptx-input.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
+ if($ActiveMaximize){Add-Type -Path (Join-Path $repo 'tests/native/dcm-pptx-resize.cs')}
  Add-Type -AssemblyName UIAutomationClient;Add-Type -AssemblyName UIAutomationTypes;Add-Type -AssemblyName WindowsBase
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-docx-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll',([Windows.Automation.AutomationElement]).Assembly.Location,([Windows.Automation.AutomationPattern]).Assembly.Location,([Windows.Point]).Assembly.Location)
  . (Join-Path $repo 'tests/native/new-fixtures.ps1');$fixture=New-DcmFixtures $lab
@@ -175,11 +241,13 @@ try {
   $receipt.provider='Installed Windows PPTX preview handler'
   $nativeTarget=[DcmPptxInput]::BindNativeSlide($hwnd,$app.Id);$receipt['initial_native_target']=$nativeTarget
   $first=NativeShot '02-native-slide1'
+  Test-ActivePptxMaximize $first.path
   NativePageKey 'page-down' 0x22;$second=NativeShot '03-native-slide2' 2 'different' $first.path
   NativePageKey 'page-up' 0x21;$returned=NativeShot '04-native-slide1-return' 1 'restore' $first.path
   $receipt.native_slide_navigation='Bound PowerPoint childClass PageDown/PageUp; 1 -> 2 -> 1 pixel change/restoration and stable captures pass; semantic slide identity requires review'
   $receipt.all_fixture_slides_captured=$true
  }else{
+  if($ActiveMaximize){throw 'DCM34_PPTX_PROVIDER: active native PowerPoint maximization requires installed Windows PPTX handler'}
   $receipt.provider='Built-in PPTX Open XML slide fallback'
   $labels=@([DcmPptxInput]::SlideNames($hwnd,$app.Id));if($labels.Count -ne 2 -or -not $labels[0].StartsWith('Slide 1',[StringComparison]::Ordinal) -or -not $labels[0].Contains('Bridge Inspection') -or -not $labels[1].StartsWith('Slide 2',[StringComparison]::Ordinal) -or -not $labels[1].Contains('Payments')){throw 'Fallback slide labels/order differ'}
   $receipt['fallback_slide_labels']=$labels
