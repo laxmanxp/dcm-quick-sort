@@ -1,5 +1,15 @@
 # DCM QuickSort — project context
 
+## 15 November 2026 - in-flight PDF completion ownership regression
+
+Next baby step `DCM-34-PDF-INTERRUPT-01`: verify that an obsolete PDF completion
+cannot clear a newer request's busy state, including reopening the same file.
+The new `pdf-interruption-unit` selector exercises production stop/completion
+logic with an owned status control. It is a deterministic component regression,
+not yet a full normal-app in-flight/cancellation acceptance. Native RED is pending.
+Keep the protected-PDF acceptance, open bitmap-size observation, 32/50 count and
+suite packaging gate unchanged.
+
 ## 15 November 2026 - bounded protected-PDF milestone accepted
 
 `DCM-34-PDF-PROTECTED-01` is **complete within its bounded no-password contract**. The pending `ui-pdf-error-controls` damaged-file regression passed at `42a6c1da83604284c2c2e97b341df98e93c62d0e` after the shared desktop became idle. It used the reverified exact-source build: 9 records, 34 retained captures, 14 readiness attempts, two native errors with all five host sizing controls disabled, correct TXT/PDF recovery, exclusive release and normal exit 0. Both TXT recovery pixel deltas are zero. Seven accepted-state full frames were separately reviewed; remaining transitions/crops are retained without separate acceptance and raw visual flags are unchanged.

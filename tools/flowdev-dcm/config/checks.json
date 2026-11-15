@@ -39,6 +39,7 @@
         "pdf-protected-renderer": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "regressions", "-Run", "^TestDCM34PDFProtected"],
         "ui-pdf-protected": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/test-ui-pdf-failure.ps1", "-FailureFixture", "protected", "-RequireErrorControls"],
         "pdf-failure-unit": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "regressions", "-Run", "^Test(DCM34PDFRenderer|PDF)"],
+        "pdf-interruption-unit": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "regressions", "-Run", "^TestDCM34PDFLateResult"],
         "pdf-control-unit": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "regressions", "-Run", "^Test(DCM34NativeSizing|ControlUpdatePreviewTransitions)"],
         "docx-failure-unit": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "regressions", "-Run", "^TestDCM34DOCX"],
         "docx-unit": ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", "tools/run-native.ps1", "-Mode", "regressions", "-Run", "^Test(DOCX|RenderDOCX|ParseDOCX|TextPreviewFontPixelHeight|OpenXML|InspectOpenXML|ResolveOpenXML|ReadOpenXML|ReadZipEntryLimited|OfficeFoundation)"],
