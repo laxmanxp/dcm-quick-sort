@@ -1,5 +1,17 @@
 # DCM-34 — preview failure and interruption states
 
+## 15 November 2026 - bounded protected-PDF milestone accepted
+
+`DCM-34-PDF-PROTECTED-01` is **complete within its bounded no-password contract**. The pending `ui-pdf-error-controls` damaged-file regression passed at `42a6c1da83604284c2c2e97b341df98e93c62d0e` after the shared desktop became idle. It used the reverified exact-source build: 9 records, 34 retained captures, 14 readiness attempts, two native errors with all five host sizing controls disabled, correct TXT/PDF recovery, exclusive release and normal exit 0. Both TXT recovery pixel deltas are zero. Seven accepted-state full frames were separately reviewed; remaining transitions/crops are retained without separate acceptance and raw visual flags are unchanged.
+
+The protected-file UI and 402/0/0 Windows baseline retain their actual source `1170e844c56ec019ae219abc8e3248092482e54d`; neither was rerun for this closeout. Application implementation is unchanged. Original failed runs, concurrency holds and the prior partial checkpoint remain historical evidence.
+
+Evidence: `qualification/evidence/dcm-34-pdf-protected-closeout.json` and [immutable regression reports `dca83055`](https://github.com/laxmanxp/flowverse-reports/tree/dca830554ba1b3305a6efef1f0e1e7b657830700/apps/dcm-quicksort/dcm34-20261115-protected/damage-regression-42a6c1d-083159).
+
+**Keep 32/50 complete and full DCM-34 PARTIAL.** `DCM-PDF-RENDER-SIZE-01` remains open: reported 612x1000 versus decoded 765x1250, with cause/impact unestablished and no size-equivalence claim. **Next DCM-34 task:** observed in-flight preview interruption and late-result rejection. Password entry/unlocking and human acceptance are unqualified. Final suite packaging and installation remain gated on Flow Search and DeepSearch readiness.
+
+The earlier pending-regression statements below are historical and superseded by this checkpoint.
+
 ## 15 November 2026 - protected-PDF path passes; regression still pending
 
 `DCM-34-PDF-PROTECTED-01` remains **PARTIAL**, with meaningful native progress:
