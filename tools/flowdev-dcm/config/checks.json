@@ -585,6 +585,14 @@
           "-File",
           "tools/test-ui-launch.ps1",
           "-Maximize"
+        ],
+        "ui-pdf-active-maximize": [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "tools/test-ui-pdf-failure.ps1",
+          "-ActiveMaximize"
         ]
       }
     }

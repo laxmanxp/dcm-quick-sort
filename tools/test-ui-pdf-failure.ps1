@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,[switch]$RequireErrorControls,[ValidateSet('damaged','protected')][string]$FailureFixture='damaged',[switch]$InFlight)
+param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,[switch]$RequireErrorControls,[ValidateSet('damaged','protected')][string]$FailureFixture='damaged',[switch]$InFlight,[switch]$ActiveMaximize)
 # DCM-34: one header-valid, unloadable PDF through the default Windows.Data.Pdf
 # renderer and its natural Windows fallback. No registry changes, fallback
 # suppression, foreign-window input, synthetic repaint or cancellation claim.
@@ -12,6 +12,7 @@ $damagedSource=Join-Path $repo 'tests/fixtures/dcm34-damaged.pdf'
 $fixtureManifest=Join-Path $repo 'tests/fixtures/dcm34-damaged.manifest.json'
 $protected=$FailureFixture -ceq 'protected'
 if($InFlight -and $protected){throw 'In-flight gate uses the original valid and damaged fixtures'}
+if($InFlight -and $ActiveMaximize){throw 'Separate completed-PDF maximize from interrupted rendering'}
 $failureFile=if($protected){'12-protected.pdf'}else{'10-damaged.pdf'}
 if($protected){$fixtureManifest=Join-Path $repo 'tests/fixtures/sumatra-password.json';$RequireErrorControls=$true}
 $lab=Join-Path $env:FLOWDEV_WORKSPACE_ROOT ('dcm-quicksort-ui-pdf-failure-'+[DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss')+'-'+[Guid]::NewGuid().ToString('N').Substring(0,8))
@@ -22,6 +23,7 @@ $receipt=[ordered]@{schema=1;feature='DCM-34';format_scope='default_PDF_damage_a
 if($protected){$receipt.format_scope='default_PDF_protected_refusal_and_recovery_only';$receipt.feature='DCM-34-PDF-PROTECTED-01';$receipt['password_supplied']=$false;$receipt['password_dialog_input_performed']=$false}
 $tracePath=Join-Path $lab 'pdf-events.jsonl'
 if($InFlight){$receipt.feature='DCM-34-PDF-INTERRUPT-01';$receipt.format_scope='observed_real_renderer_interruption';$receipt['trace_path']=$tracePath}
+if($ActiveMaximize){$receipt.feature='DCM-WINDOW-MAXIMIZE-01';$receipt.format_scope='active_PDF_maximize_restore'}
 . (Join-Path $repo 'tests/native/dcm-pdf-inflight.ps1')
 $app=$null;$hwnd=[IntPtr]::Zero;$owned=$null;$head='';$manifest=@();$fixture=$null;$expected=@{};$exe='';$build=$null;$selectedName='';$controlRefs=@();$basePaneHandles=@{};$registrations=$null
 $fallbackFooter='DCM PDF renderer unavailable; using Windows PDF preview fallback'
@@ -220,6 +222,29 @@ function TextBody([string]$name,[string]$plain,$baseline=$null){
  Record $name ([ordered]@{displayed_sha256=(Hash $textPath);exact_txt_body=$true;native_subtree_absent=$true;pdf_controls_hidden=$true;state=$statePath;accepted_capture=$frame.path;pixel_contract=$receipt.txt_pixel_contract;baseline_path=$reference.path;baseline_sha256=$reference.sha256;changed_from_initial_txt=$difference;semantic_image_review_required=$true})
  return $reference
 }
+function Test-ActivePDFMaximize {
+ NoDialog
+ if($selectedName -cne '08-preview.pdf'){throw 'Active maximize requires valid selected PDF'}
+ $style=[DcmPDFMax]::GetWindowLongPtr($hwnd,-16).ToInt64()
+ if(($style -band 0x00050000) -ne 0x00050000){throw 'PDF window missing maximize or sizing frame'}
+ $original=New-Object DcmPDFMax+Rect
+ if(-not [DcmPDFMax]::GetWindowRect($hwnd,[ref]$original)){throw 'Could not observe original host rect'}
+ $area=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea
+ [DcmPDFMax]::ShowWindow($hwnd,3)|Out-Null
+ Wait 'valid PDF maximized' {[DcmPDFMax]::IsZoomed($hwnd)}
+ $large=New-Object DcmPDFMax+Rect
+ if(-not [DcmPDFMax]::GetWindowRect($hwnd,[ref]$large)){throw 'Could not observe maximized host rect'}
+ if(($large.Right-$large.Left) -lt ($area.Width-24) -or ($large.Bottom-$large.Top) -lt ($area.Height-24) -or ($large.Right-$large.Left)-($original.Right-$original.Left) -lt 50){throw 'PDF window did not actually maximize to working area'}
+ $max=ReadyPreview 'active-pdf-maximized' 'valid'
+ [DcmPDFMax]::ShowWindow($hwnd,9)|Out-Null
+ Wait 'valid PDF restored' {-not [DcmPDFMax]::IsZoomed($hwnd)}
+ $restored=New-Object DcmPDFMax+Rect
+ if(-not [DcmPDFMax]::GetWindowRect($hwnd,[ref]$restored)){throw 'Could not observe restored host rect'}
+ if([Math]::Abs(($original.Right-$original.Left)-($restored.Right-$restored.Left)) -gt 8 -or [Math]::Abs(($original.Bottom-$original.Top)-($restored.Bottom-$restored.Top)) -gt 8){throw 'Restored PDF host size differs from original'}
+ $again=ReadyPreview 'active-pdf-restored' 'valid'
+ $receipt['active_pdf_resize']=[ordered]@{selected=$selectedName;original=@($original.Left,$original.Top,$original.Right,$original.Bottom);maximized=@($large.Left,$large.Top,$large.Right,$large.Bottom);restored=@($restored.Left,$restored.Top,$restored.Right,$restored.Bottom);working_area=@($area.Left,$area.Top,$area.Right,$area.Bottom);max_capture=$max.path;restore_capture=$again.path;visual_review_required=$true}
+ Record 'active-pdf-maximize-and-restore' ([ordered]@{valid_pdf_before_during_after=$true;actual_maximize=$true;actual_restore=$true;max_capture=$max.path;restore_capture=$again.path})
+}
 function Registration {
  $extension='.pdf';$key='{8895b1c6-b41f-4c1c-a562-0d564250836f}';$reg=[Microsoft.Win32.Registry]::ClassesRoot;$r=$reg.OpenSubKey($extension);$prog=''
  if($r){try{if($r.GetValueNames() -contains '' -and $r.GetValueKind('') -eq [Microsoft.Win32.RegistryValueKind]::String){$prog=[string]$r.GetValue('')}}finally{$r.Dispose()}}
@@ -307,6 +332,19 @@ try {
  }
  foreach($path in $fixturePaths){$entries=@($manifest|Where-Object {$_.path -ceq $path});if($entries.Count -ne 1 -or $entries[0].sha256 -cne (Hash (Join-Path $repo $path))){throw 'Failure fixture/manifest missing from exact build snapshot'}}
  Add-Type -AssemblyName System.Drawing;Add-Type -AssemblyName System.Windows.Forms
+ if($ActiveMaximize){
+  Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class DcmPDFMax {
+ [StructLayout(LayoutKind.Sequential)] public struct Rect { public int Left, Top, Right, Bottom; }
+ [DllImport("user32.dll",EntryPoint="GetWindowLongPtrW")] public static extern IntPtr GetWindowLongPtr(IntPtr hwnd,int index);
+ [DllImport("user32.dll")] [return:MarshalAs(UnmanagedType.Bool)] public static extern bool GetWindowRect(IntPtr hwnd,out Rect rect);
+ [DllImport("user32.dll")] [return:MarshalAs(UnmanagedType.Bool)] public static extern bool IsZoomed(IntPtr hwnd);
+ [DllImport("user32.dll")] [return:MarshalAs(UnmanagedType.Bool)] public static extern bool ShowWindow(IntPtr hwnd,int cmd);
+}
+'@
+ }
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-native.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-undo-input.cs')
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-pptx-input.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
@@ -349,6 +387,7 @@ try {
   $receipt.interruption_or_cancellation_tested=$true;$receipt['process_cancellation_tested']=$false
  }else{
  SelectFile '08-preview.pdf';$firstValid=ReadyPreview '02-valid-before-damage' 'valid'
+ if($ActiveMaximize){Test-ActivePDFMaximize}
  SelectFile $failureFile;$firstError=ReadyPreview ('03-first-'+$FailureFixture) 'error' $firstValid
  SelectFile '01-alpha.txt';$null=TextBody '04-first-text-recovery' $plain $initialText;ExclusivePDFs
  SelectFile '08-preview.pdf';$recovered=ReadyPreview '05-valid-pdf-recovery' 'valid' $firstValid
@@ -361,7 +400,7 @@ try {
  StopApp;Source;Files;ExclusivePDFs
  if((Hash (Join-Path $fixture.inbox $failureFile)) -cne $definition.sha256 -or (Hash $exe) -cne $build.app_artifact.sha256){throw 'Original fixture/application bytes changed'}
  Record '09-normal-close-and-original-bytes' ([ordered]@{exit_code=$owned.exit_code;original_fixture_bytes_preserved=$true;source_unchanged=$true;journal_empty=$true})
- if($InFlight){if($cases.Count -ne 10 -or $shots.Count -lt 12){throw 'Incomplete observed interruption cases or captures'}}elseif($cases.Count -ne 9 -or $shots.Count -lt 22){throw 'Incomplete PDF failure/recovery cases or original captures'}
+ if($InFlight){if($cases.Count -ne 10 -or $shots.Count -lt 12){throw 'Incomplete observed interruption cases or captures'}}elseif($ActiveMaximize){if($cases.Count -ne 12 -or $shots.Count -lt 26){throw 'Incomplete active-PDF maximize/restore cases or captures'}}elseif($cases.Count -ne 9 -or $shots.Count -lt 22){throw 'Incomplete PDF failure/recovery cases or original captures'}
  if($RequireErrorControls){if($receipt.error_control_checks.Count -ne 2){throw 'Both failure openings require control checks'};$receipt['host_error_controls_machine_checked']=$true}
  $receipt['machine_checks_passed']=$true;$receipt.passed=$true
 }catch{
