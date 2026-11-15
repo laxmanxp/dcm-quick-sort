@@ -413,6 +413,18 @@
           "-File",
           "tools/test-pptx-unit.ps1"
         ],
+        "pptx-fallback-component": [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "tools/run-native.ps1",
+          "-Mode",
+          "regressions",
+          "-Run",
+          "^TestPPTXFallbackComponentRecovery$",
+          "-CapturePPTXComponent"
+        ],
         "legacy-preview-unit": [
           "powershell.exe",
           "-NoProfile",
