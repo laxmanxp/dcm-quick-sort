@@ -166,3 +166,51 @@ func repairExcelPreviewOuterWindow(pane uintptr) (accepted bool) {
 	result, _, _ := spSetWindowPos.Call(tree.outer.hwnd, 0, 0, 0, uintptr(rc.Right), uintptr(rc.Bottom), flags)
 	return result != 0
 }
+
+const excelPerMonitorAwareV2Context = ^uintptr(3) // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = -4
+
+// Read owned pane client dimensions in physical pixels, restoring the caller
+// thread's DPI awareness before returning. Never touch the Excel child windows.
+func excelLayoutPhysicalClientRect(pane uintptr) (rect RECT, ok bool) {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+	if pane == 0 {
+		return
+	}
+	for _, p := range []*syscall.LazyProc{
+		excelLayoutGetThreadDPI, excelLayoutSetThreadDPI, excelLayoutEqualDPI,
+		procGetClientRect, spGetPID, procGetParent, spGetWindowStyle, spGetClass,
+	} {
+		if p.Find() != nil {
+			return
+		}
+	}
+	original, _, _ := excelLayoutGetThreadDPI.Call()
+	if original == 0 {
+		return
+	}
+	previous, _, _ := excelLayoutSetThreadDPI.Call(excelPerMonitorAwareV2Context)
+	if previous == 0 {
+		return
+	}
+	defer func() {
+		restored, _, _ := excelLayoutSetThreadDPI.Call(original)
+		current, _, _ := excelLayoutGetThreadDPI.Call()
+		if restored == 0 || !excelLayoutContextsEqual(current, original) {
+			ok = false
+		}
+	}()
+	current, _, _ := excelLayoutGetThreadDPI.Call()
+	if !excelLayoutContextsEqual(previous, original) || !excelLayoutContextsEqual(current, excelPerMonitorAwareV2Context) {
+		return
+	}
+	owned, valid := excelLayoutReadWindow(pane)
+	if !valid || owned.pid != uint32(os.Getpid()) || owned.class != "QuickSortPreview" {
+		return
+	}
+	read, _, _ := procGetClientRect.Call(pane, uintptr(unsafe.Pointer(&rect)))
+	if read == 0 || rect.Left != 0 || rect.Top != 0 || rect.Right <= 0 || rect.Bottom <= 0 {
+		return
+	}
+	return rect, true
+}

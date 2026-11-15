@@ -5727,6 +5727,15 @@ func resizePreviewHandler() {
 	if repairOuter && rectOK == 0 {
 		return
 	}
+
+	// Excel's out-of-process preview interprets the SetRect size in physical
+	// pixels. A DPI-unaware host thread sees virtualized client dimensions.
+	// Read a physical client rect without retaining a changed thread DPI mode.
+	if repairOuter && rectOK != 0 {
+		if physical, ok := excelLayoutPhysicalClientRect(pane); ok {
+			rc.Right, rc.Bottom = excelCOMRectSize(rc.Right, rc.Bottom, physical.Right, physical.Bottom, true, true)
+		}
+	}
 	traceCall = beginNativePreviewTrace(traceSession, "SetRect", pane, handler, 0, &rc)
 	hr, _, _ := syscall.SyscallN(ph.Vtbl.SetRect, handler, uintptr(unsafe.Pointer(&rc)))
 	endNativePreviewTraceHRESULT(traceCall, hr, handler)
@@ -5801,6 +5810,12 @@ func loadWindowsPreviewHandler(path string) bool {
 		procIUnknownSetSite.Call(self, 0)
 		syscall.SyscallN(ph.Vtbl.Release, self)
 		return false
+	}
+
+	if excelOuterRepair && rectOK != 0 {
+		if physical, ok := excelLayoutPhysicalClientRect(app.previewHwnd); ok {
+			rc.Right, rc.Bottom = excelCOMRectSize(rc.Right, rc.Bottom, physical.Right, physical.Bottom, true, true)
+		}
 	}
 	traceCall = beginNativePreviewTrace(traceSession, "SetWindow", app.previewHwnd, self, 0, &rc)
 	hr, _, _ := syscall.SyscallN(ph.Vtbl.SetWindow, self, app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
