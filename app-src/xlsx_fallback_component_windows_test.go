@@ -107,7 +107,7 @@ func TestXLSXFallbackComponentRecovery(t *testing.T) {
 				t.Helper()
 				status := getText(app.statusLabel)
 				grid := getText(app.xlsxGridEdit)
-				count, _, _ := procSendMessageW.Call(app.xlsxSheetCombo, CB_GETCOUNT, 0, 0)
+				count, _, _ := procSendMessageW.Call(app.xlsxSheetCombo, 0x0146 /* CB_GETCOUNT */, 0, 0)
 				selected, _, _ := procSendMessageW.Call(app.xlsxSheetCombo, CB_GETCURSEL, 0, 0)
 				controls := map[string]bool{}
 				for name, hwnd := range map[string]uintptr{
@@ -194,7 +194,7 @@ func TestXLSXFallbackComponentRecovery(t *testing.T) {
 					app.xlsxSheetIndex != -1 || app.xlsxGridFont != 0 {
 					t.Errorf("%s stale workbook or other preview after corrupt XLSX", stage)
 				}
-				count, _, _ := procSendMessageW.Call(app.xlsxSheetCombo, CB_GETCOUNT, 0, 0)
+				count, _, _ := procSendMessageW.Call(app.xlsxSheetCombo, 0x0146 /* CB_GETCOUNT */, 0, 0)
 				if count != 0 || getText(app.xlsxGridEdit) != "" {
 					t.Errorf("%s stale XLSX sheet selector/grid after error, count=%d", stage, count)
 				}
@@ -226,7 +226,7 @@ func TestXLSXFallbackComponentRecovery(t *testing.T) {
 				if grid := getText(app.xlsxGridEdit); !strings.Contains(grid, "Bridge Work") || !strings.Contains(grid, "125000") || !strings.Contains(grid, "Coast Road") {
 					t.Errorf("%s displayed first grid lost workbook values: %q", stage, grid)
 				}
-				count, _, _ := procSendMessageW.Call(app.xlsxSheetCombo, CB_GETCOUNT, 0, 0)
+				count, _, _ := procSendMessageW.Call(app.xlsxSheetCombo, 0x0146 /* CB_GETCOUNT */, 0, 0)
 				if count != 2 {
 					t.Errorf("%s sheet selector count %d, want 2", stage, count)
 				}
@@ -255,7 +255,7 @@ func TestXLSXFallbackComponentRecovery(t *testing.T) {
 				getText(app.xlsxGridEdit) != "" {
 				t.Error("XLSX preview survived unload or leaked grid/font resources")
 			}
-			if got, _, _ := procSendMessageW.Call(app.xlsxSheetCombo, CB_GETCOUNT, 0, 0); got != 0 {
+			if got, _, _ := procSendMessageW.Call(app.xlsxSheetCombo, 0x0146 /* CB_GETCOUNT */, 0, 0); got != 0 {
 				t.Errorf("stale sheet options after final XLSX unload: %d", got)
 			}
 			for _, file := range []string{valid, invalid} {
