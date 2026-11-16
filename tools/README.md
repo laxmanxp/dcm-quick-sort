@@ -106,3 +106,21 @@ new busy/generation state, and only the new result being applied.
 An already-finished render is a failed observation, never interruption acceptance.
 No worker suspension, artificial delay, renderer substitution or process
 cancellation is used. Complete-state damage/protected gates run without tracing.
+
+
+## DCM-35 same-file preview release to file operation
+
+For the source-bound native default-PDF integration gate, after
+`flowdev update dcm-quicksort`, run `ui-tooling` and `build`, set
+`DCM_BUILD_RECEIPT` to the exact resulting build receipt, then run
+`flowdev test dcm-quicksort ui-preview-release-operations`.
+This suite uses `08-preview.pdf` in its disposable inbox, renders the first
+page, switches to TXT and verifies exclusive PDF access, then reselects the
+same PDF to drive actual QuickSort Rename/Undo and Move/Undo. It checks the
+original/restored SHA-256 and durable journal identity and that the app's
+owned processes exit normally. Review the captured GUI states separately;
+raw visual flags are not automatically user acceptance.
+
+This is the **default PDF** same-file operation contract. It does not certify
+all installed Office preview providers or replace the `ui-rename`,
+`ui-move`, or focused PDF lifecycle selectors.
