@@ -1096,16 +1096,17 @@
       "feature": "Verify preview cleanup and file release",
       "status": "implemented",
       "completion": "in_progress",
-      "ui_test": "pdf_close_inflight_bounded_PASS; broader_preview_cleanup_rename_move_pending",
+      "ui_test": "default_pdf_close_inflight_PASS; ui_rename_PASS; ui_move_PASS; sumatra_lifecycle_PASS; sumatra_pending_close_PASS; ui_previews_RED_at_pptx_combo_label; same_previewed_file_rename_move_not_yet_qualified",
       "user_test": "not_recorded",
       "parent_ids": [
         "DCM-PREVIEW-01"
       ],
       "acceptance": "After switching/closing previews, owned workers and file locks are released so rename/move can proceed.",
       "evidence": [
-        "qualification/evidence/dcm-35-pdf-close-inflight-2026-11-16.md"
+        "qualification/evidence/dcm-35-pdf-close-inflight-2026-11-16.md",
+        "qualification/evidence/dcm-35-rename-move-lifecycle-2026-11-16.md"
       ],
-      "qualification_note": "At tested source 72ad64b, registered pdf-shutdown-unit, ui-tooling, exact build and ui-pdf-close-inflight passed. Real renderer was alive before normal close, exited naturally (0), stale result discarded before host exit (0), cache PNG removed, both PDFs exclusively released and fixture bytes preserved. Two initial-state captures separately reviewed. Raw visual/user flags unchanged. No renaming/moving performed; full DCM-35 partial. DCM-34 remains partial; 32/50 complete."
+      "qualification_note": "At pushed 049b6cb, registered update/tooling/build, ui-rename (8 cases), ui-move (6), Sumatra lifecycle (11) and pending-close (3) pass with clean source/fixtures and normal viewer teardown; ui-previews remains RED at FlowUIVision PPTX label matching after 17 pass cases. No combined preview-release-then-rename/move same-file test yet. Parent DCM-35 remains partial and 50-step completion count unchanged (32/50). Raw failed receipt preserved."
     },
     {
       "id": "DCM-36",
