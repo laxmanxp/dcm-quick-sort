@@ -288,6 +288,18 @@
           "-Run",
           "^TestDCM26"
         ],
+        "pdf-bitmap-dpi": [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "tools/run-native.ps1",
+          "-Mode",
+          "regressions",
+          "-Run",
+          "^TestDCM34PDFBitmapDPI$",
+          "-ObservePDFDPI"
+        ],
         "pdf-protected-renderer": [
           "powershell.exe",
           "-NoProfile",
