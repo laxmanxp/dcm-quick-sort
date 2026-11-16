@@ -1,5 +1,11 @@
 # DCM-34 — preview failure and interruption states
 
+## 16 November 2026 — XLSX fallback headed capture blocked by shared-desktop foreground
+
+At pushed source `3f1ce14`, registered `xlsx-fallback-component` yielded missing-handler-boundary **PASS**, but failed-handler-boundary hit eight strict foreground-owned screenshot capture refusals. The full FlowDev selector exited 1, and its companion PPTX fallback selector was **not run**. A later read-only inspection saw Firefox foreground; temporal association is insufficient to prove the exact focus owner during each missed capture. No product rendering defect is inferred, and no foreign window was disturbed. Preserve the failed raw receipt and do not repeat headed tests until the desktop is available for uninterrupted exclusive capture. See [failed attempt evidence](evidence/dcm-34-office-fallback-foreground-blocker-2026-11-16.md).
+
+DCM-34 remains PARTIAL (32/50 complete). Completed PPTX/XLSX *normal* preview gates are unaffected, but the distinct simulated absent/failing Office-handler fallback tests remain pending full headed acceptance.
+
 ## 16 November 2026 — PDF raster-size discrepancy explained at observed DPI
 
 A fresh registered `flowdev test dcm-quicksort pdf-bitmap-dpi` **passed** at source `e97ba4dc4b717e6cb24906ac2bf62bdca5f0b7c1`. Lenovo's desktop is 120 DPI (125%); production WinRT render metadata 612 × 1000 logical DIPs corresponds exactly to 765 × 1250 decoded physical PNG pixels. Four additional rendering modes/repeats matched their DPI-derived dimensions, the fixture was preserved and exclusively released, and no display setting was changed. The exact 612 × 1000 discrepancy is therefore explained, not a raster-size defect. Earlier intermittent repeated-pixel differences remain historical evidence; the latest one-repeat was stable but does not guarantee universal pixel identity.
