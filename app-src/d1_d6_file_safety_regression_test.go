@@ -67,7 +67,14 @@ func TestD1ConflictActionsRefuseSameFileIdentity(t *testing.T) {
 				case "journaled-replace":
 					_, err = replaceMoveWithRecoveryJournaled(filepath.Join(root, "journal.jsonl"), source, target, filepath.Join(root, "recovery"))
 				}
-				if err == nil {
+				if alias == "case-alias" && operation == "inspect" {
+					// Safe case-only rename is a no-replace operation on the
+					// existing file, not duplicate removal or replacement.
+					// Those destructive operations must still refuse aliasing.
+					if err != nil {
+						t.Errorf("same-file case-only rename inspection was refused: %v", err)
+					}
+				} else if err == nil {
 					t.Error("conflict action accepted two paths for the same physical file")
 				}
 				d16WantBytes(t, source, "the only original bytes")
