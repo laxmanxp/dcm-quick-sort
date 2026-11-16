@@ -44,7 +44,7 @@ func TestDCM34PDFBitmapDPI(t *testing.T) {
 		"schema": 1, "milestone": "DCM-PDF-RENDER-SIZE-01",
 		"scope": "Real WinRT PDF rasterization and decoded PNG dimensions at desktop DPI; no window GUI, synthetic DPI settings, renderer change or provider registration mutation",
 		"started_utc": time.Now().UTC().Format(time.RFC3339Nano),
-		"passed": false, "feature_accepted": false, "user_test": "not_recorded",
+		"passed": false, "feature_accepted": false, "user_test": "not_recorded", "repeat_pixel_identity_accepted": false,
 		"desktop_dpi_queried": false, "display_settings_mutated": false,
 	}
 	defer func() {
@@ -92,6 +92,9 @@ func TestDCM34PDFBitmapDPI(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	var firstZoomPixels []byte
+	var firstZoomBounds image.Rectangle
+	var firstZoomMeta PDFRenderMetadata
 	// Multiple independent modes and viewport sizes distinguish a genuine
 	// logical-to-physical conversion from a coincidence at 612x1000.
 	for _, tc := range []struct {
@@ -104,6 +107,7 @@ func TestDCM34PDFBitmapDPI(t *testing.T) {
 	}{
 		{"zoom-100", false, false, 100, 612, 1000},
 		{"fit-page", true, false, 100, 500, 700},
+		{"fit-page-original-612x1000", true, false, 100, 612, 1000},
 		{"fit-width", false, true, 100, 500, 700},
 		{"zoom-100-repeat", false, false, 100, 612, 1000},
 	} {
@@ -164,6 +168,45 @@ func TestDCM34PDFBitmapDPI(t *testing.T) {
 			obs["png_sha256"] = fmt.Sprintf("%x", sha256.Sum256(encoded))
 			obs["decoded_pixel_sha256"] = fmt.Sprintf("%x", sha256.Sum256(rgba.Pix))
 			obs["png_bytes"] = len(encoded)
+			if tc.name == "zoom-100" {
+				firstZoomPixels = append([]byte(nil), rgba.Pix...)
+				firstZoomBounds, firstZoomMeta = bounds, meta
+			} else if tc.name == "zoom-100-repeat" {
+				if firstZoomMeta != meta || firstZoomBounds != bounds {
+					t.Errorf("same 100%% request changed logical or decoded dimensions: first=%+v/%v repeat=%+v/%v", firstZoomMeta, firstZoomBounds, meta, bounds)
+				} else {
+					changed := 0
+					maxChannelDelta := 0
+					minX, minY, maxX, maxY := bounds.Dx(), bounds.Dy(), -1, -1
+					for y := 0; y < bounds.Dy(); y++ {
+						for x := 0; x < bounds.Dx(); x++ {
+							i := y*rgba.Stride + x*4
+							different := false
+							for c := 0; c < 4; c++ {
+								delta := int(firstZoomPixels[i+c]) - int(rgba.Pix[i+c])
+								if delta < 0 { delta = -delta }
+								if delta > 0 { different = true }
+								if delta > maxChannelDelta { maxChannelDelta = delta }
+							}
+							if different {
+								changed++
+								if x < minX { minX = x }
+								if x > maxX { maxX = x }
+								if y < minY { minY = y }
+								if y > maxY { maxY = y }
+							}
+						}
+					}
+					obs["repeat_changed_pixels"] = changed
+					obs["repeat_changed_fraction"] = float64(changed) / float64(bounds.Dx()*bounds.Dy())
+					obs["repeat_max_channel_delta"] = maxChannelDelta
+					if changed > 0 {
+						obs["repeat_changed_bbox"] = []int{minX, minY, maxX, maxY}
+					}
+					obs["pixel_identity_not_asserted"] = true
+					t.Logf("100%% repeat: %d differing pixels, max channel delta %d; pixel equality intentionally not accepted", changed, maxChannelDelta)
+				}
+			}
 			// A single physical pixel can be rounded differently by WinRT
 			// at fractional DPI and fractional logical destination sizes.
 			deltaW := bounds.Dx() - expectedW
