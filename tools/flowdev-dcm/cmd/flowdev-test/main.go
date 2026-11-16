@@ -18,8 +18,7 @@ type repoRow struct { app, directory, origin, branch string }
 
 func parseRepoRows(b []byte) ([]repoRow,error) {
  var rows []repoRow
- for _,raw := range strings.Split(string(b),"
-") {
+ for _,raw := range strings.Split(string(b),string([]byte{10})) {
   line:=strings.TrimSpace(raw)
   if line=="" || strings.HasPrefix(line,"#") {continue}
   parts:=strings.Split(line,"|")
@@ -92,7 +91,7 @@ func test(path,profile,selector string,spec repoRow)error{
  app,ok:=cfg.Apps[appName];if !ok{return errors.New("missing registered application")}
  argv,ok:=app.Tests[selector]
  if !ok || len(argv)==0{return fmt.Errorf("unregistered test selector: %s",selector)}
- if strings.ContainsAny(argv[0],"/\:") {return errors.New("test executable must be a registered command name")}
+ if strings.ContainsAny(argv[0],string([]byte{47,92,58})) {return errors.New("test executable must be a registered command name")}
  // Avoid arbitrary shell execution: launch the registered executable directly.
  cmd:=exec.Command(argv[0],argv[1:]...)
  cmd.Dir=path;cmd.Stdin=os.Stdin;cmd.Stdout=os.Stdout;cmd.Stderr=os.Stderr
