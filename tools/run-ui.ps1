@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('basics','filters','rename','move','batch','pdf','previews')][string]$Suite='move',
+    [ValidateSet('basics','filters','rename','move','batch','pdf','previews','preview-release-operations')][string]$Suite='move',
     [string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,
     [string]$VisionExe=$env:DCM_FLOWUIVISION_EXE,
     [string]$PreviousFixtureInbox='C:\FlowverseReports\dcm-flowuivision-20261103\inbox'
@@ -431,6 +431,70 @@ try {
         Wait-For 'Undo status' {Status-Contains 'Undid processed transaction'}
         Assert-Journal 'undo-move-completed' @('01-alpha.txt') 'undone'
         Save-State 'undo-move-completed';$null=Save-Shot 'undo-move-completed'
+    }
+    if($Suite -eq 'preview-release-operations'){
+        # DCM-35: same source PDF through preview/release/rename/Undo/move/Undo.
+        $pdf='08-preview.pdf'
+        $old=Join-Path $fixture.inbox $pdf
+        $renamed=Join-Path $fixture.inbox '08-preview-released.pdf'
+        $digest=Hash $old
+        foreach($operation in @('rename','move')){
+            $null=[DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@($pdf))
+            Wait-For ('PDF ready before '+$operation) {
+                (Status-Contains 'DCM PDF Preview') -and (Status-Contains 'Page 1/2')
+            } 30
+            $cases.Add([ordered]@{name=('real-PDF-preview-before-'+$operation);passed=$true;sha256=(Hash $old)})
+            $null=Save-Shot ('pdf-before-'+$operation)
+            $null=[DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@('01-alpha.txt'))
+            Wait-For ('TXT after PDF '+$operation) {Status-Contains 'Plain-text preview: TXT'} 20
+            $handle=[IO.File]::Open($old,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::None)
+            $handle.Dispose()
+            if((Hash $old) -ne $digest){throw 'PDF changed during release'}
+            $cases.Add([ordered]@{name=('same-PDF-exclusively-released-before-'+$operation);passed=$true;sha256=$digest})
+            $null=Save-Shot ('text-after-pdf-'+$operation)
+            # Make the target explicit again. Operation succeeds even when the
+            # file is selected and its preview is active/settled.
+            $null=[DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@($pdf))
+            Wait-For ('PDF reselected for '+$operation) {
+                (Status-Contains 'DCM PDF Preview') -and (Status-Contains 'Page 1/2')
+            } 30
+            if($operation -eq 'rename'){
+                Invoke-Fvs 'released-pdf-rename-ready' "type newname `"08-preview-released`"`ninspect main`nexpect rename enabled"
+                [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1006)
+                Wait-For 'same PDF renamed' {
+                    -not(Test-Path -LiteralPath $old) -and
+                    (Test-Path -LiteralPath $renamed) -and
+                    [DcmNative]::IsWindowEnabled([DcmNative]::Control($script:hwnd,$script:app.Id,1008))
+                } 30
+                if((Hash $renamed) -ne $digest){throw 'Renamed PDF bytes changed'}
+                $renameID=Assert-RenameJournal 'released-pdf-rename-journal' $old $renamed 'completed'
+                $null=Save-Shot 'released-pdf-renamed'
+                [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1008)
+                Wait-For 'PDF rename Undo' {
+                    (Test-Path -LiteralPath $old) -and -not(Test-Path -LiteralPath $renamed)
+                } 30
+                $null=Assert-RenameJournal 'released-pdf-undo-rename-journal' $old $renamed 'undone' $renameID
+            } else {
+                Invoke-Fvs 'released-pdf-move-ready' "type destination `"Accepted`"`ninspect main`nexpect destination text=`"Accepted`"`nexpect move enabled"
+                [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1041)
+                Wait-Moved @($pdf)
+                Assert-Journal 'released-pdf-move-journal' @($pdf) 'completed'
+                $null=Save-Shot 'released-pdf-moved'
+                [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1008)
+                Wait-Restored @($pdf)
+                Assert-Journal 'released-pdf-undo-move-journal' @($pdf) 'undone'
+            }
+            if((Hash $old) -ne $digest){throw 'PDF Undo bytes changed'}
+            Assert-Fixtures
+            $cases.Add([ordered]@{name=('same-PDF-'+$operation+'-undo-bytes-preserved');passed=$true;sha256=$digest})
+            $null=Save-Shot ('released-pdf-'+$operation+'-undone')
+        }
+        $null=[DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@('01-alpha.txt'))
+        Wait-For 'final TXT after PDF operations' {Status-Contains 'Plain-text preview: TXT'} 20
+        $handle=[IO.File]::Open($old,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::None)
+        $handle.Dispose()
+        Assert-Fixtures
+        $cases.Add([ordered]@{name='final-PDF-exclusively-released-and-fixtures-preserved';passed=$true;sha256=(Hash $old)})
     }
     if($Suite -eq 'batch'){
         $names=[string[]]@('02-bravo.txt','03-charlie.txt')
