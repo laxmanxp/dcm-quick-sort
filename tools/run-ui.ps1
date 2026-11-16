@@ -437,7 +437,7 @@ try {
         $digest=Hash $old
         foreach($scenario in @(
             @{label='spaces';stem='Odisha Project Notes'},
-            @{label='unicode';stem='Café Odisha 2026'},
+            @{label='unicode';stem=('Caf'+[char]0x00E9+' Odisha 2026')},
             @{label='case-only';stem='01-ALPHA'}
         )){
             $targetName=$scenario.stem+'.txt'
