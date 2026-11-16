@@ -24,7 +24,7 @@
   },
   "schema_version": 1,
   "app": "DCM QuickSort",
-  "updated_on": "2026-11-16",
+  "updated_on": "2026-11-17",
   "candidate_version": "v1.0.71",
   "branch": "release/v1.0.71",
   "baseline_commit": "3f7784583b0ebc292ea1572373b6bcbea22cad44",
@@ -1202,9 +1202,9 @@
     {
       "id": "DCM-41",
       "feature": "Verify conflict choices",
-      "status": "planned",
-      "completion": "pending",
-      "ui_test": "not_run",
+      "status": "tested",
+      "completion": "complete",
+      "ui_test": "desktop6b6eh4t_flowdev_ui_conflicts_PASS_18_cases_10_images",
       "user_test": "not_recorded",
       "parent_ids": [
         "D1",
@@ -1212,7 +1212,11 @@
         "D6"
       ],
       "acceptance": "Exercise the existing Skip, Keep Both, Replace and duplicate choices on disposable fixtures; each follows its documented data-preservation contract.",
-      "evidence": []
+      "evidence": [
+        "qualification/evidence/dcm-41-conflict-choices-desktop-2026-11-17.md"
+      ],
+      "qualification_note": "Bounded engineering acceptance at pushed d668dfb on DESKTOP-6B6EH4T: FlowDev update/tooling/exact build and native ui-conflicts PASS 18 cases, 10 actual screenshots independently reviewed. Skip and exact-duplicate-No preserved both source/destination files and unchanged journal; Keep Both created numbered filename while preserving old destination; Replace created hash-verified displaced-destination backup; exact-duplicate-Yes safely removed source after background hash verification. Keep Both, Replace and duplicate-removed all Undo restored original hashes and current durable transaction IDs. After each scenario full disposable fixtures restored. Source unchanged, owned app closed. Prior RED harness receipts retained. user_test not_recorded.",
+      "scope_note": "Representative same-volume single-file conflict choices and session Undo; not malicious races, arbitrary ACL/network, power loss or manual user sign-off."
     },
     {
       "id": "DCM-42",
