@@ -575,7 +575,7 @@ try {
             $null=Save-Shot ('dcm38-'+$label+'-rejected')
         }
         Invoke-Fvs 'dcm38-valid-vault-location' "type destination `"Accepted`"`ninspect main`nexpect destination text=`"Accepted`"`nexpect move enabled"
-        $selected=@([DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@('01-alpha.txt'))
+        $selected=@([DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@('01-alpha.txt')))
         if($selected.Count -ne 1){throw 'Valid destination does not have exactly one selected source'}
         $actualDestination=[IO.Path]::GetFullPath($fixture.destination)
         if(-not(Test-Path -LiteralPath $actualDestination -PathType Container)){throw 'Test Vault destination unexpectedly missing'}
