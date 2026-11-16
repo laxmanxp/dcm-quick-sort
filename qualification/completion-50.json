@@ -1166,16 +1166,20 @@
     {
       "id": "DCM-39",
       "feature": "Verify a same-volume Move",
-      "status": "planned",
-      "completion": "pending",
-      "ui_test": "not_run",
+      "status": "tested",
+      "completion": "complete",
+      "ui_test": "desktop6b6eh4t_flowdev_ui_move_PASS_6_cases_5_images",
       "user_test": "not_recorded",
       "parent_ids": [
         "D2",
         "DCM-NATIVE-01"
       ],
       "acceptance": "Normal UI movement affects only the selected fixture; independent source/destination and hash checks match the displayed outcome.",
-      "evidence": []
+      "evidence": [
+        "qualification/evidence/dcm-39-same-volume-move-desktop-2026-11-16.md"
+      ],
+      "qualification_note": "Accepted bounded engineering on DESKTOP-6B6EH4T. Tested pushed fd694c7, registered update/ui-tooling/build and ui-move PASS 6 cases, 5 actual screenshots individually reviewed. Same E: volume: selected 01-alpha.txt only moved from disposable inbox into Vault/Accepted; source absent, destination original SHA-256, all other fixtures unchanged, completed journal, restart recovered transaction, native Undo restored original path/bytes and journal undone. Source unchanged and all owned processes closed. Physical user test not recorded. DCM-40 cross-volume remains separate.",
+      "scope_note": "Actual isolated E: same-volume normal UI path; not cross-volume, arbitrary ACL/UNC, junction, disconnection, or end-user physical sign-off."
     },
     {
       "id": "DCM-40",
