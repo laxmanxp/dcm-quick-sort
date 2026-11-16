@@ -754,7 +754,7 @@ try {
                     if((Hash $dst) -ne $expectedDestinationHash){throw 'Keep Both modified original destination'}
                 }
                 if($label -eq 'replace'){$kind='replace'}
-                if($label -eq 'duplicate-yes'){$kind='duplicate_removed'}
+                if($label -eq 'duplicate-yes'){$kind='duplicate-removed'}
                 if((Hash $finalTarget) -ne $originalHash){throw ('DCM-41 '+$label+' moved bytes differ')}
                 $events=@(Get-Content -LiteralPath $journal -Encoding UTF8 | Where-Object {$_.Trim()} | ForEach-Object {$_|ConvertFrom-Json})
                 $records=@($events|Where-Object {$_.record.from -eq $src -and $_.record.to -eq $finalTarget})
