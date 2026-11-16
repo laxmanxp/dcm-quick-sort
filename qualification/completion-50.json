@@ -1132,15 +1132,19 @@
     {
       "id": "DCM-37",
       "feature": "Verify Undo Rename",
-      "status": "planned",
-      "completion": "pending",
-      "ui_test": "not_run",
+      "status": "tested",
+      "completion": "complete",
+      "ui_test": "desktop6b6eh4t_flowdev_ui_undo_rename_PASS_9_cases_6_images",
       "user_test": "not_recorded",
       "parent_ids": [
         "DCM-NATIVE-01"
       ],
       "acceptance": "Undo the selected rename; original name and bytes return without overwriting an occupied old location.",
-      "evidence": []
+      "evidence": [
+        "qualification/evidence/dcm-37-undo-rename-desktop-2026-11-16.md"
+      ],
+      "qualification_note": "Accepted bounded engineering on DESKTOP-6B6EH4T. Tested source d5cd6df, isolated profile adapter update/tooling/build and ui-undo-rename all passed. Normal UI Rename persisted across restart, blocked Undo when original path occupied by distinct-content disposable collision, retained both hashes and journal, then restored name/bytes and pending-completed-undone identity when collision cleared. 9 cases, 6 captures independently reviewed, source unchanged, owned processes closed, user_test not_recorded. DCM-34 and DCM-19 remain open.",
+      "scope_note": "Only representative disposable Windows file and journal scenario; no physical user acceptance or arbitrary reparse-point/FS coverage."
     },
     {
       "id": "DCM-38",
