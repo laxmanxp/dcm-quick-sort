@@ -293,6 +293,12 @@ function Confirm-Dialog([string]$Title,[string[]]$TextFragments,[int]$Button=6){
     Wait-For 'confirmation closed' { @([DcmNative]::Dialogs($script:hwnd,$script:app.Id)).Count -eq 0 } 10 -AllowDialog
 }
 function Status-Contains([string]$Text){return @([DcmNative]::Snapshot($script:hwnd,$script:app.Id) | Where-Object {$_.Visible -and $_.Text.Contains($Text)}).Count -gt 0}
+function OfficeStatusContains([string]$Text){
+    # Host-owned top-level status controls only. The installed Office preview
+    # subtree may legitimately contain windows from another provider PID.
+    $captions=@([DcmDocxProbe]::HostStatics($script:hwnd,$script:app.Id) | ForEach-Object {[DcmNative]::Text([IntPtr]$_,$script:app.Id)})
+    return @($captions | Where-Object {$_.Contains($Text)}).Count -gt 0
+}
 function Assert-List([string]$Name,[string[]]$Expected,[switch]$Ordered){
     $actual=@([DcmNative]::ListItems($script:hwnd,$script:app.Id,1016))
     $left=$actual;$right=$Expected
@@ -340,6 +346,10 @@ try {
     Add-Type -AssemblyName System.Drawing
     Add-Type -AssemblyName System.Windows.Forms
     Add-Type -Path (Join-Path $repo 'tests\native\dcm-native.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
+    if($Suite -eq 'office-preview-release-operations'){
+        Add-Type -AssemblyName UIAutomationClient;Add-Type -AssemblyName UIAutomationTypes;Add-Type -AssemblyName WindowsBase
+        Add-Type -Path (Join-Path $repo 'tests/native/dcm-docx-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll',([Windows.Automation.AutomationElement]).Assembly.Location,([Windows.Automation.AutomationPattern]).Assembly.Location,([Windows.Point]).Assembly.Location)
+    }
     if($Suite -eq 'pdf'){Add-Type -Path (Join-Path $repo 'tests/native/dcm-image-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')}
     . (Join-Path $repo 'tests\native\new-fixtures.ps1')
     $fixture=New-DcmFixtures $lab
@@ -525,13 +535,13 @@ try {
                 $null=[DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@($file))
                 Wait-For ('Office provider for '+$key) {
                     $found=$false
-                    foreach($prefix in $item.status){if(Status-Contains $prefix){$found=$true}}
+                    foreach($prefix in $item.status){if(OfficeStatusContains $prefix){$found=$true}}
                     return $found
                 } 30
-                $cases.Add([ordered]@{name=('office-preview-before-'+$key);passed=$true;sha256=$digest;status=@([DcmNative]::Snapshot($script:hwnd,$script:app.Id)|Where-Object {$_.Visible -and $_.Text -match 'preview'})})
+                $cases.Add([ordered]@{name=('office-preview-before-'+$key);passed=$true;sha256=$digest;status=@([DcmDocxProbe]::HostStatics($script:hwnd,$script:app.Id)|ForEach-Object {[DcmNative]::Text([IntPtr]$_,$script:app.Id)}|Where-Object {$_ -match 'preview'})})
                 $null=Save-Shot ('office-before-'+$key)
                 $null=[DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@('01-alpha.txt'))
-                Wait-For ('TXT after Office '+$key) {Status-Contains 'Plain-text preview: TXT'} 20
+                Wait-For ('TXT after Office '+$key) {OfficeStatusContains 'Plain-text preview: TXT'} 20
                 # Retry only the lock oracle while a genuine provider releases.
                 $until=[DateTime]::UtcNow.AddSeconds(12)
                 $released=$false
@@ -551,7 +561,7 @@ try {
                 $null=[DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@($file))
                 Wait-For ('Office reselected for '+$key) {
                     $found=$false
-                    foreach($prefix in $item.status){if(Status-Contains $prefix){$found=$true}}
+                    foreach($prefix in $item.status){if(OfficeStatusContains $prefix){$found=$true}}
                     return $found
                 } 30
                 if($operation -eq 'rename'){
@@ -587,7 +597,7 @@ try {
             }
         }
         $null=[DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@('01-alpha.txt'))
-        Wait-For 'final TXT after Office operations' {Status-Contains 'Plain-text preview: TXT'} 20
+        Wait-For 'final TXT after Office operations' {OfficeStatusContains 'Plain-text preview: TXT'} 20
         foreach($item in $items){
             $p=Join-Path $fixture.inbox $item.file
             $h=[IO.File]::Open($p,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::None)
