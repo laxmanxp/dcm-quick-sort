@@ -18,6 +18,7 @@ if ($CaptureDOCXComponent -and $CapturePPTXComponent) { throw 'Only one componen
 
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $workspace = [IO.Path]::GetFullPath($env:FLOWDEV_WORKSPACE_ROOT)
+. (Join-Path $PSScriptRoot 'flowdev-checkpoint.ps1')
 $report = Join-Path $workspace ('dcm-quicksort-' + $Mode + '-' + [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss') + '-' + [Guid]::NewGuid().ToString('N').Substring(0,8))
 if ($report.StartsWith($repo + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { throw 'Reports must be outside the candidate checkout.' }
 New-Item -ItemType Directory -Path $report | Out-Null
@@ -42,9 +43,8 @@ function Write-Json([string]$Path, $Value) {
 }
 function Write-Checkpoint([string]$Phase, $Details) {
     $checkpoint = [ordered]@{schema=1;app='dcm-quicksort';mode=$Mode;runner_pid=$PID;updated_utc=[DateTime]::UtcNow.ToString('o');phase=$Phase;details=$Details}
-    $temporary = Join-Path $report 'active-step.tmp'
-    Write-Json $temporary $checkpoint
-    Move-Item -LiteralPath $temporary -Destination (Join-Path $report 'active-step.json') -Force
+    $json = $checkpoint | ConvertTo-Json -Depth 30
+    Write-FlowDevCheckpoint -Path (Join-Path $report 'active-step.json') -Json $json | Out-Null
 }
 function Quote-Argument([string]$Value) {
     # Windows CommandLineToArgvW quoting, including terminal backslashes.
