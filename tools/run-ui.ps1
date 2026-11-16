@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('basics','filters','rename','rename-edge','undo-rename','destination','move','batch','pdf','previews','preview-release-operations','office-preview-release-operations')][string]$Suite='move',
+    [ValidateSet('basics','filters','rename','rename-edge','undo-rename','destination','move','cross-volume','batch','pdf','previews','preview-release-operations','office-preview-release-operations')][string]$Suite='move',
     [string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,
     [string]$VisionExe=$env:DCM_FLOWUIVISION_EXE,
     [string]$PreviousFixtureInbox='C:\FlowverseReports\dcm-flowuivision-20261103\inbox'
@@ -357,6 +357,31 @@ try {
     if($Suite -eq 'pdf'){Add-Type -Path (Join-Path $repo 'tests/native/dcm-image-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')}
     . (Join-Path $repo 'tests\native\new-fixtures.ps1')
     $fixture=New-DcmFixtures $lab
+    if($Suite -eq 'cross-volume'){
+        # The only off-workspace write location is a fresh, test-owned directory
+        # on the distinct D: NTFS volume. Never use or overwrite user files.
+        $srcVolume=Get-Volume -DriveLetter E -ErrorAction Stop
+        $dstVolume=Get-Volume -DriveLetter D -ErrorAction Stop
+        if($srcVolume.UniqueId -eq $dstVolume.UniqueId){throw 'DCM-40 requires physically distinct source/destination volumes'}
+        if($dstVolume.FileSystem -ne 'NTFS'){throw 'DCM-40 target must be NTFS'}
+        $base='D:\FlowverseTesting\DCM-QuickSort'
+        $secondary=Join-Path $base ('DCM40-'+$id)
+        if(Test-Path -LiteralPath $secondary){throw 'DCM-40 destination already exists; no overwrite allowed'}
+        if(-not(Test-Path -LiteralPath 'D:\' -PathType Container)){throw 'D: volume not mounted'}
+        New-Item -ItemType Directory -Path $secondary -Force | Out-Null
+        $marker=Join-Path $secondary '.dcm40-disposable-test-owned'
+        [IO.File]::WriteAllText($marker,('Source report: '+$lab),$utf8)
+        $newDestination=Join-Path $secondary 'Accepted'
+        New-Item -ItemType Directory -Path $newDestination | Out-Null
+        $settingsPath=Join-Path $fixture.config 'settings.json'
+        $settings=Get-Content -LiteralPath $settingsPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        $settings.vault_root=$secondary
+        [IO.File]::WriteAllText($settingsPath,($settings|ConvertTo-Json),$utf8)
+        $fixture.vault=$secondary
+        $fixture.destination=$newDestination
+        $receipt['cross_volume']=[ordered]@{source_volume=$srcVolume.UniqueId;target_volume=$dstVolume.UniqueId;source_drive='E:';target_drive='D:';isolated_root=$secondary;ownership_marker=$marker;test_files_only=$true}
+        if((Get-ChildItem -LiteralPath $newDestination -Force | Measure-Object).Count -ne 0){throw 'Cross-volume destination is not empty'}
+    }
     $receipt['configuration_backup_root']=Join-Path $lab 'configuration-backups'
     New-Item -ItemType Directory -Path (Join-Path $lab 'temp') | Out-Null
     if($Suite -in @('previews','office-preview-release-operations')){
@@ -598,6 +623,72 @@ try {
         if((Hash $source) -ne $initialHash){throw 'Valid destination Undo altered source'}
         $cases.Add([ordered]@{name='dcm38-valid-location-undo-restored-fixtures';passed=$true;sha256=$initialHash})
         $null=Save-Shot 'dcm38-valid-location-undone'
+    }
+    if($Suite -eq 'cross-volume'){
+        $source=Join-Path $fixture.inbox '01-alpha.txt'
+        $target=Join-Path $fixture.destination '01-alpha.txt'
+        $digest=Hash $source
+        $other=@($initial|Where-Object {$_.name -ne '01-alpha.txt'})
+        $marker=Join-Path $fixture.vault '.dcm40-disposable-test-owned'
+        if(-not(Test-Path -LiteralPath $marker -PathType Leaf)){throw 'Cross-volume ownership marker absent'}
+        if([IO.Path]::GetPathRoot($source) -eq [IO.Path]::GetPathRoot($target)){throw 'Cross-volume test accidentally targets same drive'}
+        Invoke-Fvs 'dcm40-valid-cross-volume' "click clear`ntype name `"01-alpha`"`nwait_ready type=textbox target=newname text=`"01-alpha`" timeout=5s`ntype destination `"Accepted`"`ninspect main`nexpect destination text=`"Accepted`"`nexpect move enabled"
+        $selected=@([DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@('01-alpha.txt')))
+        if($selected.Count -ne 1){throw 'Cross-volume selector did not select exactly one file'}
+        $cases.Add([ordered]@{name='dcm40-real-distinct-E-to-D-volumes-and-selection';passed=$true;from=$source;to=$target;source_volume=$receipt.cross_volume.source_volume;target_volume=$receipt.cross_volume.target_volume})
+        $null=Save-Shot 'dcm40-before-copy'
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1041)
+        Wait-Moved @('01-alpha.txt')
+        Assert-Journal 'dcm40-cross-volume-completed' @('01-alpha.txt') 'completed'
+        if((Hash $target) -ne $digest){throw 'Cross-volume destination copy differs from source hash'}
+        foreach($item in $other){
+            if((Hash (Join-Path $fixture.inbox $item.name)) -ne $item.sha256){throw ('Unselected file changed: '+$item.name)}
+        }
+        $cases.Add([ordered]@{name='dcm40-copy-verified-and-source-safely-removed';passed=$true;sha256=$digest})
+        $null=Save-Shot 'dcm40-cross-volume-moved'
+        Stop-OwnedApp;Start-OwnedApp
+        Invoke-Fvs 'dcm40-recovery-search' "type processedsearch `"01-alpha`"`ninspect main"
+        $items=[DcmNative]::ListItems($script:hwnd,$script:app.Id,1017)
+        $indices=@()
+        for($i=0;$i -lt $items.Length;$i++){if($items[$i].Contains('01-alpha')){$indices+=$i}}
+        if($indices.Count -ne 1){throw 'Cross-volume move was not recovered after restart'}
+        $null=[DcmNative]::SelectSingleItem($script:hwnd,$script:app.Id,1017,$indices[0])
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1008)
+        Wait-Restored @('01-alpha.txt')
+        Assert-Journal 'dcm40-cross-volume-undone' @('01-alpha.txt') 'undone'
+        if((Hash $source) -ne $digest){throw 'Cross-volume Undo source hash mismatch'}
+        Assert-Fixtures
+        $cases.Add([ordered]@{name='dcm40-cross-volume-restart-and-undo-preserves-bytes';passed=$true;sha256=$digest})
+        $null=Save-Shot 'dcm40-cross-volume-undone'
+
+        # Hold a share-read-only handle: copy is permitted, but delete/rename
+        # of the original is denied on NTFS. The result MUST be attention,
+        # not success and not source loss.
+        $null=[DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@('01-alpha.txt'))
+        Invoke-Fvs 'dcm40-partial-ready' "type destination `"Accepted`"`ninspect main`nexpect move enabled"
+        $hold=[IO.File]::Open($source,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read)
+        try {
+            [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1041)
+            Confirm-Dialog 'DCM - Quick Sort' @('Review these files before retrying','Source:') 2
+            if(-not(Test-Path -LiteralPath $source -PathType Leaf)){throw 'Guarded source retirement lost original file'}
+            if(-not(Test-Path -LiteralPath $target -PathType Leaf)){throw 'Expected retained verified copy absent on partial failure'}
+            if((Hash $source) -ne $digest -or (Hash $target) -ne $digest){throw 'Partial move copied file or original bytes mismatch'}
+            $path=Join-Path $fixture.config 'recovery/move-journal.jsonl'
+            $events=@(Get-Content -LiteralPath $path -Encoding UTF8 | Where-Object {$_.Trim()} | ForEach-Object {$_|ConvertFrom-Json})
+            $matching=@($events|Where-Object {$_.record.from -eq $source -and $_.record.to -eq $target})
+            if($matching.Count -lt 5 -or $matching[-1].state -ne 'attention'){throw 'Partial move did not record attention state'}
+            if(-not(Status-Contains 'Source retained; the move needs attention')){throw 'Partial move UI did not report attention-required state'}
+            foreach($item in $other){
+                if((Hash (Join-Path $fixture.inbox $item.name)) -ne $item.sha256){throw ('Partial failure modified unselected '+$item.name)}
+            }
+            $cases.Add([ordered]@{name='dcm40-retirement-refused-source-and-copy-both-retained-attention';passed=$true;source_sha256=(Hash $source);destination_sha256=(Hash $target);journal_terminal_state=$matching[-1].state})
+            $null=Save-Shot 'dcm40-source-retained-attention'
+        }finally{
+            $hold.Dispose()
+        }
+        # Preserve the partial copy and attention journal as immutable evidence
+        # within uniquely marked disposable test locations. Never auto-delete.
+        $receipt['partial_failure_preserved']=[ordered]@{source=$source;destination=$target;sha256=$digest;journal=(Join-Path $fixture.config 'recovery/move-journal.jsonl');ownership_marker=$marker}
     }
     if($Suite -eq 'move'){
         Invoke-Fvs 'move-readiness' "click clear`ntype name `"01-alpha`"`nwait_ready type=textbox target=newname text=`"01-alpha`" timeout=5s`ntype destination `"Accepted`"`ninspect main`nexpect destination text=`"Accepted`"`nexpect move enabled"
