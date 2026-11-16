@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('basics','filters','rename','rename-edge','undo-rename','destination','move','cross-volume','conflicts','batch','pdf','previews','preview-release-operations','office-preview-release-operations')][string]$Suite='move',
+    [ValidateSet('basics','filters','rename','rename-edge','undo-rename','destination','move','cross-volume','conflicts','batch','batch-partial','pdf','previews','preview-release-operations','office-preview-release-operations')][string]$Suite='move',
     [string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,
     [string]$VisionExe=$env:DCM_FLOWUIVISION_EXE,
     [string]$PreviousFixtureInbox='C:\FlowverseReports\dcm-flowuivision-20261103\inbox'
@@ -1000,6 +1000,70 @@ try {
         Wait-For 'batch restored status' {Status-Contains 'Undid latest batch: 2 file(s) restored'}
         Assert-Journal 'undo-batch-completed' $names 'undone' -Batch
         Save-State 'undo-batch-completed';$null=Save-Shot 'undo-batch-completed'
+    }
+    if($Suite -eq 'batch-partial'){
+        # DCM-42 supplemental: one selected file is moved successfully,
+        # one has a pre-existing disposable conflicting target and is skipped.
+        # Both remain members of the confirmed two-file plan, but only the
+        # successful move has a completed transaction in the journal.
+        $names=[string[]]@('02-bravo.txt','03-charlie.txt')
+        $bravo=Join-Path $fixture.inbox '02-bravo.txt'
+        $charlie=Join-Path $fixture.inbox '03-charlie.txt'
+        $bravoTarget=Join-Path $fixture.destination '02-bravo.txt'
+        $charlieTarget=Join-Path $fixture.destination '03-charlie.txt'
+        $bravoSHA=Hash $bravo
+        $charlieSHA=Hash $charlie
+        $collision=[Text.Encoding]::UTF8.GetBytes('DCM42-SYNTHETIC-CONFLICT-DISTINCT-CONTENTS')
+        [IO.File]::WriteAllBytes($charlieTarget,$collision)
+        $collisionSHA=Hash $charlieTarget
+        if($collisionSHA -eq $charlieSHA){throw 'DCM-42 collision accidentally identical'}
+        Invoke-Fvs 'batch-partial-readiness' "click clear`ntype destination `"Accepted`"`ninspect main`nexpect destination text=`"Accepted`""
+        $idx=@([DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,$names))
+        if($idx.Count -ne 2){throw 'DCM-42 partial batch selected wrong number of files'}
+        $cases.Add([ordered]@{name='batch-partial-select-exact-two-files';passed=$true;files=$names;indexes=$idx})
+        $null=Save-Shot 'batch-partial-selection'
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1041)
+        Confirm-Dialog 'Move Selected Files to Vault' @('Move 2 selected files',$fixture.destination)
+        Confirm-Dialog 'Filename Conflict' @('03-charlie.txt','Keep Both','Replace') 2
+        Wait-For 'DCM-42 mixed result status' {Status-Contains 'Batch move finished: 1 moved; 1 skipped or failed out of 2'} 30
+        if(Test-Path -LiteralPath $bravo){throw 'Successful batch source was not removed'}
+        if(-not(Test-Path -LiteralPath $bravoTarget)){throw 'Successful batch destination absent'}
+        if((Hash $bravoTarget) -ne $bravoSHA){throw 'Successful batch destination hash mismatch'}
+        if((Hash $charlie) -ne $charlieSHA -or (Hash $charlieTarget) -ne $collisionSHA){throw 'Skipped file or conflicting destination changed'}
+        foreach($name in @('01-alpha.txt','08-preview.pdf')){
+            $item=@($initial|Where-Object{$_.name -eq $name})
+            if($item.Count -ne 1 -or (Hash (Join-Path $fixture.inbox $name)) -ne $item[0].sha256){throw ('Unselected fixture changed: '+$name)}
+        }
+        $journal=Join-Path $fixture.config 'recovery/move-journal.jsonl'
+        $events=@(Get-Content -LiteralPath $journal -Encoding UTF8 | Where-Object{$_.Trim()} | ForEach-Object{$_|ConvertFrom-Json})
+        $success=@($events|Where-Object{$_.record.from -eq $bravo -and $_.record.to -eq $bravoTarget})
+        $skipped=@($events|Where-Object{$_.record.from -eq $charlie})
+        if($success.Count -lt 2 -or $success[0].state -ne 'pending' -or $success[-1].state -ne 'completed'){throw 'Successful batch member journal not completed'}
+        if($skipped.Count -ne 0){throw 'Skipped batch member received a false success or journal transaction'}
+        $batchID=[string]$success[-1].record.batch_id
+        if(-not $batchID -or $batchID -notlike 'batch-*'){throw 'Successful member missing batch identity'}
+        if(@($success|Where-Object{$_.record.batch_id -ne $batchID}).Count -gt 0){throw 'Batch identity inconsistent across journal events'}
+        $cases.Add([ordered]@{name='batch-partial-per-file-results-and-journal-membership';passed=$true;moved='02-bravo.txt';skipped='03-charlie.txt';batch_id=$batchID;source_sha256=$bravoSHA;skipped_sha256=$charlieSHA;collision_sha256=$collisionSHA})
+        $null=Save-Shot 'batch-partial-completed'
+        Stop-OwnedApp;Start-OwnedApp
+        Invoke-Fvs 'batch-partial-recovery' "inspect main`nexpect undobatch enabled"
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1048)
+        Confirm-Dialog 'Undo Latest Batch' @('Undo the latest batch of 1 processed file(s)')
+        Wait-For 'partial batch restored' {
+            (Test-Path -LiteralPath $bravo) -and (-not(Test-Path -LiteralPath $bravoTarget))
+        } 30
+        Wait-For 'partial batch Undo status' {Status-Contains 'Undid latest batch: 1 file(s) restored'} 20
+        if((Hash $bravo) -ne $bravoSHA -or (Hash $charlie) -ne $charlieSHA -or (Hash $charlieTarget) -ne $collisionSHA){throw 'Partial batch Undo corrupted file bytes'}
+        $events=@(Get-Content -LiteralPath $journal -Encoding UTF8 | Where-Object{$_.Trim()} | ForEach-Object{$_|ConvertFrom-Json})
+        $success=@($events|Where-Object{$_.record.from -eq $bravo -and $_.record.to -eq $bravoTarget})
+        if($success[-1].state -ne 'undone' -or $success[-1].record.batch_id -ne $batchID){throw 'Partial batch Undo journal mismatch'}
+        if(@($events|Where-Object{$_.record.from -eq $charlie}).Count -gt 0){throw 'Partial batch Undo inserted skipped member journal'}
+        $cases.Add([ordered]@{name='batch-partial-restart-and-only-successful-member-undo';passed=$true;batch_id=$batchID;original_hash=$bravoSHA})
+        $null=Save-Shot 'batch-partial-undone'
+        if((Hash $charlieTarget) -ne $collisionSHA){throw 'Test-owned collision file altered before cleanup'}
+        Remove-Item -LiteralPath $charlieTarget -Force
+        Assert-Fixtures
+        $cases.Add([ordered]@{name='batch-partial-fully-restored-fixtures';passed=$true})
     }
     if($Suite -in @('pdf','previews')){
         Invoke-Fvs 'pdf-open' "click clear`ntype name `"08-preview`"`nwait_ready type=textbox target=newname text=`"08-preview`" timeout=5s`nwait_ready type=control target=pdfstatus text~=`"Page 1/2`" timeout=20s`ninspect main`nexpect pdfstatus text~=`"Fit Width`""
