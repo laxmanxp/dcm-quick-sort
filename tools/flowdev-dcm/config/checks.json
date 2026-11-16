@@ -403,6 +403,18 @@
           "^TestDCM34DOCXFallbackComponent$",
           "-CaptureDOCXComponent"
         ],
+        "xlsx-fallback-component": [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "tools/run-native.ps1",
+          "-Mode",
+          "regressions",
+          "-Run",
+          "^TestXLSXFallbackComponentRecovery$",
+          "-CaptureXLSXComponent"
+        ],
         "xlsx-unit": [
           "powershell.exe",
           "-NoProfile",
