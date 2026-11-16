@@ -406,6 +406,13 @@
           "-Run",
           "^(Test(XLSX|RenderXLSX)|Test(OpenXML|InspectOpenXML|ResolveOpenXML|ReadOpenXML|ReadZipEntryLimited|OfficeFoundation))"
         ],
+        "checkpoint-unit": [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "tools/test-flowdev-checkpoint.ps1"
+        ],
         "pptx-unit": [
           "powershell.exe",
           "-NoProfile",
