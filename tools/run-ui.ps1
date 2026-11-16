@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('basics','filters','rename','rename-edge','undo-rename','destination','move','cross-volume','batch','pdf','previews','preview-release-operations','office-preview-release-operations')][string]$Suite='move',
+    [ValidateSet('basics','filters','rename','rename-edge','undo-rename','destination','move','cross-volume','conflicts','batch','pdf','previews','preview-release-operations','office-preview-release-operations')][string]$Suite='move',
     [string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,
     [string]$VisionExe=$env:DCM_FLOWUIVISION_EXE,
     [string]$PreviousFixtureInbox='C:\FlowverseReports\dcm-flowuivision-20261103\inbox'
@@ -689,6 +689,104 @@ try {
         # Preserve the partial copy and attention journal as immutable evidence
         # within uniquely marked disposable test locations. Never auto-delete.
         $receipt['partial_failure_preserved']=[ordered]@{source=$source;destination=$target;sha256=$digest;journal=(Join-Path $fixture.config 'recovery/move-journal.jsonl');ownership_marker=$marker}
+    }
+    if($Suite -eq 'conflicts'){
+        # DCM-41: Every conflicting file is created by this disposable test.
+        # The app owns every move, conflict decision and Undo. The harness
+        # exclusively owns setup and independent file/journal verification.
+        $name='01-alpha.txt'
+        $src=Join-Path $fixture.inbox $name
+        $dst=Join-Path $fixture.destination $name
+        $originalHash=Hash $src
+        $journal=Join-Path $fixture.config 'recovery/move-journal.jsonl'
+        $seed=[Text.Encoding]::UTF8.GetBytes('DCM41-EXISTING-DESTINATION-DIFFERENT-BYTES')
+        $scenarioList=@(
+            @{label='skip';kind='different';button=2},
+            @{label='keep-both';kind='different';button=6},
+            @{label='replace';kind='different';button=7},
+            @{label='duplicate-no';kind='duplicate';button=7},
+            @{label='duplicate-yes';kind='duplicate';button=6}
+        )
+        foreach($scenario in $scenarioList){
+            $label=[string]$scenario.label
+            if(-not(Test-Path -LiteralPath $src -PathType Leaf) -or (Test-Path -LiteralPath $dst)){throw ('DCM-41 precondition failed for '+$label)}
+            $expectedDestinationHash=''
+            if($scenario.kind -eq 'different'){
+                [IO.File]::WriteAllBytes($dst,$seed)
+                $expectedDestinationHash=Hash $dst
+                if($expectedDestinationHash -eq $originalHash){throw 'Different-file seed unexpectedly identical'}
+            }else{
+                Copy-Item -LiteralPath $src -Destination $dst -ErrorAction Stop
+                $expectedDestinationHash=Hash $dst
+                if($expectedDestinationHash -ne $originalHash){throw 'Duplicate seed differs'}
+            }
+            $before=if(Test-Path -LiteralPath $journal){Hash $journal}else{''}
+            Invoke-Fvs ('dcm41-'+$label+'-ready') "click clear`ntype name `"01-alpha`"`nwait_ready type=textbox target=newname text=`"01-alpha`" timeout=5s`ntype destination `"Accepted`"`ninspect main`nexpect move enabled"
+            $selected=@([DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@($name)))
+            if($selected.Count -ne 1){throw ('DCM-41 not exactly one selected source for '+$label)}
+            [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1041)
+            if($scenario.kind -eq 'different'){
+                Confirm-Dialog 'Filename Conflict' @('Keep Both','Replace','Cancel') ([int]$scenario.button)
+            }else{
+                Confirm-Dialog 'Exact Duplicate' @('SHA-256','Remove the source duplicate','Keep the source unchanged') ([int]$scenario.button)
+            }
+            if($label -in @('skip','duplicate-no')){
+                Wait-For ('DCM-41 '+$label+' refusal status') {
+                    if($label -eq 'skip'){Status-Contains 'Filename conflict action cancelled'}
+                    else{Status-Contains 'Exact duplicate action skipped'}
+                } 20
+                if((Hash $src) -ne $originalHash -or (Hash $dst) -ne $expectedDestinationHash){throw ('DCM-41 '+$label+' changed file bytes')}
+                $after=if(Test-Path -LiteralPath $journal){Hash $journal}else{''}
+                if($after -ne $before){throw ('DCM-41 '+$label+' changed durable journal')}
+                $cases.Add([ordered]@{name=('dcm41-'+$label+'-preserves-both-without-journal');passed=$true;source_sha256=$originalHash;destination_sha256=$expectedDestinationHash})
+                $null=Save-Shot ('dcm41-'+$label)
+            }else{
+                Wait-For ('DCM-41 '+$label+' completed') {
+                    (-not(Test-Path -LiteralPath $src)) -and [DcmNative]::IsWindowEnabled([DcmNative]::Control($script:hwnd,$script:app.Id,1008))
+                } 35
+                $finalTarget=$dst
+                $kind='move'
+                if($label -eq 'keep-both'){
+                    $extras=@(Get-ChildItem -LiteralPath $fixture.destination -File | Where-Object {$_.Name -ne $name})
+                    if($extras.Count -ne 1){throw 'Keep Both did not create exactly one numbered destination'}
+                    $finalTarget=$extras[0].FullName
+                    $kind='move'
+                    if((Hash $dst) -ne $expectedDestinationHash){throw 'Keep Both modified original destination'}
+                }
+                if($label -eq 'replace'){$kind='replace'}
+                if($label -eq 'duplicate-yes'){$kind='duplicate_removed'}
+                if((Hash $finalTarget) -ne $originalHash){throw ('DCM-41 '+$label+' moved bytes differ')}
+                $events=@(Get-Content -LiteralPath $journal -Encoding UTF8 | Where-Object {$_.Trim()} | ForEach-Object {$_|ConvertFrom-Json})
+                $records=@($events|Where-Object {$_.record.from -eq $src -and $_.record.to -eq $finalTarget})
+                if($records.Count -lt 2 -or $records[0].state -ne 'pending' -or $records[-1].state -ne 'completed'){throw ('DCM-41 '+$label+' journal not completed')}
+                if($label -eq 'replace'){
+                    if(-not $records[-1].record.replaced_backup){throw 'Replace journal did not retain displaced-file backup'}
+                    $backup=[string]$records[-1].record.replaced_backup
+                    if(-not(Test-Path -LiteralPath $backup -PathType Leaf) -or (Hash $backup) -ne $expectedDestinationHash){throw 'Replacement backup not preserved'}
+                }
+                $cases.Add([ordered]@{name=('dcm41-'+$label+'-completed-with-byte-oracle');passed=$true;target=$finalTarget;sha256=$originalHash;kind=$kind;id=$records[-1].id})
+                $null=Save-Shot ('dcm41-'+$label+'-completed')
+                [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1008)
+                Wait-For ('DCM-41 '+$label+' Undo') {
+                    (Test-Path -LiteralPath $src -PathType Leaf) -and
+                    ((Get-ChildItem -LiteralPath $fixture.destination -File|Measure-Object).Count -eq 1)
+                } 30
+                if((Hash $src) -ne $originalHash -or (Hash $dst) -ne $expectedDestinationHash){throw ('DCM-41 '+$label+' Undo corrupted source/destination')}
+                $remaining=@(Get-ChildItem -LiteralPath $fixture.destination -File)
+                if($remaining.Count -ne 1 -or $remaining[0].Name -ne $name){throw ('DCM-41 '+$label+' Undo left unexpected destination')}
+                $events=@(Get-Content -LiteralPath $journal -Encoding UTF8 | Where-Object {$_.Trim()} | ForEach-Object {$_|ConvertFrom-Json})
+                $records=@($events|Where-Object {$_.record.from -eq $src -and $_.record.to -eq $finalTarget})
+                if($records[-1].state -ne 'undone' -or $records[-1].id -ne $records[0].id){throw ('DCM-41 '+$label+' Undo journal wrong state/identity')}
+                $cases.Add([ordered]@{name=('dcm41-'+$label+'-undo-restored-both-hashes');passed=$true;source_sha256=$originalHash;destination_sha256=$expectedDestinationHash})
+                $null=Save-Shot ('dcm41-'+$label+'-undone')
+            }
+            # Remove only this test-created destination after verifying outcome;
+            # never remove the source or its original baseline fixtures.
+            if((Hash $dst) -ne $expectedDestinationHash){throw 'DCM-41 cleanup guard: seeded destination changed'}
+            Remove-Item -LiteralPath $dst -Force
+            Assert-Fixtures
+            $cases.Add([ordered]@{name=('dcm41-'+$label+'-baseline-restored');passed=$true})
+        }
     }
     if($Suite -eq 'move'){
         Invoke-Fvs 'move-readiness' "click clear`ntype name `"01-alpha`"`nwait_ready type=textbox target=newname text=`"01-alpha`" timeout=5s`ntype destination `"Accepted`"`ninspect main`nexpect destination text=`"Accepted`"`nexpect move enabled"
