@@ -758,7 +758,10 @@ try {
                 if((Hash $finalTarget) -ne $originalHash){throw ('DCM-41 '+$label+' moved bytes differ')}
                 $events=@(Get-Content -LiteralPath $journal -Encoding UTF8 | Where-Object {$_.Trim()} | ForEach-Object {$_|ConvertFrom-Json})
                 $records=@($events|Where-Object {$_.record.from -eq $src -and $_.record.to -eq $finalTarget})
-                if($records.Count -lt 2 -or $records[0].state -ne 'pending' -or $records[-1].state -ne 'completed'){throw ('DCM-41 '+$label+' journal not completed')}
+                $operationID=[string]$records[-1].id
+                $transaction=@($records | Where-Object {$_.id -eq $operationID})
+                if($transaction.Count -lt 2 -or $transaction[0].state -ne 'pending' -or $transaction[-1].state -ne 'completed'){throw ('DCM-41 '+$label+' journal not completed')}
+                if([string]$transaction[-1].record.kind -cne $kind){throw ('DCM-41 '+$label+' unexpected journal operation kind')}
                 if($label -eq 'replace'){
                     if(-not $records[-1].record.replaced_backup){throw 'Replace journal did not retain displaced-file backup'}
                     $backup=[string]$records[-1].record.replaced_backup
@@ -776,7 +779,8 @@ try {
                 if($remaining.Count -ne 1 -or $remaining[0].Name -ne $name){throw ('DCM-41 '+$label+' Undo left unexpected destination')}
                 $events=@(Get-Content -LiteralPath $journal -Encoding UTF8 | Where-Object {$_.Trim()} | ForEach-Object {$_|ConvertFrom-Json})
                 $records=@($events|Where-Object {$_.record.from -eq $src -and $_.record.to -eq $finalTarget})
-                if($records[-1].state -ne 'undone' -or $records[-1].id -ne $records[0].id){throw ('DCM-41 '+$label+' Undo journal wrong state/identity')}
+                $transaction=@($records | Where-Object {$_.id -eq $operationID})
+                if($transaction.Count -lt 3 -or $transaction[0].state -ne 'pending' -or $transaction[-1].state -ne 'undone' -or $transaction[-1].id -ne $operationID){throw ('DCM-41 '+$label+' Undo journal wrong state/identity')}
                 $cases.Add([ordered]@{name=('dcm41-'+$label+'-undo-restored-both-hashes');passed=$true;source_sha256=$originalHash;destination_sha256=$expectedDestinationHash})
                 $null=Save-Shot ('dcm41-'+$label+'-undone')
             }
