@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('basics','filters','rename','move','batch','pdf','previews','preview-release-operations')][string]$Suite='move',
+    [ValidateSet('basics','filters','rename','move','batch','pdf','previews','preview-release-operations','office-preview-release-operations')][string]$Suite='move',
     [string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,
     [string]$VisionExe=$env:DCM_FLOWUIVISION_EXE,
     [string]$PreviousFixtureInbox='C:\FlowverseReports\dcm-flowuivision-20261103\inbox'
@@ -345,12 +345,18 @@ try {
     $fixture=New-DcmFixtures $lab
     $receipt['configuration_backup_root']=Join-Path $lab 'configuration-backups'
     New-Item -ItemType Directory -Path (Join-Path $lab 'temp') | Out-Null
-    if($Suite -eq 'previews'){
+    if($Suite -in @('previews','office-preview-release-operations')){
         $prior=@()
         foreach($name in @('04-image.png','05-letter.docx','06-orders.xlsx','07-slides.pptx')){
-            $from=Join-Path $PreviousFixtureInbox $name
-            if(-not(Test-Path -LiteralPath $from -PathType Leaf)){throw "Required historical preview fixture missing: $from"}
+            $from=if($Suite -eq 'office-preview-release-operations' -and $name -eq '07-slides.pptx'){
+                Join-Path $repo 'tests/fixtures/dcm32-slides.pptx'
+            }else{Join-Path $PreviousFixtureInbox $name}
+            if(-not(Test-Path -LiteralPath $from -PathType Leaf)){throw "Required preview fixture missing: $from"}
             $digest=Hash $from
+            if($Suite -eq 'office-preview-release-operations'){
+                $pinned=@{'05-letter.docx'='11ca20995a5da66033c8dd75cc55a145bc6179bf189ac7d8bfaf9d90562a72a7';'06-orders.xlsx'='5059729f4390ecd2e169bb2d1eb850c768532ebbb24b9733e87b82b012d6d24f';'07-slides.pptx'='af42fff55297109195b95039d2ac39c5d53b1fae23b59e7b40a7184d679b93f1'}
+                if($pinned[$name] -cne $digest){throw "Pinned Office fixture identity mismatch: $name"}
+            }
             Copy-Item -LiteralPath $from -Destination (Join-Path $fixture.inbox $name)
             if((Hash (Join-Path $fixture.inbox $name)) -ne $digest){throw 'Preview fixture copy changed bytes.'}
             $prior+=[ordered]@{source=$from;name=$name;sha256=$digest}
@@ -495,6 +501,102 @@ try {
         $handle.Dispose()
         Assert-Fixtures
         $cases.Add([ordered]@{name='final-PDF-exclusively-released-and-fixtures-preserved';passed=$true;sha256=(Hash $old)})
+    }
+    if($Suite -eq 'office-preview-release-operations'){
+        # DCM-35: real installed provider or built-in fallback, no registry edits.
+        # Each operation is performed by native QuickSort buttons on the SAME
+        # previously previewed file; filesystem operations here are oracles only.
+        $items=@(
+            @{file='05-letter.docx';status=@('Windows preview: DOCX','DCM DOCX Preview')},
+            @{file='06-orders.xlsx';status=@('Windows preview: XLSX','DCM XLSX Preview')},
+            @{file='07-slides.pptx';status=@('Windows preview: PPTX','DCM PPTX Preview')}
+        )
+        foreach($item in $items){
+            $file=[string]$item.file
+            $from=Join-Path $fixture.inbox $file
+            $digest=Hash $from
+            $stem=[IO.Path]::GetFileNameWithoutExtension($file)
+            $ext=[IO.Path]::GetExtension($file)
+            $renameName=$stem+'-released'
+            $renamed=Join-Path $fixture.inbox ($renameName+$ext)
+            foreach($operation in @('rename','move')){
+                $key=$stem+'-'+$operation
+                $null=[DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@($file))
+                Wait-For ('Office provider for '+$key) {
+                    $found=$false
+                    foreach($prefix in $item.status){if(Status-Contains $prefix){$found=$true}}
+                    return $found
+                } 30
+                $cases.Add([ordered]@{name=('office-preview-before-'+$key);passed=$true;sha256=$digest;status=@([DcmNative]::Snapshot($script:hwnd,$script:app.Id)|Where-Object {$_.Visible -and $_.Text -match 'preview'})})
+                $null=Save-Shot ('office-before-'+$key)
+                $null=[DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@('01-alpha.txt'))
+                Wait-For ('TXT after Office '+$key) {Status-Contains 'Plain-text preview: TXT'} 20
+                # Retry only the lock oracle while a genuine provider releases.
+                $until=[DateTime]::UtcNow.AddSeconds(12)
+                $released=$false
+                do {
+                    try {
+                        $h=[IO.File]::Open($from,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::None)
+                        $h.Dispose()
+                        $released=$true
+                    }catch [IO.IOException] {
+                        Start-Sleep -Milliseconds 150
+                    }
+                } while (-not $released -and [DateTime]::UtcNow -lt $until)
+                if(-not $released){throw ('Office source retained a file lock after switch: '+$file)}
+                if((Hash $from) -ne $digest){throw ('Office source changed after release: '+$file)}
+                $cases.Add([ordered]@{name=('office-exclusively-released-before-'+$key);passed=$true;sha256=$digest})
+                $null=Save-Shot ('office-text-after-'+$key)
+                $null=[DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@($file))
+                Wait-For ('Office reselected for '+$key) {
+                    $found=$false
+                    foreach($prefix in $item.status){if(Status-Contains $prefix){$found=$true}}
+                    return $found
+                } 30
+                if($operation -eq 'rename'){
+                    [DcmNative]::SetText($script:hwnd,$script:app.Id,1005,$renameName)
+                    Wait-For ('rename button ready '+$file) {
+                        [DcmNative]::IsWindowEnabled([DcmNative]::Control($script:hwnd,$script:app.Id,1006))
+                    } 10
+                    [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1006)
+                    Wait-For ('Office rename completed '+$file) {
+                        -not(Test-Path -LiteralPath $from) -and
+                        (Test-Path -LiteralPath $renamed) -and
+                        [DcmNative]::IsWindowEnabled([DcmNative]::Control($script:hwnd,$script:app.Id,1008))
+                    } 30
+                    if((Hash $renamed) -ne $digest){throw ('Office rename changed bytes: '+$file)}
+                    $id=Assert-RenameJournal ('office-rename-'+$stem) $from $renamed 'completed'
+                    $null=Save-Shot ('office-renamed-'+$stem)
+                    [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1008)
+                    Wait-For ('Office Undo Rename '+$file) {
+                        (Test-Path -LiteralPath $from) -and -not(Test-Path -LiteralPath $renamed)
+                    } 30
+                    $null=Assert-RenameJournal ('office-undo-rename-'+$stem) $from $renamed 'undone' $id
+                }else{
+                    Invoke-Fvs ('office-move-ready-'+$stem) "type destination `"Accepted`"`ninspect main`nexpect destination text=`"Accepted`"`nexpect move enabled"
+                    [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1041)
+                    Wait-Moved @($file)
+                    Assert-Journal ('office-move-'+$stem) @($file) 'completed'
+                    $null=Save-Shot ('office-moved-'+$stem)
+                    [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1008)
+                    Wait-Restored @($file)
+                    Assert-Journal ('office-undo-move-'+$stem) @($file) 'undone'
+                }
+                if((Hash $from) -ne $digest){throw ('Office Undo changed bytes: '+$file)}
+                Assert-Fixtures
+                $cases.Add([ordered]@{name=('office-'+$key+'-undo-preserved');passed=$true;sha256=$digest})
+                $null=Save-Shot ('office-'+$key+'-undone')
+            }
+        }
+        $null=[DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@('01-alpha.txt'))
+        Wait-For 'final TXT after Office operations' {Status-Contains 'Plain-text preview: TXT'} 20
+        foreach($item in $items){
+            $p=Join-Path $fixture.inbox $item.file
+            $h=[IO.File]::Open($p,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::None)
+            $h.Dispose()
+        }
+        Assert-Fixtures
+        $cases.Add([ordered]@{name='all-Office-fixtures-exclusively-released-and-preserved';passed=$true})
     }
     if($Suite -eq 'batch'){
         $names=[string[]]@('02-bravo.txt','03-charlie.txt')
