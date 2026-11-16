@@ -5,7 +5,8 @@ param(
     [string]$Run = '^Test(D[1-6]|Release)',
     [string]$ExpectedBranch = 'release/v1.0.71',
     [switch]$CaptureDOCXComponent,
-    [switch]$CapturePPTXComponent
+    [switch]$CapturePPTXComponent,
+    [switch]$CaptureXLSXComponent
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -14,7 +15,8 @@ if (-not [Environment]::Is64BitProcess) { throw 'Use 64-bit PowerShell for the W
 if (-not $env:FLOWDEV_WORKSPACE_ROOT) { throw 'FLOWDEV_WORKSPACE_ROOT must be set by the selected FlowDev profile.' }
 if ($CaptureDOCXComponent -and ($Mode -ne 'regressions' -or $Run -cne '^TestDCM34DOCXFallbackComponent$')) { throw 'DOCX component capture requires its exact focused native test.' }
 if ($CapturePPTXComponent -and ($Mode -ne 'regressions' -or $Run -cne '^TestPPTXFallbackComponentRecovery$')) { throw 'PPTX component capture requires its exact focused native test.' }
-if ($CaptureDOCXComponent -and $CapturePPTXComponent) { throw 'Only one component may own the headed desktop.' }
+if ($CaptureXLSXComponent -and ($Mode -ne 'regressions' -or $Run -cne '^TestXLSXFallbackComponentRecovery$')) { throw 'XLSX component capture requires its exact focused native test.' }
+if (([int][bool]$CaptureDOCXComponent + [int][bool]$CapturePPTXComponent + [int][bool]$CaptureXLSXComponent) -gt 1) { throw 'Only one component may own the headed desktop.' }
 
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $workspace = [IO.Path]::GetFullPath($env:FLOWDEV_WORKSPACE_ROOT)
@@ -78,6 +80,8 @@ function Invoke-OwnedCommand([string]$Name, [string]$File, [string[]]$Arguments,
     if ($CaptureDOCXComponent) { $psi.EnvironmentVariables['DCM_DOCX_COMPONENT_EVIDENCE_ROOT'] = Join-Path $report 'docx-component' }
     $psi.EnvironmentVariables.Remove('DCM_PPTX_COMPONENT_EVIDENCE_ROOT')
     if ($CapturePPTXComponent) { $psi.EnvironmentVariables['DCM_PPTX_COMPONENT_EVIDENCE_ROOT'] = Join-Path $report 'pptx-component' }
+    $psi.EnvironmentVariables.Remove('DCM_XLSX_COMPONENT_EVIDENCE_ROOT')
+    if ($CaptureXLSXComponent) { $psi.EnvironmentVariables['DCM_XLSX_COMPONENT_EVIDENCE_ROOT'] = Join-Path $report 'xlsx-component' }
     $proc = New-Object Diagnostics.Process
     $proc.StartInfo = $psi
     $entry = [ordered]@{name=$Name; file=$File; arguments=$Arguments; directory=$Directory; started_utc=[DateTime]::UtcNow.ToString('o'); stdout=$outPath; stderr=$errPath; timed_out=$false}
