@@ -1,5 +1,13 @@
 # DCM-34 — preview failure and interruption states
 
+## 16 November 2026 — observed PDF interruption accepted with limits
+
+The previously blocked corrected headed retry now **passes** at pushed FlowDev-synchronized source `ed75287c58b8f0f31b4171408593cc2f9a233a7a`. Both valid success and damaged error renderers started before TXT selection, finished after it, and their obsolete results were discarded; a same-file reopen retained the newer generation and rendered the correct page. Three focused/production-prep native checks, exact build, in-flight GUI and all three trace-disabled normal/damaged/protected PDF regressions passed. All 12 original in-flight captures were individually reviewed. Both PDFs were exclusively released; fixture bytes/source were unchanged and the host exited normally. No production source fix or renderer process hard-cancellation is claimed.
+
+See [bounded in-flight closeout](evidence/dcm-34-pdf-inflight-closeout-2026-11-16.md), committed after its tested source. Raw `feature_accepted=false` and user-test flags are unchanged. The earlier failed external-process observation and its failed receipts remain historical evidence.
+
+**DCM-34 remains PARTIAL, 32/50 complete:** wider Office error/protection coverage and `DCM-PDF-RENDER-SIZE-01` still need resolution or explicit limitation; end-user and suite release acceptance remain open. Next work should target those distinct cases rather than repeat successful XLSX/PPTX sizing and PDF interruption tests.
+
 ## 15 November 2026 - live PDF observation recorded; corrected headed run pending
 
 `DCM-34-PDF-INTERRUPT-01` remains **PARTIAL**. Opt-in, bounded JSONL tracing
