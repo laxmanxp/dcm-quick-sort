@@ -655,3 +655,42 @@ func TestPreviewTopPanOffsetAnchorsTallFitWidthContentToTop(t *testing.T) {
 		}
 	}
 }
+
+
+func TestCaseOnlyRenameKeepsExactDirectoryEntryAndUndo(t *testing.T) {
+	dir := t.TempDir()
+	source := filepath.Join(dir, "01-alpha.txt")
+	target := filepath.Join(dir, "01-ALPHA.txt")
+	if !caseOnlySameDirectoryRename(source, target) {
+		t.Fatal("case-only same-directory rename not detected")
+	}
+	if caseOnlySameDirectoryRename(source, filepath.Join(dir, "other", "01-ALPHA.txt")) ||
+		caseOnlySameDirectoryRename(source, filepath.Join(dir, "02-bravo.txt")) {
+		t.Fatal("unrelated file or directory wrongly classified as case-only")
+	}
+	if err := os.WriteFile(source, []byte("preserve"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := moveFile(source, target); err != nil {
+		t.Fatal(err)
+	}
+	exact, err := exactCaseFilePresent(target)
+	if err != nil || !exact {
+		t.Fatalf("target case not preserved: exact=%v err=%v", exact, err)
+	}
+	rec := MoveRecord{From: source, To: target, Kind: MoveKindMove}
+	if err := validateUndoMove(rec); err != nil {
+		t.Fatalf("case-only Undo refused: %v", err)
+	}
+	if err := undoMove(rec); err != nil {
+		t.Fatalf("case-only Undo failed: %v", err)
+	}
+	exact, err = exactCaseFilePresent(source)
+	if err != nil || !exact {
+		t.Fatalf("original case not restored: exact=%v err=%v", exact, err)
+	}
+	content, err := os.ReadFile(source)
+	if err != nil || string(content) != "preserve" {
+		t.Fatalf("case-only Undo corrupted file: %q, %v", content, err)
+	}
+}
