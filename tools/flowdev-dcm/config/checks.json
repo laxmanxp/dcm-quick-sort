@@ -715,6 +715,15 @@
           "tools/run-ui.ps1",
           "-Suite",
           "rename-edge"
+        ],
+        "ui-undo-rename": [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "tools/run-ui.ps1",
+          "-Suite",
+          "undo-rename"
         ]
       }
     }
