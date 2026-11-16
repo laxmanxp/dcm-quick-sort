@@ -1,5 +1,11 @@
 # DCM-34 — preview failure and interruption states
 
+## 16 November 2026 — PDF raster-size discrepancy explained at observed DPI
+
+A fresh registered `flowdev test dcm-quicksort pdf-bitmap-dpi` **passed** at source `e97ba4dc4b717e6cb24906ac2bf62bdca5f0b7c1`. Lenovo's desktop is 120 DPI (125%); production WinRT render metadata 612 × 1000 logical DIPs corresponds exactly to 765 × 1250 decoded physical PNG pixels. Four additional rendering modes/repeats matched their DPI-derived dimensions, the fixture was preserved and exclusively released, and no display setting was changed. The exact 612 × 1000 discrepancy is therefore explained, not a raster-size defect. Earlier intermittent repeated-pixel differences remain historical evidence; the latest one-repeat was stable but does not guarantee universal pixel identity.
+
+See [bounded DPI closeout](evidence/dcm-34-pdf-bitmap-dpi-closeout-2026-11-16.md). This does not certify all GUI zoom/pan use of metadata units or arbitrary monitor DPI. No production fix is needed for the narrow renderer-dimensions observation. Parent DCM-34 remains **PARTIAL (32/50 complete)**, with broader Office failure/protection work still outstanding.
+
 ## 16 November 2026 — observed PDF interruption accepted with limits
 
 The previously blocked corrected headed retry now **passes** at pushed FlowDev-synchronized source `ed75287c58b8f0f31b4171408593cc2f9a233a7a`. Both valid success and damaged error renderers started before TXT selection, finished after it, and their obsolete results were discarded; a same-file reopen retained the newer generation and rendered the correct page. Three focused/production-prep native checks, exact build, in-flight GUI and all three trace-disabled normal/damaged/protected PDF regressions passed. All 12 original in-flight captures were individually reviewed. Both PDFs were exclusively released; fixture bytes/source were unchanged and the host exited normally. No production source fix or renderer process hard-cancellation is claimed.
