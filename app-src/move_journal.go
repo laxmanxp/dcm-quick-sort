@@ -370,7 +370,48 @@ func appendRecoveredEntry(path string, entry MoveJournalEntry, now time.Time) er
 	return appendMoveJournalEntry(path, entry)
 }
 
+func caseOnlyJournalEntryState(rec MoveRecord) (targetCase, sourceCase bool, err error) {
+	if rec.Kind != MoveKindMove || !caseOnlySameDirectoryRename(rec.From, rec.To) {
+		return false, false, nil
+	}
+	targetCase, err = exactCaseFilePresent(rec.To)
+	if err != nil {
+		return false, false, err
+	}
+	sourceCase, err = exactCaseFilePresent(rec.From)
+	return targetCase, sourceCase, err
+}
+
 func recoverPendingStandardMove(path string, entry MoveJournalEntry, now time.Time) (MoveJournalEntry, bool, bool, error) {
+	if caseOnlySameDirectoryRename(entry.Record.From, entry.Record.To) && entry.Record.Kind == MoveKindMove {
+		targetCase, sourceCase, err := caseOnlyJournalEntryState(entry.Record)
+		if err != nil {
+			return entry, false, false, err
+		}
+		switch {
+		case targetCase && !sourceCase:
+			entry.State = MoveJournalCompleted
+			entry.Detail = "finalized after restart: case-only target directory entry is present"
+			if err := appendRecoveredEntry(path, entry, now); err != nil {
+				return entry, false, false, err
+			}
+			return entry, true, false, nil
+		case sourceCase && !targetCase:
+			entry.State = MoveJournalFailed
+			entry.Detail = "case-only rename interrupted before commit; source casing remains"
+			if err := appendRecoveredEntry(path, entry, now); err != nil {
+				return entry, false, false, err
+			}
+			return entry, false, true, nil
+		default:
+			entry.State = MoveJournalAttention
+			entry.Detail = "case-only rename has ambiguous directory-entry casing; manual review required"
+			if err := appendRecoveredEntry(path, entry, now); err != nil {
+				return entry, false, false, err
+			}
+			return entry, false, false, nil
+		}
+	}
 	srcExists := pathExists(entry.Record.From)
 	dstExists := pathExists(entry.Record.To)
 	switch {
@@ -500,6 +541,26 @@ func recoverPendingDuplicate(path string, entry MoveJournalEntry, now time.Time)
 }
 
 func reconcileCompletedMove(path string, entry MoveJournalEntry, now time.Time) (MoveJournalEntry, error) {
+	if caseOnlySameDirectoryRename(entry.Record.From, entry.Record.To) && entry.Record.Kind == MoveKindMove {
+		targetCase, sourceCase, err := caseOnlyJournalEntryState(entry.Record)
+		if err != nil {
+			return entry, err
+		}
+		switch {
+		case targetCase && !sourceCase:
+			return entry, nil
+		case sourceCase && !targetCase:
+			entry.State = MoveJournalUndone
+			entry.Detail = "reconciled case-only rename Undo from original filename casing"
+		default:
+			entry.State = MoveJournalAttention
+			entry.Detail = "completed case-only rename has ambiguous directory-entry casing; manual review required"
+		}
+		if err := appendRecoveredEntry(path, entry, now); err != nil {
+			return entry, err
+		}
+		return entry, nil
+	}
 	srcExists := pathExists(entry.Record.From)
 	dstExists := pathExists(entry.Record.To)
 	if srcExists && !dstExists {
