@@ -466,6 +466,31 @@ try {
             $cases.Add([ordered]@{name=('rename-edge-'+$key+'-undo-preserved');passed=$true;sha256=$digest})
             $null=Save-Shot ('rename-edge-'+$key+'-undone')
         }
+        # Existing-source conflicts and illegal Windows characters must never
+        # alter either original fixture or its durable operation history.
+        $journal=Join-Path $fixture.config 'recovery/move-journal.jsonl'
+        $beforeJournal=Hash $journal
+        $null=[DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@($original))
+        Invoke-Fvs 'rename-edge-invalid-input' "type newname `"bad:name`"`ninspect main"
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1006)
+        Confirm-Dialog 'DCM - Quick Sort' @('invalid character') 1
+        Assert-Fixtures
+        if((Hash $journal) -ne $beforeJournal){throw 'Rejected invalid name changed durable journal'}
+        $cases.Add([ordered]@{name='rename-invalid-character-refused-without-data-loss';passed=$true;original_sha256=$digest})
+        $null=Save-Shot 'rename-edge-invalid-refused'
+
+        $other=Join-Path $fixture.inbox '02-bravo.txt'
+        $otherHash=Hash $other
+        $null=[DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@($original))
+        Invoke-Fvs 'rename-edge-conflict-input' "type newname `"02-bravo`"`ninspect main"
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1006)
+        Confirm-Dialog 'Filename Conflict' @('02-bravo.txt') 2
+        Wait-For 'conflicting rename cancelled' {Status-Contains 'Filename conflict action cancelled'} 20
+        Assert-Fixtures
+        if((Hash $other) -ne $otherHash -or (Hash $old) -ne $digest){throw 'Conflicting name changed fixture bytes'}
+        if((Hash $journal) -ne $beforeJournal){throw 'Cancelled conflict changed durable journal'}
+        $cases.Add([ordered]@{name='rename-existing-name-conflict-cancelled-without-data-loss';passed=$true;original_sha256=$digest;collision_sha256=$otherHash})
+        $null=Save-Shot 'rename-edge-conflict-cancelled'
     }
     if($Suite -eq 'move'){
         Invoke-Fvs 'move-readiness' "click clear`ntype name `"01-alpha`"`nwait_ready type=textbox target=newname text=`"01-alpha`" timeout=5s`ntype destination `"Accepted`"`ninspect main`nexpect destination text=`"Accepted`"`nexpect move enabled"
