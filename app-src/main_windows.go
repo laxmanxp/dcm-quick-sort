@@ -3445,6 +3445,17 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 		if !closeSumatraPreview() {
 			return 0
 		}
+		// A stopped PDF selection can still have a live WinRT render worker.
+		// Never destroy the HWND until its completion is consumed and its PNG
+		// removed. Keep processing messages; finishPDFRender reposts WM_CLOSE
+		// after the last owned worker has been drained.
+		if deferClose, firstRequest := pdfShutdown.requestClose(); deferClose {
+			if firstRequest {
+				stopPDFPreview()
+				setText(app.statusLabel, "Finishing PDF preview cleanup before closing…")
+			}
+			return 0
+		}
 		unloadPreview()
 		procDefWindowProcW.Call(hwnd, uintptr(msg), wParam, lParam)
 		return 0
