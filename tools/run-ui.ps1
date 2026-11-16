@@ -290,6 +290,10 @@ function Confirm-Dialog([string]$Title,[string[]]$TextFragments,[int]$Button=6){
     foreach($fragment in $TextFragments){if(-not $text.Contains($fragment)){throw "Confirmation does not identify expected fixture scope: $fragment"}}
     Write-Json (Join-Path $lab ('confirmation-'+$cases.Count+'.json')) ([ordered]@{title=$dialogs[0].Text;controls=$controls;button=$Button})
     [DcmNative]::ClickAsync($dialog,$script:app.Id,$Button)
+    # After BM_CLICK the native message box is being destroyed. Give it a
+    # bounded settle interval before querying its owned descendants; a
+    # synchronous window-text query against the dying HWND can time out.
+    Start-Sleep -Milliseconds 250
     Wait-For 'confirmation closed' { @([DcmNative]::Dialogs($script:hwnd,$script:app.Id)).Count -eq 0 } 10 -AllowDialog
 }
 function Status-Contains([string]$Text){return @([DcmNative]::Snapshot($script:hwnd,$script:app.Id) | Where-Object {$_.Visible -and $_.Text.Contains($Text)}).Count -gt 0}
