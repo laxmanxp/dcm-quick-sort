@@ -733,6 +733,15 @@
           "tools/run-ui.ps1",
           "-Suite",
           "destination"
+        ],
+        "ui-cross-volume": [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "tools/run-ui.ps1",
+          "-Suite",
+          "cross-volume"
         ]
       }
     }
