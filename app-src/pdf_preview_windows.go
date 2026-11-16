@@ -46,6 +46,8 @@ type pdfPreviewState struct {
 
 var pdfPreview pdfPreviewState
 var pdfRenderResults = make(chan PDFRenderResult, 8)
+// GUI-thread-only lifecycle state: a stopped selection can still own live workers.
+var pdfShutdown pdfShutdownCoordinator
 
 func createPDFPreviewControls() {
 	if app.previewHwnd == 0 {
@@ -177,7 +179,7 @@ func pdfRenderViewport() (int, int) {
 }
 
 func startPDFPreview(path string) bool {
-	if !isPDFPath(path) {
+	if pdfShutdown.closing || !isPDFPath(path) {
 		return false
 	}
 	if _, err := findPDFPowerShell(); err != nil {
@@ -248,7 +250,7 @@ func goToPDFPage(delta int) {
 }
 
 func requestPDFPreviewRender() {
-	if !pdfPreview.active || strings.TrimSpace(pdfPreview.path) == "" {
+	if pdfShutdown.closing || !pdfPreview.active || strings.TrimSpace(pdfPreview.path) == "" {
 		return
 	}
 	// Coalesce rapid Ctrl+wheel/button clicks. Only one PowerShell/WinRT render
@@ -311,6 +313,14 @@ func requestPDFPreviewRender() {
 	setText(app.statusLabel, fmt.Sprintf("Rendering PDF page %d · %s…", pdfPreview.page+1, mode))
 	updatePDFPreviewControls()
 
+	// The GUI must remain alive until this goroutine's result is consumed.
+	// No other thread mutates pdfShutdown.
+	if !pdfShutdown.workerStarted() {
+		_ = os.Remove(outputPath)
+		pdfPreview.busy = false
+		pdfPreview.workerGeneration = 0
+		return
+	}
 	go func() {
 		cmd := exec.Command(powershell, pdfRendererArgs(script, req)...)
 		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: createNoWindow}
@@ -350,6 +360,13 @@ func finishPDFRender() {
 	for {
 		select {
 		case result := <-pdfRenderResults:
+			// Run after the stale-result cleanup (or successful presentation)
+			// has finished. Only then may a deferred WM_CLOSE proceed.
+			defer func() {
+				if pdfShutdown.resultConsumed() {
+					procPostMessageW.Call(app.hwnd, WM_CLOSE, 0, 0)
+				}
+			}()
 			if result.Request.Generation != pdfPreview.generation || !pdfPreview.active || !strings.EqualFold(filepath.Clean(result.Request.InputPath), filepath.Clean(pdfPreview.path)) {
 				_ = os.Remove(result.Request.OutputPath)
 				// A stopped selection may finish after its replacement has started.
