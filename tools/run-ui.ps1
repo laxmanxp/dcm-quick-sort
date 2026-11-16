@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('basics','filters','rename','rename-edge','undo-rename','move','batch','pdf','previews','preview-release-operations','office-preview-release-operations')][string]$Suite='move',
+    [ValidateSet('basics','filters','rename','rename-edge','undo-rename','destination','move','batch','pdf','previews','preview-release-operations','office-preview-release-operations')][string]$Suite='move',
     [string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,
     [string]$VisionExe=$env:DCM_FLOWUIVISION_EXE,
     [string]$PreviousFixtureInbox='C:\FlowverseReports\dcm-flowuivision-20261103\inbox'
@@ -546,6 +546,54 @@ try {
         if((Hash $journal) -ne $beforeJournal){throw 'Cancelled conflict changed durable journal'}
         $cases.Add([ordered]@{name='rename-existing-name-conflict-cancelled-without-data-loss';passed=$true;original_sha256=$digest;collision_sha256=$otherHash})
         $null=Save-Shot 'rename-edge-conflict-cancelled'
+    }
+    if($Suite -eq 'destination'){
+        # DCM-38: all inputs through owned UI; independently prove that invalid
+        # or unavailable Vault destinations cannot mutate the source or journal.
+        $source=Join-Path $fixture.inbox '01-alpha.txt'
+        $dest=Join-Path $fixture.destination '01-alpha.txt'
+        $initialHash=Hash $source
+        $journal=Join-Path $fixture.config 'recovery/move-journal.jsonl'
+        $journalBefore=if(Test-Path -LiteralPath $journal){Hash $journal}else{''}
+        $null=[DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@('01-alpha.txt'))
+        foreach($invalid in @(
+            @{label='missing-logical-location';value='NotConfigured'},
+            @{label='invalid-traversal-location';value='../OutsideVault'}
+        )){
+            $label=[string]$invalid.label
+            $value=[string]$invalid.value
+            Invoke-Fvs ('dcm38-'+$label+'-input') ("type destination `""+$value+"`"`ninspect main")
+            $typed=[DcmNative]::Text([DcmNative]::Control($script:hwnd,$script:app.Id,1003),$script:app.Id)
+            if($typed -cne $value){throw ('Destination UI did not retain rejected input '+$label)}
+            [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1041)
+            Confirm-Dialog 'DCM - Quick Sort' @('Choose an existing logical location inside the configured Vault') 2
+            Assert-Fixtures
+            if((Hash $source) -ne $initialHash){throw ('Rejected destination changed source bytes '+$label)}
+            $journalAfter=if(Test-Path -LiteralPath $journal){Hash $journal}else{''}
+            if($journalAfter -ne $journalBefore){throw ('Rejected destination modified durable journal '+$label)}
+            $cases.Add([ordered]@{name=('dcm38-'+$label+'-rejected-without-mutation');passed=$true;input=$value;source_sha256=$initialHash;journal_sha256=$journalAfter})
+            $null=Save-Shot ('dcm38-'+$label+'-rejected')
+        }
+        Invoke-Fvs 'dcm38-valid-vault-location' "type destination `"Accepted`"`ninspect main`nexpect destination text=`"Accepted`"`nexpect move enabled"
+        $selected=@([DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@('01-alpha.txt'))
+        if($selected.Count -ne 1){throw 'Valid destination does not have exactly one selected source'}
+        $actualDestination=[IO.Path]::GetFullPath($fixture.destination)
+        if(-not(Test-Path -LiteralPath $actualDestination -PathType Container)){throw 'Test Vault destination unexpectedly missing'}
+        $cases.Add([ordered]@{name='dcm38-valid-destination-address-resolved-to-existing-vault-folder';passed=$true;logical='Accepted';physical=$actualDestination})
+        $null=Save-Shot 'dcm38-valid-location-ready'
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1041)
+        Wait-Moved @('01-alpha.txt')
+        if((Hash $dest) -ne $initialHash){throw 'Valid destination moved different file bytes'}
+        Assert-Journal 'dcm38-valid-location-move-journal' @('01-alpha.txt') 'completed'
+        $cases.Add([ordered]@{name='dcm38-valid-location-moved-only-selected-file';passed=$true;logical='Accepted';physical=$actualDestination;sha256=$initialHash})
+        $null=Save-Shot 'dcm38-valid-location-moved'
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1008)
+        Wait-Restored @('01-alpha.txt')
+        Assert-Journal 'dcm38-valid-location-undo-journal' @('01-alpha.txt') 'undone'
+        Assert-Fixtures
+        if((Hash $source) -ne $initialHash){throw 'Valid destination Undo altered source'}
+        $cases.Add([ordered]@{name='dcm38-valid-location-undo-restored-fixtures';passed=$true;sha256=$initialHash})
+        $null=Save-Shot 'dcm38-valid-location-undone'
     }
     if($Suite -eq 'move'){
         Invoke-Fvs 'move-readiness' "click clear`ntype name `"01-alpha`"`nwait_ready type=textbox target=newname text=`"01-alpha`" timeout=5s`ntype destination `"Accepted`"`ninspect main`nexpect destination text=`"Accepted`"`nexpect move enabled"
