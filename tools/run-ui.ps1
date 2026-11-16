@@ -347,7 +347,8 @@ try {
     New-Item -ItemType Directory -Path (Join-Path $lab 'temp') | Out-Null
     if($Suite -in @('previews','office-preview-release-operations')){
         $prior=@()
-        foreach($name in @('04-image.png','05-letter.docx','06-orders.xlsx','07-slides.pptx')){
+        $previewNames=if($Suite -eq 'office-preview-release-operations'){@('05-letter.docx','06-orders.xlsx','07-slides.pptx')}else{@('04-image.png','05-letter.docx','06-orders.xlsx','07-slides.pptx')}
+        foreach($name in $previewNames){
             $from=if($Suite -eq 'office-preview-release-operations' -and $name -eq '07-slides.pptx'){
                 Join-Path $repo 'tests/fixtures/dcm32-slides.pptx'
             }else{Join-Path $PreviousFixtureInbox $name}
