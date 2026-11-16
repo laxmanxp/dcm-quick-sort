@@ -1096,7 +1096,7 @@
       "feature": "Verify preview cleanup and file release",
       "status": "implemented",
       "completion": "in_progress",
-      "ui_test": "default_pdf_close_inflight_PASS; ui_rename_PASS; ui_move_PASS; sumatra_lifecycle_PASS; sumatra_pending_close_PASS; ui_previews_RED_at_pptx_combo_label; same_previewed_file_rename_move_not_yet_qualified",
+      "ui_test": "pdf_close_inflight_PASS; ui_rename_PASS; ui_move_PASS; sumatra_lifecycle_PASS; pending_close_PASS; ui_preview_release_operations_PASS_13_cases_same_PDF; broad_ui_previews_historical_RED",
       "user_test": "not_recorded",
       "parent_ids": [
         "DCM-PREVIEW-01"
@@ -1104,9 +1104,10 @@
       "acceptance": "After switching/closing previews, owned workers and file locks are released so rename/move can proceed.",
       "evidence": [
         "qualification/evidence/dcm-35-pdf-close-inflight-2026-11-16.md",
-        "qualification/evidence/dcm-35-rename-move-lifecycle-2026-11-16.md"
+        "qualification/evidence/dcm-35-rename-move-lifecycle-2026-11-16.md",
+        "qualification/evidence/dcm-35-same-pdf-release-rename-move-2026-11-16.md"
       ],
-      "qualification_note": "At pushed 049b6cb, registered update/tooling/build, ui-rename (8 cases), ui-move (6), Sumatra lifecycle (11) and pending-close (3) pass with clean source/fixtures and normal viewer teardown; ui-previews remains RED at FlowUIVision PPTX label matching after 17 pass cases. No combined preview-release-then-rename/move same-file test yet. Parent DCM-35 remains partial and 50-step completion count unchanged (32/50). Raw failed receipt preserved."
+      "qualification_note": "At pushed 605137a registered update, ui-tooling, build and new ui-preview-release-operations all PASS. Same 08-preview.pdf rendered, TXT selected, exclusive FileShare.None verified, native Rename/Undo and Move/Undo performed with SHA-256 and durable journal checks; 13 cases and all 10 captures independently reviewed, source clean and owned processes closed. This closes the bounded default-PDF cross-feature path, not Office provider lifecycle or user acceptance; DCM-35 remains PARTIAL. The earlier broad ui-previews RED PPTX label test remains unaltered. 32/50 completed, 18 remaining."
     },
     {
       "id": "DCM-36",
