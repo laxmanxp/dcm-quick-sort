@@ -24,7 +24,7 @@
   },
   "schema_version": 1,
   "app": "DCM QuickSort",
-  "updated_on": "2026-11-15",
+  "updated_on": "2026-11-16",
   "candidate_version": "v1.0.71",
   "branch": "release/v1.0.71",
   "baseline_commit": "3f7784583b0ebc292ea1572373b6bcbea22cad44",
@@ -1094,9 +1094,9 @@
     {
       "id": "DCM-35",
       "feature": "Verify preview cleanup and file release",
-      "status": "implemented",
-      "completion": "in_progress",
-      "ui_test": "pdf_close_inflight_PASS; ui_rename_PASS; ui_move_PASS; sumatra_lifecycle_PASS; pending_close_PASS; ui_preview_release_operations_PASS_13_cases_same_PDF; broad_ui_previews_historical_RED",
+      "status": "tested",
+      "completion": "complete",
+      "ui_test": "default_PDF_close_and_same_file_operations_PASS; Sumatra_lifecycle_and_pending_close_PASS; DOCX_XLSX_PPTX_fallback_same_file_rename_move_undo_PASS_37_cases_26_images; separate_installed_native_handlers_release_and_close_PASS; original_broad_ui_previews_RED_preserved",
       "user_test": "not_recorded",
       "parent_ids": [
         "DCM-PREVIEW-01"
@@ -1105,9 +1105,11 @@
       "evidence": [
         "qualification/evidence/dcm-35-pdf-close-inflight-2026-11-16.md",
         "qualification/evidence/dcm-35-rename-move-lifecycle-2026-11-16.md",
-        "qualification/evidence/dcm-35-same-pdf-release-rename-move-2026-11-16.md"
+        "qualification/evidence/dcm-35-same-pdf-release-rename-move-2026-11-16.md",
+        "qualification/evidence/dcm-35-office-release-operations-closeout-2026-11-16.md"
       ],
-      "qualification_note": "At pushed 605137a registered update, ui-tooling, build and new ui-preview-release-operations all PASS. Same 08-preview.pdf rendered, TXT selected, exclusive FileShare.None verified, native Rename/Undo and Move/Undo performed with SHA-256 and durable journal checks; 13 cases and all 10 captures independently reviewed, source clean and owned processes closed. This closes the bounded default-PDF cross-feature path, not Office provider lifecycle or user acceptance; DCM-35 remains PARTIAL. The earlier broad ui-previews RED PPTX label test remains unaltered. 32/50 completed, 18 remaining."
+      "qualification_note": "Complete with bounded automated engineering acceptance at source 25d257482567050eadecc3cd52b3014a7a14997d. Registered update/tooling/build and ui-office-preview-release-operations pass 37/37 cases; 26 images independently reviewed. Three pinned DOCX/XLSX/PPTX files each previewed, switched to TXT, opened exclusively, reselected and renamed/moved with native QuickSort UI and durable journal, then Undo with identical hash and restored source/destination. Test used built-in Office fallback paths; separate previously qualified native handler receipts prove exclusive release after switch/close, not active-provider same-file operations. PDF/Sumatra lifecycle and default PDF same-file operations pass separately. All prior RED receipts preserved. Raw user_test remains not_recorded. DCM-35 accepted, 33/50 completed, 17 remaining. DCM-34 remains partial.",
+      "scope_note": "Representative automatic acceptance only; current combined run uses built-in Office fallbacks. Separate installed handler receipts show exclusive lock release after switch/close but not live native handler Rename/Move of same previewed file. Does not certify arbitrary Office configurations, physical user acceptance, or all file types. Original broad ui-previews dropdown-label RED remains historical."
     },
     {
       "id": "DCM-36",
