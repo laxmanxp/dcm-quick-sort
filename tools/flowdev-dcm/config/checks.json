@@ -751,6 +751,15 @@
           "tools/run-ui.ps1",
           "-Suite",
           "conflicts"
+        ],
+        "ui-batch-partial": [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "tools/run-ui.ps1",
+          "-Suite",
+          "batch-partial"
         ]
       }
     }
