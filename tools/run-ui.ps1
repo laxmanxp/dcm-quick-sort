@@ -554,10 +554,7 @@ try {
                     return $found
                 } 30
                 if($operation -eq 'rename'){
-                    [DcmNative]::SetText($script:hwnd,$script:app.Id,1005,$renameName)
-                    Wait-For ('rename button ready '+$file) {
-                        [DcmNative]::IsWindowEnabled([DcmNative]::Control($script:hwnd,$script:app.Id,1006))
-                    } 10
+                    Invoke-Fvs ('office-rename-ready-'+$stem) ("type newname `""+$renameName+"`"`ninspect main`nexpect rename enabled")
                     [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1006)
                     Wait-For ('Office rename completed '+$file) {
                         -not(Test-Path -LiteralPath $from) -and
