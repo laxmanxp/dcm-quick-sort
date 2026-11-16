@@ -473,7 +473,7 @@ try {
         $null=[DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@($original))
         Invoke-Fvs 'rename-edge-invalid-input' "type newname `"bad:name`"`ninspect main"
         [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1006)
-        Confirm-Dialog 'DCM - Quick Sort' @('invalid character') 1
+        Confirm-Dialog 'DCM - Quick Sort' @('invalid character') 2
         Assert-Fixtures
         if((Hash $journal) -ne $beforeJournal){throw 'Rejected invalid name changed durable journal'}
         $cases.Add([ordered]@{name='rename-invalid-character-refused-without-data-loss';passed=$true;original_sha256=$digest})
