@@ -280,7 +280,7 @@ function Assert-RenameJournal([string]$Name,[string]$From,[string]$To,[string]$S
     $cases.Add([ordered]@{name=$Name;kind='independent rename journal oracle';passed=$true;from=$From;to=$To;state=$State;id=$ids[0];journal_sha256=(Hash $path);terminal_entry=$matched[-1]})
     return $ids[0]
 }
-function Confirm-Dialog([string]$Title,[string[]]$TextFragments,[int]$Button=6){
+function Confirm-Dialog([string]$Title,[string[]]$TextFragments,[int]$Button=6,[switch]$ExpectFollowupDialog){
     Wait-For 'expected confirmation' { @([DcmNative]::Dialogs($script:hwnd,$script:app.Id)).Count -gt 0 } 10 -AllowDialog
     $dialogs=@([DcmNative]::Dialogs($script:hwnd,$script:app.Id))
     if($dialogs.Count -ne 1 -or -not $dialogs[0].Text.StartsWith($Title)){Write-Json (Join-Path $lab 'unexpected-confirmation.json') $dialogs;throw 'Unexpected confirmation dialog; no response was sent.'}
@@ -294,7 +294,9 @@ function Confirm-Dialog([string]$Title,[string[]]$TextFragments,[int]$Button=6){
     # bounded settle interval before querying its owned descendants; a
     # synchronous window-text query against the dying HWND can time out.
     Start-Sleep -Milliseconds 250
+    if(-not $ExpectFollowupDialog){
     Wait-For 'confirmation closed' { @([DcmNative]::Dialogs($script:hwnd,$script:app.Id)).Count -eq 0 } 10 -AllowDialog
+    }
 }
 function Status-Contains([string]$Text){return @([DcmNative]::Snapshot($script:hwnd,$script:app.Id) | Where-Object {$_.Visible -and $_.Text.Contains($Text)}).Count -gt 0}
 function OfficeStatusContains([string]$Text){
@@ -1023,7 +1025,7 @@ try {
         $cases.Add([ordered]@{name='batch-partial-select-exact-two-files';passed=$true;files=$names;indexes=$idx})
         $null=Save-Shot 'batch-partial-selection'
         [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1041)
-        Confirm-Dialog 'Move Selected Files to Vault' @('Move 2 selected files',$fixture.destination)
+        Confirm-Dialog 'Move Selected Files to Vault' @('Move 2 selected files',$fixture.destination) -ExpectFollowupDialog
         Confirm-Dialog 'Filename Conflict' @('03-charlie.txt','Keep Both','Replace') 2
         Wait-For 'DCM-42 mixed result status' {Status-Contains 'Batch move finished: 1 moved; 1 skipped or failed out of 2'} 30
         if(Test-Path -LiteralPath $bravo){throw 'Successful batch source was not removed'}
