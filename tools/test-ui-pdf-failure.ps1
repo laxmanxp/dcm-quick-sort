@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,[switch]$RequireErrorControls,[ValidateSet('damaged','protected')][string]$FailureFixture='damaged',[switch]$InFlight,[switch]$ActiveMaximize)
+param([string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,[switch]$RequireErrorControls,[ValidateSet('damaged','protected')][string]$FailureFixture='damaged',[switch]$InFlight,[switch]$ActiveMaximize,[switch]$CloseInFlight)
 # DCM-34: one header-valid, unloadable PDF through the default Windows.Data.Pdf
 # renderer and its natural Windows fallback. No registry changes, fallback
 # suppression, foreign-window input, synthetic repaint or cancellation claim.
@@ -13,6 +13,7 @@ $fixtureManifest=Join-Path $repo 'tests/fixtures/dcm34-damaged.manifest.json'
 $protected=$FailureFixture -ceq 'protected'
 if($InFlight -and $protected){throw 'In-flight gate uses the original valid and damaged fixtures'}
 if($InFlight -and $ActiveMaximize){throw 'Separate completed-PDF maximize from interrupted rendering'}
+if($CloseInFlight -and ($InFlight -or $ActiveMaximize -or $protected)){throw 'Close-in-flight requires its own unmodified valid PDF route'}
 $failureFile=if($protected){'12-protected.pdf'}else{'10-damaged.pdf'}
 if($protected){$fixtureManifest=Join-Path $repo 'tests/fixtures/sumatra-password.json';$RequireErrorControls=$true}
 $lab=Join-Path $env:FLOWDEV_WORKSPACE_ROOT ('dcm-quicksort-ui-pdf-failure-'+[DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss')+'-'+[Guid]::NewGuid().ToString('N').Substring(0,8))
@@ -23,8 +24,10 @@ $receipt=[ordered]@{schema=1;feature='DCM-34';format_scope='default_PDF_damage_a
 if($protected){$receipt.format_scope='default_PDF_protected_refusal_and_recovery_only';$receipt.feature='DCM-34-PDF-PROTECTED-01';$receipt['password_supplied']=$false;$receipt['password_dialog_input_performed']=$false}
 $tracePath=Join-Path $lab 'pdf-events.jsonl'
 if($InFlight){$receipt.feature='DCM-34-PDF-INTERRUPT-01';$receipt.format_scope='observed_real_renderer_interruption';$receipt['trace_path']=$tracePath}
+if($CloseInFlight){$receipt.feature='DCM-34-PDF-CLOSE-INFLIGHT-01';$receipt.format_scope='observed_real_renderer_normal_close';$receipt['trace_path']=$tracePath}
 if($ActiveMaximize){$receipt.feature='DCM-WINDOW-MAXIMIZE-01';$receipt.format_scope='active_PDF_maximize_restore'}
 . (Join-Path $repo 'tests/native/dcm-pdf-inflight.ps1')
+if($CloseInFlight){. (Join-Path $repo 'tests/native/dcm-pdf-close-inflight.ps1')}
 $app=$null;$hwnd=[IntPtr]::Zero;$owned=$null;$head='';$manifest=@();$fixture=$null;$expected=@{};$exe='';$build=$null;$selectedName='';$controlRefs=@();$basePaneHandles=@{};$registrations=$null
 $fallbackFooter='DCM PDF renderer unavailable; using Windows PDF preview fallback'
 $unavailablePrefix='PDF preview unavailable: '
@@ -265,7 +268,7 @@ function StopApp {
  $children=@(Get-CimInstance Win32_Process -Filter ('ParentProcessId='+$owned.pid)|Where-Object {$_.CreationDate.ToUniversalTime() -ge $parentStart -and $_.CreationDate.ToUniversalTime() -le $upper}|ForEach-Object {[ordered]@{pid=[int]$_.ProcessId;path=$_.ExecutablePath;created=$_.CreationDate.ToUniversalTime().ToString('o')}})
  $lifecycle['children_before_close']=$children
  if($app.HasExited){if(-not $owned.Contains('close_requested_utc')){$owned['unexpected_exit']=$true;$issues.Add('Owned host exited before a close request')}}else{
-  try{Own;[DcmNative]::CloseAsync($hwnd,$app.Id);$owned['close_requested_utc']=[DateTime]::UtcNow.ToString('o')}catch{$lifecycle['close_window_error']=$_.Exception.Message;$issues.Add('Owned close request failed')}
+  try{if(-not $owned.Contains('close_requested_utc')){Own;[DcmNative]::CloseAsync($hwnd,$app.Id);$owned['close_requested_utc']=[DateTime]::UtcNow.ToString('o')}}catch{$lifecycle['close_window_error']=$_.Exception.Message;$issues.Add('Owned close request failed')}
   if(-not $app.WaitForExit(15000)){
    # Failure-only teardown: retain evidence, then terminate this exact host.
    # Never terminate a process tree or a shared Windows preview provider.
@@ -369,6 +372,7 @@ public static class DcmPDFMax {
  foreach($var in @('DCM_PDF_PROVIDER','DCM_SUMATRA_EXE','DCM_PDF_TRACE')){$psi.EnvironmentVariables.Remove($var)}
  $receipt['child_process_environment']=[ordered]@{pdf_provider_override_removed=$true;sumatra_executable_override_removed=$true;default_pdf_view='fit_width';registry_mutated=$false;fallback_suppressed=$false}
  if($InFlight){$psi.EnvironmentVariables['DCM_PDF_TRACE']=$tracePath;$receipt['scope_limit']='Normal application with opt-in event logging only. Real unmodified renderer, no delays, suspension, injected completion or cancellation. Valid/error to TXT and same-file reopen overlap; no broad Office interruption or close-during-render acceptance.'}
+ if($CloseInFlight){$psi.EnvironmentVariables['DCM_PDF_TRACE']=$tracePath;$receipt['scope_limit']='Real valid PDF renderer alive when normal WM_CLOSE posted; require renderer finish and obsolete completion cleanup before host exits, owned child drain, no stale PNG, files preserved; no process killing, synthetic delays, general Office testing or end-user acceptance.'}
  $app=New-Object Diagnostics.Process;$app.StartInfo=$psi;if(-not $app.Start()){throw 'Host launch failed'};$owned=[ordered]@{pid=$app.Id;path=$exe;start=$app.StartTime.ToUniversalTime().ToString('o')};$receipt['owned_process']=$owned
  $until=[DateTime]::UtcNow.AddSeconds(20);do{$app.Refresh();if($app.HasExited){throw 'Host exited before window'};$hwnd=$app.MainWindowHandle;if($hwnd -ne [IntPtr]::Zero){break};Start-Sleep -Milliseconds 100}while([DateTime]::UtcNow -lt $until)
  Wait 'fixture list' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq $expected.Count}
@@ -385,6 +389,10 @@ public static class DcmPDFMax {
   $null=ReadyPreview 'inflight-reopened-pdf' 'valid'
   SelectFile '01-alpha.txt';$null=TextBody 'inflight-final-text' $plain $initialText
   $receipt.interruption_or_cancellation_tested=$true;$receipt['process_cancellation_tested']=$false
+ }elseif($CloseInFlight){
+  $receipt.sequence=@('initial TXT','start real valid PDF renderer','post normal close while renderer active','wait for renderer completion and output discard','verify clean exit/cache and exclusive file release')
+  Invoke-DcmPdfCloseInFlight
+  $receipt.interruption_or_cancellation_tested=$true;$receipt['process_cancellation_tested']=$false
  }else{
  SelectFile '08-preview.pdf';$firstValid=ReadyPreview '02-valid-before-damage' 'valid'
  if($ActiveMaximize){Test-ActivePDFMaximize}
@@ -400,7 +408,7 @@ public static class DcmPDFMax {
  StopApp;Source;Files;ExclusivePDFs
  if((Hash (Join-Path $fixture.inbox $failureFile)) -cne $definition.sha256 -or (Hash $exe) -cne $build.app_artifact.sha256){throw 'Original fixture/application bytes changed'}
  Record '09-normal-close-and-original-bytes' ([ordered]@{exit_code=$owned.exit_code;original_fixture_bytes_preserved=$true;source_unchanged=$true;journal_empty=$true})
- if($InFlight){if($cases.Count -ne 10 -or $shots.Count -lt 12){throw 'Incomplete observed interruption cases or captures'}}elseif($ActiveMaximize){if($cases.Count -ne 12 -or $shots.Count -lt 26){throw 'Incomplete active-PDF maximize/restore cases or captures'}}elseif($cases.Count -ne 9 -or $shots.Count -lt 22){throw 'Incomplete PDF failure/recovery cases or original captures'}
+ if($InFlight){if($cases.Count -ne 10 -or $shots.Count -lt 12){throw 'Incomplete observed interruption cases or captures'}}elseif($CloseInFlight){if($cases.Count -ne 4 -or $shots.Count -lt 2){throw 'Incomplete real close-in-flight cases or baseline screenshots'}}elseif($ActiveMaximize){if($cases.Count -ne 12 -or $shots.Count -lt 26){throw 'Incomplete active-PDF maximize/restore cases or captures'}}elseif($cases.Count -ne 9 -or $shots.Count -lt 22){throw 'Incomplete PDF failure/recovery cases or original captures'}
  if($RequireErrorControls){if($receipt.error_control_checks.Count -ne 2){throw 'Both failure openings require control checks'};$receipt['host_error_controls_machine_checked']=$true}
  $receipt['machine_checks_passed']=$true;$receipt.passed=$true
 }catch{
