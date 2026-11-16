@@ -531,19 +531,12 @@
           "tools/test-ui-pptx.ps1"
         ],
         "ui-pptx-active-maximize": [
-
           "powershell.exe",
-
           "-NoProfile",
-
           "-NonInteractive",
-
           "-File",
-
           "tools/test-ui-pptx.ps1",
-
           "-ActiveMaximize"
-
         ],
         "ui-legacy-doc": [
           "powershell.exe",
@@ -695,6 +688,15 @@
           "tools/test-ui-xlsx.ps1",
           "-ActiveMaximize",
           "-ObserveNativeLayout"
+        ],
+        "ui-preview-release-operations": [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "tools/run-ui.ps1",
+          "-Suite",
+          "preview-release-operations"
         ]
       }
     }
