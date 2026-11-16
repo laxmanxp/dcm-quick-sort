@@ -1114,16 +1114,20 @@
     {
       "id": "DCM-36",
       "feature": "Verify Rename through the normal UI",
-      "status": "planned",
-      "completion": "pending",
-      "ui_test": "not_run",
+      "status": "tested",
+      "completion": "complete",
+      "ui_test": "ui-rename-edge_PASS_19_cases_10_captures_spaces_unicode_caseonly_invalid_conflict_and_undo",
       "user_test": "not_recorded",
       "parent_ids": [
         "D1",
         "DCM-NATIVE-01"
       ],
       "acceptance": "Rename an ordinary fixture and exercise spaces, Unicode, case-only names, invalid names and conflicts without data loss.",
-      "evidence": []
+      "evidence": [
+        "qualification/evidence/dcm-36-rename-edge-closeout-2026-11-16.md"
+      ],
+      "qualification_note": "Complete with bounded engineering acceptance at tested pushed e477bc3. flowdev update, ui-tooling, exact build, ui-rename-edge PASS 19 cases, all 10 original captures independently reviewed. Spaces, Unicode U+00E9, case-only, invalid-name refusal, existing-name conflict cancellation all preserve bytes; native Rename/Undo journals verified. Case-only production fix safely allows same-file casing changes with guarded Undo/restart recovery. Full native regressions passed at product-code-identical 0a91821; final changes only headed test harness. Historical RED receipts retained. User acceptance not recorded. 34/50 steps complete, 16 remaining. DCM-34 remains partial.",
+      "scope_note": "Representative normal UI and Windows source fixture; not arbitrary Unicode normalization, reparse-point or case-sensitive directory behavior, every filesystem, or physical user acceptance."
     },
     {
       "id": "DCM-37",
