@@ -124,3 +124,22 @@ raw visual flags are not automatically user acceptance.
 This is the **default PDF** same-file operation contract. It does not certify
 all installed Office preview providers or replace the `ui-rename`,
 `ui-move`, or focused PDF lifecycle selectors.
+
+
+## DCM-35 Office preview release operations
+
+After the registered update, run `ui-tooling`, an exact-source `build`,
+set `DCM_BUILD_RECEIPT` to that build's successful receipt and execute
+`flowdev test dcm-quicksort ui-office-preview-release-operations`.
+The selector pins a DOCX, XLSX and committed PPTX fixture; each is previewed,
+switched to TXT and exclusively opened with `FileShare.None`, then reselected
+and operated through QuickSort's own Rename/Undo and Move/Undo controls.
+Original/restored SHA-256, durable journal identity, fixture set, final
+file release and owned app shutdown are checked. Review the captured states
+separately.
+
+The provider may be either the installed Windows handler or the built-in
+OpenXML fallback. Record which was *actually observed*; do not infer installed
+handler acceptance from a fallback pass. The native Office release receipts
+remain separate evidence. No Office registration changes, user-file writes
+or production source edits on Lenovo are permitted.
