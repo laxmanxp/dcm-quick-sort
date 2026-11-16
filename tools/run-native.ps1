@@ -6,7 +6,8 @@ param(
     [string]$ExpectedBranch = 'release/v1.0.71',
     [switch]$CaptureDOCXComponent,
     [switch]$CapturePPTXComponent,
-    [switch]$CaptureXLSXComponent
+    [switch]$CaptureXLSXComponent,
+    [switch]$ObservePDFDPI
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -16,7 +17,9 @@ if (-not $env:FLOWDEV_WORKSPACE_ROOT) { throw 'FLOWDEV_WORKSPACE_ROOT must be se
 if ($CaptureDOCXComponent -and ($Mode -ne 'regressions' -or $Run -cne '^TestDCM34DOCXFallbackComponent$')) { throw 'DOCX component capture requires its exact focused native test.' }
 if ($CapturePPTXComponent -and ($Mode -ne 'regressions' -or $Run -cne '^TestPPTXFallbackComponentRecovery$')) { throw 'PPTX component capture requires its exact focused native test.' }
 if ($CaptureXLSXComponent -and ($Mode -ne 'regressions' -or $Run -cne '^TestXLSXFallbackComponentRecovery$')) { throw 'XLSX component capture requires its exact focused native test.' }
+if ($ObservePDFDPI -and ($Mode -ne 'regressions' -or $Run -cne '^TestDCM34PDFBitmapDPI$')) { throw 'PDF DPI observation requires its exact focused native test.' }
 if (([int][bool]$CaptureDOCXComponent + [int][bool]$CapturePPTXComponent + [int][bool]$CaptureXLSXComponent) -gt 1) { throw 'Only one component may own the headed desktop.' }
+if ($ObservePDFDPI -and ($CaptureDOCXComponent -or $CapturePPTXComponent -or $CaptureXLSXComponent)) { throw 'PDF DPI measurement is a separate non-GUI test.' }
 
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $workspace = [IO.Path]::GetFullPath($env:FLOWDEV_WORKSPACE_ROOT)
@@ -82,6 +85,8 @@ function Invoke-OwnedCommand([string]$Name, [string]$File, [string[]]$Arguments,
     if ($CapturePPTXComponent) { $psi.EnvironmentVariables['DCM_PPTX_COMPONENT_EVIDENCE_ROOT'] = Join-Path $report 'pptx-component' }
     $psi.EnvironmentVariables.Remove('DCM_XLSX_COMPONENT_EVIDENCE_ROOT')
     if ($CaptureXLSXComponent) { $psi.EnvironmentVariables['DCM_XLSX_COMPONENT_EVIDENCE_ROOT'] = Join-Path $report 'xlsx-component' }
+    $psi.EnvironmentVariables.Remove('DCM_PDF_DPI_EVIDENCE_ROOT')
+    if ($ObservePDFDPI) { $psi.EnvironmentVariables['DCM_PDF_DPI_EVIDENCE_ROOT'] = Join-Path $report 'pdf-dpi-observation' }
     $proc = New-Object Diagnostics.Process
     $proc.StartInfo = $psi
     $entry = [ordered]@{name=$Name; file=$File; arguments=$Arguments; directory=$Directory; started_utc=[DateTime]::UtcNow.ToString('o'); stdout=$outPath; stderr=$errPath; timed_out=$false}
