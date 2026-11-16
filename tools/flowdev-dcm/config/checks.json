@@ -328,6 +328,14 @@
           "tools/test-ui-pdf-failure.ps1",
           "-InFlight"
         ],
+        "ui-pdf-close-inflight": [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "tools/test-ui-pdf-failure.ps1",
+          "-CloseInFlight"
+        ],
         "pdf-trace-unit": [
           "powershell.exe",
           "-NoProfile",
