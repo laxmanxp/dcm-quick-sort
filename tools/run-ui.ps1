@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('basics','filters','rename','rename-edge','move','batch','pdf','previews','preview-release-operations','office-preview-release-operations')][string]$Suite='move',
+    [ValidateSet('basics','filters','rename','rename-edge','undo-rename','move','batch','pdf','previews','preview-release-operations','office-preview-release-operations')][string]$Suite='move',
     [string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,
     [string]$VisionExe=$env:DCM_FLOWUIVISION_EXE,
     [string]$PreviousFixtureInbox='C:\FlowverseReports\dcm-flowuivision-20261103\inbox'
@@ -427,6 +427,61 @@ try {
         $null=Assert-RenameJournal 'undo-rename-journal-completed' $old $renamed 'undone' $renameID
         $cases.Add([ordered]@{name='Undo Rename independent byte oracle';passed=$true;restored=$old;sha256=(Hash $old)})
         Save-State 'undo-rename-completed';$null=Save-Shot 'undo-rename-completed'
+    }
+    if($Suite -eq 'undo-rename'){
+        # DCM-37: real UI Undo following restart, including an occupied old
+        # pathname. A colliding file is created only as disposable test setup.
+        Invoke-Fvs 'dcm37-rename-ready' "click clear`ntype name `"01-alpha`"`nwait_ready type=textbox target=newname text=`"01-alpha`" timeout=5s`ntype newname `"01-renamed-alpha`"`ninspect main`nexpect rename enabled"
+        $original=Join-Path $fixture.inbox '01-alpha.txt'
+        $renamed=Join-Path $fixture.inbox '01-renamed-alpha.txt'
+        $originalHash=Hash $original
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1006)
+        Wait-For 'DCM-37 rename finished' {
+            -not (Test-Path -LiteralPath $original) -and
+            (Test-Path -LiteralPath $renamed) -and
+            [DcmNative]::IsWindowEnabled([DcmNative]::Control($script:hwnd,$script:app.Id,1008))
+        } 20
+        if((Hash $renamed) -ne $originalHash){throw 'DCM-37 Rename changed source bytes'}
+        $id=Assert-RenameJournal 'dcm37-rename-completed-journal' $original $renamed 'completed'
+        $cases.Add([ordered]@{name='dcm37-rename-created-transaction';passed=$true;sha256=$originalHash;id=$id})
+        $null=Save-Shot 'dcm37-renamed'
+        Stop-OwnedApp;Start-OwnedApp
+        Invoke-Fvs 'dcm37-processed-search' "type processedsearch `"01-renamed-alpha`"`ninspect main"
+        $processed=@([DcmNative]::ListItems($script:hwnd,$script:app.Id,1017))
+        $indexes=@()
+        for($i=0;$i -lt $processed.Count;$i++){
+            if($processed[$i].Contains('01-renamed-alpha')){$indexes+=$i}
+        }
+        if($indexes.Count -ne 1){throw 'DCM-37 restart did not retain exactly one renamed processed transaction'}
+        $null=[DcmNative]::SelectSingleItem($script:hwnd,$script:app.Id,1017,$indexes[0])
+        $cases.Add([ordered]@{name='dcm37-rename-durable-and-selected-after-restart';passed=$true;id=$id})
+        $collisionBytes=[Text.Encoding]::UTF8.GetBytes('DCM37-OCCUPIED-ORIGINAL-V1')
+        [IO.File]::WriteAllBytes($original,$collisionBytes)
+        $collisionHash=Hash $original
+        if($collisionHash -eq $originalHash){throw 'DCM-37 collision fixture is not distinct'}
+        $journal=Join-Path $fixture.config 'recovery/move-journal.jsonl'
+        $journalBefore=Hash $journal
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1008)
+        Confirm-Dialog 'DCM - Quick Sort' @('cannot undo: original path is already occupied') 2
+        if((Hash $original) -ne $collisionHash -or (Hash $renamed) -ne $originalHash){
+            throw 'DCM-37 refused Undo damaged colliding or renamed file'
+        }
+        if((Hash $journal) -ne $journalBefore){throw 'DCM-37 refused Undo changed durable journal'}
+        $null=Assert-RenameJournal 'dcm37-refused-undo-journal-remains-completed' $original $renamed 'completed' $id
+        $cases.Add([ordered]@{name='dcm37-occupied-original-undo-refused-without-overwrite';passed=$true;collision_sha256=$collisionHash;renamed_sha256=$originalHash;journal_sha256=$journalBefore})
+        $null=Save-Shot 'dcm37-refused-occupied-original'
+        [IO.File]::Delete($original)
+        if(Test-Path -LiteralPath $original){throw 'Cannot clear disposable collision fixture'}
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1008)
+        Wait-For 'DCM-37 Undo after clearing occupied path' {
+            (Test-Path -LiteralPath $original) -and -not(Test-Path -LiteralPath $renamed)
+        } 20
+        Wait-For 'DCM-37 successful Undo status' {Status-Contains 'Undid processed transaction'}
+        if((Hash $original) -ne $originalHash){throw 'DCM-37 Undo did not restore original bytes'}
+        $null=Assert-RenameJournal 'dcm37-successful-undo-journal' $original $renamed 'undone' $id
+        Assert-Fixtures
+        $cases.Add([ordered]@{name='dcm37-cleared-original-undo-restores-name-bytes-and-journal';passed=$true;sha256=$originalHash;id=$id})
+        $null=Save-Shot 'dcm37-undo-restored'
     }
     if($Suite -eq 'rename-edge'){
         # DCM-36: exact native GUI rename and Undo; no filesystem rename shortcuts.
