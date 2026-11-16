@@ -430,3 +430,42 @@ func TestMoveJournalPreservesBatchIDAcrossRecovery(t *testing.T) {
 		t.Fatalf("batch ID not preserved by durable journal: %#v", recovery.History)
 	}
 }
+
+
+func TestCaseOnlyRenameJournalSurvivesRestartAndUndo(t *testing.T) {
+	dir := t.TempDir()
+	from := filepath.Join(dir, "01-alpha.txt")
+	to := filepath.Join(dir, "01-ALPHA.txt")
+	journalPath := filepath.Join(dir, "journal.jsonl")
+	if err := os.WriteFile(from, []byte("case-only"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	rec, err := beginMoveJournal(journalPath, MoveRecord{From: from, To: to, Kind: MoveKindMove}, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := moveFile(from, to); err != nil {
+		t.Fatal(err)
+	}
+	if err := completeMoveJournal(journalPath, rec, time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	recovery, err := recoverMoveJournal(journalPath, time.Now())
+	if err != nil || len(recovery.History) != 1 || len(recovery.Attention) != 0 {
+		t.Fatalf("completed case-only rename not recoverable: %#v %v", recovery, err)
+	}
+	if err := undoMove(recovery.History[0]); err != nil {
+		t.Fatalf("case-only Undo failed: %v", err)
+	}
+	if err := markMoveJournalUndone(journalPath, rec.JournalID, time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	after, err := recoverMoveJournal(journalPath, time.Now())
+	if err != nil || len(after.History) != 0 || len(after.Attention) != 0 {
+		t.Fatalf("case-only Undo recovery not clean: %#v %v", after, err)
+	}
+	exact, err := exactCaseFilePresent(from)
+	if err != nil || !exact {
+		t.Fatalf("original filename case not restored: %v %v", exact, err)
+	}
+}
