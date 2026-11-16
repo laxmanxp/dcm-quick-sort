@@ -1184,16 +1184,20 @@
     {
       "id": "DCM-40",
       "feature": "Verify a cross-volume Move",
-      "status": "planned",
-      "completion": "pending",
-      "ui_test": "not_run",
+      "status": "tested",
+      "completion": "complete",
+      "ui_test": "desktop6b6eh4t_flowdev_ui_cross_volume_PASS_9_cases_7_images",
       "user_test": "not_recorded",
       "parent_ids": [
         "D2",
         "DCM-NATIVE-01"
       ],
       "acceptance": "Use an isolated second volume; verify copied bytes, guarded source removal and truthful failure/partial states.",
-      "evidence": []
+      "evidence": [
+        "qualification/evidence/dcm-40-cross-volume-move-desktop-2026-11-16.md"
+      ],
+      "qualification_note": "Bounded engineering acceptance on DESKTOP-6B6EH4T, pushed 25c9c0b: registered update, ui-tooling, exact build and new ui-cross-volume PASS (9 cases, 7 images reviewed). Actual distinct E: and D: NTFS volume IDs; native E→D move copied exact hash then removed source, completed journal; restart recovered transaction; Undo restored bytes/path/journal. Second locked-source move made verified D copy but correctly retained E source, showed attention-required error/status, recorded attention journal. Independent post-run check confirmed both retained hashes and ownership marker; no user files touched, raw partial evidence preserved. User acceptance not recorded.",
+      "scope_note": "Real E-to-D cross-volume NTFS success and controlled source-retirement-refused partial state; does not certify arbitrary network, disk-full, forced crash, ACL or physical sign-off."
     },
     {
       "id": "DCM-41",
