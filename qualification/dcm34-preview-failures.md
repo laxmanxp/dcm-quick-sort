@@ -1,5 +1,13 @@
 # DCM-34 — preview failure and interruption states
 
+## 16 November 2026 — XLSX and PPTX fallback component recovery accepted with limits
+
+At source `e82f295adc53a64fe977b04361c1c6f15564a3e1`, the registered `xlsx-fallback-component` and `pptx-fallback-component` FlowDev selectors **both PASS**, each 16 of 16 captured states, with all 32 images separately reviewed and no visible fault within their owned-component contract. Both missing-handler and failed-handler boundary inputs correctly display unavailable messages for malformed files, transition to valid sheets/slides, clear previous content after a later malformed file, then recover again. Fixture bytes and locks passed both gates; Office registration and providers were not modified or invoked.
+
+The earlier 8-capture XLSX foreground failure remains historical RED, superseded by the successful run; it has not been relabeled. Raw receipt visual/user flags remain unchanged. The handlers were simulated at the boundary, **not physically removed or made to fail on Lenovo**. See [Office component closeout](evidence/dcm-34-office-fallback-component-closeout-2026-11-16.md).
+
+**Full DCM-34 still PARTIAL; 32 complete / 18 remaining.** This result is bounded component recovery rather than complete broad Office/provider failure and physical acceptance. Continue only with distinct still-open feature scope; avoid restarting accepted XLSX/PPTX rendering and resize runs.
+
 ## 16 November 2026 — XLSX fallback headed capture blocked by shared-desktop foreground
 
 At pushed source `3f1ce14`, registered `xlsx-fallback-component` yielded missing-handler-boundary **PASS**, but failed-handler-boundary hit eight strict foreground-owned screenshot capture refusals. The full FlowDev selector exited 1, and its companion PPTX fallback selector was **not run**. A later read-only inspection saw Firefox foreground; temporal association is insufficient to prove the exact focus owner during each missed capture. No product rendering defect is inferred, and no foreign window was disturbed. Preserve the failed raw receipt and do not repeat headed tests until the desktop is available for uninterrupted exclusive capture. See [failed attempt evidence](evidence/dcm-34-office-fallback-foreground-blocker-2026-11-16.md).
