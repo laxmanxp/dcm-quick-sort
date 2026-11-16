@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('basics','filters','rename','move','batch','pdf','previews','preview-release-operations','office-preview-release-operations')][string]$Suite='move',
+    [ValidateSet('basics','filters','rename','rename-edge','move','batch','pdf','previews','preview-release-operations','office-preview-release-operations')][string]$Suite='move',
     [string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,
     [string]$VisionExe=$env:DCM_FLOWUIVISION_EXE,
     [string]$PreviousFixtureInbox='C:\FlowverseReports\dcm-flowuivision-20261103\inbox'
@@ -427,6 +427,45 @@ try {
         $null=Assert-RenameJournal 'undo-rename-journal-completed' $old $renamed 'undone' $renameID
         $cases.Add([ordered]@{name='Undo Rename independent byte oracle';passed=$true;restored=$old;sha256=(Hash $old)})
         Save-State 'undo-rename-completed';$null=Save-Shot 'undo-rename-completed'
+    }
+    if($Suite -eq 'rename-edge'){
+        # DCM-36: exact native GUI rename and Undo; no filesystem rename shortcuts.
+        # Windows case-only rename must be checked by enumerated exact casing,
+        # not Test-Path, because Windows path existence is case-insensitive.
+        $original='01-alpha.txt'
+        $old=Join-Path $fixture.inbox $original
+        $digest=Hash $old
+        foreach($scenario in @(
+            @{label='spaces';stem='Odisha Project Notes'},
+            @{label='unicode';stem='Café Odisha 2026'},
+            @{label='case-only';stem='01-ALPHA'}
+        )){
+            $targetName=$scenario.stem+'.txt'
+            $target=Join-Path $fixture.inbox $targetName
+            $key=[string]$scenario.label
+            $null=[DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@($original))
+            Invoke-Fvs ('rename-edge-input-'+$key) ("type newname `""+$scenario.stem+"`"`ninspect main`nexpect rename enabled")
+            [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1006)
+            Wait-For ('rename edge completed '+$key) {
+                $match=@(Get-ChildItem -LiteralPath $fixture.inbox -File | Where-Object {$_.Name -ieq $targetName})
+                ($match.Count -eq 1) -and ($match[0].Name -ceq $targetName) -and
+                [DcmNative]::IsWindowEnabled([DcmNative]::Control($script:hwnd,$script:app.Id,1008))
+            } 30
+            if((Hash $target) -ne $digest){throw 'Rename edge changed source bytes'}
+            $id=Assert-RenameJournal ('rename-edge-'+$key) $old $target 'completed'
+            $cases.Add([ordered]@{name=('rename-edge-'+$key+'-exact-name-and-bytes');passed=$true;target=$targetName;sha256=$digest})
+            $null=Save-Shot ('rename-edge-'+$key)
+            [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1008)
+            Wait-For ('rename edge Undo '+$key) {
+                $match=@(Get-ChildItem -LiteralPath $fixture.inbox -File | Where-Object {$_.Name -ieq $original})
+                ($match.Count -eq 1) -and ($match[0].Name -ceq $original)
+            } 30
+            $null=Assert-RenameJournal ('rename-edge-undo-'+$key) $old $target 'undone' $id
+            if((Hash $old) -ne $digest){throw 'Rename edge Undo altered bytes'}
+            Assert-Fixtures
+            $cases.Add([ordered]@{name=('rename-edge-'+$key+'-undo-preserved');passed=$true;sha256=$digest})
+            $null=Save-Shot ('rename-edge-'+$key+'-undone')
+        }
     }
     if($Suite -eq 'move'){
         Invoke-Fvs 'move-readiness' "click clear`ntype name `"01-alpha`"`nwait_ready type=textbox target=newname text=`"01-alpha`" timeout=5s`ntype destination `"Accepted`"`ninspect main`nexpect destination text=`"Accepted`"`nexpect move enabled"
