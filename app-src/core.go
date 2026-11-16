@@ -176,6 +176,36 @@ func fileSHA256(path string) (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
+// caseOnlySameDirectoryRename limits the exception to a casing change within
+// the exact same parent path. It never permits overwriting a different file.
+func caseOnlySameDirectoryRename(source, target string) bool {
+	return filepath.Clean(filepath.Dir(source)) == filepath.Clean(filepath.Dir(target)) &&
+		filepath.Base(source) != filepath.Base(target) &&
+		strings.EqualFold(filepath.Base(source), filepath.Base(target))
+}
+
+// exactCaseFilePresent checks the on-disk directory entry, not Stat(path):
+// on Windows both spellings of the same file can otherwise appear to exist.
+// Ambiguous case-folding matches are never treated as a safe exact name.
+func exactCaseFilePresent(path string) (bool, error) {
+	entries, err := os.ReadDir(filepath.Dir(path))
+	if err != nil {
+		return false, err
+	}
+	want := filepath.Base(path)
+	count := 0
+	exact := false
+	for _, entry := range entries {
+		if strings.EqualFold(entry.Name(), want) {
+			count++
+			if entry.Name() == want {
+				exact = true
+			}
+		}
+	}
+	return count == 1 && exact, nil
+}
+
 func inspectDestinationConflict(source, target string) (DestinationConflictInfo, error) {
 	info := DestinationConflictInfo{Kind: ConflictNone, Source: source, Target: target}
 	srcInfo, err := os.Stat(source)
@@ -197,6 +227,18 @@ func inspectDestinationConflict(source, target string) (DestinationConflictInfo,
 		return info, errors.New("destination path exists but is not a regular file")
 	}
 	if os.SameFile(srcInfo, tgtInfo) {
+		// A Windows case-only rename refers to the same file on both paths.
+		// MoveFileExW without REPLACE_EXISTING can change its directory-entry
+		// casing safely; still reject aliases and all other same-file targets.
+		if caseOnlySameDirectoryRename(source, target) {
+			exact, err := exactCaseFilePresent(source)
+			if err != nil {
+				return info, err
+			}
+			if exact {
+				return info, nil
+			}
+		}
 		return info, errors.New("source and destination refer to the same file; no conflict action is safe")
 	}
 	info.TargetSize = tgtInfo.Size()
@@ -435,6 +477,18 @@ func moveFileWith(source, target string, renameFn func(string, string) error, re
 }
 
 func validateUndoMove(rec MoveRecord) error {
+	if rec.Kind == MoveKindMove && caseOnlySameDirectoryRename(rec.From, rec.To) {
+		// A Windows case-only rename makes both Stat paths resolve to one file.
+		// Undo is safe only while the actual stored entry has the target case.
+		exact, err := exactCaseFilePresent(rec.To)
+		if err != nil {
+			return fmt.Errorf("cannot inspect case-only rename destination: %w", err)
+		}
+		if !exact {
+			return errors.New("cannot undo case-only rename: target casing is no longer present")
+		}
+		return nil
+	}
 	switch rec.Kind {
 	case MoveKindDuplicateRemoved:
 		if _, err := os.Lstat(rec.From); err == nil {
