@@ -414,6 +414,17 @@
           "-Run",
           "^(Test(XLSX|RenderXLSX)|Test(OpenXML|InspectOpenXML|ResolveOpenXML|ReadOpenXML|ReadZipEntryLimited|OfficeFoundation))"
         ],
+        "pdf-shutdown-unit": [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "tools/run-native.ps1",
+          "-Mode",
+          "regressions",
+          "-Run",
+          "^TestPDFShutdownCoordinator"
+        ],
         "checkpoint-unit": [
           "powershell.exe",
           "-NoProfile",
