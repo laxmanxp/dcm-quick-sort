@@ -1149,15 +1149,19 @@
     {
       "id": "DCM-38",
       "feature": "Verify destination selection",
-      "status": "planned",
-      "completion": "pending",
-      "ui_test": "not_run",
+      "status": "tested",
+      "completion": "complete",
+      "ui_test": "desktop6b6eh4t_ui_destination_PASS_10_cases_7_images",
       "user_test": "not_recorded",
       "parent_ids": [
         "DCM-NATIVE-01"
       ],
       "acceptance": "The supported destination controls resolve the intended folder; invalid and unavailable paths are rejected before mutation.",
-      "evidence": []
+      "evidence": [
+        "qualification/evidence/dcm-38-destination-selection-desktop-2026-11-16.md"
+      ],
+      "qualification_note": "Representative desktop engineering acceptance at tested pushed a99dc95: registered update/tooling/build/heading ui-destination passed (10 cases, 7 original screenshots independently reviewed). Native UI rejected missing NotConfigured and traversal-style ../OutsideVault with original source hashes and journal unchanged; valid Accepted logical destination resolved to existing Vault/Accepted physical directory, native Move relocated exact selected 01-alpha.txt and Undo restored hashes, journal and fixtures. Existing favorite Acceptance visible. Source unchanged and owned processes closed. Historical harness failures preserved. No physical user acceptance. 36/50 complete.",
+      "scope_note": "Not full destination manager, arbitrary UNC, disconnected/removable drives, junction aliases or all permissions; registered native Vault destination field + representative rejected and accepted fixtures only."
     },
     {
       "id": "DCM-39",
