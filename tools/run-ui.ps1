@@ -774,6 +774,10 @@ try {
                     (Test-Path -LiteralPath $src -PathType Leaf) -and
                     ((Get-ChildItem -LiteralPath $fixture.destination -File|Measure-Object).Count -eq 1)
                 } 30
+                Wait-For ('DCM-41 '+$label+' journal Undo finalization') {
+                    $seen=@(Get-Content -LiteralPath $journal -Encoding UTF8 | Where-Object {$_.Trim()} | ForEach-Object {$_|ConvertFrom-Json} | Where-Object {$_.id -eq $operationID})
+                    return $seen.Count -ge 3 -and $seen[-1].state -eq 'undone'
+                } 20
                 if((Hash $src) -ne $originalHash -or (Hash $dst) -ne $expectedDestinationHash){throw ('DCM-41 '+$label+' Undo corrupted source/destination')}
                 $remaining=@(Get-ChildItem -LiteralPath $fixture.destination -File)
                 if($remaining.Count -ne 1 -or $remaining[0].Name -ne $name){throw ('DCM-41 '+$label+' Undo left unexpected destination')}
