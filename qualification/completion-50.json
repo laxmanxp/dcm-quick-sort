@@ -1221,16 +1221,20 @@
     {
       "id": "DCM-42",
       "feature": "Verify Batch Move",
-      "status": "planned",
-      "completion": "pending",
-      "ui_test": "not_run",
+      "status": "tested",
+      "completion": "complete",
+      "ui_test": "desktop6b6eh4t_flowdev_ui_batch_PASS_7_cases_6_images_and_ui_batch_partial_PASS_6_cases_6_images",
       "user_test": "not_recorded",
       "parent_ids": [
         "D3",
         "DCM-NATIVE-01"
       ],
       "acceptance": "Only the confirmed selected files move; per-file results, failures and batch membership match independent checks.",
-      "evidence": []
+      "evidence": [
+        "qualification/evidence/dcm-42-batch-move-desktop-2026-11-17.md"
+      ],
+      "qualification_note": "Bounded automated acceptance on DESKTOP-6B6EH4T. Full two-file native Batch Move cancellation/commit/restart/Undo PASS 7 cases, 6 images at source 66ded9c; supplemental mixed outcome (02-bravo moved, 03-charlie conflict skipped) PASS 6 cases, 6 images at source a7f213a. Exact selection readback, hashes, unselected fixtures unchanged, completed transactions with batch ID, no skipped-file journal, truthful 1 moved 1 skipped status, restart and Undo Batch of only completed member verified. All 12 original images reviewed. Source unchanged, owned processes closed. First test harness dialog transition RED preserved. User acceptance not recorded.",
+      "scope_note": "Representative two-file batch, cancellation, success and per-file conflict skip, not general I/O failure, crash, disconnected volume or arbitrary batch size."
     },
     {
       "id": "DCM-43",
