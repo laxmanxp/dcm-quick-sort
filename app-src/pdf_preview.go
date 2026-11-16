@@ -114,3 +114,48 @@ func parsePDFRendererOutput(output string) (PDFRenderMetadata, error) {
 func pdfCompletionOwnsWorker(busy bool, workerGeneration, completedGeneration uint64) bool {
 	return busy && workerGeneration != 0 && workerGeneration == completedGeneration
 }
+
+
+// pdfShutdownCoordinator is owned exclusively by the Windows GUI thread.
+// A PDF selection may be stopped while its renderer is still executing, so
+// outstanding work cannot be inferred from pdfPreview.busy or active alone.
+// Count a worker until its result has been consumed AND its cache cleaned.
+type pdfShutdownCoordinator struct {
+	outstanding int
+	closing     bool
+}
+
+func (s *pdfShutdownCoordinator) workerStarted() bool {
+	if s.closing {
+		return false // no new renderer may be launched after close was requested
+	}
+	s.outstanding++
+	return true
+}
+
+// requestClose returns deferClose and firstRequest.
+// A repeated WM_CLOSE must not invalidate the same selection twice.
+func (s *pdfShutdownCoordinator) requestClose() (bool, bool) {
+	if s.outstanding == 0 {
+		return false, false
+	}
+	if s.closing {
+		return true, false
+	}
+	s.closing = true
+	return true, true
+}
+
+// resultConsumed returns true exactly once, when the last previously launched
+// worker has completed AND the GUI consumed/discarded its result.
+func (s *pdfShutdownCoordinator) resultConsumed() bool {
+	if s.outstanding <= 0 {
+		return false // existing tests can inject synthetic result completions
+	}
+	s.outstanding--
+	if s.outstanding == 0 && s.closing {
+		s.closing = false
+		return true
+	}
+	return false
+}
