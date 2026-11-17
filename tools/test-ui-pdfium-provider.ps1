@@ -79,6 +79,7 @@ try{
  Add-Type -AssemblyName System.Windows.Forms
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-native.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-undo-input.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')
+ Add-Type -Path (Join-Path $repo 'tests/native/dcm-pdfium-wheel-input.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')
  . (Join-Path $repo 'tests/native/new-fixtures.ps1')
  $fixture=New-DcmFixtures $lab
  $pdf=Join-Path $fixture.inbox '08-preview.pdf'
@@ -121,6 +122,21 @@ try{
  } 40
  Capture '04-after-zoom-in' 'teal'
  Step 'toolbar-zoom-success' 'PDFium result applied after native Zoom In control'
+ $pane=[DcmNative]::ChildByClass($hwnd,$app.Id,'QuickSortPreview')
+ $rect=[DcmNative+RECT]::new()
+ if(-not [DcmNative]::GetWindowRect($pane,[ref]$rect)){throw 'Owned preview rectangle unavailable'}
+ $width=$rect.Right-$rect.Left
+ $height=$rect.Bottom-$rect.Top
+ $beforeEvents=@(Get-Content -LiteralPath $trace | Where-Object {$_ -match 'result-applied'}).Count
+ [DcmPdfWheelInput]::Wheel($hwnd,$pane,$app.Id,[int]($width*0.4),[int]($height*0.5),2)
+ Wait 'Ctrl-wheel PDFium completed' {
+  $now=@(Get-Content -LiteralPath $trace | Where-Object {$_ -match 'result-applied'}).Count
+  $now -gt $beforeEvents
+ } 45
+ Start-Sleep -Milliseconds 650
+ Capture '05-after-ctrl-wheel' 'teal'
+ $afterEvents=@(Get-Content -LiteralPath $trace | Where-Object {$_ -match 'result-applied'}).Count
+ Step 'ctrl-wheel-zoom-routed' @{before_render_count=$beforeEvents;after_render_count=$afterEvents;pointer_fraction_x=0.4;pointer_fraction_y=0.5;detents=2;cursor_anchoring_verified=$false}
  List-Selected '01-alpha.txt'
  $file=[IO.File]::Open($pdf,[IO.FileMode]::Open,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
  $file.Dispose()
@@ -128,7 +144,7 @@ try{
  Step 'pdf-exclusive-release' 'exclusive read/write lock succeeded after PDF deselection'
  List-Selected '08-preview.pdf'
  PageReady 'Page 1 of 2'
- Capture '05-reopened-pdf' 'teal'
+ Capture '06-reopened-pdf' 'teal'
  Step 'pdf-reopen' 'same PDF reopened after exclusive file access'
  $receipt.passed=$true
 }catch{
