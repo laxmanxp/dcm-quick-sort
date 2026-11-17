@@ -113,3 +113,37 @@ func TestFlowPDFiumWorkerLongDocument(t *testing.T){
   t.Logf("300-page document page %d: %s dimensions %dx%d",page,elapsed,cfg.Width,cfg.Height)
  }
 }
+
+func TestFlowPDFiumWorkerComplexPages(t *testing.T) {
+ worker:=strings.TrimSpace(os.Getenv("DCM_FLOWPDF_WORKER"))
+ raster:=strings.TrimSpace(os.Getenv("DCM_PDFIUM_RASTER_PDF"))
+ vector:=strings.TrimSpace(os.Getenv("DCM_PDFIUM_VECTOR_PDF"))
+ if worker==""||raster==""||vector==""{t.Skip("complex PDF fixtures are not configured")}
+ root:=t.TempDir()
+ for _,tc:=range []struct{name,path string;zoom int}{
+  {"raster",raster,100},{"vector",vector,150},
+ }{
+  t.Run(tc.name,func(t *testing.T){
+   input,err:=os.ReadFile(tc.path);if err!=nil{t.Fatal(err)}
+   original:=sha256.Sum256(input)
+   output:=filepath.Join(root,tc.name+".png")
+   ctx,cancel:=context.WithTimeout(context.Background(),30*time.Second)
+   cmd:=exec.CommandContext(ctx,worker,pdfiumRendererArgs(PDFRenderRequest{
+    InputPath:tc.path,OutputPath:output,PageIndex:0,Zoom:tc.zoom,
+    ViewportWidth:900,ViewportHeight:700,
+   })...)
+   start:=time.Now();stdout,err:=cmd.CombinedOutput();elapsed:=time.Since(start)
+   timeout:=ctx.Err()!=nil;cancel()
+   if timeout{t.Fatalf("%s workload exceeded 30s deadline",tc.name)}
+   if err!=nil{t.Fatalf("%s worker failed: %v %s",tc.name,err,stdout)}
+   meta,err:=parsePDFRendererOutput(string(stdout))
+   if err!=nil||meta.PageCount!=1||meta.PageIndex!=0 {t.Fatalf("%s metadata: %+v err=%v",tc.name,meta,err)}
+   pngBytes,err:=os.ReadFile(output);if err!=nil{t.Fatal(err)}
+   config,err:=png.DecodeConfig(bytes.NewReader(pngBytes))
+   if err!=nil||config.Width!=meta.Width||config.Height!=meta.Height {t.Fatalf("%s PNG dimensions mismatch: %v",tc.name,err)}
+   after,err:=os.ReadFile(tc.path);if err!=nil||sha256.Sum256(after)!=original{t.Fatal("worker changed input PDF")}
+   if err:=os.Remove(output);err!=nil{t.Fatalf("output retained lock: %v",err)}
+   t.Logf("%s page rendered in %v; png=%d bytes image=%dx%d",tc.name,elapsed,len(pngBytes),config.Width,config.Height)
+  })
+ }
+}
