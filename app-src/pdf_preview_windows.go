@@ -469,8 +469,7 @@ func finishPDFRender() {
 			app.fallback = ""
 			// Only PDFium's real mouse-wheel zoom uses pointer anchoring.
 			// Fit modes retain their established centered/top-aligned layout.
-			if usingFlowPDFiumProvider() && pdfPreview.cursorAnchor.Valid &&
-				pdfPreview.cursorAnchor.Generation <= result.Request.Generation &&
+			if usingFlowPDFiumProvider() && pdfAnchorApplies(pdfPreview.cursorAnchor, result.Request.Generation, pdfPreview.generation) &&
 				!app.previewFit && !app.previewFitWidth {
 				var rc RECT
 				procGetClientRect.Call(app.previewHwnd,uintptr(unsafe.Pointer(&rc)))
