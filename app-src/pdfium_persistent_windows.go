@@ -4,6 +4,8 @@ package main
 
 import (
  "bufio"
+ "bytes"
+ "context"
  "encoding/json"
  "errors"
  "fmt"
@@ -200,6 +202,27 @@ func (p *flowPDFiumProcess) close(){
   return
  }
  p.discardLocked()
+}
+
+// On a persistent IPC transport failure, preserve the pre-existing one-shot
+// PDFium route under a separate deadline. Decoder refusals remain errors:
+// the fallback is specifically for a broken/unresponsive service.
+func flowPDFiumOneShotFallback(executable string,req PDFRenderRequest)(PDFRenderMetadata,int,error){
+ ctx,cancel:=context.WithTimeout(context.Background(),flowPDFiumRequestDeadline)
+ defer cancel()
+ cmd:=exec.CommandContext(ctx,executable,pdfiumRendererArgs(req)...)
+ cmd.SysProcAttr=&syscall.SysProcAttr{HideWindow:true,CreationFlags:createNoWindow}
+ var output bytes.Buffer
+ cmd.Stdout=&output
+ cmd.Stderr=&output
+ if err:=cmd.Start();err!=nil{return PDFRenderMetadata{},0,err}
+ pid:=cmd.Process.Pid
+ recordPDFTrace(PDFTraceEvent{Event:"persistent-fallback-started",Generation:req.Generation,InputPath:req.InputPath,OutputPath:req.OutputPath,RendererPID:pid})
+ err:=cmd.Wait()
+ if ctx.Err()!=nil {return PDFRenderMetadata{},pid,fmt.Errorf("PDFium one-shot fallback deadline: %w",ctx.Err())}
+ if err!=nil {return PDFRenderMetadata{},pid,fmt.Errorf("PDFium one-shot fallback: %w: %s",err,strings.TrimSpace(output.String()))}
+ meta,err:=parsePDFRendererOutput(output.String())
+ return meta,pid,err
 }
 
 var sharedFlowPDFiumProcess flowPDFiumProcess
