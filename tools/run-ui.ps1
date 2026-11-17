@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('basics','filters','rename','rename-edge','undo-rename','undo-move-safety','destination','move','cross-volume','conflicts','batch','batch-partial','batch-undo-safety','history','pdf','previews','preview-release-operations','office-preview-release-operations')][string]$Suite='move',
+    [ValidateSet('basics','filters','rename','rename-edge','undo-rename','undo-move-safety','destination','move','cross-volume','conflicts','batch','batch-partial','batch-undo-safety','history','final-workflow','pdf','previews','preview-release-operations','office-preview-release-operations')][string]$Suite='move',
     [string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,
     [string]$VisionExe=$env:DCM_FLOWUIVISION_EXE,
     [string]$PreviousFixtureInbox='C:\FlowverseReports\dcm-flowuivision-20261103\inbox'
@@ -1311,6 +1311,114 @@ try {
         $null=Save-Shot 'dcm43-undo-completed'
         Assert-Fixtures
         $cases.Add([ordered]@{name='dcm43-original-fixtures-restored';passed=$true})
+    }
+    if($Suite -eq 'final-workflow'){
+        # DCM-46: single continuous normal-app workflow, with PDF and TXT
+        # pixels, native Rename/Move, restart, then separate Move/Rename Undo.
+        $original=Join-Path $fixture.inbox '01-alpha.txt'
+        $renamed=Join-Path $fixture.inbox '01-final-alpha.txt'
+        $moved=Join-Path $fixture.destination '01-final-alpha.txt'
+        $digest=Hash $original
+        $journal=Join-Path $fixture.config 'recovery/move-journal.jsonl'
+        # Prove the normal text fixture is actually readable, not blank UI.
+        Invoke-Fvs 'dcm46-text-preview' "click clear`ntype name `"01-alpha`"`nwait_ready type=textbox target=newname text=`"01-alpha`" timeout=5s`ninspect main"
+        $ui=@([DcmNative]::Snapshot($script:hwnd,$script:app.Id))
+        $readable=@($ui|Where-Object{$_.Visible -and $_.Text.Contains('Exact bytes must survive Move and Undo')})
+        if($readable.Count -lt 1){throw 'DCM-46 text preview missing actual fixture content'}
+        $cases.Add([ordered]@{name='dcm46-real-text-preview-readable';passed=$true;sha256=$digest})
+        Save-State 'dcm46-text-preview';$null=Save-Shot 'dcm46-text-preview'
+        # Inspect a real rendered two-page PDF before changing a filename.
+        Invoke-Fvs 'dcm46-pdf-preview' "click clear`ntype name `"08-preview`"`nwait_ready type=control target=pdfstatus text~=`"Page 1/2`" timeout=20s`ninspect main`nexpect pdfstatus text~=`"Fit Width`""
+        $null=Save-Shot 'dcm46-pdf-page-one'
+        $pageOne=Save-Shot 'dcm46-pdf-page-one-document' -Preview
+        if($pageOne.teal_samples -lt 100){throw 'DCM-46 PDF page one rendered blank'}
+        $cases.Add([ordered]@{name='dcm46-pdf-page-one-visible-pixels';passed=$true;teal_samples=$pageOne.teal_samples})
+        Invoke-Fvs 'dcm46-pdf-page-two' "click nextpage`nwait_ready type=control target=pdfstatus text~=`"Page 2/2`" timeout=20s`ndelay 350ms`ninspect main"
+        $pageTwo=Save-Shot 'dcm46-pdf-page-two-document' -Preview
+        if($pageTwo.orange_samples -lt 100){throw 'DCM-46 PDF page two rendered blank'}
+        $cases.Add([ordered]@{name='dcm46-pdf-page-two-visible-pixels';passed=$true;orange_samples=$pageTwo.orange_samples})
+        # Rename through the normal application, preserving the source bytes.
+        Invoke-Fvs 'dcm46-rename-ready' "click clear`ntype name `"01-alpha`"`nwait_ready type=textbox target=newname text=`"01-alpha`" timeout=5s`ntype newname `"01-final-alpha`"`ninspect main`nexpect rename enabled"
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1006)
+        Wait-For 'DCM-46 native Rename finished' {
+            (-not (Test-Path -LiteralPath $original)) -and
+            (Test-Path -LiteralPath $renamed) -and
+            [DcmNative]::IsWindowEnabled([DcmNative]::Control($script:hwnd,$script:app.Id,1008))
+        } 30
+        if((Hash $renamed) -ne $digest){throw 'DCM-46 Rename changed original bytes'}
+        $renameID=Assert-RenameJournal 'dcm46-rename-journal-completed' $original $renamed 'completed'
+        $cases.Add([ordered]@{name='dcm46-native-rename-preserved-bytes';passed=$true;sha256=$digest;journal_id=$renameID})
+        Save-State 'dcm46-rename-completed';$null=Save-Shot 'dcm46-rename-completed'
+        # Move the just-renamed file through QuickSort without an app restart.
+        Invoke-Fvs 'dcm46-move-ready' "click clear`ntype name `"01-final-alpha`"`nwait_ready type=textbox target=newname text=`"01-final-alpha`" timeout=5s`ntype destination `"Accepted`"`ninspect main`nexpect move enabled"
+        $selected=@([DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@('01-final-alpha.txt')))
+        if($selected.Count -ne 1){throw 'DCM-46 Move selected the wrong file'}
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1041)
+        Wait-For 'DCM-46 native Move finished' {
+            (-not (Test-Path -LiteralPath $renamed)) -and
+            (Test-Path -LiteralPath $moved) -and
+            [DcmNative]::IsWindowEnabled([DcmNative]::Control($script:hwnd,$script:app.Id,1008))
+        } 30
+        if((Hash $moved) -ne $digest){throw 'DCM-46 moved bytes differ from original'}
+        $events=@(Get-Content -LiteralPath $journal -Encoding UTF8 | Where-Object{$_.Trim()} | ForEach-Object{$_|ConvertFrom-Json})
+        $moveEvents=@($events|Where-Object{$_.record.from -eq $renamed -and $_.record.to -eq $moved})
+        if($moveEvents.Count -lt 2 -or $moveEvents[-1].state -ne 'completed'){throw 'DCM-46 Move journal not completed'}
+        $moveID=[string]$moveEvents[-1].id
+        if(-not $moveID -or [string]$moveEvents[-1].record.original_sha256 -cne $digest){throw 'DCM-46 Move durable fingerprint missing'}
+        foreach($item in @($initial|Where-Object {$_.name -ne '01-alpha.txt'})){
+            if((Hash (Join-Path $fixture.inbox $item.name)) -ne $item.sha256){throw ('DCM-46 unrelated source changed: '+$item.name)}
+        }
+        $cases.Add([ordered]@{name='dcm46-native-move-preserved-bytes-and-fingerprint';passed=$true;journal_id=$moveID;sha256=$digest})
+        Save-State 'dcm46-move-completed';$null=Save-Shot 'dcm46-move-completed'
+        # Restart the *same* normal candidate, not a separate synthetic suite.
+        Stop-OwnedApp;Start-OwnedApp
+        $recovered=@(Get-Content -LiteralPath $journal -Encoding UTF8 | Where-Object{$_.Trim()} | ForEach-Object{$_|ConvertFrom-Json} | Where-Object{$_.state -eq 'completed' -and $_.id -in @($moveID,$renameID)})
+        if($recovered.Count -ne 2){throw 'DCM-46 restart did not recover both committed operations'}
+        if(-not [DcmNative]::IsWindowEnabled([DcmNative]::Control($script:hwnd,$script:app.Id,1008))){throw 'DCM-46 recovered Undo not enabled'}
+        $cases.Add([ordered]@{name='dcm46-restart-recovered-both-transaction-identities';passed=$true;rename_id=$renameID;move_id=$moveID})
+        $null=Save-Shot 'dcm46-restarted-recovery'
+        # Undo most recent Move first. The Rename can then be safely undone.
+        Invoke-Fvs 'dcm46-move-history-search' "type processedsearch `"01-final-alpha`"`ninspect main"
+        $rows=@([DcmNative]::ListItems($script:hwnd,$script:app.Id,1017))
+        $idx=@()
+        for($i=0;$i -lt $rows.Count;$i++){if($rows[$i].Contains('01-final-alpha.txt')){$idx+=$i}}
+        if($idx.Count -ne 2){throw ('DCM-46 history should have rename and move transactions, got '+$idx.Count)}
+        # Find the Move row by its exact filename->same-filename text.
+        $moveIndex=-1
+        foreach($i in $idx){if($rows[$i].Contains('01-final-alpha.txt → 01-final-alpha.txt')){$moveIndex=$i}}
+        if($moveIndex -lt 0){throw 'DCM-46 Move transaction was not independently selectable'}
+        $null=[DcmNative]::SelectSingleItem($script:hwnd,$script:app.Id,1017,$moveIndex)
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1008)
+        Wait-For 'DCM-46 Move Undo restored renamed file' {
+            (Test-Path -LiteralPath $renamed) -and (-not(Test-Path -LiteralPath $moved))
+        } 30
+        Wait-For 'DCM-46 Undo Move status' {Status-Contains 'Undid processed transaction'} 20
+        if((Hash $renamed) -ne $digest){throw 'DCM-46 Undo Move changed bytes'}
+        $events=@(Get-Content -LiteralPath $journal -Encoding UTF8 | Where-Object{$_.Trim()} | ForEach-Object{$_|ConvertFrom-Json})
+        if(@($events|Where-Object{$_.id -eq $moveID})[-1].state -ne 'undone'){throw 'DCM-46 Undo Move not journaled'}
+        $cases.Add([ordered]@{name='dcm46-restarted-undo-move-exact-bytes';passed=$true;sha256=$digest;journal_id=$moveID})
+        Save-State 'dcm46-undo-move';$null=Save-Shot 'dcm46-undo-move'
+        Invoke-Fvs 'dcm46-rename-history-search' "type processedsearch `"01-final-alpha`"`ninspect main"
+        $rows=@([DcmNative]::ListItems($script:hwnd,$script:app.Id,1017))
+        $renameIndex=-1
+        for($i=0;$i -lt $rows.Count;$i++){if($rows[$i].Contains('01-alpha.txt → 01-final-alpha.txt')){$renameIndex=$i}}
+        if($renameIndex -lt 0){throw 'DCM-46 Rename transaction unavailable for Undo'}
+        $null=[DcmNative]::SelectSingleItem($script:hwnd,$script:app.Id,1017,$renameIndex)
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1008)
+        Wait-For 'DCM-46 Undo Rename restored original' {
+            (Test-Path -LiteralPath $original) -and (-not(Test-Path -LiteralPath $renamed))
+        } 30
+        Wait-For 'DCM-46 Undo Rename status' {Status-Contains 'Undid processed transaction'} 20
+        $null=Assert-RenameJournal 'dcm46-rename-journal-undone' $original $renamed 'undone' $renameID
+        Assert-Fixtures
+        $cases.Add([ordered]@{name='dcm46-final-original-filenames-bytes-and-journal-restored';passed=$true;sha256=$digest;journal_id=$renameID})
+        Save-State 'dcm46-final-restored';$null=Save-Shot 'dcm46-final-restored'
+        # Preserve a stable explicit no-match state for empty UI copy/layout.
+        Invoke-Fvs 'dcm46-empty-filter' "type name `"ZZZ_DCM46_NOT_A_REAL_FILENAME`"`ninspect main"
+        $filtered=@([DcmNative]::ListItems($script:hwnd,$script:app.Id,1016))
+        if($filtered.Count -ne 0){throw 'DCM-46 no-match filter still shows files'}
+        $cases.Add([ordered]@{name='dcm46-final-empty-filter-no-false-rows';passed=$true})
+        $null=Save-Shot 'dcm46-empty-filter'
     }
     if($Suite -in @('pdf','previews')){
         Invoke-Fvs 'pdf-open' "click clear`ntype name `"08-preview`"`nwait_ready type=textbox target=newname text=`"08-preview`" timeout=5s`nwait_ready type=control target=pdfstatus text~=`"Page 1/2`" timeout=20s`ninspect main`nexpect pdfstatus text~=`"Fit Width`""
