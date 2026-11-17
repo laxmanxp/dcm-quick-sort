@@ -248,3 +248,44 @@ made. Remaining: longer-run process-tree memory and worker-timeout
 containment under hostile documents, reliable two-axis pointer anchoring
 across DPI settings, concurrent readers/multiple panes, persistent worker
 performance, and third-party distribution/license review.
+
+
+## Persistent PDFium adapter integration — 17 November 2026
+
+**Implemented on feature branch only:** `app-src/pdfium_persistent_windows.go`
+provides a private persistent worker over stdin/stdout JSONL v1 with matching
+request IDs, 15-second per-response timeout, owned-process restart (once
+after IPC failure), a bounded one-shot fallback, and graceful child
+shutdown. `DCM_FLOWPDF_PERSISTENT=1` alongside `DCM_PDF_PROVIDER=pdfium`
+is the explicit activation flag. Unsetting it retains one-shot PDFium;
+unsetting the PDFium provider returns to the Windows default. See
+`docs/persistent-flowpdf-pdfium-provider.md`.
+
+### Lenovo test results
+
+1. `go test -run TestPersistentPDFium -v -count=1` — PASS:
+   stalled child timeout and reaping; live PID reuse across normal and
+   protected PDF requests; restart after exact child was killed; strict
+   opt-in; old one-shot executable fallback.
+2. Full `go test ./... -count=1` with persistent worker, 300-page,
+   raster/vector and control fixtures — PASS (`32.346s`).
+3. Native GUI acceptance with `-Persistent` — PASS, normal exit.
+   Evidence `D:\FlowverseReportsRepo\dcm-pdfium-gui-20261117-174423-b3ecb67`.
+   **19 render requests used exactly one PID 20448**, no one-shot
+   fallbacks; the owned child had exited after Quick Sort closed.
+   Page navigation, zoom, Rename/Move/Undo, bad/password-protected PDF
+   refusal and normal-file recovery all passed.
+4. Updated one-shot mode native GUI acceptance with same test harness —
+   PASS, normal exit. Evidence
+   `D:\FlowverseReportsRepo\dcm-pdfium-gui-20261117-174805-fad969d`.
+5. GUI render-start-to-applied interval: one-shot median 144.9ms
+   (12 applied renders), persistent median 53.6ms (17 applied renders).
+   Different render populations: **indicative only** and not a
+   controlled paired speedup claim.
+
+**Still pending before release:** stale-work cancellation during selection
+changes, forced crash/timeout in native GUI, extended memory and handle
+testing, complete 2-axis pointer-zoom/DPI certification, real-world
+scanner-heavy PDFs and binary signing/license/packaging qualification.
+
+No release branch, production installation or default PDF provider changed.
