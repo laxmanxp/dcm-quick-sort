@@ -259,6 +259,38 @@ try{
  $null=Journal $pdf $renamed 'undone' 2
  $null=Journal $pdf $moved 'undone' 2
  Step 'final-file-integrity' @{original_pdf_restored=$true;unselected_txt_intact=$true;destination_empty=$true;undone_journal_records=2}
+ # Failure/recovery is exercised in the live application, not only the worker.
+ # Use the versioned synthetic corrupt/encrypted fixtures from this checkout.
+ $damaged=Join-Path $fixture.inbox '11-damaged.pdf'
+ $protected=Join-Path $fixture.inbox '12-protected.pdf'
+ Copy-Item -LiteralPath (Join-Path $repo 'tests/fixtures/dcm34-damaged.pdf') -Destination $damaged
+ $definition=Get-Content -LiteralPath (Join-Path $repo 'tests/fixtures/sumatra-password.json') -Raw | ConvertFrom-Json
+ $protectedBytes=[Convert]::FromBase64String($definition.Base64)
+ [IO.File]::WriteAllBytes($protected,$protectedBytes)
+ if((Hash $protected) -ne $definition.SHA256.ToLowerInvariant()){throw 'Protected PDF fixture checksum mismatch'}
+ $badHash=Hash $damaged
+ $lockedHash=Hash $protected
+ [DcmNative]::ClickAsync($hwnd,$app.Id,1011)
+ Wait 'failure fixtures listed' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 6}
+ foreach($case in @(
+   @{name='11-damaged.pdf';path=$damaged;hash=$badHash},
+   @{name='12-protected.pdf';path=$protected;hash=$lockedHash}
+ )) {
+  List-Selected $case.name
+  $selected=$case.path
+  Wait ('PDFium refusal for '+$case.name) {
+   if(-not(Test-Path $trace)){return $false}
+   $matches=@(Get-Content -LiteralPath $trace | ForEach-Object {$_|ConvertFrom-Json} | Where-Object {$_.event -eq 'result-unavailable' -and $_.input_path -eq $selected})
+   $matches.Count -gt 0
+  } 40
+  if((Hash $selected) -ne $case.hash){throw ('Failed PDF modified: '+$case.name)}
+  Exclusive $selected
+  Step ('refused-'+$case.name) @{worker_refusal_observed=$true;bytes_preserved=$true;exclusive_release=$true}
+  VerifyPDF '08-preview.pdf' $pdf ($sha.ToLowerInvariant())
+  Capture ('11-recovered-after-'+$case.name.Replace('.pdf','')) 'teal'
+  Step ('recovered-after-'+$case.name) @{valid_pdf_rendered_again=$true}
+ }
+ if(@([DcmNative]::ListItems($hwnd,$app.Id,1017)).Count){throw 'Processed history changed during failed-PDF recovery'}
  $receipt.passed=$true
 }catch{
  $failure=$_.Exception.Message
