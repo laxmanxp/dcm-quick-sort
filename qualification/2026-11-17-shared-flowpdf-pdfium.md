@@ -149,3 +149,74 @@ under memory pressure; persistent worker performance and packaging; complete
 two-axis cursor anchoring and independent screenshot review.
 
 Do not make PDFium the release default based solely on this scope.
+
+
+## PDFium resilience and memory acceptance — 17 November 2026
+
+Machine: `Laxman_Lenovo`. Worker from File Workspace's
+`feature/flowpdf-shared-provider-contract`; DCM branch
+`feature/shared-flowpdf-pdfium-provider`. All inputs are versioned
+synthetic fixtures or test-generated PDFs.
+
+### Native worker decoder gate
+
+Added `app-src/pdfium_resilience_windows_test.go`.
+Test `TestFlowPDFiumWorkerResilience`: PASS.
+
+- Valid control before failures: PASS (819 ms cold measured)
+- Damaged PDF: explicit load error, no output PNG, input intact: PASS (135 ms)
+- Valid second page after damaged failure: PASS (483 ms)
+- Encrypted PDF without a password: explicit refusal, no output PNG: PASS (135 ms)
+- Valid control after protected failure: PASS (304 ms)
+- Ten subsequent renders alternating pages and zoom percentages: PASS
+- All synthetic PDFs retained original byte hashes; file access verified after worker exit
+
+`TestFlowPDFiumWorkerLongDocument`: PASS.
+Synthetic mixed-layout 300-page PDF renders at indices 0, 149, 299, 0:
+130, 146, 175, 211 ms respectively. These are worker-process runtimes
+for this document, not general scanned-PDF performance benchmarks.
+
+### Worker process footprint
+
+Added `tools/test-pdfium-worker-memory.ps1`, revised to explicitly
+provide `FILEWORKSPACE_RUNTIME_DIR`. The first run failed due to the
+missing test runtime setting; it produced no benchmark result. The
+corrected 20-invocation run passed.
+
+Evidence: `D:\FlowverseReportsRepo\dcm-pdfium-worker-memory-20261117-170743-e92137\receipt.json`.
+
+- 20/20 individual worker invocations returned usable PNGs and exited
+- Median wall time 199 ms; maximum 484 ms
+- Maximum **sampled** private memory 38.5 MB
+- Render PNG outputs removed after each test; no leftover PNGs
+- These observations cannot establish a continuously running worker's
+  memory growth or true instantaneous peak; sampling may miss short peaks
+
+### Actual native GUI failure and recovery
+
+Extended `tools/test-ui-pdfium-provider.ps1` to select each malformed or
+encrypted PDF inside the disposable Quick Sort GUI, confirm the
+`result-unavailable` trace event, then select the valid PDF and confirm
+real rendered teal pixels. The first expanded run failed because the
+test incorrectly required exclusive file access while the valid PDF
+was still actively previewed. That assertion was removed. The corrected
+full GUI test passed.
+
+Evidence: `D:\FlowverseReportsRepo\dcm-pdfium-gui-20261117-171115-00e7eda\receipt.json`.
+
+- Candidate branch commit `5d1a6a2ff15c7033188a0ce331e1b37a4faa89b6`
+- `PASSED=True`, `NORMAL_EXIT=True`, `GUI_EXIT=0`
+- Damaged PDF: real worker failure observed, input hash unchanged, exclusive
+  file access after failure: PASS
+- Valid PDF renders following damage: PASS
+- Protected PDF: real worker failure observed, input hash unchanged,
+  exclusive file access after failure: PASS
+- Valid PDF renders following protected refusal: PASS
+- Rename/Undo, Move/Undo and final journal integrity remained PASS
+- 12 saved native GUI captures; not independently visually reviewed
+
+**Remaining:** raster-heavy scanned and graphics-intensive PDFs,
+extended tab/file switching under memory pressure, controlled
+renderer crash/timeout injection, persistent worker service benchmark,
+full two-axis/DPI cursor-anchor certification, packaging and license
+audit. This does not authorize making PDFium the default provider.
