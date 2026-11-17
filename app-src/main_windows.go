@@ -2929,6 +2929,20 @@ func continueMoveAfterConflict(source, target string) {
 		return
 	}
 	if err := renameFileNoReplace(source, target); err == nil {
+		// Persist the verified destination bytes with the completed record so
+		// Undo can refuse edits made after a successful same-volume move.
+		// A fingerprint failure cannot be advertised as a normal completion.
+		snapshot, snapshotErr := snapshotSource(target)
+		if snapshotErr != nil {
+			_ = failMoveJournal(moveJournalFilePath(), rec, MoveJournalAttention,
+				"moved file exists but destination fingerprint could not be recorded: "+snapshotErr.Error(), time.Now())
+			cancelPendingFileOperation()
+			reloadFiles()
+			setText(app.statusLabel, "Move requires attention: destination fingerprint unavailable.")
+			showError("The file moved, but its destination bytes could not be verified for safe Undo:\n" + snapshotErr.Error() + "\n\nReview the destination and Recovery journal before proceeding.")
+			return
+		}
+		rec.OriginalSHA256, rec.OriginalSize = snapshot.SHA256, snapshot.Size
 		journalErr = completeMoveJournal(moveJournalFilePath(), rec, time.Now())
 		finishSuccessfulFileOperation(source, target, rec, false)
 		if journalErr != nil {
