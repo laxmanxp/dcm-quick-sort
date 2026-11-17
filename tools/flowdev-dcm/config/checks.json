@@ -794,6 +794,15 @@
           "tools/run-ui.ps1",
           "-Suite",
           "batch-undo-safety"
+        ],
+        "ui-final-workflow": [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "tools/run-ui.ps1",
+          "-Suite",
+          "final-workflow"
         ]
       }
     }
