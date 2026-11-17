@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('basics','filters','rename','rename-edge','undo-rename','destination','move','cross-volume','conflicts','batch','batch-partial','history','pdf','previews','preview-release-operations','office-preview-release-operations')][string]$Suite='move',
+    [ValidateSet('basics','filters','rename','rename-edge','undo-rename','undo-move-safety','destination','move','cross-volume','conflicts','batch','batch-partial','history','pdf','previews','preview-release-operations','office-preview-release-operations')][string]$Suite='move',
     [string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,
     [string]$VisionExe=$env:DCM_FLOWUIVISION_EXE,
     [string]$PreviousFixtureInbox='C:\FlowverseReports\dcm-flowuivision-20261103\inbox'
@@ -577,6 +577,80 @@ try {
         if((Hash $journal) -ne $beforeJournal){throw 'Cancelled conflict changed durable journal'}
         $cases.Add([ordered]@{name='rename-existing-name-conflict-cancelled-without-data-loss';passed=$true;original_sha256=$digest;collision_sha256=$otherHash})
         $null=Save-Shot 'rename-edge-conflict-cancelled'
+    }
+    if($Suite -eq 'undo-move-safety'){
+        # DCM-44: verify the exact journaled move and both unsafe Undo
+        # refusals through native QuickSort's owned UI controls.
+        $name='01-alpha.txt'
+        $src=Join-Path $fixture.inbox $name
+        $dst=Join-Path $fixture.destination $name
+        $originalHash=Hash $src
+        $reference=Join-Path $lab 'dcm44-original-bytes.bin'
+        Copy-Item -LiteralPath $src -Destination $reference -ErrorAction Stop
+        if((Hash $reference) -ne $originalHash){throw 'DCM-44 baseline copy mismatch'}
+        Invoke-Fvs 'dcm44-move-ready' "click clear`ntype name `"01-alpha`"`nwait_ready type=textbox target=newname text=`"01-alpha`" timeout=5s`ntype destination `"Accepted`"`ninspect main`nexpect move enabled"
+        $selected=@([DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@($name)))
+        if($selected.Count -ne 1){throw 'DCM-44 did not select exactly one source'}
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1041)
+        Wait-Moved @($name)
+        $journal=Join-Path $fixture.config 'recovery/move-journal.jsonl'
+        $events=@(Get-Content -LiteralPath $journal -Encoding UTF8 | Where-Object {$_.Trim()} | ForEach-Object {$_|ConvertFrom-Json})
+        $record=@($events|Where-Object {$_.record.from -eq $src -and $_.record.to -eq $dst})
+        if($record.Count -lt 2 -or $record[-1].state -ne 'completed'){throw 'DCM-44 move journal missing completed transaction'}
+        $opID=[string]$record[-1].id
+        if(-not $opID -or [string]$record[-1].record.original_sha256 -cne $originalHash){throw 'DCM-44 completed move fingerprint missing or different'}
+        if([int64]$record[-1].record.original_size -ne (Get-Item -LiteralPath $dst).Length){throw 'DCM-44 completed move size missing or different'}
+        $cases.Add([ordered]@{name='dcm44-single-move-completed-with-source-fingerprint';passed=$true;journal_id=$opID;sha256=$originalHash})
+        $null=Save-Shot 'dcm44-move-completed'
+        Stop-OwnedApp;Start-OwnedApp
+        Invoke-Fvs 'dcm44-recovered-processed' "type processedsearch `"01-alpha`"`ninspect main"
+        $items=@([DcmNative]::ListItems($script:hwnd,$script:app.Id,1017))
+        $idx=@()
+        for($i=0;$i -lt $items.Count;$i++){if($items[$i].Contains($name)){$idx+=$i}}
+        if($idx.Count -ne 1){throw 'DCM-44 restart did not recover exactly one transaction'}
+        $null=[DcmNative]::SelectSingleItem($script:hwnd,$script:app.Id,1017,$idx[0])
+        $cases.Add([ordered]@{name='dcm44-single-undo-transaction-recovered-after-restart';passed=$true;journal_id=$opID})
+        # Occupied original must refuse Undo and preserve BOTH distinct files.
+        [IO.File]::WriteAllBytes($src,[Text.Encoding]::UTF8.GetBytes('DCM44-OCCUPIED-ORIGINAL-DISTINCT'))
+        $occupiedHash=Hash $src
+        $journalBefore=Hash $journal
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1008)
+        Confirm-Dialog 'DCM - Quick Sort' @('cannot undo: original path is already occupied') 2
+        if((Hash $src) -ne $occupiedHash -or (Hash $dst) -ne $originalHash -or (Hash $journal) -ne $journalBefore){throw 'DCM-44 occupied source Undo refusal modified bytes or journal'}
+        $cases.Add([ordered]@{name='dcm44-occupied-original-undo-refused-without-loss';passed=$true;source_sha256=$occupiedHash;destination_sha256=$originalHash;journal_sha256=$journalBefore})
+        $null=Save-Shot 'dcm44-occupied-original-refused'
+        [IO.File]::Delete($src)
+        if(Test-Path -LiteralPath $src){throw 'DCM-44 could not remove its disposable occupancy fixture'}
+        # Edited moved target must also refuse Undo; never replace the moved
+        # original with unapproved bytes.
+        [IO.File]::WriteAllBytes($dst,[Text.Encoding]::UTF8.GetBytes('DCM44-MOVED-DESTINATION-EDITED-DISTINCT'))
+        $changedHash=Hash $dst
+        if($changedHash -eq $originalHash){throw 'DCM-44 edited destination did not differ'}
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1008)
+        Confirm-Dialog 'DCM - Quick Sort' @('cannot undo: moved file contents changed after the move') 2
+        if(Test-Path -LiteralPath $src){throw 'DCM-44 changed target Undo created source'}
+        if((Hash $dst) -ne $changedHash -or (Hash $journal) -ne $journalBefore){throw 'DCM-44 changed target Undo refusal altered file/journal'}
+        $cases.Add([ordered]@{name='dcm44-changed-destination-undo-refused-without-loss';passed=$true;destination_sha256=$changedHash;journal_sha256=$journalBefore})
+        $null=Save-Shot 'dcm44-changed-destination-refused'
+        # Restore ONLY the disposable test target from its pinned original
+        # fixture bytes, not via QuickSort, before asking QuickSort to Undo.
+        $baseline=@($initial|Where-Object {$_.name -eq $name})
+        if($baseline.Count -ne 1 -or $baseline[0].sha256 -ne $originalHash){throw 'DCM-44 missing baseline fingerprint'}
+        $reference=Join-Path $lab 'dcm44-original-bytes.bin'
+        if(-not(Test-Path -LiteralPath $reference)){throw 'DCM-44 immutable original backup absent'}
+        if((Hash $reference) -ne $originalHash){throw 'DCM-44 immutable original backup was changed'}
+        Copy-Item -LiteralPath $reference -Destination $dst -Force
+        if((Hash $dst) -ne $originalHash){throw 'DCM-44 original destination bytes could not be restored'}
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1008)
+        Wait-Restored @($name)
+        Wait-For 'DCM-44 successful Undo status' {Status-Contains 'Undid processed transaction'} 20
+        if((Hash $src) -ne $originalHash){throw 'DCM-44 restored file contents differ'}
+        $events=@(Get-Content -LiteralPath $journal -Encoding UTF8 | Where-Object {$_.Trim()} | ForEach-Object {$_|ConvertFrom-Json})
+        $record=@($events|Where-Object {$_.id -eq $opID})
+        if($record.Count -lt 3 -or $record[-1].state -ne 'undone' -or [string]$record[-1].record.original_sha256 -cne $originalHash){throw 'DCM-44 Undo journal identity or fingerprint mismatch'}
+        Assert-Fixtures
+        $cases.Add([ordered]@{name='dcm44-normal-single-undo-restored-original-name-location-and-hash';passed=$true;journal_id=$opID;sha256=$originalHash})
+        $null=Save-Shot 'dcm44-single-undo-restored'
     }
     if($Suite -eq 'destination'){
         # DCM-38: all inputs through owned UI; independently prove that invalid
