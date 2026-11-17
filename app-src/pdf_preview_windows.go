@@ -42,6 +42,8 @@ type pdfPreviewState struct {
 	lastHeight       int
 	lastScalePercent int
 	lastFallback     string
+	cursorAnchor     PDFCursorAnchor
+	panAnchored      bool
 }
 
 var pdfPreview pdfPreviewState
@@ -155,6 +157,27 @@ func ensurePDFRendererScript() (string, error) {
 // pdfRendererExecutable chooses an explicitly opted-in shared FileFlow
 // PDFium worker; the existing Windows.Data.Pdf renderer stays the default.
 // A missing opt-in worker is an error rather than an unsafe silent switch.
+func usingFlowPDFiumProvider() bool {
+ return strings.EqualFold(strings.TrimSpace(os.Getenv("DCM_PDF_PROVIDER")), "pdfium")
+}
+
+// capturePDFCursorAnchor runs on the GUI thread before wheel zoom changes
+// generation. The renderer may finish later; generation keeps anchors scoped
+// to the corresponding displayed document.
+func capturePDFCursorAnchor(pointer POINT) {
+ if !usingFlowPDFiumProvider() || !pdfPreview.active || app.previewHwnd==0 {return}
+ var rc RECT
+ procGetClientRect.Call(app.previewHwnd,uintptr(unsafe.Pointer(&rc)))
+ anchor:=pdfCaptureCursorAnchor(pointer.X,pointer.Y,int32(pdfPreview.lastWidth),int32(pdfPreview.lastHeight),
+  rc.Right-rc.Left,rc.Bottom-rc.Top,pdfToolbarHeight,app.previewPanX,app.previewPanY)
+ if anchor.Valid {
+  anchor.Generation=pdfPreview.generation+1
+  pdfPreview.cursorAnchor=anchor
+ } else {
+  pdfPreview.cursorAnchor=PDFCursorAnchor{}
+ }
+}
+
 func pdfRendererExecutable() (string, error) {
  if strings.EqualFold(strings.TrimSpace(os.Getenv("DCM_PDF_PROVIDER")), "pdfium") {
   worker := strings.TrimSpace(os.Getenv("DCM_FLOWPDF_WORKER"))
@@ -226,6 +249,8 @@ func startPDFPreview(path string) bool {
 	pdfPreview.lastHeight = 0
 	pdfPreview.lastScalePercent = 0
 	pdfPreview.lastFallback = ""
+	pdfPreview.cursorAnchor = PDFCursorAnchor{}
+	pdfPreview.panAnchored = false
 	defaultView := normalizePDFDefaultView(app.pdfDefaultView)
 	app.previewFitWidth = defaultView == pdfDefaultViewFitWidth
 	app.previewFit = !app.previewFitWidth
@@ -257,6 +282,8 @@ func stopPDFPreview() {
 	pdfPreview.lastWidth = 0
 	pdfPreview.lastHeight = 0
 	pdfPreview.lastScalePercent = 0
+	pdfPreview.cursorAnchor = PDFCursorAnchor{}
+	pdfPreview.panAnchored = false
 	hidePDFPreviewControls()
 	tracePDFPreview("selection-stopped", previous, false)
 }
@@ -270,6 +297,8 @@ func goToPDFPage(delta int) {
 		return
 	}
 	pdfPreview.page = next
+	pdfPreview.cursorAnchor = PDFCursorAnchor{}
+	pdfPreview.panAnchored = false
 	app.previewPanX, app.previewPanY = 0, 0
 	updatePDFPreviewControls()
 	requestPDFPreviewRender()
@@ -438,6 +467,19 @@ func finishPDFRender() {
 				app.previewZoom = result.Meta.ScalePercent
 			}
 			app.fallback = ""
+			// Only PDFium's real mouse-wheel zoom uses pointer anchoring.
+			// Fit modes retain their established centered/top-aligned layout.
+			if usingFlowPDFiumProvider() && pdfPreview.cursorAnchor.Valid &&
+				pdfPreview.cursorAnchor.Generation == result.Request.Generation &&
+				!app.previewFit && !app.previewFitWidth {
+				var rc RECT
+				procGetClientRect.Call(app.previewHwnd,uintptr(unsafe.Pointer(&rc)))
+				app.previewPanX,app.previewPanY=pdfRestoreCursorPan(pdfPreview.cursorAnchor,
+					int32(result.Meta.Width),int32(result.Meta.Height),
+					rc.Right-rc.Left,rc.Bottom-rc.Top,pdfToolbarHeight)
+				pdfPreview.panAnchored=true
+			}
+			pdfPreview.cursorAnchor = PDFCursorAnchor{}
 			if app.previewFit {
 				app.previewPanX, app.previewPanY = 0, 0
 			} else if app.previewFitWidth {
