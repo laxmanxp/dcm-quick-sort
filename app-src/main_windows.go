@@ -5604,10 +5604,19 @@ func adjustPreviewZoomAt(detents int, screenPoint POINT) {
    capturePDFCursorAnchor(point)
   }
  }
- adjustPreviewZoom(detents)
+ adjustPreviewZoomInternal(detents)
 }
 
 func adjustPreviewZoom(detents int) {
+ // Toolbar and keyboard zoom do not have a cursor anchor. Do not let an
+ // earlier in-flight wheel gesture move a subsequent non-pointer render.
+ if usingFlowPDFiumProvider() && pdfPreview.active {
+  pdfPreview.cursorAnchor = PDFCursorAnchor{}
+ }
+ adjustPreviewZoomInternal(detents)
+}
+
+func adjustPreviewZoomInternal(detents int) {
 	if detents == 0 || !previewSupportsZoom() {
 		return
 	}
