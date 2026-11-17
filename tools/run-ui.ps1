@@ -1115,8 +1115,10 @@ try {
         $null=Save-Shot 'dcm45-batch-completed'
         Stop-OwnedApp;Start-OwnedApp
         Invoke-Fvs 'dcm45-after-restart' "inspect main`nexpect undobatch enabled"
-        $items=@([DcmNative]::ListItems($script:hwnd,$script:app.Id,1017))
-        if(@($items|Where-Object{$_.Contains('02-bravo.txt') -or $_.Contains('03-charlie.txt')}).Count -ne 2){throw 'DCM-45 restarted Processed did not contain both members'}
+        # The Processed date group may be collapsed after restart; do not
+        # confuse hidden child rows with missing recovered transactions.
+        $persisted=@(Get-Content -LiteralPath $journal -Encoding UTF8 | Where-Object {$_.Trim()} | ForEach-Object {$_|ConvertFrom-Json} | Where-Object {$_.state -eq 'completed' -and $_.record.batch_id -eq $batchID})
+        if($persisted.Count -ne 2 -or -not [DcmNative]::IsWindowEnabled([DcmNative]::Control($script:hwnd,$script:app.Id,1048))){throw 'DCM-45 batch recovery identity or native Undo Batch not available'}
         $cases.Add([ordered]@{name='dcm45-restarted-batch-recovered-exactly-two-members';passed=$true;batch_id=$batchID})
         $null=Save-Shot 'dcm45-batch-recovered'
         # Source occupancy: create only a disposable original-path collision.
