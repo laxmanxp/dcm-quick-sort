@@ -1275,9 +1275,9 @@
     {
       "id": "DCM-45",
       "feature": "Verify Batch Undo after restart",
-      "status": "planned",
-      "completion": "pending",
-      "ui_test": "not_run",
+      "status": "tested",
+      "completion": "complete",
+      "ui_test": "desktop6b6eh4t_flowdev_ui_batch_undo_safety_PASS_9_cases_9_images_normal_restart_only",
       "user_test": "not_recorded",
       "parent_ids": [
         "D3",
@@ -1285,7 +1285,11 @@
         "DCM-NATIVE-01"
       ],
       "acceptance": "Restart the normal candidate and undo the intended batch; include interruption/recovery and unavailable-original cases with independent byte checks.",
-      "evidence": []
+      "evidence": [
+        "qualification/evidence/dcm-45-batch-undo-restart-desktop-2026-11-17.md"
+      ],
+      "qualification_note": "B O U N D E D engineering acceptance, tested pushed 87f981d on DESKTOP-6B6EH4T: FlowDev update/tooling/build and native ui-batch-undo-safety PASS 9 cases, all 9 images independently reviewed. Two-file batch with preserved shared journal ID and original hashes recovered after normal restart. Occupied original and modified moved destination each refused entire batch before any Undo; both destination/source hashes and journal unchanged. After restoring disposable test preconditions, Undo Batch restored both names/paths/bytes and journal undone. Two earlier failed harness receipts retained. No abrupt process interruption mid-batch tested; not power-loss certification. User_test not recorded.",
+      "scope_note": "Normal restart and unsafe-member batch preflight; deliberate mid-operation kill/crash and post-preflight per-member I/O failure are not tested; separate future gate required."
     },
     {
       "id": "DCM-46",
