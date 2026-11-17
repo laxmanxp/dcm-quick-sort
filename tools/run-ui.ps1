@@ -1134,6 +1134,11 @@ try {
         if((Hash $journal) -ne $stateBefore.journal -or (Hash $refusedSrc) -ne $stateBefore.source -or (Hash $refusedDst) -ne $stateBefore.collision -or (Hash $dst) -ne $stateBefore.destination){throw 'Restart viewing history changed bytes or journal'}
         $cases.Add([ordered]@{name='dcm43-restarted-history-display-remains-readonly';passed=$true})
         $null=Save-Shot 'dcm43-restarted-history'
+        # The synthetic conflicting destination is test-owned. All history
+        # read-only checks above proved it unchanged; remove it before the
+        # standard Wait-Restored oracle, which requires an empty Vault.
+        if((Hash $refusedDst) -ne $collisionHash){throw 'History read-only collision changed before cleanup'}
+        Remove-Item -LiteralPath $refusedDst -Force
         # Undo is the only deliberately mutating history action.
         $list=@([DcmNative]::ListItems($script:hwnd,$script:app.Id,1017))
         $idx=@()
@@ -1143,10 +1148,9 @@ try {
         [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1008)
         Wait-Restored @($movedName)
         Assert-Journal 'dcm43-undo-history' @($movedName) 'undone'
-        if((Hash $src) -ne $movedHash -or (Hash $refusedSrc) -ne $refusedHash -or (Hash $refusedDst) -ne $collisionHash){throw 'Undo or refusal altered source/collision bytes'}
+        if((Hash $src) -ne $movedHash -or (Hash $refusedSrc) -ne $refusedHash){throw 'Undo or refusal altered source bytes'}
         $cases.Add([ordered]@{name='dcm43-explicit-undo-restores-and-journals';passed=$true})
         $null=Save-Shot 'dcm43-undo-completed'
-        Remove-Item -LiteralPath $refusedDst -Force
         Assert-Fixtures
         $cases.Add([ordered]@{name='dcm43-original-fixtures-restored';passed=$true})
     }
