@@ -220,3 +220,31 @@ extended tab/file switching under memory pressure, controlled
 renderer crash/timeout injection, persistent worker service benchmark,
 full two-axis/DPI cursor-anchor certification, packaging and license
 audit. This does not authorize making PDFium the default provider.
+
+
+## Extended synthetic graphics/raster gate and final regression
+
+At DCM branch commit `91d10e37778889e8606bd2c6ae2d56ccb878d01a`,
+`tests/native/pdfium-stress-fixture.js` generated two deterministic,
+non-user PDF workloads on Lenovo:
+
+- Raster-like 1-page PDF embedding a compressed 1400x1800 grayscale image
+  (2,520,000 source pixels; PDF size 2,424,954 bytes)
+- Vector-heavy 1-page PDF with 7,000 drawn rectangles (PDF size 23,231 bytes)
+
+`TestFlowPDFiumWorkerComplexPages`: PASS. Raster page rendered in
+303.5 ms with PNG 934x1200, size 2,411,763 bytes; vector page rendered
+in 156.3 ms with PNG 1400x1800, size 81,108 bytes. Both PNGs decoded,
+their dimensions matched metadata, input hashes were preserved, and
+render outputs could be removed. Synthetic raster/vector pages do not
+replace qualification against diverse real-world documents.
+
+The full DCM Go regression suite was then run on Laxman_Lenovo with
+the PDFium worker, 300-page, raster and vector fixtures configured:
+`go test ./... -count=1` — **PASS**, `ok quicksort 34.321s`, exit 0.
+
+No production release/default-engine changes or package deployments were
+made. Remaining: longer-run process-tree memory and worker-timeout
+containment under hostile documents, reliable two-axis pointer anchoring
+across DPI settings, concurrent readers/multiple panes, persistent worker
+performance, and third-party distribution/license review.
