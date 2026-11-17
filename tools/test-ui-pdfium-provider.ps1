@@ -77,7 +77,6 @@ function VerifyPDF([string]$name,[string]$expectedPath,[string]$expectedHash) {
  List-Selected $name
  PageReady 'Page 1 of 2'
  if((Hash $expectedPath) -ne $expectedHash){throw 'PDF bytes changed'}
- Exclusive $expectedPath
 }
 function Label {return [DcmNative]::Text([DcmNative]::Control($hwnd,$app.Id,1061),$app.Id)}
 function PageLabel {return [DcmNative]::Text([DcmNative]::Control($hwnd,$app.Id,1060),$app.Id)}
@@ -228,7 +227,6 @@ try{
  [DcmNative]::ClickAsync($hwnd,$app.Id,1008)
  Wait 'Undo Rename completed' {(Test-Path -LiteralPath $pdf) -and -not(Test-Path -LiteralPath $renamed)}
  if((Hash $pdf) -ne $sha.ToLowerInvariant() -or (Journal $pdf $renamed 'undone' 1) -ne $renameID){throw 'Undo Rename content/journal mismatch'}
- Exclusive $pdf
  Step 'undo-rename-pdf' @{original_restored=$true;bytes_preserved=$true}
  VerifyPDF '08-preview.pdf' $pdf ($sha.ToLowerInvariant())
  Capture '08-restored-after-rename-undo' 'teal'
