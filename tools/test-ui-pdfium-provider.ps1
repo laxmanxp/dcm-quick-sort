@@ -2,7 +2,8 @@
 param(
   [Parameter(Mandatory=$true)][string]$CandidateExe,
   [Parameter(Mandatory=$true)][string]$WorkerExe,
-  [string]$LabRoot='D:\FlowverseReportsRepo'
+  [string]$LabRoot='D:\FlowverseReportsRepo',
+  [switch]$Persistent
 )
 # Test-only. Source is GitHub; Lenovo is a disposable acceptance environment.
 $ErrorActionPreference='Stop'
@@ -15,12 +16,14 @@ if(-not (Test-Path 'C:\Flowverse\runtime\pdfium\bin\pdfium.dll')){throw 'Managed
 $lab=Join-Path $LabRoot ('dcm-pdfium-gui-'+[DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss')+'-'+[Guid]::NewGuid().ToString('N').Substring(0,7))
 $null=New-Item -ItemType Directory -Path $lab
 $receipt=[ordered]@{schema=1;feature='DCM-SHARED-PDFIUM-GUI';started_utc=[DateTime]::UtcNow.ToString('o');lab=$lab;commit=(& git -C $repo rev-parse HEAD).Trim();candidate=$exe;worker=$worker;passed=$false;steps=@();captures=@();error=$null;normal_exit=$false;visual_reviewed=$false}
+$receipt['persistent']=([bool]$Persistent)
 $receipt.candidate_sha256=(Get-FileHash $exe -Algorithm SHA256).Hash
 $receipt.worker_sha256=(Get-FileHash $worker -Algorithm SHA256).Hash
 $trace=Join-Path $lab 'pdf-trace.jsonl'
 $app=$null
 $hwnd=[IntPtr]::Zero
 $failure=$null
+$serviceChildPID=0
 function Step([string]$name,$data){$receipt.steps+=@([ordered]@{name=$name;utc=[DateTime]::UtcNow.ToString('o');result=$data})}
 function Owned {
  if($null -eq $app){throw 'No owned app'}
@@ -146,7 +149,7 @@ try{
  $psi.WorkingDirectory=$lab
  $psi.UseShellExecute=$false
  foreach($kv in @{
-  'DCM_PDF_PROVIDER'='pdfium';'DCM_FLOWPDF_WORKER'=$worker;'FILEWORKSPACE_RUNTIME_DIR'='C:\Flowverse\runtime';
+  'DCM_PDF_PROVIDER'='pdfium';'DCM_FLOWPDF_WORKER'=$worker;'DCM_FLOWPDF_PERSISTENT'=$(if($Persistent){'1'}else{'0'});'FILEWORKSPACE_RUNTIME_DIR'='C:\Flowverse\runtime';
   'LOCALAPPDATA'=$fixture.local;'APPDATA'=$fixture.roaming;'TEMP'=$lab;'TMP'=$lab;
   'DCM_PDF_TRACE'=$trace;'DCM_QUICKSORT_BACKUP_DIR'=(Join-Path $lab 'backups')
  }.GetEnumerator()){$psi.EnvironmentVariables[$kv.Key]=$kv.Value}
@@ -289,6 +292,16 @@ try{
   Step ('recovered-after-'+$case.name) @{valid_pdf_rendered_again=$true}
  }
  if(@([DcmNative]::ListItems($hwnd,$app.Id,1017)).Count){throw 'Processed history changed during failed-PDF recovery'}
+ if($Persistent) {
+  $events=@(Get-Content -LiteralPath $trace | ForEach-Object {$_|ConvertFrom-Json})
+  $starts=@($events | Where-Object {$_.event -eq 'worker-started' -and $_.renderer_pid -gt 0})
+  $unique=@($starts | Select-Object -ExpandProperty renderer_pid -Unique)
+  if($starts.Count -lt 6 -or $unique.Count -ne 1){throw ('Persistent worker PID was not reused: renders='+$starts.Count+' PIDs='+($unique -join ','))}
+  $fallbacks=@($events | Where-Object {$_.event -match 'persistent-transport-fallback|persistent-fallback-started'})
+  if($fallbacks.Count){throw ('Unexpected one-shot fallback during healthy GUI: '+$fallbacks.Count)}
+  $serviceChildPID=[int]$unique[0]
+  Step 'persistent-process-reuse' @{worker_pid=$serviceChildPID;render_requests=$starts.Count;distinct_pids=1;one_shot_fallbacks=0}
+ }
  $receipt.passed=$true
 }catch{
  $failure=$_.Exception.Message
@@ -303,6 +316,16 @@ try{
     if(-not $app.WaitForExit(20000)){throw 'Owned close timeout'}
    }
    $receipt.normal_exit=($app.HasExited -and $app.ExitCode -eq 0)
+   if($Persistent -and $serviceChildPID -gt 0 -and $receipt.normal_exit) {
+    $until=[DateTime]::UtcNow.AddSeconds(5)
+    do {
+     $child=Get-Process -Id $serviceChildPID -ErrorAction SilentlyContinue
+     if($null -eq $child){break}
+     Start-Sleep -Milliseconds 100
+    }while([DateTime]::UtcNow -lt $until)
+    if($null -ne $child){throw ('Persistent PDFium worker survived owner shutdown: '+$serviceChildPID)}
+    Step 'persistent-owned-worker-exited' @{worker_pid=$serviceChildPID;terminated_after_host_close=$true}
+   }
   }catch{
    $receipt.passed=$false
    $receipt['close_error']=$_.Exception.Message
