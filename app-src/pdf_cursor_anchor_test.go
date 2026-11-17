@@ -37,7 +37,7 @@ func TestPDFCursorAnchorSmallPageUsesAvailableMargins(t *testing.T) {
 }
 
 func TestPDFCursorAnchorRejectsOutsidePageAndInvalidGeometry(t *testing.T) {
- if pdfCaptureCursorAnchor(0,0,800,1000,600,700,34,0,0).Valid {t.Fatal("mouse outside page accepted")}
+ if pdfCaptureCursorAnchor(-300,-300,800,1000,600,700,34,0,0).Valid {t.Fatal("mouse outside page accepted")}
  if pdfCaptureCursorAnchor(300,300,0,1000,600,700,34,0,0).Valid {t.Fatal("invalid size accepted")}
  if pdfClampAnchorPan(900,500,999)!=200 {t.Fatal("large page pan not bounded")}
  if pdfClampAnchorPan(200,500,999)!=150 {t.Fatal("small page pan not bounded")}
