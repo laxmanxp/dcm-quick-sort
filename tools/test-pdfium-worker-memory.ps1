@@ -10,6 +10,9 @@ Set-StrictMode -Version Latest
 if($Iterations -lt 5 -or $Iterations -gt 60){throw 'Iterations outside 5..60'}
 $exe=[IO.Path]::GetFullPath($WorkerExe);$pdf=[IO.Path]::GetFullPath($ValidPdf)
 if(-not (Test-Path $exe -PathType Leaf) -or -not(Test-Path $pdf -PathType Leaf)){throw 'Worker or fixture missing'}
+$runtime='C:\Flowverse\runtime'
+if(-not(Test-Path (Join-Path $runtime 'pdfium\bin\pdfium.dll') -PathType Leaf)){throw 'Managed PDFium DLL missing'}
+$env:FILEWORKSPACE_RUNTIME_DIR=$runtime
 $lab=Join-Path $Root ('dcm-pdfium-worker-memory-'+[DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss')+'-'+[Guid]::NewGuid().ToString('N').Substring(0,6))
 $null=New-Item -ItemType Directory -Path $lab
 $receipt=[ordered]@{schema=1;feature='PDFIUM-WORKER-MEMORY';started_utc=[DateTime]::UtcNow.ToString('o');passed=$false;worker_sha256=(Get-FileHash $exe -Algorithm SHA256).Hash;fixture_sha256=(Get-FileHash $pdf -Algorithm SHA256).Hash;iterations=$Iterations;samples=@();lab=$lab;error=$null}
@@ -40,12 +43,12 @@ try{
    }
   }
   $clock.Stop();$p.Refresh()
-  $maxPrivate=[Math]::Max($maxPrivate,[long]$p.PeakPagedMemorySize64)
+  # PrivateMemorySize64 is sampled; PeakPagedMemorySize64 is NOT private-byte peak.
   $maxWorking=[Math]::Max($maxWorking,[long]$p.PeakWorkingSet64)
   $stdout=$p.StandardOutput.ReadToEnd().Trim();$stderr=$p.StandardError.ReadToEnd().Trim()
   if($p.ExitCode -ne 0 -or $stdout -notmatch '^OK\|'){throw ('Failed render '+$i+' exit='+$p.ExitCode+' output='+$stderr+' '+$stdout)}
   if(-not (Test-Path $out -PathType Leaf)){throw ('Missing PNG on iteration '+$i)}
-  $sample=[ordered]@{index=$i;pid=$pidOwned;duration_ms=$clock.ElapsedMilliseconds;peak_private_bytes=$maxPrivate;peak_working_bytes=$maxWorking;result=$stdout;png_bytes=(Get-Item $out).Length;normal_exit=$true}
+  $sample=[ordered]@{index=$i;pid=$pidOwned;duration_ms=$clock.ElapsedMilliseconds;sampled_max_private_bytes=$maxPrivate;peak_working_bytes=$maxWorking;result=$stdout;png_bytes=(Get-Item $out).Length;normal_exit=$true}
   $receipt.samples+=@($sample)
   Remove-Item -LiteralPath $out -Force
   $p.Dispose()
@@ -60,8 +63,8 @@ try{
  [IO.File]::WriteAllText((Join-Path $lab 'receipt.json'),($receipt|ConvertTo-Json -Depth 10))
  $durations=@($receipt.samples|ForEach-Object {$_.duration_ms}|Sort-Object)
  if($durations.Count){Write-Output ('SAMPLES='+$durations.Count+' MEDIAN_MS='+$durations[[int][Math]::Floor(($durations.Count-1)/2)]+' MAX_MS='+$durations[-1])}
- $privateMax=0L;foreach($sample in $receipt.samples){$privateMax=[Math]::Max($privateMax,[long]$sample.peak_private_bytes)}
- Write-Output ('PEAK_PRIVATE_MB='+[Math]::Round($privateMax/1MB,1))
+ $privateMax=0L;foreach($sample in $receipt.samples){$privateMax=[Math]::Max($privateMax,[long]$sample.sampled_max_private_bytes)}
+ Write-Output ('MAX_SAMPLED_PRIVATE_MB='+[Math]::Round($privateMax/1MB,1))
  Write-Output ('REPORT='+$lab);Write-Output ('PASSED='+$receipt.passed)
 }
 if(-not $receipt.passed){exit 1}
