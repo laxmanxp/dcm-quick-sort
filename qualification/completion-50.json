@@ -1239,15 +1239,20 @@
     {
       "id": "DCM-43",
       "feature": "Verify Processed and history displays",
-      "status": "planned",
-      "completion": "pending",
-      "ui_test": "not_run",
+      "status": "tested",
+      "completion": "complete",
+      "ui_test": "desktop6b6eh4t_flowdev_ui_history_PASS_16_cases_10_images_plus_prior_dcm40_attention_evidence",
       "user_test": "not_recorded",
       "parent_ids": [
         "DCM-NATIVE-01"
       ],
       "acceptance": "Successful, refused and partial operations are represented honestly; merely viewing history performs no file mutation.",
-      "evidence": []
+      "evidence": [
+        "qualification/evidence/dcm-43-processed-history-desktop-2026-11-17.md",
+        "qualification/evidence/dcm-40-cross-volume-move-desktop-2026-11-16.md"
+      ],
+      "qualification_note": "Bounded engineering PASS on DESKTOP-6B6EH4T, pushed fe34e91: FlowDev update, tooling, exact build and registered ui-history PASS (16 cases, 10 images reviewed). Completed move correctly Processed, refused collision absent from successful Processed, search/selection, history inspection and restart all preserved SHA-256 of source, collision, destination and journal. Explicit Undo restored original and journal. Prior DCM-40 real E-to-D source-retirement failure evidence confirms attention status, source/copied bytes retained and journal terminal attention; this partial case was NOT rerun by DCM-43. Earlier RED harness fixture cleanup state preserved. Physical user_test not recorded.",
+      "scope_note": "Success and refused Processed/search read-only behavior directly tested; partial attention status/journal supported by separate DCM-40. Not full Recovery UI navigation, every partial state, concurrency race or manual user acceptance."
     },
     {
       "id": "DCM-44",
