@@ -769,6 +769,15 @@
           "tools/run-ui.ps1",
           "-Suite",
           "history"
+        ],
+        "ui-undo-move-safety": [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "tools/run-ui.ps1",
+          "-Suite",
+          "undo-move-safety"
         ]
       }
     }
