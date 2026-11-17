@@ -152,6 +152,30 @@ func ensurePDFRendererScript() (string, error) {
 	return path, nil
 }
 
+// pdfRendererExecutable chooses an explicitly opted-in shared FileFlow
+// PDFium worker; the existing Windows.Data.Pdf renderer stays the default.
+// A missing opt-in worker is an error rather than an unsafe silent switch.
+func pdfRendererExecutable() (string, error) {
+ if strings.EqualFold(strings.TrimSpace(os.Getenv("DCM_PDF_PROVIDER")), "pdfium") {
+  worker := strings.TrimSpace(os.Getenv("DCM_FLOWPDF_WORKER"))
+  if worker == "" { return "", errors.New("PDFium provider requires DCM_FLOWPDF_WORKER") }
+  absolute, err := filepath.Abs(worker)
+  if err != nil { return "", err }
+  info, err := os.Stat(absolute)
+  if err != nil { return "", fmt.Errorf("PDFium worker unavailable: %w", err) }
+  if !info.Mode().IsRegular() { return "", errors.New("PDFium worker path must be a file") }
+  return absolute, nil
+ }
+ return findPDFPowerShell()
+}
+
+func pdfPreviewRenderCommand(executable, script string, req PDFRenderRequest) *exec.Cmd {
+ if strings.EqualFold(strings.TrimSpace(os.Getenv("DCM_PDF_PROVIDER")), "pdfium") {
+  return exec.Command(executable, pdfiumRendererArgs(req)...)
+ }
+ return exec.Command(executable, pdfRendererArgs(script, req)...)
+}
+
 func findPDFPowerShell() (string, error) {
 	for _, name := range []string{"powershell.exe", "pwsh.exe"} {
 		if path, err := exec.LookPath(name); err == nil {
@@ -182,11 +206,13 @@ func startPDFPreview(path string) bool {
 	if pdfShutdown.closing || !isPDFPath(path) {
 		return false
 	}
-	if _, err := findPDFPowerShell(); err != nil {
+	if _, err := pdfRendererExecutable(); err != nil {
 		return false
 	}
-	if _, err := ensurePDFRendererScript(); err != nil {
-		return false
+	if !strings.EqualFold(strings.TrimSpace(os.Getenv("DCM_PDF_PROVIDER")), "pdfium") {
+		if _, err := ensurePDFRendererScript(); err != nil {
+			return false
+		}
 	}
 	full, err := filepath.Abs(path)
 	if err != nil {
@@ -262,15 +288,18 @@ func requestPDFPreviewRender() {
 		setText(app.statusLabel, "PDF zoom/page update queued…")
 		return
 	}
-	powershell, err := findPDFPowerShell()
+	executable, err := pdfRendererExecutable()
 	if err != nil {
 		finishPDFRendererUnavailable(err)
 		return
 	}
-	script, err := ensurePDFRendererScript()
-	if err != nil {
-		finishPDFRendererUnavailable(err)
-		return
+	script := ""
+	if !strings.EqualFold(strings.TrimSpace(os.Getenv("DCM_PDF_PROVIDER")), "pdfium") {
+		script, err = ensurePDFRendererScript()
+		if err != nil {
+			finishPDFRendererUnavailable(err)
+			return
+		}
 	}
 	dir := filepath.Join(settingsDirectory(), "preview-cache")
 	if strings.TrimSpace(settingsDirectory()) == "" {
@@ -322,7 +351,7 @@ func requestPDFPreviewRender() {
 		return
 	}
 	go func() {
-		cmd := exec.Command(powershell, pdfRendererArgs(script, req)...)
+		cmd := pdfPreviewRenderCommand(executable, script, req)
 		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: createNoWindow}
 		var combined bytes.Buffer
 		cmd.Stdout = &combined
