@@ -1385,7 +1385,8 @@ try {
         if($idx.Count -ne 2){throw ('DCM-46 history should have rename and move transactions, got '+$idx.Count)}
         # Find the Move row by its exact filename->same-filename text.
         $moveIndex=-1
-        foreach($i in $idx){if($rows[$i].Contains('01-final-alpha.txt → 01-final-alpha.txt')){$moveIndex=$i}}
+        $moveLabel='01-final-alpha.txt '+[char]0x2192+' 01-final-alpha.txt'
+        foreach($i in $idx){if($rows[$i].Contains($moveLabel)){$moveIndex=$i}}
         if($moveIndex -lt 0){throw 'DCM-46 Move transaction was not independently selectable'}
         $null=[DcmNative]::SelectSingleItem($script:hwnd,$script:app.Id,1017,$moveIndex)
         [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1008)
@@ -1401,7 +1402,8 @@ try {
         Invoke-Fvs 'dcm46-rename-history-search' "type processedsearch `"01-final-alpha`"`ninspect main"
         $rows=@([DcmNative]::ListItems($script:hwnd,$script:app.Id,1017))
         $renameIndex=-1
-        for($i=0;$i -lt $rows.Count;$i++){if($rows[$i].Contains('01-alpha.txt → 01-final-alpha.txt')){$renameIndex=$i}}
+        $renameLabel='01-alpha.txt '+[char]0x2192+' 01-final-alpha.txt'
+        for($i=0;$i -lt $rows.Count;$i++){if($rows[$i].Contains($renameLabel)){$renameIndex=$i}}
         if($renameIndex -lt 0){throw 'DCM-46 Rename transaction unavailable for Undo'}
         $null=[DcmNative]::SelectSingleItem($script:hwnd,$script:app.Id,1017,$renameIndex)
         [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1008)
