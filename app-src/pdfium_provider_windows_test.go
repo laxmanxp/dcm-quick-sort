@@ -6,7 +6,6 @@ import (
  "bytes"
  "image/png"
  "os"
- "os/exec"
  "path/filepath"
  "strings"
  "testing"
