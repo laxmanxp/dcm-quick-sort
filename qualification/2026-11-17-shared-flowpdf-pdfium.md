@@ -108,3 +108,44 @@ security/redistribution compliance.
 
 No PDF default-provider switch, release merge, installer change, or
 production application modification was made.
+
+
+## Native Rename / Move / Undo acceptance — Lenovo
+
+The isolated PDFium candidate passed real Win32 GUI file-operation acceptance
+on **Laxman_Lenovo** using only disposable fixtures. No release build,
+installed application, or user document was changed.
+
+- Source branch: `feature/shared-flowpdf-pdfium-provider`
+- Test harness/qualification commit: `a212a139fd32ef41a218726570c0f39b207be9da`
+- Device evidence directory:
+  `D:\FlowverseReportsRepo\dcm-pdfium-gui-20261117-165735-4034632`
+- Result: `PASSED=True`, `NORMAL_EXIT=True`, `GUI_EXIT=0`
+- Native evidence: `receipt.json`, `pdf-trace.jsonl`, and ten
+  full-window PNG captures (visual review not independently completed).
+
+The test selected the active two-page PDFium-rendered document, renamed
+`08-preview.pdf` to `undo-preview.pdf`, verified the new file's byte
+hash and completed journal entry, reopened its page, then used the
+application's own Undo control to restore the original path and verify the
+journal state `undone`.
+
+It subsequently moved the PDF to the disposable `Vault\Accepted` location,
+verified the completed move journal and matching bytes, opened the document
+from the destination, then used the application's own Undo control to restore
+the source path. The destination selection cleared correctly. The final
+source folder contained the original `08-preview.pdf` and the unchanged
+three TXT fixtures. The destination was empty. Both operation journal records
+ended in the `undone` state.
+
+The worker's ability to release file handles for these operations is supported
+by the successful on-disk transitions and explicit exclusive-file access checks.
+
+**Qualified scope:** small deterministic two-page fixture, regular operation
+completion, existing native preview, local filesystem. **Still pending:**
+large scanned and graphics-heavy PDFs; corrupt/password-protected documents;
+failure injection and render-timeout handling; repeated tab/file switching
+under memory pressure; persistent worker performance and packaging; complete
+two-axis cursor anchoring and independent screenshot review.
+
+Do not make PDFium the release default based solely on this scope.
