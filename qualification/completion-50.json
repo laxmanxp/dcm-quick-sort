@@ -1257,16 +1257,20 @@
     {
       "id": "DCM-44",
       "feature": "Verify single Undo Move",
-      "status": "planned",
-      "completion": "pending",
-      "ui_test": "not_run",
+      "status": "tested",
+      "completion": "complete",
+      "ui_test": "desktop6b6eh4t_ui_undo_move_safety_PASS_7_cases_7_images_unit_PASS_move_batch_smoke_PASS_full_regression_BLOCKED_symlink_privilege",
       "user_test": "not_recorded",
       "parent_ids": [
         "D6",
         "DCM-NATIVE-01"
       ],
       "acceptance": "Restore original name/location/bytes for the intended operation; refuse changed or occupied destinations safely.",
-      "evidence": []
+      "evidence": [
+        "qualification/evidence/dcm-44-single-undo-move-desktop-2026-11-17.md"
+      ],
+      "qualification_note": "Bounded automated engineering PASS on DESKTOP-6B6EH4T at pushed 35c4391: new normal same-volume Move stores destination SHA256/size in completed journal; Undo refuses occupied original and changed moved-file bytes with both hashes/journal unchanged, then restores exact name/path/bytes and journal after safe conditions. Registered source-pinned unit, tooling, build, ui-undo-move-safety (7 cases, 7 images reviewed), ui-move and ui-batch all PASS. Broad D1-D6 regressions are NOT ACCEPTED: one existing symlink-permission test skipped (26 pass, 0 fail, 1 skip), receipt retained. Legacy no-digest records not retrospectively protected. No physical user test.",
+      "scope_note": "New fingerprinted same-volume single-file Move/Undo, occupied original and changed destination. Not legacy no-fingerprint journal, all races, large-file performance, symlink/ACL, or full regression pass."
     },
     {
       "id": "DCM-45",
