@@ -6146,6 +6146,8 @@ func initGDIPlus() bool {
 }
 
 func main() {
+	// The owned private PDFium child must not survive Quick Sort's message loop.
+	defer closeSharedFlowPDFiumProcess()
 	defer flushStartupTrace()
 	defer flushLayoutTrace()
 	runtime.LockOSThread()
