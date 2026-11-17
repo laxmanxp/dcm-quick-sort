@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('basics','filters','rename','rename-edge','undo-rename','destination','move','cross-volume','conflicts','batch','batch-partial','pdf','previews','preview-release-operations','office-preview-release-operations')][string]$Suite='move',
+    [ValidateSet('basics','filters','rename','rename-edge','undo-rename','destination','move','cross-volume','conflicts','batch','batch-partial','history','pdf','previews','preview-release-operations','office-preview-release-operations')][string]$Suite='move',
     [string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,
     [string]$VisionExe=$env:DCM_FLOWUIVISION_EXE,
     [string]$PreviousFixtureInbox='C:\FlowverseReports\dcm-flowuivision-20261103\inbox'
@@ -1066,6 +1066,89 @@ try {
         Remove-Item -LiteralPath $charlieTarget -Force
         Assert-Fixtures
         $cases.Add([ordered]@{name='batch-partial-fully-restored-fixtures';passed=$true})
+    }
+    if($Suite -eq 'history'){
+        # DCM-43: Completed and refused file operations must not be conflated.
+        # Search, selection and inspection of Processed cannot modify any
+        # source, Vault destination or durable journal event.
+        $movedName='02-bravo.txt'
+        $refusedName='03-charlie.txt'
+        $src=Join-Path $fixture.inbox $movedName
+        $dst=Join-Path $fixture.destination $movedName
+        $refusedSrc=Join-Path $fixture.inbox $refusedName
+        $refusedDst=Join-Path $fixture.destination $refusedName
+        $movedHash=Hash $src
+        $refusedHash=Hash $refusedSrc
+        $journal=Join-Path $fixture.config 'recovery/move-journal.jsonl'
+        $null=[DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@($movedName))
+        Invoke-Fvs 'dcm43-success-ready' "type destination `"Accepted`"`ninspect main`nexpect move enabled"
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1041)
+        Wait-Moved @($movedName)
+        Assert-Journal 'dcm43-success-journal' @($movedName) 'completed'
+        $completed=@([DcmNative]::ListItems($script:hwnd,$script:app.Id,1017))
+        if(@($completed|Where-Object{$_.Contains($movedName)}).Count -ne 1){throw 'Completed move not represented in Processed'}
+        if((Hash $dst) -ne $movedHash){throw 'Completed move content mismatch'}
+        $cases.Add([ordered]@{name='dcm43-success-visible-in-processed';passed=$true;file=$movedName;sha256=$movedHash})
+        $null=Save-Shot 'dcm43-successful-processed'
+        # A distinct preexisting destination must cause a per-file refusal.
+        $seed=[Text.Encoding]::UTF8.GetBytes('DCM43-REFUSED-DESTINATION-PRESERVE')
+        [IO.File]::WriteAllBytes($refusedDst,$seed)
+        $collisionHash=Hash $refusedDst
+        $journalBefore=Hash $journal
+        $null=[DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,[string[]]@($refusedName))
+        Invoke-Fvs 'dcm43-refusal-ready' "type destination `"Accepted`"`ninspect main`nexpect move enabled"
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1041)
+        Confirm-Dialog 'Filename Conflict' @($refusedName,'Keep Both','Replace') 2
+        Wait-For 'DCM43 refusal status' {Status-Contains 'Filename conflict action cancelled'} 20
+        if((Hash $refusedSrc) -ne $refusedHash -or (Hash $refusedDst) -ne $collisionHash){throw 'Refused move changed file bytes'}
+        if((Hash $journal) -ne $journalBefore){throw 'Refused move changed journal'}
+        $processed=@([DcmNative]::ListItems($script:hwnd,$script:app.Id,1017))
+        if(@($processed|Where-Object{$_.Contains($refusedName)}).Count -ne 0){throw 'Refused move falsely appears as completed Processed'}
+        $cases.Add([ordered]@{name='dcm43-refused-not-misrepresented-as-success';passed=$true;refused=$refusedName;preserved_hash=$refusedHash;collision_hash=$collisionHash})
+        $null=Save-Shot 'dcm43-refused-not-processed'
+        # Snapshot all relevant bytes and journal. From this point, Processed
+        # views, searches and selected-history readback must be read-only.
+        $stateBefore=[ordered]@{journal=(Hash $journal);source=(Hash $refusedSrc);collision=(Hash $refusedDst);destination=(Hash $dst)}
+        Invoke-Fvs 'dcm43-history-filter-refused' "type processedsearch `"03-charlie`"`ninspect main"
+        $filtered=@([DcmNative]::ListItems($script:hwnd,$script:app.Id,1017))
+        if(@($filtered|Where-Object{$_.Contains($refusedName)}).Count -ne 0){throw 'Refused item appeared under Processed search'}
+        $cases.Add([ordered]@{name='dcm43-refused-search-has-no-success-row';passed=$true})
+        $null=Save-Shot 'dcm43-refused-history-search'
+        Invoke-Fvs 'dcm43-history-filter-success' "type processedsearch `"02-bravo`"`ninspect main"
+        $filtered=@([DcmNative]::ListItems($script:hwnd,$script:app.Id,1017))
+        $idx=@()
+        for($i=0;$i -lt $filtered.Count;$i++){if($filtered[$i].Contains($movedName)){$idx+=$i}}
+        if($idx.Count -ne 1){throw 'Successful item not found once by Processed search'}
+        $null=[DcmNative]::SelectSingleItem($script:hwnd,$script:app.Id,1017,$idx[0])
+        $cases.Add([ordered]@{name='dcm43-success-history-search-and-selection';passed=$true;selected=$movedName})
+        $null=Save-Shot 'dcm43-success-history-search'
+        Invoke-Fvs 'dcm43-history-clear-search' "type processedsearch `"`"`ninspect main"
+        Save-State 'dcm43-history-view'
+        if((Hash $journal) -ne $stateBefore.journal -or (Hash $refusedSrc) -ne $stateBefore.source -or (Hash $refusedDst) -ne $stateBefore.collision -or (Hash $dst) -ne $stateBefore.destination){throw 'Viewing history modified files or durable journal'}
+        $cases.Add([ordered]@{name='dcm43-history-navigation-readonly-byte-and-journal-proof';passed=$true;journal_sha256=$stateBefore.journal})
+        $null=Save-Shot 'dcm43-history-readonly'
+        Stop-OwnedApp;Start-OwnedApp
+        Invoke-Fvs 'dcm43-restart-history-search' "type processedsearch `"02-bravo`"`ninspect main"
+        $again=@([DcmNative]::ListItems($script:hwnd,$script:app.Id,1017))
+        if(@($again|Where-Object{$_.Contains($movedName)}).Count -ne 1){throw 'Restart failed to recover successful Processed entry'}
+        if((Hash $journal) -ne $stateBefore.journal -or (Hash $refusedSrc) -ne $stateBefore.source -or (Hash $refusedDst) -ne $stateBefore.collision -or (Hash $dst) -ne $stateBefore.destination){throw 'Restart viewing history changed bytes or journal'}
+        $cases.Add([ordered]@{name='dcm43-restarted-history-display-remains-readonly';passed=$true})
+        $null=Save-Shot 'dcm43-restarted-history'
+        # Undo is the only deliberately mutating history action.
+        $list=@([DcmNative]::ListItems($script:hwnd,$script:app.Id,1017))
+        $idx=@()
+        for($i=0;$i -lt $list.Count;$i++){if($list[$i].Contains($movedName)){$idx+=$i}}
+        if($idx.Count -ne 1){throw 'Cannot find history record for Undo'}
+        $null=[DcmNative]::SelectSingleItem($script:hwnd,$script:app.Id,1017,$idx[0])
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1008)
+        Wait-Restored @($movedName)
+        Assert-Journal 'dcm43-undo-history' @($movedName) 'undone'
+        if((Hash $src) -ne $movedHash -or (Hash $refusedSrc) -ne $refusedHash -or (Hash $refusedDst) -ne $collisionHash){throw 'Undo or refusal altered source/collision bytes'}
+        $cases.Add([ordered]@{name='dcm43-explicit-undo-restores-and-journals';passed=$true})
+        $null=Save-Shot 'dcm43-undo-completed'
+        Remove-Item -LiteralPath $refusedDst -Force
+        Assert-Fixtures
+        $cases.Add([ordered]@{name='dcm43-original-fixtures-restored';passed=$true})
     }
     if($Suite -in @('pdf','previews')){
         Invoke-Fvs 'pdf-open' "click clear`ntype name `"08-preview`"`nwait_ready type=textbox target=newname text=`"08-preview`" timeout=5s`nwait_ready type=control target=pdfstatus text~=`"Page 1/2`" timeout=20s`ninspect main`nexpect pdfstatus text~=`"Fit Width`""
