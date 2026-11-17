@@ -380,6 +380,34 @@ func requestPDFPreviewRender() {
 		return
 	}
 	go func() {
+		if pdfiumPersistentOptIn() {
+			result := PDFRenderResult{Request:req}
+			started := func(pid int) {
+				recordPDFTrace(PDFTraceEvent{Event:"worker-started",Generation:req.Generation,
+					InputPath:req.InputPath,OutputPath:req.OutputPath,RendererPID:pid})
+			}
+			meta,pid,err:=sharedFlowPDFiumProcess.render(executable,req,flowPDFiumRequestDeadline,started)
+			recordPDFTrace(PDFTraceEvent{Event:"worker-finished",Generation:req.Generation,
+				InputPath:req.InputPath,OutputPath:req.OutputPath,RendererPID:pid,Failed:err!=nil})
+			if err!=nil && !strings.HasPrefix(err.Error(),"PDFium: ") {
+				// Transport failures can be recovered by an isolated one-shot
+				// invocation. Decoder refusals are final and never retried.
+				tracePDFPreview("persistent-transport-fallback",req,true)
+				_ = os.Remove(req.OutputPath)
+				meta,pid,err=flowPDFiumOneShotFallback(executable,req)
+				recordPDFTrace(PDFTraceEvent{Event:"persistent-fallback-finished",Generation:req.Generation,
+					InputPath:req.InputPath,OutputPath:req.OutputPath,RendererPID:pid,Failed:err!=nil})
+			}
+			result.Meta,result.Err=meta,err
+			if result.Err==nil {
+				if st,statErr:=os.Stat(req.OutputPath);statErr!=nil||st.Size()==0 {
+					if statErr!=nil {result.Err=statErr} else {result.Err=errors.New("PDFium service produced an empty image")}
+				}
+			}
+			pdfRenderResults<-result
+			procPostMessageW.Call(app.hwnd,WM_PDF_RENDER_DONE,0,0)
+			return
+		}
 		cmd := pdfPreviewRenderCommand(executable, script, req)
 		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: createNoWindow}
 		var combined bytes.Buffer
