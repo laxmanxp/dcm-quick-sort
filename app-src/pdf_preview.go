@@ -73,6 +73,22 @@ func pdfRendererArgs(scriptPath string, req PDFRenderRequest) []string {
 	}
 }
 
+// The shared PDFium worker uses the same OK|... output contract as
+// pdf_render.ps1, but accepts native flags rather than PowerShell switches.
+func pdfiumRendererArgs(req PDFRenderRequest) []string {
+ mode := "zoom"
+ if req.FitWidth {mode="fitwidth"} else if req.Fit {mode="fit"}
+ return []string{
+  "-InputPath",req.InputPath,
+  "-OutputPath",req.OutputPath,
+  "-PageIndex",strconv.Itoa(req.PageIndex),
+  "-Mode",mode,
+  "-Zoom",strconv.Itoa(clampPDFZoom(req.Zoom)),
+  "-ViewportWidth",strconv.Itoa(req.ViewportWidth),
+  "-ViewportHeight",strconv.Itoa(req.ViewportHeight),
+ }
+}
+
 func parsePDFRendererOutput(output string) (PDFRenderMetadata, error) {
 	lines := strings.Split(strings.ReplaceAll(output, "\r\n", "\n"), "\n")
 	for i := len(lines) - 1; i >= 0; i-- {
