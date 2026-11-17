@@ -221,6 +221,7 @@ try{
  $renamed=Join-Path $fixture.inbox 'undo-preview.pdf'
  Wait 'PDF rename completed' {(Test-Path -LiteralPath $renamed) -and -not(Test-Path -LiteralPath $pdf)}
  if((Hash $renamed) -ne $sha.ToLowerInvariant()){throw 'Rename altered PDF content'}
+ Wait 'Rename journal completed' {try {$null=Journal $pdf $renamed 'completed' 1;return $true} catch {return $false}}
  $renameID=Journal $pdf $renamed 'completed' 1
  Step 'rename-pdf' @{source=$pdf;target=$renamed;bytes_preserved=$true;journal_id=$renameID}
  Wait 'renamed selection' {(TextControl 1005) -eq 'undo-preview'}
@@ -229,6 +230,7 @@ try{
  SelectUndoRecord 'undo-preview.pdf'
  [DcmNative]::ClickAsync($hwnd,$app.Id,1008)
  Wait 'Undo Rename completed' {(Test-Path -LiteralPath $pdf) -and -not(Test-Path -LiteralPath $renamed)}
+ Wait 'Undo Rename journal' {try {$null=Journal $pdf $renamed 'undone' 1;return $true} catch {return $false}}
  if((Hash $pdf) -ne $sha.ToLowerInvariant() -or (Journal $pdf $renamed 'undone' 1) -ne $renameID){throw 'Undo Rename content/journal mismatch'}
  Step 'undo-rename-pdf' @{original_restored=$true;bytes_preserved=$true}
  VerifyPDF '08-preview.pdf' $pdf ($sha.ToLowerInvariant())
@@ -237,6 +239,7 @@ try{
  $moved=Join-Path $fixture.destination '08-preview.pdf'
  Wait 'PDF move completed' {(Test-Path -LiteralPath $moved) -and -not(Test-Path -LiteralPath $pdf)}
  if((Hash $moved) -ne $sha.ToLowerInvariant()){throw 'Move altered PDF content'}
+ Wait 'Move journal completed' {try {$null=Journal $pdf $moved 'completed' 2;return $true} catch {return $false}}
  $moveID=Journal $pdf $moved 'completed' 2
  Step 'move-pdf' @{destination=$moved;bytes_preserved=$true;journal_id=$moveID}
  SwitchSource $fixture.destination 1
@@ -245,6 +248,7 @@ try{
  SelectUndoRecord '08-preview.pdf'
  [DcmNative]::ClickAsync($hwnd,$app.Id,1008)
  Wait 'Undo Move completed' {(Test-Path -LiteralPath $pdf) -and -not(Test-Path -LiteralPath $moved)}
+ Wait 'Undo Move journal' {try {$null=Journal $pdf $moved 'undone' 2;return $true} catch {return $false}}
  if((Hash $pdf) -ne $sha.ToLowerInvariant() -or (Journal $pdf $moved 'undone' 2) -ne $moveID){throw 'Undo Move content/journal mismatch'}
  Wait 'destination source emptied after undo' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 0 -and (TextControl 1005) -ceq ''}
  Exclusive $pdf
