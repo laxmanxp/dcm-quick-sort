@@ -760,6 +760,15 @@
           "tools/run-ui.ps1",
           "-Suite",
           "batch-partial"
+        ],
+        "ui-history": [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "tools/run-ui.ps1",
+          "-Suite",
+          "history"
         ]
       }
     }
