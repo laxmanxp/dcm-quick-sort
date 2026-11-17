@@ -476,6 +476,23 @@ func moveFileWith(source, target string, renameFn func(string, string) error, re
 	return retireFn(source, target, expected)
 }
 
+// verifyUndoMovedBytes prevents a newly recorded move or rename from silently
+// returning edited destination bytes under the original filename. Legacy
+// records without a saved digest retain their previous undo behavior.
+func verifyUndoMovedBytes(rec MoveRecord) error {
+	if rec.OriginalSHA256 == "" {
+		return nil
+	}
+	snapshot, err := snapshotSource(rec.To)
+	if err != nil {
+		return fmt.Errorf("cannot verify moved file before undo: %w", err)
+	}
+	if snapshot.Size != rec.OriginalSize || !strings.EqualFold(snapshot.SHA256, rec.OriginalSHA256) {
+		return errors.New("cannot undo: moved file contents changed after the move")
+	}
+	return nil
+}
+
 func validateUndoMove(rec MoveRecord) error {
 	if rec.Kind == MoveKindMove && caseOnlySameDirectoryRename(rec.From, rec.To) {
 		// A Windows case-only rename makes both Stat paths resolve to one file.
@@ -487,7 +504,7 @@ func validateUndoMove(rec MoveRecord) error {
 		if !exact {
 			return errors.New("cannot undo case-only rename: target casing is no longer present")
 		}
-		return nil
+		return verifyUndoMovedBytes(rec)
 	}
 	switch rec.Kind {
 	case MoveKindDuplicateRemoved:
@@ -521,7 +538,7 @@ func validateUndoMove(rec MoveRecord) error {
 		if _, err := os.Stat(rec.To); err != nil {
 			return errors.New("cannot undo: moved file no longer exists")
 		}
-		return nil
+		return verifyUndoMovedBytes(rec)
 	}
 }
 
