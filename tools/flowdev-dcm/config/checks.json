@@ -778,6 +778,13 @@
           "tools/run-ui.ps1",
           "-Suite",
           "undo-move-safety"
+        ],
+        "undo-move-safety-unit": [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "tools/test-undo-move-safety.ps1"
         ]
       }
     }
