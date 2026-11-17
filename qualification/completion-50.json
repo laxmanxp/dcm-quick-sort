@@ -1294,9 +1294,9 @@
     {
       "id": "DCM-46",
       "feature": "Run final normal-app workflow and image review",
-      "status": "planned",
-      "completion": "pending",
-      "ui_test": "not_run",
+      "status": "tested",
+      "completion": "complete",
+      "ui_test": "desktop6b6eh4t_flowdev_ui_final_workflow_PASS_19_cases_13_images_independently_reviewed",
       "user_test": "not_recorded",
       "parent_ids": [
         "DCM-NATIVE-01",
@@ -1306,14 +1306,15 @@
       "acceptance": "Complete Preview -> Rename -> Move -> restart -> Undo on the final candidate; review retained images for actual visible success/error/blank states.",
       "evidence": [
         "qualification/2026-11-13-compact-labels.md",
-        "qualification/evidence/compact-labels-summary.json"
+        "qualification/evidence/compact-labels-summary.json",
+        "qualification/evidence/dcm-46-final-workflow-desktop-2026-11-17.md"
       ],
       "visual_followups": [
         "DCM-UI-EMPTY-COPY-01",
         "DCM-UI-LABEL-01",
         "DCM-UI-RESIZE-01"
       ],
-      "qualification_note": "DCM-17 screenshot review found no-match wording and clipped/crowded labels at the tested scaling/geometry. Resolve or explicitly disposition before final release; functional DCM-17 acceptance is not global layout approval.",
+      "qualification_note": "Bounded integrated native engineering PASS on DESKTOP-6B6EH4T at pushed ef7bd87d: registered FlowDev update/tooling/exact build and ui-final-workflow passed 19 cases, 13 original captures independently reviewed. Readable TXT, genuine 2-page colored PDF pixels, Rename, Move, clean restart recovered two journal IDs, Undo Move then Undo Rename restored original hash and all fixtures, and explicit readable empty/no-match state. Source clean and app shutdown normal. Visual limits remain: long Processed transaction rows clipped at tested width; long source path horizontally scrolled; fixed geometry, not physical scaling/layout blanket approval. Prior failed encoding harness receipt preserved. User acceptance not recorded.",
       "compact_label_checkpoint": {
         "commit": "2cafe818b16ccb2c861ac1d5cd74731ab446c7db",
         "status": "fixed_at_tested_geometry",
@@ -1343,7 +1344,8 @@
         "numbered_steps_closed": []
       },
       "label_followup_disposition": "DCM-UI-LABEL-01 fixed at2cafe818 for tested geometry; retain final-candidate workflow/image recheck and unrecorded user acceptance.",
-      "docx_reopen_followup": "Review and resolve/disposition the retained incomplete-paint frame at 8eb1470a with natural follow-up captures/layout observations; fresh DOCX run is clean but the old frame cause is not established."
+      "docx_reopen_followup": "Review and resolve/disposition the retained incomplete-paint frame at 8eb1470a with natural follow-up captures/layout observations; fresh DOCX run is clean but the old frame cause is not established.",
+      "scope_note": "Representative TXT/default PDF integrated workflow at one window geometry; not full installed Office providers, all error states, historical DOCX paint, resizing/DPI, or human operation. DCM-UI-RESIZE-01 and clipped label followups retained."
     },
     {
       "id": "DCM-47",
