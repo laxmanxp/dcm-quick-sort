@@ -42,3 +42,12 @@ func TestPDFCursorAnchorRejectsOutsidePageAndInvalidGeometry(t *testing.T) {
  if pdfClampAnchorPan(900,500,999)!=200 {t.Fatal("large page pan not bounded")}
  if pdfClampAnchorPan(200,500,999)!=150 {t.Fatal("small page pan not bounded")}
 }
+
+func TestPDFCursorAnchorCoalescedGeneration(t *testing.T) {
+ anchor:=PDFCursorAnchor{Valid:true,Generation:7}
+ if !pdfAnchorApplies(anchor,8,8) {t.Fatal("coalesced final render dropped live pointer anchor")}
+ if pdfAnchorApplies(anchor,7,8) {t.Fatal("stale worker used pointer anchor")}
+ if pdfAnchorApplies(anchor,8,9) {t.Fatal("superseded worker used pointer anchor")}
+ if pdfAnchorApplies(PDFCursorAnchor{},8,8) {t.Fatal("empty anchor accepted")}
+ if pdfAnchorApplies(PDFCursorAnchor{Valid:true,Generation:9},8,8) {t.Fatal("future anchor accepted")}
+}
