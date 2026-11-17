@@ -785,6 +785,15 @@
           "-NonInteractive",
           "-File",
           "tools/test-undo-move-safety.ps1"
+        ],
+        "ui-batch-undo-safety": [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "tools/run-ui.ps1",
+          "-Suite",
+          "batch-undo-safety"
         ]
       }
     }
