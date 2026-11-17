@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('basics','filters','rename','rename-edge','undo-rename','undo-move-safety','destination','move','cross-volume','conflicts','batch','batch-partial','history','pdf','previews','preview-release-operations','office-preview-release-operations')][string]$Suite='move',
+    [ValidateSet('basics','filters','rename','rename-edge','undo-rename','undo-move-safety','destination','move','cross-volume','conflicts','batch','batch-partial','batch-undo-safety','history','pdf','previews','preview-release-operations','office-preview-release-operations')][string]$Suite='move',
     [string]$BuildReceipt=$env:DCM_BUILD_RECEIPT,
     [string]$VisionExe=$env:DCM_FLOWUIVISION_EXE,
     [string]$PreviousFixtureInbox='C:\FlowverseReports\dcm-flowuivision-20261103\inbox'
@@ -1076,6 +1076,88 @@ try {
         Wait-For 'batch restored status' {Status-Contains 'Undid latest batch: 2 file(s) restored'}
         Assert-Journal 'undo-batch-completed' $names 'undone' -Batch
         Save-State 'undo-batch-completed';$null=Save-Shot 'undo-batch-completed'
+    }
+    if($Suite -eq 'batch-undo-safety'){
+        # DCM-45: prove that the native Undo Batch preflights all members
+        # after restart, and refuses occupied or altered members atomically.
+        $names=[string[]]@('02-bravo.txt','03-charlie.txt')
+        $bravo=Join-Path $fixture.inbox $names[0]
+        $charlie=Join-Path $fixture.inbox $names[1]
+        $bravoDest=Join-Path $fixture.destination $names[0]
+        $charlieDest=Join-Path $fixture.destination $names[1]
+        $bravoHash=Hash $bravo
+        $charlieHash=Hash $charlie
+        $bravoBackup=Join-Path $lab 'dcm45-bravo-original.bin'
+        $charlieBackup=Join-Path $lab 'dcm45-charlie-original.bin'
+        Copy-Item -LiteralPath $bravo -Destination $bravoBackup -ErrorAction Stop
+        Copy-Item -LiteralPath $charlie -Destination $charlieBackup -ErrorAction Stop
+        if((Hash $bravoBackup) -ne $bravoHash -or (Hash $charlieBackup) -ne $charlieHash){throw 'DCM-45 immutable original backups mismatch'}
+        Invoke-Fvs 'dcm45-selected-batch-ready' "click clear`ntype destination `"Accepted`"`ninspect main`nexpect destination text=`"Accepted`""
+        $indexes=@([DcmNative]::SelectFiles($script:hwnd,$script:app.Id,1016,$names))
+        if($indexes.Count -ne 2){throw 'DCM-45 did not select exactly two files'}
+        $null=Save-Shot 'dcm45-batch-selected'
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1041)
+        Confirm-Dialog 'Move Selected Files to Vault' @('Move 2 selected files',$fixture.destination)
+        Wait-Moved $names
+        Wait-For 'DCM45 batch completed' {Status-Contains 'Batch move complete: 2 of 2'} 30
+        Assert-Journal 'dcm45-batch-completed' $names 'completed' -Batch
+        $journal=Join-Path $fixture.config 'recovery/move-journal.jsonl'
+        $events=@(Get-Content -LiteralPath $journal -Encoding UTF8 | Where-Object {$_.Trim()} | ForEach-Object {$_|ConvertFrom-Json})
+        $last=@($events|Where-Object {$_.record.from -in @($bravo,$charlie) -and $_.state -eq 'completed'})
+        if($last.Count -ne 2){throw 'DCM-45 expected exactly two completed batch members'}
+        $batchID=[string]$last[0].record.batch_id
+        if(-not $batchID -or $last[1].record.batch_id -ne $batchID){throw 'DCM-45 members missing shared batch ID'}
+        foreach($entry in $last){
+            $expected=if($entry.record.from -eq $bravo){$bravoHash}else{$charlieHash}
+            if([string]$entry.record.original_sha256 -cne $expected){throw 'DCM-45 member missing durable destination fingerprint'}
+        }
+        $cases.Add([ordered]@{name='dcm45-two-journaled-members-and-original-hashes';passed=$true;batch_id=$batchID;files=$names})
+        $null=Save-Shot 'dcm45-batch-completed'
+        Stop-OwnedApp;Start-OwnedApp
+        Invoke-Fvs 'dcm45-after-restart' "inspect main`nexpect undobatch enabled"
+        $items=@([DcmNative]::ListItems($script:hwnd,$script:app.Id,1017))
+        if(@($items|Where-Object{$_.Contains('02-bravo.txt') -or $_.Contains('03-charlie.txt')}).Count -ne 2){throw 'DCM-45 restarted Processed did not contain both members'}
+        $cases.Add([ordered]@{name='dcm45-restarted-batch-recovered-exactly-two-members';passed=$true;batch_id=$batchID})
+        $null=Save-Shot 'dcm45-batch-recovered'
+        # Source occupancy: create only a disposable original-path collision.
+        [IO.File]::WriteAllBytes($charlie,[Text.Encoding]::UTF8.GetBytes('DCM45-OCCUPIED-CHARLIE-DISTINCT'))
+        $occupiedHash=Hash $charlie
+        $journalBefore=Hash $journal
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1048)
+        Confirm-Dialog 'Undo Latest Batch' @('Undo the latest batch of 2 processed file(s)') -ExpectFollowupDialog
+        Confirm-Dialog 'DCM - Quick Sort' @('batch undo preflight failed','original path is already occupied') 2
+        if((Hash $charlie) -ne $occupiedHash -or (Hash $bravoDest) -ne $bravoHash -or (Hash $charlieDest) -ne $charlieHash -or (Hash $journal) -ne $journalBefore){throw 'DCM-45 occupied original refusal modified the batch'}
+        if(Test-Path -LiteralPath $bravo){throw 'DCM-45 occupied-path preflight partially restored other member'}
+        $cases.Add([ordered]@{name='dcm45-occupied-member-preflight-refuses-entire-batch';passed=$true;occupant_sha256=$occupiedHash;journal_sha256=$journalBefore})
+        $null=Save-Shot 'dcm45-occupied-refused'
+        [IO.File]::Delete($charlie)
+        if(Test-Path -LiteralPath $charlie){throw 'DCM-45 failed to clear disposable occupancy'}
+        # Modified destination: this member's recorded fingerprint must fail
+        # before *either* member can be moved back.
+        [IO.File]::WriteAllBytes($charlieDest,[Text.Encoding]::UTF8.GetBytes('DCM45-MODIFIED-DESTINATION-DISTINCT'))
+        $changedHash=Hash $charlieDest
+        if($changedHash -eq $charlieHash){throw 'DCM-45 edited file unexpectedly matches baseline'}
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1048)
+        Confirm-Dialog 'Undo Latest Batch' @('Undo the latest batch of 2 processed file(s)') -ExpectFollowupDialog
+        Confirm-Dialog 'DCM - Quick Sort' @('batch undo preflight failed','moved file contents changed') 2
+        if(Test-Path -LiteralPath $bravo -or (Test-Path -LiteralPath $charlie)){throw 'DCM-45 changed-member preflight partially restored the batch'}
+        if((Hash $bravoDest) -ne $bravoHash -or (Hash $charlieDest) -ne $changedHash -or (Hash $journal) -ne $journalBefore){throw 'DCM-45 changed-member refusal modified batch bytes or journal'}
+        $cases.Add([ordered]@{name='dcm45-modified-member-preflight-refuses-entire-batch';passed=$true;changed_sha256=$changedHash;journal_sha256=$journalBefore})
+        $null=Save-Shot 'dcm45-modified-refused'
+        # Restore known disposable target from its pinned immutable backup,
+        # then let QuickSort perform the *only* actual batch Undo.
+        if((Hash $charlieBackup) -ne $charlieHash){throw 'DCM-45 immutable charlie backup changed'}
+        Copy-Item -LiteralPath $charlieBackup -Destination $charlieDest -Force
+        if((Hash $charlieDest) -ne $charlieHash){throw 'DCM-45 target recovery fixture hash mismatch'}
+        [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1048)
+        Confirm-Dialog 'Undo Latest Batch' @('Undo the latest batch of 2 processed file(s)')
+        Wait-Restored $names
+        Wait-For 'DCM-45 batch Undo success status' {Status-Contains 'Undid latest batch: 2 file(s) restored'} 20
+        Assert-Journal 'dcm45-restarted-batch-undone' $names 'undone' -Batch
+        if((Hash $bravo) -ne $bravoHash -or (Hash $charlie) -ne $charlieHash){throw 'DCM-45 restored files differ from original hashes'}
+        $cases.Add([ordered]@{name='dcm45-restarted-batch-safe-retry-restored-both';passed=$true;batch_id=$batchID;files=$names})
+        $null=Save-Shot 'dcm45-batch-undone'
+        Assert-Fixtures
     }
     if($Suite -eq 'batch-partial'){
         # DCM-42 supplemental: one selected file is moved successfully,
