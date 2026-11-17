@@ -107,3 +107,25 @@ func TestPersistentPDFiumOptInIsStrict(t *testing.T) {
  t.Setenv("DCM_FLOWPDF_PERSISTENT","1")
  if pdfiumPersistentOptIn(){t.Fatal("non-PDFium provider started persistent worker")}
 }
+
+func TestPersistentPDFiumLegacyOneShotFallback(t *testing.T) {
+ legacy:=strings.TrimSpace(os.Getenv("DCM_PDFIUM_ONESHOT_WORKER"))
+ fixture:=strings.TrimSpace(os.Getenv("DCM_PDFIUM_TEST_PDF"))
+ if legacy==""||fixture==""{t.Skip("legacy worker and fixture not configured")}
+ if _,err:=os.Stat(legacy);err!=nil{t.Fatal(err)}
+ host:=&flowPDFiumProcess{}
+ defer host.close()
+ output:=filepath.Join(t.TempDir(),"legacy-fallback.png")
+ req:=PDFRenderRequest{InputPath:fixture,OutputPath:output,PageIndex:1,Zoom:100,
+  ViewportWidth:800,ViewportHeight:600,Generation:31}
+ _,_,err:=host.render(legacy,req,3*time.Second,nil)
+ if err==nil{t.Fatal("older one-shot executable unexpectedly spoke persistent JSONL")}
+ if host.cmd!=nil {t.Fatal("failed persistent negotiation left an owned worker")}
+ meta,pid,err:=flowPDFiumOneShotFallback(legacy,req)
+ if err!=nil{t.Fatalf("one-shot fallback failed: %v",err)}
+ if pid<=0||meta.PageCount<2||meta.PageIndex!=1{t.Fatalf("invalid fallback result pid=%d meta=%+v",pid,meta)}
+ data,err:=os.ReadFile(output)
+ if err!=nil||len(data)<24{t.Fatalf("missing fallback PNG: %v",err)}
+ if err:=os.Remove(output);err!=nil{t.Fatal(err)}
+ t.Logf("unsupported persistent worker safely recovered through legacy one-shot renderer PID %d",pid)
+}
