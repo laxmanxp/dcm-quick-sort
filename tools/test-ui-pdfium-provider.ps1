@@ -42,6 +42,43 @@ function List-Selected([string]$name){
  $stem=[IO.Path]::GetFileNameWithoutExtension($name)
  Wait ('selected '+$name) {([DcmUndoInput]::TryText($hwnd,$app.Id,1005)) -ceq $stem}
 }
+function TextControl([int]$id){return [DcmNative]::Text([DcmNative]::Control($hwnd,$app.Id,$id),$app.Id)}
+function Hash([string]$path){return (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()}
+function Exclusive([string]$path){
+ $f=[IO.File]::Open($path,[IO.FileMode]::Open,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
+ $f.Dispose()
+}
+function Journal([string]$from,[string]$to,[string]$state,[int]$count) {
+ $records=@{}
+ if(Test-Path $journal){
+  foreach($line in [IO.File]::ReadAllLines($journal)){
+   if($line.Trim()){$row=$line|ConvertFrom-Json;$records[$row.id]=$row}
+  }
+ }
+ if($records.Count -ne $count){throw ('Expected '+$count+' journal entries, got '+$records.Count)}
+ $matches=@($records.Values|Where-Object {$_.record.from -eq $from -and $_.record.to -eq $to})
+ if($matches.Count -ne 1 -or $matches[0].state -ne $state){throw ('Journal state mismatch '+$state)}
+ return [string]$matches[0].id
+}
+function SelectUndoRecord([string]$name) {
+ Wait 'Undo button ready' {[DcmNative]::IsWindowEnabled([DcmNative]::Control($hwnd,$app.Id,1008))}
+ $items=@([DcmNative]::ListItems($hwnd,$app.Id,1017))
+ $matches=@()
+ for($i=0;$i -lt $items.Count;$i++){if($items[$i].Contains($name)){$matches+=,$i}}
+ if($matches.Count -ne 1){throw ('Undo history row not unique for '+$name)}
+ $null=[DcmNative]::SelectSingleItem($hwnd,$app.Id,1017,$matches[0])
+}
+function SwitchSource([string]$path,[int]$count){
+ [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1001,$path)
+ [DcmNative]::ClickAsync($hwnd,$app.Id,1011)
+ Wait 'source switch' {(TextControl 1001) -eq $path -and @([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq $count}
+}
+function VerifyPDF([string]$name,[string]$expectedPath,[string]$expectedHash) {
+ List-Selected $name
+ PageReady 'Page 1 of 2'
+ if((Hash $expectedPath) -ne $expectedHash){throw 'PDF bytes changed'}
+ Exclusive $expectedPath
+}
 function Label {return [DcmNative]::Text([DcmNative]::Control($hwnd,$app.Id,1061),$app.Id)}
 function PageLabel {return [DcmNative]::Text([DcmNative]::Control($hwnd,$app.Id,1060),$app.Id)}
 function PreviewSnapshot {
@@ -95,11 +132,15 @@ try{
  Add-Type -AssemblyName System.Windows.Forms
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-native.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-undo-input.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')
+ Add-Type -Path (Join-Path $repo 'tests/native/dcm-sumatra-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','Accessibility.dll','System.Drawing.dll')
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-pdfium-wheel-input.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')
  . (Join-Path $repo 'tests/native/new-fixtures.ps1')
  $fixture=New-DcmFixtures $lab
  $pdf=Join-Path $fixture.inbox '08-preview.pdf'
  $sha=(Get-FileHash $pdf -Algorithm SHA256).Hash
+ $journal=Join-Path $fixture.config 'recovery\move-journal.jsonl'
+ $txtHashes=@{}
+ Get-ChildItem -LiteralPath $fixture.inbox -Filter '*.txt' | ForEach-Object {$txtHashes[$_.Name]=Hash $_.FullName}
  $psi=New-Object Diagnostics.ProcessStartInfo
  $psi.FileName=$exe
  $psi.Arguments='"'+(Join-Path $fixture.inbox '01-alpha.txt')+'"'
@@ -171,6 +212,53 @@ try{
  PageReady 'Page 1 of 2'
  Capture '06-reopened-pdf' 'teal'
  Step 'pdf-reopen' 'same PDF reopened after exclusive file access'
+ # Operate only on the disposable PDF fixture, never on a user file.
+ [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1003,'Accepted')
+ [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1005,'undo-preview')
+ [DcmNative]::ClickAsync($hwnd,$app.Id,1006)
+ $renamed=Join-Path $fixture.inbox 'undo-preview.pdf'
+ Wait 'PDF rename completed' {(Test-Path -LiteralPath $renamed) -and -not(Test-Path -LiteralPath $pdf)}
+ if((Hash $renamed) -ne $sha.ToLowerInvariant()){throw 'Rename altered PDF content'}
+ $renameID=Journal $pdf $renamed 'completed' 1
+ Step 'rename-pdf' @{source=$pdf;target=$renamed;bytes_preserved=$true;journal_id=$renameID}
+ Wait 'renamed selection' {(TextControl 1005) -eq 'undo-preview'}
+ PageReady 'Page 1 of 2'
+ Capture '07-renamed-pdf-visible' 'teal'
+ SelectUndoRecord 'undo-preview.pdf'
+ [DcmNative]::ClickAsync($hwnd,$app.Id,1008)
+ Wait 'Undo Rename completed' {(Test-Path -LiteralPath $pdf) -and -not(Test-Path -LiteralPath $renamed)}
+ if((Hash $pdf) -ne $sha.ToLowerInvariant() -or (Journal $pdf $renamed 'undone' 1) -ne $renameID){throw 'Undo Rename content/journal mismatch'}
+ Exclusive $pdf
+ Step 'undo-rename-pdf' @{original_restored=$true;bytes_preserved=$true}
+ VerifyPDF '08-preview.pdf' $pdf ($sha.ToLowerInvariant())
+ Capture '08-restored-after-rename-undo' 'teal'
+ [DcmNative]::ClickAsync($hwnd,$app.Id,1041)
+ $moved=Join-Path $fixture.destination '08-preview.pdf'
+ Wait 'PDF move completed' {(Test-Path -LiteralPath $moved) -and -not(Test-Path -LiteralPath $pdf)}
+ if((Hash $moved) -ne $sha.ToLowerInvariant()){throw 'Move altered PDF content'}
+ $moveID=Journal $pdf $moved 'completed' 2
+ Step 'move-pdf' @{destination=$moved;bytes_preserved=$true;journal_id=$moveID}
+ SwitchSource $fixture.destination 1
+ VerifyPDF '08-preview.pdf' $moved ($sha.ToLowerInvariant())
+ Capture '09-moved-pdf-visible' 'teal'
+ SelectUndoRecord '08-preview.pdf'
+ [DcmNative]::ClickAsync($hwnd,$app.Id,1008)
+ Wait 'Undo Move completed' {(Test-Path -LiteralPath $pdf) -and -not(Test-Path -LiteralPath $moved)}
+ if((Hash $pdf) -ne $sha.ToLowerInvariant() -or (Journal $pdf $moved 'undone' 2) -ne $moveID){throw 'Undo Move content/journal mismatch'}
+ Wait 'destination source emptied after undo' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 0 -and (TextControl 1005) -ceq ''}
+ Exclusive $pdf
+ Step 'undo-move-pdf' @{source_restored=$true;destination_empty=$true;bytes_preserved=$true}
+ SwitchSource $fixture.inbox 4
+ VerifyPDF '08-preview.pdf' $pdf ($sha.ToLowerInvariant())
+ Capture '10-final-pdf-reopen' 'teal'
+ if(@([DcmNative]::ListItems($hwnd,$app.Id,1017)).Count){throw 'Undone transactions remain in Processed UI'}
+ if(@(Get-ChildItem -LiteralPath $fixture.destination -Force).Count){throw 'Destination contains unexpected files'}
+ foreach($key in $txtHashes.Keys) {
+  if((Hash (Join-Path $fixture.inbox $key)) -ne $txtHashes[$key]){throw 'Unselected TXT content changed'}
+ }
+ $null=Journal $pdf $renamed 'undone' 2
+ $null=Journal $pdf $moved 'undone' 2
+ Step 'final-file-integrity' @{original_pdf_restored=$true;unselected_txt_intact=$true;destination_empty=$true;undone_journal_records=2}
  $receipt.passed=$true
 }catch{
  $failure=$_.Exception.Message
