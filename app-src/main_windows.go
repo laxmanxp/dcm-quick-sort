@@ -289,6 +289,7 @@ var (
 	procMoveWindow           = user32.NewProc("MoveWindow")
 	procRedrawWindow         = user32.NewProc("RedrawWindow")
 	procGetClientRect        = user32.NewProc("GetClientRect")
+	procScreenToClient       = user32.NewProc("ScreenToClient")
 	procGetWindowRect        = user32.NewProc("GetWindowRect")
 	procBeginPaint           = user32.NewProc("BeginPaint")
 	procEndPaint             = user32.NewProc("EndPaint")
@@ -5160,7 +5161,8 @@ func previewWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr
 		delta := int(int16(hiword(wParam)))
 		if keyDown(VK_CONTROL) && previewSupportsZoom() {
 			if detents := consumePreviewWheelDetents(&app.previewZoomWheelRemainder, delta); detents != 0 {
-				adjustPreviewZoom(detents)
+				point := POINT{X: int32(int16(loword(lParam))), Y: int32(int16(hiword(lParam)))}
+				adjustPreviewZoomAt(detents, point)
 			}
 			return 0
 		}
@@ -5258,8 +5260,13 @@ func drawImagePreview(hdc uintptr, rc RECT) {
 	if dw <= 0 || dh <= 0 {
 		return
 	}
-	app.previewPanX = clampPreviewPan(dw, availW, app.previewPanX)
-	app.previewPanY = clampPreviewPan(dh, availH, app.previewPanY)
+	if pdfPreview.active && pdfPreview.panAnchored && usingFlowPDFiumProvider() {
+		app.previewPanX = pdfClampAnchorPan(dw, availW, app.previewPanX)
+		app.previewPanY = pdfClampAnchorPan(dh, availH, app.previewPanY)
+	} else {
+		app.previewPanX = clampPreviewPan(dw, availW, app.previewPanX)
+		app.previewPanY = clampPreviewPan(dh, availH, app.previewPanY)
+	}
 	x := rc.Left + (rc.Right-rc.Left-dw)/2 + app.previewPanX
 	y := rc.Top + (rc.Bottom-rc.Top-dh)/2 + app.previewPanY
 	var graphics uintptr
@@ -5584,6 +5591,20 @@ func fitPreviewWidth() {
 		setText(app.statusLabel, fmt.Sprintf("Image preview: Fit Width · top · %d%%", app.previewZoom))
 		updatePreviewZoomControls()
 	}
+}
+
+// adjustPreviewZoomAt receives a screen-coordinate pointer from WM_MOUSEWHEEL.
+// It only alters the PDFium opt-in provider; every legacy preview preserves
+// its existing behavior.
+func adjustPreviewZoomAt(detents int, screenPoint POINT) {
+ if detents==0{return}
+ if usingFlowPDFiumProvider() && pdfPreview.active && app.previewHwnd!=0 {
+  point:=screenPoint
+  if ok,_,_:=procScreenToClient.Call(app.previewHwnd,uintptr(unsafe.Pointer(&point)));ok!=0 {
+   capturePDFCursorAnchor(point)
+  }
+ }
+ adjustPreviewZoom(detents)
 }
 
 func adjustPreviewZoom(detents int) {
@@ -6146,7 +6167,7 @@ func main() {
 			delta := int(int16(hiword(msg.WParam)))
 			if keyDown(VK_CONTROL) && previewSupportsZoom() {
 				if detents := consumePreviewWheelDetents(&app.previewZoomWheelRemainder, delta); detents != 0 {
-					adjustPreviewZoom(detents)
+					adjustPreviewZoomAt(detents, msg.Pt)
 				}
 				continue
 			}
