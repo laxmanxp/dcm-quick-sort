@@ -73,6 +73,14 @@ func pdfRestoreCursorPan(anchor PDFCursorAnchor, newWidth, newHeight, clientWidt
  return pdfClampAnchorPan(newWidth,clientWidth,x),pdfClampAnchorPan(newHeight,clientHeight-contentTop,y)
 }
 
+// A coalesced render request can add a generation while a previous worker
+// finishes. An anchor captured for the latest wheel gesture still belongs to
+// the subsequently scheduled render, but never to a stale result.
+func pdfAnchorApplies(anchor PDFCursorAnchor, renderGeneration, desiredGeneration uint64) bool {
+ return anchor.Valid && anchor.Generation>0 &&
+  renderGeneration==desiredGeneration && anchor.Generation<=renderGeneration
+}
+
 func pdfClampAnchorPan(content,viewport,pan int32)int32 {
  if content<=0||viewport<=0{return 0}
  limit:=(content-viewport)/2
