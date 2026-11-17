@@ -1142,7 +1142,7 @@ try {
         [DcmNative]::ClickAsync($script:hwnd,$script:app.Id,1048)
         Confirm-Dialog 'Undo Latest Batch' @('Undo the latest batch of 2 processed file(s)') -ExpectFollowupDialog
         Confirm-Dialog 'DCM - Quick Sort' @('batch undo preflight failed','moved file contents changed') 2
-        if(Test-Path -LiteralPath $bravo -or (Test-Path -LiteralPath $charlie)){throw 'DCM-45 changed-member preflight partially restored the batch'}
+        if((Test-Path -LiteralPath $bravo) -or (Test-Path -LiteralPath $charlie)){throw 'DCM-45 changed-member preflight partially restored the batch'}
         if((Hash $bravoDest) -ne $bravoHash -or (Hash $charlieDest) -ne $changedHash -or (Hash $journal) -ne $journalBefore){throw 'DCM-45 changed-member refusal modified batch bytes or journal'}
         $cases.Add([ordered]@{name='dcm45-modified-member-preflight-refuses-entire-batch';passed=$true;changed_sha256=$changedHash;journal_sha256=$journalBefore})
         $null=Save-Shot 'dcm45-modified-refused'
