@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"math"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -37,6 +38,48 @@ type PDFRenderResult struct {
 	Request PDFRenderRequest
 	Meta    PDFRenderMetadata
 	Err     error
+}
+
+// PDFCursorAnchor records a document-space point under a real mouse wheel
+// gesture. It is not tied to a particular renderer or window DPI.
+type PDFCursorAnchor struct {
+ CursorX, CursorY int32
+ FractionX, FractionY float64
+ Generation uint64
+ Valid bool
+}
+
+// pdfCaptureCursorAnchor returns false for pointer positions outside the
+// displayed PDF page. The origin uses Quick Sort's centered-pan coordinates.
+func pdfCaptureCursorAnchor(cursorX, cursorY, oldWidth, oldHeight, clientWidth, clientHeight, contentTop, panX, panY int32) PDFCursorAnchor {
+ if oldWidth<=0||oldHeight<=0||clientWidth<=0||clientHeight<=0{return PDFCursorAnchor{}}
+ originX := float64(clientWidth-oldWidth)/2 + float64(panX)
+ originY := float64(contentTop)+float64(clientHeight-contentTop-oldHeight)/2+float64(panY)
+ fx:=(float64(cursorX)-originX)/float64(oldWidth)
+ fy:=(float64(cursorY)-originY)/float64(oldHeight)
+ if fx<0||fx>1||fy<0||fy>1{return PDFCursorAnchor{}}
+ return PDFCursorAnchor{CursorX:cursorX,CursorY:cursorY,FractionX:fx,FractionY:fy,Valid:true}
+}
+
+// pdfRestoreCursorPan computes the offset required to keep the document point
+// beneath the cursor fixed after a different-size PDFium bitmap arrives.
+// For pages smaller than the viewport, empty margins permit limited panning.
+func pdfRestoreCursorPan(anchor PDFCursorAnchor, newWidth, newHeight, clientWidth, clientHeight, contentTop int32)(int32,int32) {
+ if !anchor.Valid||newWidth<=0||newHeight<=0{return 0,0}
+ baseX:=float64(clientWidth-newWidth)/2
+ baseY:=float64(contentTop)+float64(clientHeight-contentTop-newHeight)/2
+ x:=int32(math.Round(float64(anchor.CursorX)-baseX-anchor.FractionX*float64(newWidth)))
+ y:=int32(math.Round(float64(anchor.CursorY)-baseY-anchor.FractionY*float64(newHeight)))
+ return pdfClampAnchorPan(newWidth,clientWidth,x),pdfClampAnchorPan(newHeight,clientHeight-contentTop,y)
+}
+
+func pdfClampAnchorPan(content,viewport,pan int32)int32 {
+ if content<=0||viewport<=0{return 0}
+ limit:=(content-viewport)/2
+ if limit<0{limit=-limit}
+ if pan>limit{return limit}
+ if pan< -limit{return -limit}
+ return pan
 }
 
 func isPDFPath(path string) bool {
