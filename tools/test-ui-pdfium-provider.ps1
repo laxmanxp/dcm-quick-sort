@@ -53,6 +53,22 @@ function PageReady([string]$want){
   @($snap | Where-Object {$_.Text -eq $want}).Count -gt 0
  } 35
 }
+function TealSpan([string]$path){
+ $bmp=[Drawing.Bitmap]::FromFile($path)
+ try{
+  $min=999999;$max=-1;$count=0
+  for($y=0;$y -lt $bmp.Height;$y+=3){
+   for($x=0;$x -lt $bmp.Width;$x+=3){
+    $c=$bmp.GetPixel($x,$y)
+    if($c.R -lt 35 -and $c.G -gt 125 -and $c.G -lt 155 -and $c.B -gt 145 -and $c.B -lt 187){
+     $min=[Math]::Min($min,$x);$max=[Math]::Max($max,$x);$count++
+    }
+   }
+  }
+  if($count -lt 400 -or $max-$min -lt 100){throw 'PDF content teal horizontal span insufficient'}
+  return [pscustomobject]@{min=$min;max=$max;count=$count}
+ }finally{$bmp.Dispose()}
+}
 function Capture([string]$name,[string]$rgb){
  Owned
  $area=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea
@@ -70,7 +86,7 @@ function Capture([string]$name,[string]$rgb){
    }
   }
  }finally{$bmp.Dispose()}
- $receipt.captures+=@([ordered]@{name=$name;path=$shot.Path;sha256=(Get-FileHash $shot.Path -Algorithm SHA256).Hash;colour=$rgb;sampled_pixels=$pixels;visual_reviewed=$false})
+ $receipt.captures+=@([ordered]@{name=$name;path=$shot.Path;left=$shot.Left;top=$shot.Top;width=$shot.Width;height=$shot.Height;sha256=(Get-FileHash $shot.Path -Algorithm SHA256).Hash;colour=$rgb;sampled_pixels=$pixels;visual_reviewed=$false})
  if($pixels -lt 250){throw ('Expected '+$rgb+' PDF content pixels missing: '+$pixels)}
  Step ('visible-content-'+$name) @{colour=$rgb;sampled_pixels=$pixels}
 }
@@ -135,6 +151,15 @@ try{
  } 45
  Start-Sleep -Milliseconds 650
  Capture '05-after-ctrl-wheel' 'teal'
+ $beforeShot=@($receipt.captures | Where-Object {$_.name -eq '04-after-zoom-in'})[0]
+ $afterShot=@($receipt.captures | Where-Object {$_.name -eq '05-after-ctrl-wheel'})[0]
+ $beforeSpan=TealSpan $beforeShot.path
+ $afterSpan=TealSpan $afterShot.path
+ $mouseScreenX=$rect.Left+[int]($width*0.4)
+ $beforeFX=($mouseScreenX-$beforeShot.left-$beforeSpan.min)/($beforeSpan.max-$beforeSpan.min)
+ $afterFX=($mouseScreenX-$afterShot.left-$afterSpan.min)/($afterSpan.max-$afterSpan.min)
+ $drift=[Math]::Abs($beforeFX-$afterFX)
+ Step 'cursor-anchor-image-diagnostic' @{before_fraction=$beforeFX;after_fraction=$afterFX;drift=$drift;before_span=$beforeSpan;after_span=$afterSpan;qualifies=($drift -lt 0.04);note='Horizontal colour-panel edge metric; not a full 2-axis viewport anchor certification'}
  $afterEvents=@(Get-Content -LiteralPath $trace | Where-Object {$_ -match 'result-applied'}).Count
  Step 'ctrl-wheel-zoom-routed' @{before_render_count=$beforeEvents;after_render_count=$afterEvents;pointer_fraction_x=0.4;pointer_fraction_y=0.5;detents=2;cursor_anchoring_verified=$false}
  List-Selected '01-alpha.txt'
