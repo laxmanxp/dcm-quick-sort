@@ -694,3 +694,32 @@ func TestCaseOnlyRenameKeepsExactDirectoryEntryAndUndo(t *testing.T) {
 		t.Fatalf("case-only Undo corrupted file: %q, %v", content, err)
 	}
 }
+
+
+func TestUndoMoveWithRecordedFingerprintRejectsChangedDestination(t *testing.T) {
+ dir := t.TempDir()
+ source := filepath.Join(dir, "inbox", "01-alpha.txt")
+ target := filepath.Join(dir, "vault", "01-alpha.txt")
+ if err := os.MkdirAll(filepath.Dir(source), 0o700); err != nil { t.Fatal(err) }
+ if err := os.MkdirAll(filepath.Dir(target), 0o700); err != nil { t.Fatal(err) }
+ original := []byte("original fixture bytes")
+ if err := os.WriteFile(source, original, 0o600); err != nil { t.Fatal(err) }
+ if err := moveFile(source, target); err != nil { t.Fatal(err) }
+ expected, err := snapshotSource(target)
+ if err != nil { t.Fatal(err) }
+ rec := MoveRecord{From:source, To:target, Kind:MoveKindMove, OriginalSHA256:expected.SHA256, OriginalSize:expected.Size}
+ if err := os.WriteFile(target, []byte("modified fixture bytes"), 0o600); err != nil {t.Fatal(err)}
+ if err := validateUndoMove(rec); err == nil || !strings.Contains(err.Error(), "contents changed") {t.Fatalf("expected edited destination refusal, got %v",err)}
+ if err := undoMove(rec); err == nil {t.Fatal("Undo accepted changed destination bytes")}
+ if _,err:=os.Stat(source);!os.IsNotExist(err){t.Fatalf("Undo created original despite mismatch: %v",err)}
+ changed,err:=os.ReadFile(target);if err!=nil || string(changed)!="modified fixture bytes"{t.Fatalf("Undo damaged modified target: %q %v",changed,err)}
+ if err := os.WriteFile(target,original,0o600);err!=nil{t.Fatal(err)}
+ if err := os.WriteFile(source,[]byte("occupied"),0o600);err!=nil{t.Fatal(err)}
+ if err := validateUndoMove(rec);err==nil || !strings.Contains(err.Error(),"already occupied"){t.Fatalf("expected occupied-source refusal, got %v",err)}
+ if err := undoMove(rec);err==nil{t.Fatal("Undo overwrote occupied source")}
+ existing,err:=os.ReadFile(source);if err!=nil || string(existing)!="occupied"{t.Fatalf("occupied source changed: %q %v",existing,err)}
+ if err := os.Remove(source);err!=nil{t.Fatal(err)}
+ if err := undoMove(rec);err!=nil{t.Fatalf("safe Undo failed: %v",err)}
+ final,err:=os.ReadFile(source);if err!=nil || string(final)!=string(original){t.Fatalf("restored bytes differ: %q %v",final,err)}
+ if _,err:=os.Stat(target);!os.IsNotExist(err){t.Fatalf("Undo left destination: %v",err)}
+}
