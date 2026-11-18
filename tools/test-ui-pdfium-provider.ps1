@@ -159,6 +159,12 @@ try{
   'DCM_PDF_TRACE'=$trace;'DCM_QUICKSORT_BACKUP_DIR'=(Join-Path $lab 'backups')
  }.GetEnumerator()){$psi.EnvironmentVariables[$kv.Key]=$kv.Value}
  foreach($key in @('DCM_PDF_PROVIDER','DCM_FLOWPDF_WORKER','DCM_FLOWPDF_PERSISTENT')){$psi.EnvironmentVariables.Remove($key)}
+ if($DevDefault) {
+  # A genuine automatic-default acceptance must not supply PDFium-specific
+  # configuration or the managed runtime location to the child.
+  $psi.EnvironmentVariables.Remove('FILEWORKSPACE_RUNTIME_DIR')
+  $psi.EnvironmentVariables.Remove('FILEWORKSPACE_PDFIUM')
+ }
  if($WindowsRollback){
   $psi.EnvironmentVariables['DCM_PDF_PROVIDER']='windows'
  }elseif(-not $DevDefault){
