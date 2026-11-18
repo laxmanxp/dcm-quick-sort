@@ -587,6 +587,7 @@ type appState struct {
 	destAliasCombo, destSuggestionList, fileList, processedList, processedSearchEdit                                                                   uintptr
 	currentLabel, countLabel, processedTitleLabel, statusLabel, keyboardHintLabel                                                                      uintptr
 	nameLabel, renameToolLabel, destinationLabel, pathLabel                                                                                            uintptr
+	actualNameLabel, actualNameEdit, actualTypeLabel                                                                                                  uintptr
 	sourceBtn, destBtn, destOpenBtn, destConfigBtn, renameBtn, fileFlowBtn, moveBtn, nextBtn, undoBtn, undoBatchBtn, openBtn, openFolderBtn, reloadBtn uintptr
 	recoveryBtn, learningBtn, suggestionBtn                                                                                                            uintptr
 	zoomOutBtn, zoom100Btn, zoomInBtn, zoomFitBtn, zoomFitWidthBtn                                                                                     uintptr
@@ -3539,6 +3540,7 @@ func createUI(hwnd uintptr) {
 	procSendMessageW.Call(app.processedSearchEdit, EM_SETCUEBANNER, 1, uintptr(unsafe.Pointer(wstr("Search processed..."))))
 	app.processedList = createControl("LISTBOX", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_TABSTOP|LBS_NOTIFY|WS_VSCROLL, 980, 181, 260, 329, hwnd, ID_PROCESSED_LIST)
 	setExplorerTheme(app.fileList)
+	setExplorerTheme(app.actualNameEdit)
 	setExplorerTheme(app.processedSearchEdit)
 	setExplorerTheme(app.processedList)
 	setExplorerTheme(app.categoryCombo)
@@ -3577,6 +3579,12 @@ func createUI(hwnd uintptr) {
 	setExplorerTheme(app.xlsxSheetCombo)
 	setExplorerTheme(app.pptxSlideCombo)
 
+	// Dedicated read-only filename row: the rename field intentionally omits
+	// the extension, and the file list/header can be truncated in narrow panes.
+	app.actualNameLabel = createControl("STATIC", "Actual File:", WS_CHILD|WS_VISIBLE|SS_LEFT, 20, 493, 90, 20, hwnd, 0)
+	app.actualNameEdit = createControl("EDIT", "", WS_CHILD|WS_VISIBLE|WS_BORDER|ES_AUTOHSCROLL|ES_READONLY, 115, 489, 900, 28, hwnd, 0)
+	app.actualTypeLabel = createControl("STATIC", "", WS_CHILD|WS_VISIBLE|SS_LEFT, 1090, 493, 145, 20, hwnd, 0)
+	setControlFont(app.actualTypeLabel, app.headingFont)
 	app.nameLabel = createControl("STATIC", "New Name:", WS_CHILD|WS_VISIBLE|SS_LEFT, 20, 530, 70, 20, hwnd, 0)
 	app.nameEdit = createControl("EDIT", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_TABSTOP|ES_AUTOHSCROLL, 95, 525, 655, 28, hwnd, ID_NAME_EDIT)
 	app.renameToolLabel = createControl("STATIC", "Tool:", WS_CHILD|WS_VISIBLE|SS_LEFT, 765, 530, 35, 20, hwnd, 0)
@@ -3631,7 +3639,9 @@ func layoutUI(hwnd uintptr) {
 	filters := compactFilterLayout(w)
 	headerY := filters.HeaderY
 	previewTop := headerY + 28
-	previewH := h - 335 - (headerY - 120)
+	// Reserve one 34px filename strip above the existing New Name row.
+	// This keeps rename, destination, action and status controls stationary.
+	previewH := h - 369 - (headerY - 120)
 	if previewH < 245 {
 		previewH = 245
 	}
@@ -3772,13 +3782,21 @@ func layoutUI(hwnd uintptr) {
 	recordAttachmentTrace("layout-before-processedList")
 	procMoveWindow.Call(app.processedList, uintptr(processed.List.X), uintptr(processed.List.Y), uintptr(processed.List.W), uintptr(processed.List.H), 0)
 	recordAttachmentTrace("layout-after-processedList")
-	y := previewTop + 10 + previewH
+	actualY := previewTop + 10 + previewH
 	// Keep the lower form on a single alignment grid. Labels and controls move
 	// together so DPI/window changes cannot make rows drift independently.
 	labelX := int32(20)
 	labelW := int32(90)
 	fieldX := labelX + labelW + 5
 	rowH := int32(28)
+	typeW := int32(125)
+	typeX := w - 20 - typeW
+	actualNameW := typeX - 9 - fieldX
+	if actualNameW < 180 { actualNameW = 180 }
+	procMoveWindow.Call(app.actualNameLabel, uintptr(labelX), uintptr(actualY+4), uintptr(labelW), 20, 0)
+	procMoveWindow.Call(app.actualNameEdit, uintptr(fieldX), uintptr(actualY), uintptr(actualNameW), uintptr(rowH), 0)
+	procMoveWindow.Call(app.actualTypeLabel, uintptr(typeX), uintptr(actualY+4), uintptr(typeW), 20, 0)
+	y := actualY + 34
 	recordAttachmentTrace("layout-before-nameLabel")
 	procMoveWindow.Call(app.nameLabel, uintptr(labelX), uintptr(y+4), uintptr(labelW), 20, 0)
 	recordAttachmentTrace("layout-after-nameLabel")
@@ -4405,16 +4423,20 @@ func showCurrentView(focusName, syncSelection bool) {
 		setText(app.currentLabel, "PREVIEW  ·  "+heading)
 		setText(app.countLabel, "FILES  ·  0")
 		setText(app.nameEdit, "")
+		setText(app.actualNameEdit, "No file selected")
+		setText(app.actualTypeLabel, "")
 		app.fallback = hint
 		refreshSuggestionForCurrent()
 		refreshFileFlowMetadataControls()
 		procInvalidateRect.Call(app.previewHwnd, 0, 1)
 		return
 	}
-	base := filepath.Base(f)
+	base, kind := actualFileDisplay(f)
 	ext := filepath.Ext(base)
 	stem := strings.TrimSuffix(base, ext)
-	setText(app.currentLabel, "PREVIEW  ·  "+base)
+	setText(app.currentLabel, "PREVIEW")
+	setText(app.actualNameEdit, base)
+	setText(app.actualTypeLabel, "Type: "+kind)
 	if syncSelection {
 		syncFileListSelection()
 	}
