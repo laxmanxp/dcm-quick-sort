@@ -19,7 +19,8 @@ const (
 	WM_PDF_RENDER_DONE = 0x8007 // WM_APP + 7
 	ID_PDF_PREV        = 1060
 	ID_PDF_NEXT        = 1061
-	ID_PDF_ROTATE      = 1062
+	ID_PDF_ROTATE      = 1062 // clockwise, retains the original button ID
+	ID_PDF_ROTATE_LEFT = 1063 // counterclockwise
 	pdfToolbarHeight   = int32(34)
 	createNoWindow     = 0x08000000
 )
@@ -39,7 +40,8 @@ type pdfPreviewState struct {
 	pending          bool
 	prevBtn          uintptr
 	nextBtn          uintptr
-	rotateBtn        uintptr
+	rotateBtn        uintptr // clockwise icon
+	rotateLeftBtn    uintptr // counterclockwise icon
 	pageLabel        uintptr
 	lastWidth        int
 	lastHeight       int
@@ -61,15 +63,17 @@ func createPDFPreviewControls() {
 	pdfPreview.prevBtn = createControl("BUTTON", "‹", WS_CHILD|WS_TABSTOP|BS_PUSHBUTTON, 6, 4, 34, 26, app.previewHwnd, ID_PDF_PREV)
 	pdfPreview.pageLabel = createControl("STATIC", "Page", WS_CHILD|SS_LEFT, 46, 9, 130, 20, app.previewHwnd, 0)
 	pdfPreview.nextBtn = createControl("BUTTON", "›", WS_CHILD|WS_TABSTOP|BS_PUSHBUTTON, 182, 4, 34, 26, app.previewHwnd, ID_PDF_NEXT)
-	pdfPreview.rotateBtn = createControl("BUTTON", "Rotate", WS_CHILD|WS_TABSTOP|BS_PUSHBUTTON, 226, 4, 78, 26, app.previewHwnd, ID_PDF_ROTATE)
+	// Owner-drawn directional icons avoid the missing-glyph '?' problem on
+	// native Windows fonts. Button titles remain descriptive for accessibility.
+	pdfPreview.rotateLeftBtn = createControl("BUTTON", "Rotate left 90 degrees", WS_CHILD|WS_TABSTOP|BS_OWNERDRAW, 226, 4, 34, 26, app.previewHwnd, ID_PDF_ROTATE_LEFT)
+	pdfPreview.rotateBtn = createControl("BUTTON", "Rotate right 90 degrees", WS_CHILD|WS_TABSTOP|BS_OWNERDRAW, 266, 4, 34, 26, app.previewHwnd, ID_PDF_ROTATE)
 	setExplorerTheme(pdfPreview.prevBtn)
 	setExplorerTheme(pdfPreview.nextBtn)
-	setExplorerTheme(pdfPreview.rotateBtn)
 	hidePDFPreviewControls()
 }
 
 func hidePDFPreviewControls() {
-	for _, hwnd := range []uintptr{pdfPreview.prevBtn, pdfPreview.pageLabel, pdfPreview.nextBtn, pdfPreview.rotateBtn} {
+	for _, hwnd := range []uintptr{pdfPreview.prevBtn, pdfPreview.pageLabel, pdfPreview.nextBtn, pdfPreview.rotateLeftBtn, pdfPreview.rotateBtn} {
 		if hwnd != 0 {
 			procShowWindow.Call(hwnd, 0)
 		}
@@ -77,7 +81,7 @@ func hidePDFPreviewControls() {
 }
 
 func showPDFPreviewControls() {
-	for _, hwnd := range []uintptr{pdfPreview.prevBtn, pdfPreview.pageLabel, pdfPreview.nextBtn, pdfPreview.rotateBtn} {
+	for _, hwnd := range []uintptr{pdfPreview.prevBtn, pdfPreview.pageLabel, pdfPreview.nextBtn, pdfPreview.rotateLeftBtn, pdfPreview.rotateBtn} {
 		if hwnd != 0 {
 			procShowWindow.Call(hwnd, SW_SHOW)
 		}
@@ -92,37 +96,28 @@ func layoutPDFPreviewControls() {
 	}
 	var rc RECT
 	procGetClientRect.Call(app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
-	// Center all four PDF-only controls as a single toolbar group.
-	// At narrower pane widths, shorten the label before clipping the
-	// rotate action. The 34px row height remains unchanged.
+	// Center navigation and both icon-only rotation controls together.
+	// Compact 34x26 buttons keep the toolbar height unchanged.
 	available := rc.Right - rc.Left
-	labelW, rotateW := int32(132), int32(78)
-	gap := int32(6)
-	if available < 265 {
-		rotateW = 42
-		setText(pdfPreview.rotateBtn, "Turn")
-	} else {
-		setText(pdfPreview.rotateBtn, "Rotate")
-	}
-	groupW := 34 + gap + labelW + gap + 34 + gap + rotateW
+	const navW, iconW, gap = int32(34), int32(34), int32(6)
+	labelW := int32(132)
+	groupW := 2*navW + 2*iconW + 4*gap + labelW
 	if available < groupW+8 {
-		labelW = available - (34 + gap + gap + 34 + gap + rotateW + 8)
-		if labelW < 44 {
-			labelW = 44
-		}
-		groupW = 34 + gap + labelW + gap + 34 + gap + rotateW
+		labelW = available - (2*navW + 2*iconW + 4*gap + 8)
+		if labelW < 44 { labelW = 44 }
+		groupW = 2*navW + 2*iconW + 4*gap + labelW
 	}
-	x := (available - groupW) / 2
-	if x < 4 {
-		x = 4
-	}
-	procMoveWindow.Call(pdfPreview.prevBtn, uintptr(x), 4, 34, 26, 1)
-	x += 34 + gap
+	x := (available-groupW)/2
+	if x < 4 { x = 4 }
+	procMoveWindow.Call(pdfPreview.prevBtn, uintptr(x), 4, uintptr(navW), 26, 1)
+	x += navW+gap
 	procMoveWindow.Call(pdfPreview.pageLabel, uintptr(x), 9, uintptr(labelW), 20, 1)
-	x += labelW + gap
-	procMoveWindow.Call(pdfPreview.nextBtn, uintptr(x), 4, 34, 26, 1)
-	x += 34 + gap
-	procMoveWindow.Call(pdfPreview.rotateBtn, uintptr(x), 4, uintptr(rotateW), 26, 1)
+	x += labelW+gap
+	procMoveWindow.Call(pdfPreview.nextBtn, uintptr(x), 4, uintptr(navW), 26, 1)
+	x += navW+gap
+	procMoveWindow.Call(pdfPreview.rotateLeftBtn, uintptr(x), 4, uintptr(iconW), 26, 1)
+	x += iconW+gap
+	procMoveWindow.Call(pdfPreview.rotateBtn, uintptr(x), 4, uintptr(iconW), 26, 1)
 }
 
 func updatePDFPreviewControls() {
@@ -148,8 +143,10 @@ func updatePDFPreviewControls() {
 	}
 	procEnableWindow.Call(pdfPreview.prevBtn, prevEnabled)
 	procEnableWindow.Call(pdfPreview.nextBtn, nextEnabled)
-	if pdfPreview.rotateBtn != 0 {
-		procEnableWindow.Call(pdfPreview.rotateBtn, 1)
+	for _, button := range []uintptr{pdfPreview.rotateLeftBtn, pdfPreview.rotateBtn} {
+		if button != 0 {
+			procEnableWindow.Call(button, 1)
+		}
 	}
 }
 
@@ -342,17 +339,20 @@ func goToPDFPage(delta int) {
 // Rotation changes only the current preview and is retained when navigating
 // pages. Opening another PDF resets it. Multiple clicks during a render use
 // the existing generation-safe queue to apply only the latest orientation.
-func rotatePDFPreviewClockwise() {
+func rotatePDFPreviewBy(degrees int) {
 	if !pdfPreview.active || pdfShutdown.closing {
 		return
 	}
-	pdfPreview.rotation = nextPDFPreviewRotation(pdfPreview.rotation)
+	pdfPreview.rotation = normalizePDFPreviewRotation(pdfPreview.rotation + degrees)
 	pdfPreview.cursorAnchor = PDFCursorAnchor{}
 	pdfPreview.panAnchored = false
 	app.previewPanX, app.previewPanY = 0, 0
 	updatePDFPreviewControls()
 	requestPDFPreviewRender()
 }
+
+func rotatePDFPreviewClockwise() { rotatePDFPreviewBy(90) }
+func rotatePDFPreviewCounterclockwise() { rotatePDFPreviewBy(-90) }
 
 func requestPDFPreviewRender() {
 	if pdfShutdown.closing || !pdfPreview.active || strings.TrimSpace(pdfPreview.path) == "" {
