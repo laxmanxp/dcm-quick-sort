@@ -61,7 +61,7 @@ func createPDFPreviewControls() {
 	pdfPreview.prevBtn = createControl("BUTTON", "‹", WS_CHILD|WS_TABSTOP|BS_PUSHBUTTON, 6, 4, 34, 26, app.previewHwnd, ID_PDF_PREV)
 	pdfPreview.pageLabel = createControl("STATIC", "Page", WS_CHILD|SS_LEFT, 46, 9, 130, 20, app.previewHwnd, 0)
 	pdfPreview.nextBtn = createControl("BUTTON", "›", WS_CHILD|WS_TABSTOP|BS_PUSHBUTTON, 182, 4, 34, 26, app.previewHwnd, ID_PDF_NEXT)
-	pdfPreview.rotateBtn = createControl("BUTTON", "Rotate ↻", WS_CHILD|WS_TABSTOP|BS_PUSHBUTTON, 226, 4, 78, 26, app.previewHwnd, ID_PDF_ROTATE)
+	pdfPreview.rotateBtn = createControl("BUTTON", "Rotate", WS_CHILD|WS_TABSTOP|BS_PUSHBUTTON, 226, 4, 78, 26, app.previewHwnd, ID_PDF_ROTATE)
 	setExplorerTheme(pdfPreview.prevBtn)
 	setExplorerTheme(pdfPreview.nextBtn)
 	setExplorerTheme(pdfPreview.rotateBtn)
@@ -100,9 +100,9 @@ func layoutPDFPreviewControls() {
 	gap := int32(6)
 	if available < 265 {
 		rotateW = 42
-		setText(pdfPreview.rotateBtn, "↻")
+		setText(pdfPreview.rotateBtn, "Turn")
 	} else {
-		setText(pdfPreview.rotateBtn, "Rotate ↻")
+		setText(pdfPreview.rotateBtn, "Rotate")
 	}
 	groupW := 34 + gap + labelW + gap + 34 + gap + rotateW
 	if available < groupW+8 {
