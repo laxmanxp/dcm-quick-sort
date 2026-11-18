@@ -14,6 +14,8 @@ on:
       - "app-src/pdfium_persistent_windows_test.go"
       - "app-src/assets/pdf_render.ps1"
       - "app-src/main_windows.go"
+      - "app-src/actual_filename.go"
+      - "app-src/actual_filename_test.go"
   workflow_dispatch:
 
 permissions:
@@ -36,8 +38,8 @@ jobs:
         run: go build .
       - name: Build PDFium development-default preview
         run: go build -tags pdfium_dev .
-      - name: Rotation and native renderer argument tests
-        run: go test -tags pdfium_dev -run "TestPDFRotation|TestPDFRenderer|TestBundledPDFRenderer|TestPDFProvider" -count=1 -v .
+      - name: Filename visibility, rotation and provider policy tests
+        run: go test -tags pdfium_dev -run "TestActualFileDisplay|TestPDFRotation|TestPDFRenderer|TestBundledPDFRenderer|TestPDFProvider" -count=1 -v .
       - name: Create disposable two-page PDF for Windows.Data.Pdf
         working-directory: .
         shell: powershell
