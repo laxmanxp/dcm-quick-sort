@@ -230,6 +230,8 @@ const (
 	ID_PROCESSED_SEARCH  = 1046
 	ID_ZOOM_FIT_WIDTH    = 1047
 	ID_UNDO_BATCH        = 1048
+	ID_ACTUAL_FILENAME   = 1049
+	ID_ACTUAL_FILE_TYPE  = 1050
 
 	ID_MENU_EXIT             = 2001
 	ID_MENU_ABOUT            = 2002
@@ -3582,8 +3584,8 @@ func createUI(hwnd uintptr) {
 	// Dedicated read-only filename row: the rename field intentionally omits
 	// the extension, and the file list/header can be truncated in narrow panes.
 	app.actualNameLabel = createControl("STATIC", "Actual File:", WS_CHILD|WS_VISIBLE|SS_LEFT, 20, 493, 90, 20, hwnd, 0)
-	app.actualNameEdit = createControl("EDIT", "", WS_CHILD|WS_VISIBLE|WS_BORDER|ES_AUTOHSCROLL|ES_READONLY, 115, 489, 900, 28, hwnd, 0)
-	app.actualTypeLabel = createControl("STATIC", "", WS_CHILD|WS_VISIBLE|SS_LEFT, 1090, 493, 145, 20, hwnd, 0)
+	app.actualNameEdit = createControl("EDIT", "", WS_CHILD|WS_VISIBLE|WS_BORDER|ES_AUTOHSCROLL|ES_READONLY, 115, 489, 900, 28, hwnd, ID_ACTUAL_FILENAME)
+	app.actualTypeLabel = createControl("STATIC", "", WS_CHILD|WS_VISIBLE|SS_LEFT, 1090, 493, 145, 20, hwnd, ID_ACTUAL_FILE_TYPE)
 	setControlFont(app.actualTypeLabel, app.headingFont)
 	app.nameLabel = createControl("STATIC", "New Name:", WS_CHILD|WS_VISIBLE|SS_LEFT, 20, 530, 70, 20, hwnd, 0)
 	app.nameEdit = createControl("EDIT", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_TABSTOP|ES_AUTOHSCROLL, 95, 525, 655, 28, hwnd, ID_NAME_EDIT)
