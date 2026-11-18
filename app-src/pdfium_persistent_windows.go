@@ -33,6 +33,7 @@ type flowPDFiumRequest struct {
  OutputPath string `json:"outputPath,omitempty"`
  Mode string `json:"mode,omitempty"`
  PageIndex int `json:"pageIndex,omitempty"`
+ Rotation int `json:"rotation,omitempty"`
  Zoom int `json:"zoom,omitempty"`
  ViewportWidth int `json:"viewportWidth,omitempty"`
  ViewportHeight int `json:"viewportHeight,omitempty"`
@@ -219,7 +220,7 @@ func (p *flowPDFiumProcess) render(exe string,req PDFRenderRequest,deadline time
   cmd:=flowPDFiumRequest{
    Version:flowPDFiumProtocolVersion,ID:id,Command:"render",
    InputPath:req.InputPath,OutputPath:req.OutputPath,Mode:flowPDFiumMode(req),
-   PageIndex:req.PageIndex,Zoom:clampPDFZoom(req.Zoom),
+   PageIndex:req.PageIndex,Rotation:normalizePDFPreviewRotation(req.Rotation),Zoom:clampPDFZoom(req.Zoom),
    ViewportWidth:req.ViewportWidth,ViewportHeight:req.ViewportHeight,
   }
   reply,err:=p.exchangeLocked(cmd,deadline)
