@@ -4,6 +4,7 @@ package main
 
 import (
  "fmt"
+ "errors"
  "os"
  "path/filepath"
  "strings"
@@ -130,4 +131,85 @@ func TestPersistentPDFiumLegacyOneShotFallback(t *testing.T) {
  if err!=nil||len(data)<24{t.Fatalf("missing fallback PNG: %v",err)}
  if err:=os.Remove(output);err!=nil{t.Fatal(err)}
  t.Logf("unsupported persistent worker safely recovered through legacy one-shot renderer PID %d",pid)
+}
+
+func TestPersistentPDFiumCancelInFlightOnFileSwitch(t *testing.T) {
+ helper,err:=os.Executable()
+ if err!=nil {t.Fatal(err)}
+ t.Setenv("DCM_PDFIUM_TEST_HELPER","hang")
+ host:=&flowPDFiumProcess{}
+ defer host.close()
+ dir:=t.TempDir()
+ req:=PDFRenderRequest{
+  InputPath:filepath.Join(dir,"old.pdf"),
+  OutputPath:filepath.Join(dir,"old.png"),
+  Generation:62,PageIndex:0,Zoom:100,
+  ViewportWidth:800,ViewportHeight:600,
+ }
+ started:=make(chan int,2)
+ done:=make(chan error,1)
+ go func(){
+  _,_,err:=host.render(helper,req,8*time.Second,func(pid int){started<-pid})
+  done<-err
+ }()
+ var pid int
+ select {
+ case pid=<-started:
+ case <-time.After(3*time.Second):
+  t.Fatal("hanging test child never started")
+ }
+ before:=time.Now()
+ if !host.cancelThrough(req.Generation){t.Fatal("active child not canceled")}
+ select {
+ case err=<-done:
+  if !errors.Is(err,errFlowPDFiumCanceled) {t.Fatalf("selection cancellation became a fallback/timeout: %v",err)}
+ case <-time.After(2*time.Second):
+  t.Fatal("obsolete PDF render continued blocking after selection switch")
+ }
+ if elapsed:=time.Since(before);elapsed>2*time.Second{t.Fatalf("cancellation too slow %s",elapsed)}
+ if host.cmd!=nil {t.Fatal("obsolete worker remained active after cancellation")}
+ if _,err:=os.Stat(req.OutputPath);!os.IsNotExist(err){t.Fatalf("obsolete worker left preview image: %v",err)}
+ if !host.obsolete(req.Generation) || host.obsolete(req.Generation+1){
+  t.Fatal("generation cancellation affected wrong selection")
+ }
+ t.Logf("canceled owned stalled worker PID %d in %s",pid,time.Since(before))
+}
+
+func TestPersistentPDFiumCancelQueuedRenderBeforeStart(t *testing.T) {
+ helper,err:=os.Executable()
+ if err!=nil {t.Fatal(err)}
+ t.Setenv("DCM_PDFIUM_TEST_HELPER","hang")
+ host:=&flowPDFiumProcess{}
+ if host.cancelThrough(9){t.Fatal("cancellation claimed a child before launch")}
+ req:=PDFRenderRequest{InputPath:"never.pdf",OutputPath:filepath.Join(t.TempDir(),"none.png"),
+  Generation:8,Zoom:100,ViewportWidth:800,ViewportHeight:600}
+ started:=0
+ _,pid,err:=host.render(helper,req,5*time.Second,func(int){started++})
+ if !errors.Is(err,errFlowPDFiumCanceled)||pid!=0||started!=0 {
+  t.Fatalf("queued stale request started: pid=%d started=%d err=%v",pid,started,err)
+ }
+ if host.cmd!=nil{t.Fatal("obsolete queued request launched a worker")}
+ if host.obsolete(10){t.Fatal("future generation was canceled")}
+}
+
+func TestPersistentPDFiumCancelAndResumeWithLiveWorker(t *testing.T){
+ worker:=strings.TrimSpace(os.Getenv("DCM_FLOWPDF_WORKER"))
+ input:=strings.TrimSpace(os.Getenv("DCM_PDFIUM_TEST_PDF"))
+ if worker==""||input==""{t.Skip("native worker and PDF test fixture unavailable")}
+ host:=&flowPDFiumProcess{}
+ defer host.close()
+ dir:=t.TempDir()
+ req:=PDFRenderRequest{InputPath:input,OutputPath:filepath.Join(dir,"old.png"),
+  Generation:101,PageIndex:0,Zoom:100,ViewportWidth:800,ViewportHeight:600}
+ if host.cancelThrough(req.Generation){t.Fatal("unexpected running worker")}
+ _,pid,err:=host.render(worker,req,8*time.Second,nil)
+ if !errors.Is(err,errFlowPDFiumCanceled)||pid!=0{t.Fatalf("stale request was rendered: pid=%d err=%v",pid,err)}
+ newer:=req
+ newer.Generation=103
+ newer.PageIndex=1
+ newer.OutputPath=filepath.Join(dir,"new.png")
+ meta,pid,err:=host.render(worker,newer,8*time.Second,nil)
+ if err!=nil {t.Fatalf("replacement PDF failed: %v",err)}
+ if pid<=0||meta.PageIndex!=1 {t.Fatalf("replacement page or worker invalid: pid=%d meta=%+v",pid,meta)}
+ if st,err:=os.Stat(newer.OutputPath);err!=nil||st.Size()==0{t.Fatalf("replacement output missing: %v",err)}
 }
