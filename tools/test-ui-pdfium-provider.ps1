@@ -91,11 +91,20 @@ function PageLabel {return [DcmNative]::Text([DcmNative]::Control($hwnd,$app.Id,
 function PreviewSnapshot {
  return @([DcmNative]::Snapshot($hwnd,$app.Id) | Where-Object {$_.Visible -and ($_.Text -like 'DCM PDF Preview*' -or $_.Text -like 'Page * of *')})
 }
+$lastPDFReadyGeneration=0
 function PageReady([string]$want){
  Wait ('rendered '+$want) {
   $snap=PreviewSnapshot
-  @($snap | Where-Object {$_.Text -eq $want}).Count -gt 0
- } 35
+  if(@($snap | Where-Object {$_.Text -eq $want}).Count -eq 0){return $false}
+  if(-not(Test-Path -LiteralPath $trace)){return $false}
+  $applied=@(Get-Content -LiteralPath $trace | ForEach-Object {$_|ConvertFrom-Json} |
+    Where-Object {$_.event -eq 'result-applied' -and $_.state.active})
+  if(-not $applied.Count){return $false}
+  $latest=@($applied | Sort-Object generation)[-1]
+  if([uint64]$latest.generation -le [uint64]$script:lastPDFReadyGeneration){return $false}
+  $script:lastPDFReadyGeneration=[uint64]$latest.generation
+  return $true
+ } 45
 }
 function TealSpan([string]$path){
  $bmp=[Drawing.Bitmap]::FromFile($path)
