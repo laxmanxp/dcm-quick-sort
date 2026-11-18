@@ -101,7 +101,10 @@ func TestPDFRotationPropagatesToBothRendererCLIs(t *testing.T){
    if !strings.Contains(cli,flag) {t.Fatalf("request lost %q: %s",flag,cli)}
   }
  }
- if joined:=strings.Join(pdfiumRendererArgs(PDFRenderRequest{Rotation:360})," ");!strings.Contains(joined,"-Rotation 0") {
-  t.Fatalf("full-circle rotation was not reset: %s",joined)
+ if joined:=strings.Join(pdfiumRendererArgs(PDFRenderRequest{Rotation:360})," ");strings.Contains(joined,"-Rotation") {
+  t.Fatalf("zero-degree PDFium rotation must omit legacy-incompatible flag: %s",joined)
+ }
+ if joined:=strings.Join(pdfRendererArgs("render.ps1",PDFRenderRequest{Rotation:360})," ");!strings.Contains(joined,"-Rotation 0") {
+  t.Fatalf("Windows renderer did not normalize full-circle rotation: %s",joined)
  }
 }
