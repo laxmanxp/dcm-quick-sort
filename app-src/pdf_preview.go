@@ -144,16 +144,23 @@ func pdfRendererArgs(scriptPath string, req PDFRenderRequest) []string {
 func pdfiumRendererArgs(req PDFRenderRequest) []string {
  mode := "zoom"
  if req.FitWidth {mode="fitwidth"} else if req.Fit {mode="fit"}
- return []string{
+ args:=[]string{
   "-InputPath",req.InputPath,
   "-OutputPath",req.OutputPath,
   "-PageIndex",strconv.Itoa(req.PageIndex),
-  "-Rotation",strconv.Itoa(normalizePDFPreviewRotation(req.Rotation)),
+ }
+ // Older one-shot workers do not understand -Rotation. Preserve their
+ // zero-degree CLI contract while still forwarding actual quarter-turns
+ // to rotation-aware workers.
+ if degrees:=normalizePDFPreviewRotation(req.Rotation);degrees!=0 {
+  args=append(args,"-Rotation",strconv.Itoa(degrees))
+ }
+ return append(args,
   "-Mode",mode,
   "-Zoom",strconv.Itoa(clampPDFZoom(req.Zoom)),
   "-ViewportWidth",strconv.Itoa(req.ViewportWidth),
   "-ViewportHeight",strconv.Itoa(req.ViewportHeight),
- }
+ )
 }
 
 func parsePDFRendererOutput(output string) (PDFRenderMetadata, error) {
