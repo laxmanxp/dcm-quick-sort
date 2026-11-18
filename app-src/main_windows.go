@@ -5141,6 +5141,9 @@ func previewWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr
 			case ID_PDF_NEXT:
 				goToPDFPage(1)
 				return 0
+			case ID_PDF_ROTATE:
+				rotatePDFPreviewClockwise()
+				return 0
 			}
 		}
 		if id == ID_XLSX_SHEET && notify == CBN_SELCHANGE && app.xlsxPreviewActive {
