@@ -1,0 +1,40 @@
+name: PDF preview rotation development checks
+
+on:
+  push:
+    branches:
+      - feature/shared-flowpdf-pdfium-provider
+    paths:
+      - ".github/workflows/pdf-rotation-feature-ci.yml"
+      - "app-src/pdf_preview.go"
+      - "app-src/pdf_preview_windows.go"
+      - "app-src/pdf_preview_test.go"
+      - "app-src/pdf_rotation_windows_test.go"
+      - "app-src/pdfium_persistent_windows.go"
+      - "app-src/pdfium_persistent_windows_test.go"
+      - "app-src/assets/pdf_render.ps1"
+      - "app-src/main_windows.go"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-rotation:
+    runs-on: windows-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: app-src
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: app-src/go.mod
+          cache: false
+      - name: Build normal Windows PDF preview
+        run: go build .
+      - name: Build PDFium development-default preview
+        run: go build -tags pdfium_dev .
+      - name: Rotation and native renderer argument tests
+        run: go test -tags pdfium_dev -run "TestPDFRotation|TestPDFRenderer|TestBundledPDFRenderer|TestPDFProvider" -count=1 -v .
