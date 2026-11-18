@@ -2,6 +2,7 @@ param(
     [Parameter(Mandatory=$true)][string]$InputPath,
     [Parameter(Mandatory=$true)][string]$OutputPath,
     [int]$PageIndex = 0,
+    [ValidateSet(0,90,180,270)][int]$Rotation = 0,
     [ValidateSet('fit','fitwidth','zoom')][string]$Mode = 'fit',
     [int]$Zoom = 100,
     [int]$ViewportWidth = 1000,
@@ -59,14 +60,23 @@ try {
         throw 'PDF page reported an invalid size'
     }
 
+    # Calculate the desired on-screen geometry after the rotation, while
+    # rendering the native PDF page unrotated to its own PNG first.
+    $viewWidth = $pageWidth
+    $viewHeight = $pageHeight
+    if ($Rotation -eq 90 -or $Rotation -eq 270) {
+        $viewWidth = $pageHeight
+        $viewHeight = $pageWidth
+    }
+
     if ($Mode -eq 'fit') {
         $vw = [Math]::Max(64, $ViewportWidth)
         $vh = [Math]::Max(64, $ViewportHeight)
-        $scale = [Math]::Min($vw / $pageWidth, $vh / $pageHeight)
+        $scale = [Math]::Min($vw / $viewWidth, $vh / $viewHeight)
         if ($scale -le 0) { $scale = 1.0 }
     } elseif ($Mode -eq 'fitwidth') {
         $vw = [Math]::Max(64, $ViewportWidth)
-        $scale = $vw / $pageWidth
+        $scale = $vw / $viewWidth
         if ($scale -le 0) { $scale = 1.0 }
     } else {
         $scale = [Math]::Max(0.10, [Math]::Min(8.0, $Zoom / 100.0))
@@ -89,8 +99,37 @@ try {
         if ($stream -is [System.IDisposable]) { $stream.Dispose() }
     }
 
+    $renderedWidth = $destWidth
+    $renderedHeight = $destHeight
+    if ($Rotation -ne 0) {
+        # Windows.Data.Pdf has no per-render rotate option. Rotate only the
+        # temporary preview PNG; never modify or rewrite the input PDF.
+        Add-Type -AssemblyName System.Drawing
+        $rotatedTemp = Join-Path $outputDir ('.dcm-preview-rotate-'+[Guid]::NewGuid().ToString('N')+'.png')
+        try {
+            $bitmap = [System.Drawing.Bitmap]::FromFile($outputFull)
+            try {
+                $turn = switch ($Rotation) {
+                    90 { [System.Drawing.RotateFlipType]::Rotate90FlipNone }
+                    180 { [System.Drawing.RotateFlipType]::Rotate180FlipNone }
+                    270 { [System.Drawing.RotateFlipType]::Rotate270FlipNone }
+                }
+                $bitmap.RotateFlip($turn)
+                $bitmap.Save($rotatedTemp, [System.Drawing.Imaging.ImageFormat]::Png)
+            } finally {
+                $bitmap.Dispose()
+            }
+            [System.IO.File]::Copy($rotatedTemp, $outputFull, $true)
+        } finally {
+            Remove-Item -LiteralPath $rotatedTemp -Force -ErrorAction SilentlyContinue
+        }
+        if ($Rotation -eq 90 -or $Rotation -eq 270) {
+            $renderedWidth, $renderedHeight = $destHeight, $destWidth
+        }
+    }
+
     $scalePercent = [Math]::Max(1, [int][Math]::Round($scale * 100.0))
-    Write-Output ("OK|{0}|{1}|{2}|{3}|{4}" -f $pageCount, $PageIndex, $destWidth, $destHeight, $scalePercent)
+    Write-Output ("OK|{0}|{1}|{2}|{3}|{4}" -f $pageCount, $PageIndex, $renderedWidth, $renderedHeight, $scalePercent)
 } finally {
     if ($page -is [System.IDisposable]) { $page.Dispose() }
 }
