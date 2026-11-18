@@ -259,6 +259,14 @@ func tracePDFPreview(event string, req PDFRenderRequest, failed bool) {
 
 func stopPDFPreview() {
 	previous := PDFRenderRequest{Generation: pdfPreview.generation, InputPath: pdfPreview.path}
+	if pdfPreview.active && pdfiumPersistentOptIn() {
+		// Cancel the obsolete render without waiting for the worker's
+		// request mutex. Generation protection keeps the next selection safe.
+		if sharedFlowPDFiumProcess.cancelThrough(previous.Generation) {
+			recordPDFTrace(PDFTraceEvent{Event:"worker-cancel-requested",
+				Generation:previous.Generation,InputPath:previous.InputPath})
+		}
+	}
 	pdfPreview.generation++ // makes any in-flight renderer result stale
 	pdfPreview.active = false
 	pdfPreview.path = ""
@@ -377,7 +385,12 @@ func requestPDFPreviewRender() {
 			meta,pid,err:=sharedFlowPDFiumProcess.render(executable,req,flowPDFiumRequestDeadline,started)
 			recordPDFTrace(PDFTraceEvent{Event:"worker-finished",Generation:req.Generation,
 				InputPath:req.InputPath,OutputPath:req.OutputPath,RendererPID:pid,Failed:err!=nil})
-			if err!=nil && !strings.HasPrefix(err.Error(),"PDFium: ") {
+			if errors.Is(err,errFlowPDFiumCanceled) {
+				recordPDFTrace(PDFTraceEvent{Event:"worker-canceled",
+					Generation:req.Generation,InputPath:req.InputPath,OutputPath:req.OutputPath,
+					RendererPID:pid})
+			}
+			if err!=nil && !errors.Is(err,errFlowPDFiumCanceled) && !strings.HasPrefix(err.Error(),"PDFium: ") {
 				// Transport failures can be recovered by an isolated one-shot
 				// invocation. Decoder refusals are final and never retried.
 				tracePDFPreview("persistent-transport-fallback",req,true)
