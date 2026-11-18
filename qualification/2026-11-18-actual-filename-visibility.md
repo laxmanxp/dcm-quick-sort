@@ -109,3 +109,33 @@ changed during this work.
 The filename-native acceptance run predates that separate
 compatibility correction but exercises the same committed filename
 UI implementation; no filename UI logic changed in the correction.
+
+
+## Final live-window visual inspection
+
+The final development bundle was rebuilt on Lenovo in
+`D:\FlowverseReportsRepo\dcm-pdfium-provider-acceptance-20261117\out\actual-filename-final-20261118\`
+after the full Go and CI checks. The app was launched without any
+PDF-provider/worker/runtime overrides with a disposable PDF open.
+
+**Live GUI PID 21016**, Windows interactive session. The native
+control tree confirmed:
+
+- Actual File: `08-preview.pdf` (read-only)
+- Type: `Type: PDF`
+- New Name: `08-preview` (editable)
+
+An independently captured unobstructed **1600×1025** native window
+screenshot was inspected and showed the filename row fully visible,
+its type label aligned at the far right, and the New Name row
+immediately below without overlap. The existing file list, PDF
+preview and rotation buttons remained visible.
+
+Visual evidence on Lenovo:
+`D:\FlowverseReportsRepo\dcm-pdfium-provider-acceptance-20261117\out\actual-filename-final-20261118\actual-filename-live.png`
+SHA-256:
+`FEA262395D3B9B4130030C6A3F1E5B93018515DB86AFD6975A70B0A6CF0186E3`.
+
+The final live app remained running for user inspection. Older
+development windows were not forcibly closed, and production was
+not modified.
