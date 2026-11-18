@@ -247,7 +247,7 @@ try{
   foreach($button in @(@{id=1063;label='Rotate left 90 degrees'},@{id=1062;label='Rotate right 90 degrees'})){
    $control=[DcmNative]::Control($hwnd,$app.Id,$button.id)
    if(-not [DcmNative]::IsWindowEnabled($control)){throw ('Rotation button disabled: '+$button.id)}
-   $snapshot=@(PreviewSnapshot|Where-Object {$_.Text -eq $button.label -and $_.Visible})
+   $snapshot=@([DcmNative]::Snapshot($hwnd,$app.Id)|Where-Object {$_.Text -eq $button.label -and $_.Visible})
    if($snapshot.Count -ne 1){throw ('Missing accessible rotation icon: '+$button.label)}
   }
   Step 'two-rotation-icon-controls' @{rotate_left_id=1063;rotate_right_id=1062;both_visible=$true;both_enabled=$true}
