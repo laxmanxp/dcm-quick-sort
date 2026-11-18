@@ -61,8 +61,8 @@ function AcceptedRender([string]$path,[int]$seconds=15){
  Wait ('applied preview '+$path) {
   @((Events)|Where-Object {$_.event -eq 'result-applied' -and $_.input_path -eq $path}).Count -gt 0
  } $seconds
- $page=[DcmNative]::Text([DcmNative]::Control($hwnd,$app.Id,1060),$app.Id)
- if($page -ne 'Page 1 of 2'){throw ('Invalid page status after render: '+$page)}
+ $page=@([DcmNative]::Snapshot($hwnd,$app.Id)|Where-Object {$_.Visible -and $_.Text -eq 'Page 1 of 2'})
+ if($page.Count -lt 1){throw 'Expected visible Page 1 of 2 label after applied PDF result'}
  $area=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea
  [DcmNative]::Restore($hwnd,$app.Id,$area.Left+8,$area.Top+8)
  Start-Sleep -Milliseconds 200
