@@ -310,6 +310,7 @@ func stopPDFPreview() {
 	pdfPreview.path = ""
 	pdfPreview.page = 0
 	pdfPreview.pageCount = 0
+	pdfPreview.rotation = 0
 	pdfPreview.busy = false
 	pdfPreview.workerGeneration = 0
 	pdfPreview.pending = false
@@ -331,6 +332,21 @@ func goToPDFPage(delta int) {
 		return
 	}
 	pdfPreview.page = next
+	pdfPreview.cursorAnchor = PDFCursorAnchor{}
+	pdfPreview.panAnchored = false
+	app.previewPanX, app.previewPanY = 0, 0
+	updatePDFPreviewControls()
+	requestPDFPreviewRender()
+}
+
+// Rotation changes only the current preview and is retained when navigating
+// pages. Opening another PDF resets it. Multiple clicks during a render use
+// the existing generation-safe queue to apply only the latest orientation.
+func rotatePDFPreviewClockwise() {
+	if !pdfPreview.active || pdfShutdown.closing {
+		return
+	}
+	pdfPreview.rotation = nextPDFPreviewRotation(pdfPreview.rotation)
 	pdfPreview.cursorAnchor = PDFCursorAnchor{}
 	pdfPreview.panAnchored = false
 	app.previewPanX, app.previewPanY = 0, 0
@@ -387,6 +403,7 @@ func requestPDFPreviewRender() {
 		InputPath:      pdfPreview.path,
 		OutputPath:     outputPath,
 		PageIndex:      pdfPreview.page,
+		Rotation:       pdfPreview.rotation,
 		Fit:            app.previewFit,
 		FitWidth:       app.previewFitWidth,
 		Zoom:           app.previewZoom,
@@ -401,6 +418,9 @@ func requestPDFPreviewRender() {
 		mode = "Fit"
 	} else if app.previewFitWidth {
 		mode = "Fit Width"
+	}
+	if req.Rotation != 0 {
+		mode += fmt.Sprintf(" · %d°", req.Rotation)
 	}
 	setText(app.statusLabel, fmt.Sprintf("Rendering PDF page %d · %s…", pdfPreview.page+1, mode))
 	updatePDFPreviewControls()
@@ -567,6 +587,9 @@ func finishPDFRender() {
 				mode = fmt.Sprintf("Fit · %d%%", app.previewZoom)
 			} else if app.previewFitWidth {
 				mode = fmt.Sprintf("Fit Width · %d%%", app.previewZoom)
+			}
+			if pdfPreview.rotation != 0 {
+				mode += fmt.Sprintf(" · %d°", pdfPreview.rotation)
 			}
 			setText(app.statusLabel, fmt.Sprintf("DCM PDF Preview · Page %d/%d · %s", pdfPreview.page+1, pdfPreview.pageCount, mode))
 			tracePDFPreview("result-applied", result.Request, false)
