@@ -18,6 +18,7 @@ type PDFRenderRequest struct {
 	InputPath      string
 	OutputPath     string
 	PageIndex      int
+	Rotation       int // clockwise degrees: 0, 90, 180, or 270 (preview only)
 	Fit            bool
 	FitWidth       bool
 	Zoom           int
@@ -90,6 +91,19 @@ func pdfClampAnchorPan(content,viewport,pan int32)int32 {
  return pan
 }
 
+// Rotation is view-only: it never writes PDF page data or changes filenames.
+func normalizePDFPreviewRotation(degrees int) int {
+	degrees %= 360
+	if degrees < 0 {
+		degrees += 360
+	}
+	return degrees
+}
+
+func nextPDFPreviewRotation(degrees int) int {
+	return normalizePDFPreviewRotation(degrees + 90)
+}
+
 func isPDFPath(path string) bool {
 	return strings.EqualFold(filepath.Ext(strings.TrimSpace(path)), ".pdf")
 }
@@ -117,6 +131,7 @@ func pdfRendererArgs(scriptPath string, req PDFRenderRequest) []string {
 		"-InputPath", req.InputPath,
 		"-OutputPath", req.OutputPath,
 		"-PageIndex", strconv.Itoa(req.PageIndex),
+		"-Rotation", strconv.Itoa(normalizePDFPreviewRotation(req.Rotation)),
 		"-Mode", mode,
 		"-Zoom", strconv.Itoa(clampPDFZoom(req.Zoom)),
 		"-ViewportWidth", strconv.Itoa(req.ViewportWidth),
@@ -133,6 +148,7 @@ func pdfiumRendererArgs(req PDFRenderRequest) []string {
   "-InputPath",req.InputPath,
   "-OutputPath",req.OutputPath,
   "-PageIndex",strconv.Itoa(req.PageIndex),
+  "-Rotation",strconv.Itoa(normalizePDFPreviewRotation(req.Rotation)),
   "-Mode",mode,
   "-Zoom",strconv.Itoa(clampPDFZoom(req.Zoom)),
   "-ViewportWidth",strconv.Itoa(req.ViewportWidth),
