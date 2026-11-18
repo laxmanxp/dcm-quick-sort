@@ -7,7 +7,8 @@ param(
   [switch]$DevDefault,
   [switch]$WindowsRollback,
   [switch]$VerifyRotation,
-  [switch]$VerifyActualFilename
+  [switch]$VerifyActualFilename,
+  [switch]$SkipPointerWheel
 )
 # Test-only. Source is GitHub; Lenovo is a disposable acceptance environment.
 $ErrorActionPreference='Stop'
@@ -291,6 +292,7 @@ try{
  } 40
  Capture '04-after-zoom-in' 'teal'
  Step 'toolbar-zoom-success' 'PDFium result applied after native Zoom In control'
+ if(-not $SkipPointerWheel){
  $pane=[DcmNative]::ChildByClass($hwnd,$app.Id,'QuickSortPreview')
  $rect=[DcmNative+RECT]::new()
  if(-not [DcmNative]::GetWindowRect($pane,[ref]$rect)){throw 'Owned preview rectangle unavailable'}
@@ -315,6 +317,9 @@ try{
  Step 'cursor-anchor-image-diagnostic' @{before_fraction=$beforeFX;after_fraction=$afterFX;drift=$drift;before_span=$beforeSpan;after_span=$afterSpan;qualifies=($drift -lt 0.04);note='Horizontal colour-panel edge metric; not a full 2-axis viewport anchor certification'}
  $afterEvents=@(Get-Content -LiteralPath $trace | Where-Object {$_ -match 'result-applied'}).Count
  Step 'ctrl-wheel-zoom-routed' @{before_render_count=$beforeEvents;after_render_count=$afterEvents;pointer_fraction_x=0.4;pointer_fraction_y=0.5;detents=2;cursor_anchoring_verified=$false}
+ }else{
+  Step 'pointer-wheel-not-in-scope' 'Separate cursor-wheel acceptance previously qualified; this run checks filename identity and file lifecycle.'
+ }
  List-Selected '01-alpha.txt'
  if($VerifyActualFilename){Assert-ActualFile '01-alpha.txt' 'TXT'}
  $file=[IO.File]::Open($pdf,[IO.FileMode]::Open,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
