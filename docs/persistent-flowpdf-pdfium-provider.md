@@ -70,9 +70,10 @@ launching multiple renders simultaneously.
 
 **Important limits:** the process persists, and its in-memory bitmap
 cache persists, but PDFium currently opens/closes each PDF document
-on a cache miss. Long-running worker selection cancellation, fully
-certified two-axis pointer anchoring, per-process memory under extended
-use, and sandboxing beyond process isolation remain future work.
+on a cache miss. Obsolete document renders now cancel by generation,
+while individual zoom-tick supersession remains coalesced. Fully
+certified two-axis pointer anchoring, extended memory/handle stability,
+and sandboxing beyond process isolation remain future work.
 
 ## Tests — Laxman_Lenovo (17 Nov 2026)
 
@@ -116,11 +117,10 @@ versus 66.2 ms persistent on the synthetic fixture.
 
 ## Remaining release gates
 
-- Explicit cancellation of a stale in-flight render upon selection change;
-  the current generation guard prevents stale display but may still
-  spend time processing work that was made obsolete.
-- GUI render-worker crash and timeout injection mid-preview, including
-  fallback and subsequent return to persistent mode.
+- Stale-selection cancellation and injected GUI crash/timeout recovery
+  now PASS on Lenovo (see
+  [the 18 November qualification](../qualification/2026-11-18-pdfium-development-default.md));
+  continue monitoring these paths during release qualification.
 - Longer-run process memory and handle-leak tests, real scanned PDFs,
   high zoom extremes, multiple DPI/scaling configurations.
 - Complete two-axis cursor anchoring measured in native GUI and
