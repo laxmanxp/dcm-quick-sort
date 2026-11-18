@@ -90,3 +90,22 @@ Keep changes on the development feature branch pending normal
 promotion procedures. The production-default renderer remains
 Windows.Data.Pdf. No user files or installed applications were
 changed during this work.
+
+
+## Final regression and CI verification
+
+- Full untagged Lenovo `go test ./... -count=1`: **PASS**, 36.293s.
+- Full tagged Lenovo `go test -tags pdfium_dev ./... -count=1`:
+  **PASS**, 33.405s.
+- Windows GitHub Actions:
+  [run 44322519234](https://github.com/laxmanxp/dcm-quick-sort/actions/runs/44322519234):
+  **PASS** on source commit `cf3967309579eac56ef702f12b789db83ab69242`.
+  The workflow now includes `TestActualFileDisplay` alongside the
+  PDF rotation and provider checks.
+- The legacy worker compatibility correction is included in these
+  passing results: zero-degree one-shot requests omit optional
+  `-Rotation`, while nonzero quarter-turns use the modern protocol.
+
+The filename-native acceptance run predates that separate
+compatibility correction but exercises the same committed filename
+UI implementation; no filename UI logic changed in the correction.
