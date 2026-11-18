@@ -101,9 +101,12 @@ PDFium is **not** promoted as the release default. Production selection
 remains Windows.Data.Pdf. The existing Sumatra and one-shot PDFium
 alternatives remain available.
 
-Still pending before a production-default change: cancellation of stale
-renders while switching documents, injected crash/timeout in the live
-GUI, sustained process/handle/memory pressure across many PDFs,
-complete two-axis cursor anchoring at multiple DPIs, real-world scanned
-and vector-heavy PDFs, packaged runtime signing, trust boundaries,
+Stale-selection cancellation, injected crash/restart, and two-attempt
+timeout followed by one-shot fallback have now passed the native GUI
+acceptance gates (see
+[the updated qualification evidence](../qualification/2026-11-18-pdfium-development-default.md)).
+Production promotion is still blocked by sustained
+process/handle/memory pressure across many PDFs, complete two-axis
+cursor anchoring at multiple DPIs, diverse real-world scanned and
+vector-heavy PDFs, packaged runtime signing, trust boundaries,
 redistribution notice/license review and installer acceptance.
