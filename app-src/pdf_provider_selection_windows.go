@@ -51,6 +51,23 @@ func regularPDFWorkerFile(path string) (string, error) {
  return absolute, nil
 }
 
+// Candidate lookup is separate from build/env policy so packaging tests
+// can verify the development-binary layout without altering the test binary.
+func findBundledFlowPDFiumWorker(executable, runtimeRoot string) (string, error) {
+ candidates := []string{
+  filepath.Join(filepath.Dir(executable), "flowpdf-preview-worker-persistent.exe"),
+ }
+ if runtimeRoot = strings.TrimSpace(runtimeRoot); runtimeRoot != "" {
+  candidates = append(candidates, filepath.Join(runtimeRoot, "pdfium", "bin", "flowpdf-preview-worker-persistent.exe"))
+ }
+ for _, candidate := range candidates {
+  if valid, err := regularPDFWorkerFile(candidate); err == nil {
+   return valid, nil
+  }
+ }
+ return "", errors.New("bundled FlowPDF persistent worker not found")
+}
+
 // Bundled development builds locate the qualified persistent worker next
 // to the candidate EXE. An explicitly supplied path always takes priority.
 // The managed runtime directory is an optional secondary development location.
@@ -65,18 +82,7 @@ func flowPDFiumWorkerPath() (string, error) {
  if err != nil {
   return "", err
  }
- candidates := []string{
-  filepath.Join(filepath.Dir(executable), "flowpdf-preview-worker-persistent.exe"),
- }
- if runtimeRoot := strings.TrimSpace(os.Getenv("FILEWORKSPACE_RUNTIME_DIR")); runtimeRoot != "" {
-  candidates = append(candidates, filepath.Join(runtimeRoot, "pdfium", "bin", "flowpdf-preview-worker-persistent.exe"))
- }
- for _, candidate := range candidates {
-  if valid, err := regularPDFWorkerFile(candidate); err == nil {
-   return valid, nil
-  }
- }
- return "", errors.New("bundled FlowPDF persistent worker not found")
+ return findBundledFlowPDFiumWorker(executable, os.Getenv("FILEWORKSPACE_RUNTIME_DIR"))
 }
 
 func selectedPDFBackend() string {
