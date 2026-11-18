@@ -78,3 +78,54 @@ Windows build/unit/real Windows.Data.Pdf rendering checks.
 remain pending**, and persistent PDFium remains the development
 default only. No release-branch or installed-application changes
 were made.
+
+
+## Bidirectional icon controls — Lenovo acceptance
+
+The original single text Rotate button was replaced by two adjacent
+34 × 26 native, owner-drawn arrow-icon controls:
+
+- **Rotate left 90 degrees**, ID `1063`: counterclockwise / −90°.
+- **Rotate right 90 degrees**, ID `1062`: clockwise / +90°.
+
+Both use GDI curved-arrow vector geometry, mirrored horizontally, to
+avoid unsupported Unicode arrow font glyphs. Native button captions
+remain descriptive for screen-reader/window automation. The PDF
+toolbar height is unchanged; the page label contracts in narrower
+panes. The two actions only change the view orientation and continue
+to use the same safe PDFium/Windows rendering protocols.
+
+**Laxman_Lenovo, 18 November 2026:** development bundle built from
+Quick Sort feature-branch commit `353c6c0` and File Workspace
+feature-branch commit `1855d6a` into
+`D:\FlowverseReportsRepo\dcm-pdfium-provider-acceptance-20261117\out\pdfium-dev-two-rotate-20261118`.
+
+Native acceptance:
+`D:\FlowverseReportsRepo\dcm-pdfium-gui-20261118-130612-8e0e6da\receipt.json`.
+
+- `PASSED=True`, `NORMAL_EXIT=True`, exit code 0.
+- Both native owner-drawn buttons visible, enabled and independently
+  addressable using IDs 1063 (left) and 1062 (right).
+- Clockwise 0 → 90 → 180 → 270 → 0: PASS.
+- Counterclockwise 0 → 270 → 180 → 90 → 0: PASS.
+- Preserved page navigation and source PDF hashes: PASS.
+- Regular Rename/Move/Undo, valid-PDF recovery and zoom acceptance:
+  PASS in the same test.
+- 29 preview renders, one persistent worker PID 3876, no unexpected
+  one-shot fallbacks, and clean worker shutdown.
+- 22 native GUI captures, including both rotation sequences. Full
+  independent visual review of icon artwork is not yet certified.
+
+Two early harness runs stopped on test assumptions: the page-label
+filter excluded owner-drawn button captions, and the zero-degree
+trace intentionally omitted its optional rotation field. Both
+test-only issues were corrected before the passing final run.
+
+The updated development app was launched in Lenovo's interactive
+desktop session as PID **29228**, with both button captions confirmed
+in its native window tree. An attempted independent screenshot crop
+was subsequently blocked by another foreground application's
+occlusion; no other application was terminated or disturbed.
+
+No production release binary, default PDF engine, or installed
+Quick Sort application was changed.
