@@ -103,9 +103,11 @@ func TestPersistentPDFiumOptInIsStrict(t *testing.T) {
  if !pdfiumPersistentOptIn(){t.Fatal("opt-in unavailable")}
  t.Setenv("DCM_FLOWPDF_PERSISTENT","0")
  if pdfiumPersistentOptIn(){t.Fatal("disabled mode started persistent worker")}
- t.Setenv("DCM_PDF_PROVIDER","")
+ // Empty provider now means "use the development build default".
+ // Test an explicit non-PDFium choice instead.
+ t.Setenv("DCM_PDF_PROVIDER","windows")
  t.Setenv("DCM_FLOWPDF_PERSISTENT","1")
- if pdfiumPersistentOptIn(){t.Fatal("non-PDFium provider started persistent worker")}
+ if pdfiumPersistentOptIn(){t.Fatal("explicit Windows provider started persistent worker")}
 }
 
 func TestPersistentPDFiumLegacyOneShotFallback(t *testing.T) {
