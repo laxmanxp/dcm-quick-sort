@@ -5121,6 +5121,18 @@ func unloadPreview() {
 
 func previewWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 	switch msg {
+	case WM_DRAWITEM:
+		dis := (*DRAWITEMSTRUCT)(unsafe.Pointer(lParam))
+		if dis != nil {
+			switch int(dis.CtlID) {
+			case ID_PDF_ROTATE_LEFT:
+				drawPDFRotateIconButton(dis, false)
+				return 1
+			case ID_PDF_ROTATE:
+				drawPDFRotateIconButton(dis, true)
+				return 1
+			}
+		}
 	case WM_SIZE:
 		resizeSumatraPreview()
 		resizePreviewHandler()
@@ -5143,6 +5155,9 @@ func previewWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr
 				return 0
 			case ID_PDF_ROTATE:
 				rotatePDFPreviewClockwise()
+				return 0
+			case ID_PDF_ROTATE_LEFT:
+				rotatePDFPreviewCounterclockwise()
 				return 0
 			}
 		}
