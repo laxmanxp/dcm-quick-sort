@@ -85,6 +85,45 @@ func flowPDFiumWorkerPath() (string, error) {
  return findBundledFlowPDFiumWorker(executable, os.Getenv("FILEWORKSPACE_RUNTIME_DIR"))
 }
 
+const developmentManagedPDFiumRoot = `C:\Flowverse\runtime`
+
+func pdfiumLibraryExists(root string) bool {
+ if strings.TrimSpace(root)=="" {return false}
+ dll:=filepath.Join(root,"pdfium","bin","pdfium.dll")
+ info,err:=os.Stat(dll)
+ return err==nil && info.Mode().IsRegular()
+}
+
+// Only auto-select PDFium when the development build has a worker AND
+// a plausible PDFium DLL. An explicit provider choice keeps its existing
+// error semantics so users see configuration failures instead of a silent
+// backend change.
+func developmentPDFiumRuntimeAvailable() bool {
+ if library:=strings.TrimSpace(os.Getenv("FILEWORKSPACE_PDFIUM"));library!="" {
+  info,err:=os.Stat(library)
+  return err==nil&&info.Mode().IsRegular()
+ }
+ if root:=strings.TrimSpace(os.Getenv("FILEWORKSPACE_RUNTIME_DIR"));root!="" {
+  return pdfiumLibraryExists(root)
+ }
+ return pdfiumLibraryExists(developmentManagedPDFiumRoot)
+}
+
+// The File Workspace PDFium DLL adapter reads FILEWORKSPACE_RUNTIME_DIR.
+// Supply the documented managed runtime to child processes only in tagged
+// development builds, without mutating the parent process environment.
+func developmentPDFiumWorkerEnvironment() []string {
+ if !defaultPersistentPDFiumDevelopment ||
+  strings.TrimSpace(os.Getenv("FILEWORKSPACE_PDFIUM"))!="" ||
+  strings.TrimSpace(os.Getenv("FILEWORKSPACE_RUNTIME_DIR"))!="" {
+  return nil // inherit unmodified
+ }
+ if pdfiumLibraryExists(developmentManagedPDFiumRoot) {
+  return append(os.Environ(),"FILEWORKSPACE_RUNTIME_DIR="+developmentManagedPDFiumRoot)
+ }
+ return nil
+}
+
 func selectedPDFBackend() string {
  setting := os.Getenv("DCM_PDF_PROVIDER")
  switch strings.ToLower(strings.TrimSpace(setting)) {
@@ -96,7 +135,7 @@ func selectedPDFBackend() string {
    return pdfProviderWindows
   }
   _, err := flowPDFiumWorkerPath()
-  return selectPDFBackend(setting, true, err == nil)
+  return selectPDFBackend(setting, true, err == nil && developmentPDFiumRuntimeAvailable())
  default:
   return pdfProviderWindows
  }
