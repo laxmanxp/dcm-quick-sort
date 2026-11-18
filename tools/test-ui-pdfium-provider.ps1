@@ -6,7 +6,8 @@ param(
   [switch]$Persistent,
   [switch]$DevDefault,
   [switch]$WindowsRollback,
-  [switch]$VerifyRotation
+  [switch]$VerifyRotation,
+  [switch]$VerifyActualFilename
 )
 # Test-only. Source is GitHub; Lenovo is a disposable acceptance environment.
 $ErrorActionPreference='Stop'
@@ -52,6 +53,13 @@ function List-Selected([string]$name){
  Wait ('selected '+$name) {([DcmUndoInput]::TryText($hwnd,$app.Id,1005)) -ceq $stem}
 }
 function TextControl([int]$id){return [DcmNative]::Text([DcmNative]::Control($hwnd,$app.Id,$id),$app.Id)}
+function Assert-ActualFile([string]$name,[string]$extension) {
+ Wait ('actual filename '+$name) {
+  (TextControl 1049) -ceq $name -and (TextControl 1050) -ceq ('Type: '+$extension)
+ } 20
+ Step ('actual-filename-'+$extension) @{filename=(TextControl 1049);type=(TextControl 1050);
+   rename_stem=(TextControl 1005);extension_visible=$true;selection=$name}
+}
 function Hash([string]$path){return (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()}
 function Exclusive([string]$path){
  $f=[IO.File]::Open($path,[IO.FileMode]::Open,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
@@ -195,6 +203,7 @@ try{
  if($hwnd -eq [IntPtr]::Zero){throw 'Candidate HWND missing'}
  Wait 'fixture loaded' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 4}
  List-Selected '08-preview.pdf'
+ if($VerifyActualFilename){Assert-ActualFile '08-preview.pdf' 'PDF'}
  PageReady 'Page 1 of 2'
  Step 'page-one-controls' (PreviewSnapshot)
  Capture '01-page-one' 'teal'
@@ -304,6 +313,7 @@ try{
  $afterEvents=@(Get-Content -LiteralPath $trace | Where-Object {$_ -match 'result-applied'}).Count
  Step 'ctrl-wheel-zoom-routed' @{before_render_count=$beforeEvents;after_render_count=$afterEvents;pointer_fraction_x=0.4;pointer_fraction_y=0.5;detents=2;cursor_anchoring_verified=$false}
  List-Selected '01-alpha.txt'
+ if($VerifyActualFilename){Assert-ActualFile '01-alpha.txt' 'TXT'}
  $file=[IO.File]::Open($pdf,[IO.FileMode]::Open,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
  $file.Dispose()
  if((Get-FileHash $pdf -Algorithm SHA256).Hash -ne $sha){throw 'PDF fixture changed'}
@@ -323,6 +333,7 @@ try{
  $renameID=Journal $pdf $renamed 'completed' 1
  Step 'rename-pdf' @{source=$pdf;target=$renamed;bytes_preserved=$true;journal_id=$renameID}
  Wait 'renamed selection' {(TextControl 1005) -eq 'undo-preview'}
+ if($VerifyActualFilename){Assert-ActualFile 'undo-preview.pdf' 'PDF'}
  PageReady 'Page 1 of 2'
  Capture '07-renamed-pdf-visible' 'teal'
  SelectUndoRecord 'undo-preview.pdf'
@@ -349,6 +360,10 @@ try{
  Wait 'Undo Move journal' {try {$null=Journal $pdf $moved 'undone' 2;return $true} catch {return $false}}
  if((Hash $pdf) -ne $sha.ToLowerInvariant() -or (Journal $pdf $moved 'undone' 2) -ne $moveID){throw 'Undo Move content/journal mismatch'}
  Wait 'destination source emptied after undo' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 0 -and (TextControl 1005) -ceq ''}
+ if($VerifyActualFilename){
+  Wait 'empty source actual filename cleared' {(TextControl 1049) -eq 'No file selected' -and (TextControl 1050) -eq ''}
+  Step 'actual-filename-cleared' @{actual_name=(TextControl 1049);type=(TextControl 1050)}
+ }
  Exclusive $pdf
  Step 'undo-move-pdf' @{source_restored=$true;destination_empty=$true;bytes_preserved=$true}
  SwitchSource $fixture.inbox 4
@@ -394,6 +409,22 @@ try{
   Step ('recovered-after-'+$case.name) @{valid_pdf_rendered_again=$true}
  }
  if(@([DcmNative]::ListItems($hwnd,$app.Id,1017)).Count){throw 'Processed history changed during failed-PDF recovery'}
+ if($VerifyActualFilename){
+  # Use real OpenXML samples, never arbitrary renamed empty files.
+  $docx=Join-Path $fixture.inbox '13-Letter.DOCX'
+  $xlsx=Join-Path $fixture.inbox '14-Budget.xlsx'
+  Copy-Item -LiteralPath (Join-Path $repo 'tests/fixtures/dcm33-legacy.source.docx') -Destination $docx
+  Copy-Item -LiteralPath (Join-Path $repo 'tests/fixtures/dcm33-legacy-xls.source.xlsx') -Destination $xlsx
+  [DcmNative]::ClickAsync($hwnd,$app.Id,1011)
+  Wait 'Office file fixtures listed' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 8}
+  List-Selected '13-Letter.DOCX'
+  Assert-ActualFile '13-Letter.DOCX' 'DOCX'
+  List-Selected '14-Budget.xlsx'
+  Assert-ActualFile '14-Budget.xlsx' 'XLSX'
+  List-Selected '08-preview.pdf'
+  Assert-ActualFile '08-preview.pdf' 'PDF'
+  Step 'actual-filename-office-switching' @{docx=$true;xlsx=$true;pdf=$true;read_only_field=$true}
+ }
  if($Persistent -or $DevDefault) {
   $events=@(Get-Content -LiteralPath $trace | ForEach-Object {$_|ConvertFrom-Json})
   $starts=@($events | Where-Object {$_.event -eq 'worker-started' -and $_.renderer_pid -gt 0})
