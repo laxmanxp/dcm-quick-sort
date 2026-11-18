@@ -25,6 +25,7 @@ type PDFTraceEvent struct {
 	HostPID     int            `json:"host_pid"`
 	Event       string         `json:"event"`
 	Generation  uint64         `json:"generation"`
+	Rotation    int            `json:"rotation,omitempty"`
 	InputPath   string         `json:"input_path"`
 	OutputPath  string         `json:"output_path"`
 	RendererPID int            `json:"renderer_pid"`
