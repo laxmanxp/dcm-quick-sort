@@ -64,3 +64,30 @@ func TestPDFRendererReportsEffectiveScaleAndSupportsFitWidth(t *testing.T) {
 		t.Fatalf("fit-width args missing fitwidth mode: %s", args)
 	}
 }
+
+func TestPDFRotationSequence(t *testing.T) {
+ rotation:=0
+ for _,want:=range []int{90,180,270,0,90}{
+  rotation=nextPDFPreviewRotation(rotation)
+  if rotation!=want {t.Fatalf("next clockwise rotation=%d want %d",rotation,want)}
+ }
+ if got:=normalizePDFPreviewRotation(-90);got!=270{t.Fatalf("normalized negative degrees=%d",got)}
+ if got:=normalizePDFPreviewRotation(450);got!=90{t.Fatalf("normalized full circle=%d",got)}
+}
+
+func TestPDFRotationPropagatesToBothRendererCLIs(t *testing.T){
+ req:=PDFRenderRequest{
+  InputPath:"source.pdf",OutputPath:"preview.png",
+  PageIndex:1,Rotation:270,Zoom:135,ViewportWidth:800,ViewportHeight:600,
+ }
+ native:=strings.Join(pdfiumRendererArgs(req)," ")
+ legacy:=strings.Join(pdfRendererArgs("render.ps1",req)," ")
+ for _,cli:=range []string{native,legacy} {
+  for _,flag:=range []string{"-Rotation 270","-PageIndex 1","-Zoom 135"} {
+   if !strings.Contains(cli,flag) {t.Fatalf("request lost %q: %s",flag,cli)}
+  }
+ }
+ if joined:=strings.Join(pdfiumRendererArgs(PDFRenderRequest{Rotation:360})," ");!strings.Contains(joined,"-Rotation 0") {
+  t.Fatalf("full-circle rotation was not reset: %s",joined)
+ }
+}
