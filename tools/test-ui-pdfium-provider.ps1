@@ -53,12 +53,15 @@ function List-Selected([string]$name){
  Wait ('selected '+$name) {([DcmUndoInput]::TryText($hwnd,$app.Id,1005)) -ceq $stem}
 }
 function TextControl([int]$id){return [DcmNative]::Text([DcmNative]::Control($hwnd,$app.Id,$id),$app.Id)}
-function Assert-ActualFile([string]$name,[string]$extension) {
- Wait ('actual filename '+$name) {
-  (TextControl 1049) -ceq $name -and (TextControl 1050) -ceq ('Type: '+$extension)
+function Assert-ActualFile([string]$filename,[string]$extension) {
+ # Wait's own $name parameter must not shadow the expected filename.
+ $expectedName=$filename
+ $expectedType='Type: '+$extension
+ Wait ('actual filename '+$expectedName) {
+  (TextControl 1049) -ceq $expectedName -and (TextControl 1050) -ceq $expectedType
  } 20
  Step ('actual-filename-'+$extension) @{filename=(TextControl 1049);type=(TextControl 1050);
-   rename_stem=(TextControl 1005);extension_visible=$true;selection=$name}
+   rename_stem=(TextControl 1005);extension_visible=$true;selection=$expectedName}
 }
 function Hash([string]$path){return (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()}
 function Exclusive([string]$path){
