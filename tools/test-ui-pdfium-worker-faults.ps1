@@ -133,7 +133,9 @@ try{
   $changedAt=[DateTime]::UtcNow
   Selected '09-followup.pdf'
   AcceptedRender $new 12
-  $elapsed=([DateTime]::UtcNow-$changedAt).TotalMilliseconds
+  $applied=@((Events)|Where-Object {$_.event -eq 'result-applied' -and $_.input_path -eq $new}|
+    Sort-Object sequence|Select-Object -Last 1)[0]
+  $elapsed=([DateTimeOffset]::Parse($applied.utc).UtcDateTime-$changedAt).TotalMilliseconds
   Wait 'obsolete selection canceled' {
    @((Events)|Where-Object {$_.event -eq 'worker-canceled' -and $_.input_path -eq $old}).Count -ge 1
   } 8
