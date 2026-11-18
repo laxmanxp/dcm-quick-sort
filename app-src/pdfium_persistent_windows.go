@@ -65,6 +65,7 @@ func (p *flowPDFiumProcess) startLocked(exe string)(int,error){
  }
  if p.cmd!=nil {p.discardLocked()}
  cmd:=exec.Command(exe,"-ServeJSONL")
+ cmd.Env=developmentPDFiumWorkerEnvironment()
  cmd.SysProcAttr=&syscall.SysProcAttr{HideWindow:true,CreationFlags:createNoWindow}
  stdin,err:=cmd.StdinPipe()
  if err!=nil{return 0,err}
@@ -206,6 +207,7 @@ func flowPDFiumOneShotFallback(executable string,req PDFRenderRequest)(PDFRender
  ctx,cancel:=context.WithTimeout(context.Background(),flowPDFiumRequestDeadline)
  defer cancel()
  cmd:=exec.CommandContext(ctx,executable,pdfiumRendererArgs(req)...)
+ cmd.Env=developmentPDFiumWorkerEnvironment()
  cmd.SysProcAttr=&syscall.SysProcAttr{HideWindow:true,CreationFlags:createNoWindow}
  var output bytes.Buffer
  cmd.Stdout=&output
