@@ -243,8 +243,31 @@ try{
   [DcmNative]::ClickAsync($hwnd,$app.Id,1062)
   PageReady 'Page 1 of 2'
   Capture 'rotate-reset-0' 'teal'
+  # Each owner-drawn icon must be a separate accessible, enabled native button.
+  foreach($button in @(@{id=1063;label='Rotate left 90 degrees'},@{id=1062;label='Rotate right 90 degrees'})){
+   $control=[DcmNative]::Control($hwnd,$app.Id,$button.id)
+   if(-not [DcmNative]::IsWindowEnabled($control)){throw ('Rotation button disabled: '+$button.id)}
+   $snapshot=@(PreviewSnapshot|Where-Object {$_.Text -eq $button.label -and $_.Visible})
+   if($snapshot.Count -ne 1){throw ('Missing accessible rotation icon: '+$button.label)}
+  }
+  Step 'two-rotation-icon-controls' @{rotate_left_id=1063;rotate_right_id=1062;both_visible=$true;both_enabled=$true}
+  foreach($angle in @(270,180,90,0)) {
+   $previous=@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}).Count
+   [DcmNative]::ClickAsync($hwnd,$app.Id,1063)
+   $expected=if($angle -eq 0){'Page 1 of 2'}else{RotatedLabel 1 $angle}
+   Wait ('PDF counterclockwise rotation '+$angle) {
+    $label=@(PreviewSnapshot|Where-Object {$_.Text -eq $expected})
+    if($label.Count -ne 1){return $false}
+    $applied=@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}|ForEach-Object {$_|ConvertFrom-Json})
+    if($applied.Count -le $previous){return $false}
+    $last=$applied[-1]
+    return ($last.rotation -eq $angle -and $last.input_path -eq $pdf)
+   } 50
+   Capture ('rotate-left-'+$angle) 'teal'
+   Step ('counterclockwise-rotation-'+$angle) @{angle=$angle;page=1;source_hash_intact=((Hash $pdf) -eq $originalHash)}
+  }
   if((Hash $pdf) -ne $originalHash){throw 'Preview rotation modified input PDF bytes'}
-  Step 'preview-rotation-cycle' @{angles=@(0,90,180,270,0);page_navigation_preserved=$true;source_file_untouched=$true}
+  Step 'preview-rotation-cycle' @{clockwise_angles=@(0,90,180,270,0);counterclockwise_angles=@(0,270,180,90,0);page_navigation_preserved=$true;source_file_untouched=$true}
  }
  # Native toolbar zoom; wheel mouse-location acceptance is a separate gate.
  [DcmNative]::ClickAsync($hwnd,$app.Id,1022)
