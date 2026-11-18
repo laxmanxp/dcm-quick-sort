@@ -291,7 +291,7 @@ func startPDFPreview(path string) bool {
 }
 
 func tracePDFPreview(event string, req PDFRenderRequest, failed bool) {
-	recordPDFTrace(PDFTraceEvent{Event: event, Generation: req.Generation, InputPath: req.InputPath, OutputPath: req.OutputPath, Failed: failed,
+	recordPDFTrace(PDFTraceEvent{Event: event, Generation: req.Generation, Rotation:req.Rotation, InputPath: req.InputPath, OutputPath: req.OutputPath, Failed: failed,
 		State: &PDFTraceState{Generation: pdfPreview.generation, WorkerGeneration: pdfPreview.workerGeneration, Active: pdfPreview.active, Busy: pdfPreview.busy, Pending: pdfPreview.pending, Path: pdfPreview.path}})
 }
 
