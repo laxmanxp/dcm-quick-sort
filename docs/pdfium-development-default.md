@@ -112,15 +112,18 @@ vector-heavy PDFs, packaged runtime signing, trust boundaries,
 redistribution notice/license review and installer acceptance.
 
 
-## PDF Preview Rotate button — development feature
+## PDF Preview two-direction Rotate icons — development feature
 
-The PDF-only navigation row now includes a **Rotate ↻** button
-beside Previous, page count and Next. Each click rotates the
-**preview clockwise by 90°** through 0 → 90 → 180 → 270 → 0.
-The page count row indicates the current angle. The angle is kept
-while navigating pages in the same document, and resets to 0 when
-another PDF is selected. This is a view-only action: it does not
-rewrite the PDF, change filename operations or create an edited copy.
+The PDF-only navigation row has two adjacent GDI-drawn curved-arrow
+**icon buttons**, following Previous, page count and Next:
+**Rotate left** turns counterclockwise by 90° (0 → 270 → 180 → 90 → 0),
+and **Rotate right** turns clockwise by 90° (0 → 90 → 180 → 270 → 0).
+The buttons have descriptive accessibility labels rather than relying
+on Unicode icon fonts, which previously rendered an arrow as '?' on
+Lenovo. The page-count row indicates the current angle. Rotation is
+retained while navigating pages in one document and resets to 0 when
+another PDF is selected. It never rewrites the source PDF, alters
+rename/move semantics or creates an edited copy.
 
 The shared persistent and one-shot PDFium protocols pass a
 `rotation` in degrees to PDFium's native render operation. The
@@ -131,10 +134,13 @@ writes to the source PDF.
 
 The feature-branch native harness supports
 `tools/test-ui-pdfium-provider.ps1 -VerifyRotation`. It exercises
-90/180/270/0 rendering, rotation retained across page navigation,
-visible page colour, unchanged source hash and the regular zoom
-workflow. Dedicated Go tests check clockwise sequencing, CLI/JSONL
-propagation, cache separation and real PDFium PNG geometry.
+both icon controls (IDs 1063 and 1062), clockwise and counterclockwise
+full cycles, rotated page navigation, visible page colors, source
+file integrity and the regular zoom/Rename/Move/Undo workflow.
+The completed Lenovo native test passed with 29 renders on one
+persistent worker (see `qualification/2026-11-18-pdf-preview-rotate-button.md`).
+Dedicated Go tests cover reversible rotations and PDFium
+CLI/JSONL geometry and cache behavior.
 
 The rotation UI does **not** by itself qualify the PDFium engine as
 the production default, which remains Windows.Data.Pdf pending the
