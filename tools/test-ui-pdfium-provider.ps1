@@ -261,7 +261,9 @@ try{
     $applied=@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}|ForEach-Object {$_|ConvertFrom-Json})
     if($applied.Count -le $previous){return $false}
     $last=$applied[-1]
-    return ($last.rotation -eq $angle -and $last.input_path -eq $pdf)
+    # Trace JSON omits rotation when the angle returns to zero.
+    $renderRotation=if($last.PSObject.Properties['rotation']){[int]$last.rotation}else{0}
+    return ($renderRotation -eq $angle -and $last.input_path -eq $pdf)
    } 50
    Capture ('rotate-left-'+$angle) 'teal'
    Step ('counterclockwise-rotation-'+$angle) @{angle=$angle;page=1;source_hash_intact=((Hash $pdf) -eq $originalHash)}
