@@ -5,7 +5,8 @@ param(
   [string]$LabRoot='D:\FlowverseReportsRepo',
   [switch]$Persistent,
   [switch]$DevDefault,
-  [switch]$WindowsRollback
+  [switch]$WindowsRollback,
+  [switch]$VerifyRotation
 )
 # Test-only. Source is GitHub; Lenovo is a disposable acceptance environment.
 $ErrorActionPreference='Stop'
@@ -201,6 +202,45 @@ try{
  [DcmNative]::ClickAsync($hwnd,$app.Id,1060)
  PageReady 'Page 1 of 2'
  Capture '03-page-one-return' 'teal'
+ if($VerifyRotation) {
+  $originalHash=Hash $pdf
+  foreach($angle in @(90,180,270)) {
+   $previous=@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}).Count
+   [DcmNative]::ClickAsync($hwnd,$app.Id,1062)
+   $expected=('Page 1 of 2 · '+$angle+'°')
+   Wait ('PDF clockwise rotation '+$angle) {
+    $label=@(PreviewSnapshot|Where-Object {$_.Text -eq $expected})
+    if($label.Count -ne 1){return $false}
+    $applied=@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}|ForEach-Object {$_|ConvertFrom-Json})
+    if($applied.Count -le $previous){return $false}
+    $last=$applied[-1]
+    return ($last.rotation -eq $angle -and $last.input_path -eq $pdf)
+   } 50
+   Capture ('rotate-'+$angle) 'teal'
+   Step ('rotation-'+$angle) @{angle=$angle;page=1;source_hash_intact=((Hash $pdf) -eq $originalHash)}
+   if($angle -eq 90) {
+    [DcmNative]::ClickAsync($hwnd,$app.Id,1061)
+    Wait 'rotated page-two navigation' {
+     $labels=@(PreviewSnapshot|Where-Object {$_.Text -eq 'Page 2 of 2 · 90°'})
+     $applied=@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}|ForEach-Object {$_|ConvertFrom-Json})
+     return ($labels.Count -eq 1 -and $applied[-1].rotation -eq 90 -and $applied[-1].generation -gt $previous)
+    } 50
+    Capture 'rotate-90-next-page' 'orange'
+    [DcmNative]::ClickAsync($hwnd,$app.Id,1060)
+    Wait 'rotated previous-page navigation' {
+     $labels=@(PreviewSnapshot|Where-Object {$_.Text -eq 'Page 1 of 2 · 90°'})
+     $applied=@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}|ForEach-Object {$_|ConvertFrom-Json})
+     return ($labels.Count -eq 1 -and $applied[-1].rotation -eq 90 -and $applied[-1].page_index -eq $null)
+    } 50
+    Capture 'rotate-90-previous-page' 'teal'
+   }
+  }
+  [DcmNative]::ClickAsync($hwnd,$app.Id,1062)
+  PageReady 'Page 1 of 2'
+  Capture 'rotate-reset-0' 'teal'
+  if((Hash $pdf) -ne $originalHash){throw 'Preview rotation modified input PDF bytes'}
+  Step 'preview-rotation-cycle' @{angles=@(0,90,180,270,0);page_navigation_preserved=$true;source_file_untouched=$true}
+ }
  # Native toolbar zoom; wheel mouse-location acceptance is a separate gate.
  [DcmNative]::ClickAsync($hwnd,$app.Id,1022)
  Wait 'zoom render success' {
