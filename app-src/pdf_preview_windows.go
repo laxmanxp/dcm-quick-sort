@@ -180,7 +180,9 @@ func pdfRendererExecutable() (string, error) {
 
 func pdfPreviewRenderCommand(executable, script string, req PDFRenderRequest) *exec.Cmd {
  if usingFlowPDFiumProvider() {
-  return exec.Command(executable, pdfiumRendererArgs(req)...)
+  cmd:=exec.Command(executable, pdfiumRendererArgs(req)...)
+  cmd.Env=developmentPDFiumWorkerEnvironment()
+  return cmd
  }
  return exec.Command(executable, pdfRendererArgs(script, req)...)
 }
