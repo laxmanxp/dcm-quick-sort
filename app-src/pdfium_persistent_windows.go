@@ -47,6 +47,10 @@ type flowPDFiumReply struct {
 }
 type flowPDFiumPipeResult struct {line string;err error}
 
+// Canceled renders are expected when the user changes files. They must never
+// start a transport retry or a one-shot fallback for the obsolete document.
+var errFlowPDFiumCanceled = errors.New("PDFium render canceled after selection change")
+
 // flowPDFiumProcess is a private, sequential child of the exact Quick Sort
 // instance that created it. It never listens on a TCP/global named pipe.
 // The mutex covers the whole request/response exchange and child lifecycle.
@@ -57,6 +61,54 @@ type flowPDFiumProcess struct {
  stdin io.WriteCloser
  scanner *bufio.Scanner
  sequence uint64
+
+ // The GUI can cancel a stale worker without acquiring mu, which is held
+ // during the blocking request/response. Every generation is monotonic
+ // within one Quick Sort process.
+ activeMu sync.Mutex
+ activeProcess *os.Process
+ activeGeneration uint64
+ canceledThrough uint64
+}
+
+func (p *flowPDFiumProcess) obsolete(generation uint64) bool {
+ p.activeMu.Lock()
+ defer p.activeMu.Unlock()
+ return p.canceledThrough>0 && generation<=p.canceledThrough
+}
+
+// cancelThrough does not wait for the IPC mutex. It records a cancellation
+// boundary for requests not yet registered, and kills only the exact child
+// owned by an already active obsolete request. Future generations are safe.
+func (p *flowPDFiumProcess) cancelThrough(generation uint64) bool {
+ if generation==0 {return false}
+ p.activeMu.Lock()
+ defer p.activeMu.Unlock()
+ if generation>p.canceledThrough{p.canceledThrough=generation}
+ if p.activeProcess==nil||p.activeGeneration>generation{return false}
+ _=p.activeProcess.Kill()
+ return true
+}
+
+// registerActive also covers the race where the UI stopped the selection
+// before the rendering goroutine obtained mu and started its worker.
+func (p *flowPDFiumProcess) registerActive(generation uint64) bool {
+ p.activeMu.Lock()
+ defer p.activeMu.Unlock()
+ if p.canceledThrough>0 && generation<=p.canceledThrough{return false}
+ p.activeGeneration=generation
+ p.activeProcess=p.cmd.Process
+ return true
+}
+
+func (p *flowPDFiumProcess) clearActive(generation uint64) bool {
+ p.activeMu.Lock()
+ defer p.activeMu.Unlock()
+ if p.activeGeneration==generation{
+  p.activeGeneration=0
+  p.activeProcess=nil
+ }
+ return p.canceledThrough>0 && generation<=p.canceledThrough
 }
 
 func (p *flowPDFiumProcess) startLocked(exe string)(int,error){
@@ -144,10 +196,23 @@ func flowPDFiumMode(req PDFRenderRequest)string{
 func (p *flowPDFiumProcess) render(exe string,req PDFRenderRequest,deadline time.Duration,started func(int))(PDFRenderMetadata,int,error){
  p.mu.Lock()
  defer p.mu.Unlock()
+ if p.obsolete(req.Generation) {
+  _=os.Remove(req.OutputPath)
+  return PDFRenderMetadata{},0,errFlowPDFiumCanceled
+ }
  var last error
  for attempt:=0;attempt<2;attempt++ {
+  if p.obsolete(req.Generation) {
+   _=os.Remove(req.OutputPath)
+   return PDFRenderMetadata{},0,errFlowPDFiumCanceled
+  }
   pid,err:=p.startLocked(exe)
   if err!=nil {last=fmt.Errorf("PDFium service start: %w",err);p.discardLocked();continue}
+  if !p.registerActive(req.Generation) {
+   p.discardLocked()
+   _=os.Remove(req.OutputPath)
+   return PDFRenderMetadata{},0,errFlowPDFiumCanceled
+  }
   if started!=nil {started(pid)}
   p.sequence++
   id:=fmt.Sprintf("pdf-%d-%d",req.Generation,p.sequence)
@@ -158,6 +223,12 @@ func (p *flowPDFiumProcess) render(exe string,req PDFRenderRequest,deadline time
    ViewportWidth:req.ViewportWidth,ViewportHeight:req.ViewportHeight,
   }
   reply,err:=p.exchangeLocked(cmd,deadline)
+  wasCanceled:=p.clearActive(req.Generation)
+  if wasCanceled {
+   p.discardLocked()
+   _=os.Remove(req.OutputPath)
+   return PDFRenderMetadata{},pid,errFlowPDFiumCanceled
+  }
   if err!=nil{
    last=err
    p.discardLocked()
