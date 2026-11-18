@@ -89,6 +89,9 @@ function VerifyPDF([string]$name,[string]$expectedPath,[string]$expectedHash) {
 }
 function Label {return [DcmNative]::Text([DcmNative]::Control($hwnd,$app.Id,1061),$app.Id)}
 function PageLabel {return [DcmNative]::Text([DcmNative]::Control($hwnd,$app.Id,1060),$app.Id)}
+function RotatedLabel([int]$page,[int]$angle){
+ return ('Page '+$page+' of 2 '+[char]0x00B7+' '+$angle+[char]0x00B0)
+}
 function PreviewSnapshot {
  return @([DcmNative]::Snapshot($hwnd,$app.Id) | Where-Object {$_.Visible -and ($_.Text -like 'DCM PDF Preview*' -or $_.Text -like 'Page * of *')})
 }
@@ -207,7 +210,7 @@ try{
   foreach($angle in @(90,180,270)) {
    $previous=@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}).Count
    [DcmNative]::ClickAsync($hwnd,$app.Id,1062)
-   $expected=('Page 1 of 2 · '+$angle+'°')
+   $expected=RotatedLabel 1 $angle
    Wait ('PDF clockwise rotation '+$angle) {
     $label=@(PreviewSnapshot|Where-Object {$_.Text -eq $expected})
     if($label.Count -ne 1){return $false}
@@ -222,7 +225,7 @@ try{
     $nextFromGeneration=(@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}|ForEach-Object {$_|ConvertFrom-Json})[-1]).generation
     [DcmNative]::ClickAsync($hwnd,$app.Id,1061)
     Wait 'rotated page-two navigation' {
-     $labels=@(PreviewSnapshot|Where-Object {$_.Text -eq 'Page 2 of 2 · 90°'})
+     $labels=@(PreviewSnapshot|Where-Object {$_.Text -eq (RotatedLabel 2 90)})
      $applied=@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}|ForEach-Object {$_|ConvertFrom-Json})
      return ($labels.Count -eq 1 -and $applied[-1].rotation -eq 90 -and $applied[-1].generation -gt $nextFromGeneration)
     } 50
@@ -230,7 +233,7 @@ try{
     $returnFromGeneration=(@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}|ForEach-Object {$_|ConvertFrom-Json})[-1]).generation
     [DcmNative]::ClickAsync($hwnd,$app.Id,1060)
     Wait 'rotated previous-page navigation' {
-     $labels=@(PreviewSnapshot|Where-Object {$_.Text -eq 'Page 1 of 2 · 90°'})
+     $labels=@(PreviewSnapshot|Where-Object {$_.Text -eq (RotatedLabel 1 90)})
      $applied=@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}|ForEach-Object {$_|ConvertFrom-Json})
      return ($labels.Count -eq 1 -and $applied[-1].rotation -eq 90 -and $applied[-1].generation -gt $returnFromGeneration)
     } 50
