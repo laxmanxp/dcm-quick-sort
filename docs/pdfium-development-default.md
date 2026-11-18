@@ -110,3 +110,32 @@ process/handle/memory pressure across many PDFs, complete two-axis
 cursor anchoring at multiple DPIs, diverse real-world scanned and
 vector-heavy PDFs, packaged runtime signing, trust boundaries,
 redistribution notice/license review and installer acceptance.
+
+
+## PDF Preview Rotate button — development feature
+
+The PDF-only navigation row now includes a **Rotate ↻** button
+beside Previous, page count and Next. Each click rotates the
+**preview clockwise by 90°** through 0 → 90 → 180 → 270 → 0.
+The page count row indicates the current angle. The angle is kept
+while navigating pages in the same document, and resets to 0 when
+another PDF is selected. This is a view-only action: it does not
+rewrite the PDF, change filename operations or create an edited copy.
+
+The shared persistent and one-shot PDFium protocols pass a
+`rotation` in degrees to PDFium's native render operation. The
+Windows.Data.Pdf rollback renders as usual and rotates only its
+temporary preview PNG with `System.Drawing.RotateFlip`, while Fit
+and Fit Width use the rotated page geometry. No normal preview code
+writes to the source PDF.
+
+The feature-branch native harness supports
+`tools/test-ui-pdfium-provider.ps1 -VerifyRotation`. It exercises
+90/180/270/0 rendering, rotation retained across page navigation,
+visible page colour, unchanged source hash and the regular zoom
+workflow. Dedicated Go tests check clockwise sequencing, CLI/JSONL
+propagation, cache separation and real PDFium PNG geometry.
+
+The rotation UI does **not** by itself qualify the PDFium engine as
+the production default, which remains Windows.Data.Pdf pending the
+separate release gates.
