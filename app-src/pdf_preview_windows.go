@@ -154,13 +154,6 @@ func ensurePDFRendererScript() (string, error) {
 	return path, nil
 }
 
-// pdfRendererExecutable chooses an explicitly opted-in shared FileFlow
-// PDFium worker; the existing Windows.Data.Pdf renderer stays the default.
-// A missing opt-in worker is an error rather than an unsafe silent switch.
-func usingFlowPDFiumProvider() bool {
- return strings.EqualFold(strings.TrimSpace(os.Getenv("DCM_PDF_PROVIDER")), "pdfium")
-}
-
 // capturePDFCursorAnchor runs on the GUI thread before wheel zoom changes
 // generation. The renderer may finish later; generation keeps anchors scoped
 // to the corresponding displayed document.
@@ -179,21 +172,14 @@ func capturePDFCursorAnchor(pointer POINT) {
 }
 
 func pdfRendererExecutable() (string, error) {
- if strings.EqualFold(strings.TrimSpace(os.Getenv("DCM_PDF_PROVIDER")), "pdfium") {
-  worker := strings.TrimSpace(os.Getenv("DCM_FLOWPDF_WORKER"))
-  if worker == "" { return "", errors.New("PDFium provider requires DCM_FLOWPDF_WORKER") }
-  absolute, err := filepath.Abs(worker)
-  if err != nil { return "", err }
-  info, err := os.Stat(absolute)
-  if err != nil { return "", fmt.Errorf("PDFium worker unavailable: %w", err) }
-  if !info.Mode().IsRegular() { return "", errors.New("PDFium worker path must be a file") }
-  return absolute, nil
+ if usingFlowPDFiumProvider() {
+  return flowPDFiumWorkerPath()
  }
  return findPDFPowerShell()
 }
 
 func pdfPreviewRenderCommand(executable, script string, req PDFRenderRequest) *exec.Cmd {
- if strings.EqualFold(strings.TrimSpace(os.Getenv("DCM_PDF_PROVIDER")), "pdfium") {
+ if usingFlowPDFiumProvider() {
   return exec.Command(executable, pdfiumRendererArgs(req)...)
  }
  return exec.Command(executable, pdfRendererArgs(script, req)...)
@@ -232,7 +218,7 @@ func startPDFPreview(path string) bool {
 	if _, err := pdfRendererExecutable(); err != nil {
 		return false
 	}
-	if !strings.EqualFold(strings.TrimSpace(os.Getenv("DCM_PDF_PROVIDER")), "pdfium") {
+	if !usingFlowPDFiumProvider() {
 		if _, err := ensurePDFRendererScript(); err != nil {
 			return false
 		}
@@ -323,7 +309,7 @@ func requestPDFPreviewRender() {
 		return
 	}
 	script := ""
-	if !strings.EqualFold(strings.TrimSpace(os.Getenv("DCM_PDF_PROVIDER")), "pdfium") {
+	if !usingFlowPDFiumProvider() {
 		script, err = ensurePDFRendererScript()
 		if err != nil {
 			finishPDFRendererUnavailable(err)
