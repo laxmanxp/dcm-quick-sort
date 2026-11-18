@@ -59,11 +59,6 @@ type flowPDFiumProcess struct {
  sequence uint64
 }
 
-func pdfiumPersistentOptIn() bool {
- return usingFlowPDFiumProvider() &&
-   strings.TrimSpace(os.Getenv("DCM_FLOWPDF_PERSISTENT"))=="1"
-}
-
 func (p *flowPDFiumProcess) startLocked(exe string)(int,error){
  if p.cmd!=nil && strings.EqualFold(p.executable,exe) {
   return p.cmd.Process.Pid,nil
