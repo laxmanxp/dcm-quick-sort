@@ -3,11 +3,14 @@ param(
   [Parameter(Mandatory=$true)][string]$CandidateExe,
   [Parameter(Mandatory=$true)][string]$WorkerExe,
   [string]$LabRoot='D:\FlowverseReportsRepo',
-  [switch]$Persistent
+  [switch]$Persistent,
+  [switch]$DevDefault,
+  [switch]$WindowsRollback
 )
 # Test-only. Source is GitHub; Lenovo is a disposable acceptance environment.
 $ErrorActionPreference='Stop'
 Set-StrictMode -Version Latest
+if($DevDefault -and ($Persistent -or $WindowsRollback)){throw 'Use one provider-selection scenario per test'}
 $repo=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $exe=[IO.Path]::GetFullPath($CandidateExe)
 $worker=[IO.Path]::GetFullPath($WorkerExe)
@@ -16,7 +19,9 @@ if(-not (Test-Path 'C:\Flowverse\runtime\pdfium\bin\pdfium.dll')){throw 'Managed
 $lab=Join-Path $LabRoot ('dcm-pdfium-gui-'+[DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss')+'-'+[Guid]::NewGuid().ToString('N').Substring(0,7))
 $null=New-Item -ItemType Directory -Path $lab
 $receipt=[ordered]@{schema=1;feature='DCM-SHARED-PDFIUM-GUI';started_utc=[DateTime]::UtcNow.ToString('o');lab=$lab;commit=(& git -C $repo rev-parse HEAD).Trim();candidate=$exe;worker=$worker;passed=$false;steps=@();captures=@();error=$null;normal_exit=$false;visual_reviewed=$false}
-$receipt['persistent']=([bool]$Persistent)
+$receipt['persistent']=([bool]($Persistent -or $DevDefault))
+$receipt['dev_default']=([bool]$DevDefault)
+$receipt['windows_rollback']=([bool]$WindowsRollback)
 $receipt.candidate_sha256=(Get-FileHash $exe -Algorithm SHA256).Hash
 $receipt.worker_sha256=(Get-FileHash $worker -Algorithm SHA256).Hash
 $trace=Join-Path $lab 'pdf-trace.jsonl'
@@ -149,10 +154,18 @@ try{
  $psi.WorkingDirectory=$lab
  $psi.UseShellExecute=$false
  foreach($kv in @{
-  'DCM_PDF_PROVIDER'='pdfium';'DCM_FLOWPDF_WORKER'=$worker;'DCM_FLOWPDF_PERSISTENT'=$(if($Persistent){'1'}else{'0'});'FILEWORKSPACE_RUNTIME_DIR'='C:\Flowverse\runtime';
+  'FILEWORKSPACE_RUNTIME_DIR'='C:\Flowverse\runtime';
   'LOCALAPPDATA'=$fixture.local;'APPDATA'=$fixture.roaming;'TEMP'=$lab;'TMP'=$lab;
   'DCM_PDF_TRACE'=$trace;'DCM_QUICKSORT_BACKUP_DIR'=(Join-Path $lab 'backups')
  }.GetEnumerator()){$psi.EnvironmentVariables[$kv.Key]=$kv.Value}
+ foreach($key in @('DCM_PDF_PROVIDER','DCM_FLOWPDF_WORKER','DCM_FLOWPDF_PERSISTENT')){$psi.EnvironmentVariables.Remove($key)}
+ if($WindowsRollback){
+  $psi.EnvironmentVariables['DCM_PDF_PROVIDER']='windows'
+ }elseif(-not $DevDefault){
+  $psi.EnvironmentVariables['DCM_PDF_PROVIDER']='pdfium'
+  $psi.EnvironmentVariables['DCM_FLOWPDF_WORKER']=$worker
+  $psi.EnvironmentVariables['DCM_FLOWPDF_PERSISTENT']=$(if($Persistent){'1'}else{'0'})
+ }
  $app=New-Object Diagnostics.Process
  $app.StartInfo=$psi
  if(-not $app.Start()){throw 'Failed to start test candidate'}
@@ -296,7 +309,7 @@ try{
   Step ('recovered-after-'+$case.name) @{valid_pdf_rendered_again=$true}
  }
  if(@([DcmNative]::ListItems($hwnd,$app.Id,1017)).Count){throw 'Processed history changed during failed-PDF recovery'}
- if($Persistent) {
+ if($Persistent -or $DevDefault) {
   $events=@(Get-Content -LiteralPath $trace | ForEach-Object {$_|ConvertFrom-Json})
   $starts=@($events | Where-Object {$_.event -eq 'worker-started' -and $_.renderer_pid -gt 0})
   $unique=@($starts | Select-Object -ExpandProperty renderer_pid -Unique)
@@ -320,7 +333,7 @@ try{
     if(-not $app.WaitForExit(20000)){throw 'Owned close timeout'}
    }
    $receipt.normal_exit=($app.HasExited -and $app.ExitCode -eq 0)
-   if($Persistent -and $serviceChildPID -gt 0 -and $receipt.normal_exit) {
+   if(($Persistent -or $DevDefault) -and $serviceChildPID -gt 0 -and $receipt.normal_exit) {
     $until=[DateTime]::UtcNow.AddSeconds(5)
     do {
      $child=Get-Process -Id $serviceChildPID -ErrorAction SilentlyContinue
