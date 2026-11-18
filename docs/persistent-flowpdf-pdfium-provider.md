@@ -1,12 +1,18 @@
-# Persistent FlowPDF/PDFium provider — opt-in native Quick Sort integration
+# Persistent FlowPDF/PDFium provider — native Quick Sort integration
 
 **Status:** Development branch candidate; native GUI acceptance passed on
-Laxman_Lenovo. **Not the release-default previewer.**
+Laxman_Lenovo. **Persistent PDFium is the `pdfium_dev`-tagged development
+default, but it is not the release-default previewer.** See
+[`pdfium-development-default.md`](pdfium-development-default.md)
+for the automatic bundled-worker build and rollback qualification.
 
 ## Usage and rollback
 
-The default PDF provider remains Windows.Data.Pdf. Sumatra and the prior
-one-shot PDFium adapter are unchanged.
+Untagged/release builds still default to Windows.Data.Pdf. The
+`pdfium_dev`-tagged development build automatically selects persistent
+PDFium when it can locate its bundled worker and managed DLL, and falls
+back to Windows.Data.Pdf if either is absent. Sumatra and the prior
+one-shot PDFium adapter remain available.
 
 To activate the persistent PDFium provider only in an isolated test shell:
 
@@ -17,9 +23,13 @@ $env:DCM_FLOWPDF_PERSISTENT = '1'
 $env:FILEWORKSPACE_RUNTIME_DIR = 'C:\Flowverse\runtime'
 ```
 
-`DCM_FLOWPDF_PERSISTENT=0` or unset returns to one-shot PDFium while
-`DCM_PDF_PROVIDER=pdfium` is active. Unset both PDFium options to return
-to the Windows default provider.
+`DCM_FLOWPDF_PERSISTENT=0` explicitly chooses one-shot PDFium.
+In a normal/untagged build an unset value also means one-shot; in a
+`pdfium_dev`-tagged build an unset value means persistent PDFium.
+Set `DCM_PDF_PROVIDER=windows` for an immediate Windows.Data.Pdf
+rollback in either build. Unsetting PDFium options restores the Windows
+default in untagged builds and the automatic development default in
+tagged builds.
 
 Only use a worker built from the File Workspace
 `feature/flowpdf-shared-provider-contract` branch after verifying its
