@@ -73,6 +73,20 @@ func TestPDFRotationSequence(t *testing.T) {
  }
  if got:=normalizePDFPreviewRotation(-90);got!=270{t.Fatalf("normalized negative degrees=%d",got)}
  if got:=normalizePDFPreviewRotation(450);got!=90{t.Fatalf("normalized full circle=%d",got)}
+ // The two adjacent toolbar icons must be reversible, including wraparound.
+ left:=0
+ for _,want:=range []int{270,180,90,0}{
+  left=normalizePDFPreviewRotation(left-90)
+  if left!=want {t.Fatalf("counterclockwise step=%d want %d",left,want)}
+ }
+ for _,angle:=range []int{0,90,180,270}{
+  if got:=normalizePDFPreviewRotation(nextPDFPreviewRotation(angle)-90);got!=angle{
+   t.Fatalf("right then left from %d ended at %d",angle,got)
+  }
+  if got:=nextPDFPreviewRotation(normalizePDFPreviewRotation(angle-90));got!=angle{
+   t.Fatalf("left then right from %d ended at %d",angle,got)
+  }
+ }
 }
 
 func TestPDFRotationPropagatesToBothRendererCLIs(t *testing.T){
