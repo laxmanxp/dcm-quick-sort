@@ -19,6 +19,7 @@ const (
 	WM_PDF_RENDER_DONE = 0x8007 // WM_APP + 7
 	ID_PDF_PREV        = 1060
 	ID_PDF_NEXT        = 1061
+	ID_PDF_ROTATE      = 1062
 	pdfToolbarHeight   = int32(34)
 	createNoWindow     = 0x08000000
 )
@@ -31,12 +32,14 @@ type pdfPreviewState struct {
 	path             string
 	page             int
 	pageCount        int
+	rotation         int // clockwise preview-only degrees, retained across pages
 	generation       uint64
 	workerGeneration uint64 // identity of the request that owns busy/pending
 	busy             bool
 	pending          bool
 	prevBtn          uintptr
 	nextBtn          uintptr
+	rotateBtn        uintptr
 	pageLabel        uintptr
 	lastWidth        int
 	lastHeight       int
@@ -58,13 +61,15 @@ func createPDFPreviewControls() {
 	pdfPreview.prevBtn = createControl("BUTTON", "‹", WS_CHILD|WS_TABSTOP|BS_PUSHBUTTON, 6, 4, 34, 26, app.previewHwnd, ID_PDF_PREV)
 	pdfPreview.pageLabel = createControl("STATIC", "Page", WS_CHILD|SS_LEFT, 46, 9, 130, 20, app.previewHwnd, 0)
 	pdfPreview.nextBtn = createControl("BUTTON", "›", WS_CHILD|WS_TABSTOP|BS_PUSHBUTTON, 182, 4, 34, 26, app.previewHwnd, ID_PDF_NEXT)
+	pdfPreview.rotateBtn = createControl("BUTTON", "Rotate ↻", WS_CHILD|WS_TABSTOP|BS_PUSHBUTTON, 226, 4, 78, 26, app.previewHwnd, ID_PDF_ROTATE)
 	setExplorerTheme(pdfPreview.prevBtn)
 	setExplorerTheme(pdfPreview.nextBtn)
+	setExplorerTheme(pdfPreview.rotateBtn)
 	hidePDFPreviewControls()
 }
 
 func hidePDFPreviewControls() {
-	for _, hwnd := range []uintptr{pdfPreview.prevBtn, pdfPreview.pageLabel, pdfPreview.nextBtn} {
+	for _, hwnd := range []uintptr{pdfPreview.prevBtn, pdfPreview.pageLabel, pdfPreview.nextBtn, pdfPreview.rotateBtn} {
 		if hwnd != 0 {
 			procShowWindow.Call(hwnd, 0)
 		}
@@ -72,7 +77,7 @@ func hidePDFPreviewControls() {
 }
 
 func showPDFPreviewControls() {
-	for _, hwnd := range []uintptr{pdfPreview.prevBtn, pdfPreview.pageLabel, pdfPreview.nextBtn} {
+	for _, hwnd := range []uintptr{pdfPreview.prevBtn, pdfPreview.pageLabel, pdfPreview.nextBtn, pdfPreview.rotateBtn} {
 		if hwnd != 0 {
 			procShowWindow.Call(hwnd, SW_SHOW)
 		}
@@ -87,11 +92,37 @@ func layoutPDFPreviewControls() {
 	}
 	var rc RECT
 	procGetClientRect.Call(app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
-	labelW := int32(150)
-	center := (rc.Right - rc.Left) / 2
-	procMoveWindow.Call(pdfPreview.prevBtn, uintptr(center-labelW/2-42), 4, 34, 26, 1)
-	procMoveWindow.Call(pdfPreview.pageLabel, uintptr(center-labelW/2), 9, uintptr(labelW), 20, 1)
-	procMoveWindow.Call(pdfPreview.nextBtn, uintptr(center+labelW/2+8), 4, 34, 26, 1)
+	// Center all four PDF-only controls as a single toolbar group.
+	// At narrower pane widths, shorten the label before clipping the
+	// rotate action. The 34px row height remains unchanged.
+	available := rc.Right - rc.Left
+	labelW, rotateW := int32(132), int32(78)
+	gap := int32(6)
+	if available < 265 {
+		rotateW = 42
+		setText(pdfPreview.rotateBtn, "↻")
+	} else {
+		setText(pdfPreview.rotateBtn, "Rotate ↻")
+	}
+	groupW := 34 + gap + labelW + gap + 34 + gap + rotateW
+	if available < groupW+8 {
+		labelW = available - (34 + gap + gap + 34 + gap + rotateW + 8)
+		if labelW < 44 {
+			labelW = 44
+		}
+		groupW = 34 + gap + labelW + gap + 34 + gap + rotateW
+	}
+	x := (available - groupW) / 2
+	if x < 4 {
+		x = 4
+	}
+	procMoveWindow.Call(pdfPreview.prevBtn, uintptr(x), 4, 34, 26, 1)
+	x += 34 + gap
+	procMoveWindow.Call(pdfPreview.pageLabel, uintptr(x), 9, uintptr(labelW), 20, 1)
+	x += labelW + gap
+	procMoveWindow.Call(pdfPreview.nextBtn, uintptr(x), 4, 34, 26, 1)
+	x += 34 + gap
+	procMoveWindow.Call(pdfPreview.rotateBtn, uintptr(x), 4, uintptr(rotateW), 26, 1)
 }
 
 func updatePDFPreviewControls() {
@@ -102,6 +133,9 @@ func updatePDFPreviewControls() {
 	label := "Rendering PDF…"
 	if pdfPreview.pageCount > 0 {
 		label = fmt.Sprintf("Page %d of %d", pdfPreview.page+1, pdfPreview.pageCount)
+		if pdfPreview.rotation != 0 {
+			label += fmt.Sprintf(" · %d°", pdfPreview.rotation)
+		}
 	}
 	setText(pdfPreview.pageLabel, label)
 	prevEnabled := uintptr(0)
@@ -114,6 +148,9 @@ func updatePDFPreviewControls() {
 	}
 	procEnableWindow.Call(pdfPreview.prevBtn, prevEnabled)
 	procEnableWindow.Call(pdfPreview.nextBtn, nextEnabled)
+	if pdfPreview.rotateBtn != 0 {
+		procEnableWindow.Call(pdfPreview.rotateBtn, 1)
+	}
 }
 
 func pdfContentRect(rc RECT) RECT {
@@ -233,6 +270,7 @@ func startPDFPreview(path string) bool {
 	pdfPreview.path = full
 	pdfPreview.page = 0
 	pdfPreview.pageCount = 0
+	pdfPreview.rotation = 0
 	pdfPreview.lastWidth = 0
 	pdfPreview.lastHeight = 0
 	pdfPreview.lastScalePercent = 0
