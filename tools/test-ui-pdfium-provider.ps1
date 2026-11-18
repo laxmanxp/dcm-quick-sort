@@ -219,11 +219,12 @@ try{
    Capture ('rotate-'+$angle) 'teal'
    Step ('rotation-'+$angle) @{angle=$angle;page=1;source_hash_intact=((Hash $pdf) -eq $originalHash)}
    if($angle -eq 90) {
+    $nextFromGeneration=(@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}|ForEach-Object {$_|ConvertFrom-Json})[-1]).generation
     [DcmNative]::ClickAsync($hwnd,$app.Id,1061)
     Wait 'rotated page-two navigation' {
      $labels=@(PreviewSnapshot|Where-Object {$_.Text -eq 'Page 2 of 2 · 90°'})
      $applied=@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}|ForEach-Object {$_|ConvertFrom-Json})
-     return ($labels.Count -eq 1 -and $applied[-1].rotation -eq 90 -and $applied[-1].generation -gt $previous)
+     return ($labels.Count -eq 1 -and $applied[-1].rotation -eq 90 -and $applied[-1].generation -gt $nextFromGeneration)
     } 50
     Capture 'rotate-90-next-page' 'orange'
     $returnFromGeneration=(@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}|ForEach-Object {$_|ConvertFrom-Json})[-1]).generation
