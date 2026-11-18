@@ -226,11 +226,12 @@ try{
      return ($labels.Count -eq 1 -and $applied[-1].rotation -eq 90 -and $applied[-1].generation -gt $previous)
     } 50
     Capture 'rotate-90-next-page' 'orange'
+    $returnFromGeneration=(@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}|ForEach-Object {$_|ConvertFrom-Json})[-1]).generation
     [DcmNative]::ClickAsync($hwnd,$app.Id,1060)
     Wait 'rotated previous-page navigation' {
      $labels=@(PreviewSnapshot|Where-Object {$_.Text -eq 'Page 1 of 2 · 90°'})
      $applied=@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}|ForEach-Object {$_|ConvertFrom-Json})
-     return ($labels.Count -eq 1 -and $applied[-1].rotation -eq 90 -and $applied[-1].page_index -eq $null)
+     return ($labels.Count -eq 1 -and $applied[-1].rotation -eq 90 -and $applied[-1].generation -gt $returnFromGeneration)
     } 50
     Capture 'rotate-90-previous-page' 'teal'
    }
