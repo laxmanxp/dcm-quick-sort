@@ -8,7 +8,8 @@ param(
   [switch]$WindowsRollback,
   [switch]$VerifyRotation,
   [switch]$VerifyActualFilename,
-  [switch]$SkipPointerWheel
+  [switch]$SkipPointerWheel,
+  [switch]$SkipScreenshots
 )
 # Test-only. Source is GitHub; Lenovo is a disposable acceptance environment.
 $ErrorActionPreference='Stop'
@@ -63,6 +64,28 @@ function Assert-ActualFile([string]$filename,[string]$extension) {
  } 20
  Step ('actual-filename-'+$extension) @{filename=(TextControl 1049);type=(TextControl 1050);
    rename_stem=(TextControl 1005);extension_visible=$true;selection=$expectedName}
+}
+function Assert-ActualFilenameLayout {
+ $file=[DcmNative]::Control($hwnd,$app.Id,1049)
+ $kind=[DcmNative]::Control($hwnd,$app.Id,1050)
+ $rename=[DcmNative]::Control($hwnd,$app.Id,1005)
+ $fileRect=[DcmNative+RECT]::new()
+ $typeRect=[DcmNative+RECT]::new()
+ $renameRect=[DcmNative+RECT]::new()
+ if(-not [DcmNative]::GetWindowRect($file,[ref]$fileRect) -or
+    -not [DcmNative]::GetWindowRect($kind,[ref]$typeRect) -or
+    -not [DcmNative]::GetWindowRect($rename,[ref]$renameRect)){
+  throw 'Actual filename layout rectangles unavailable'
+ }
+ if($fileRect.Right + 4 -gt $typeRect.Left){throw 'Filename overlaps file-type label'}
+ if($fileRect.Bottom + 3 -gt $renameRect.Top){throw 'Actual filename overlaps editable New Name row'}
+ if($fileRect.Right-$fileRect.Left -lt 180){throw 'Actual filename field is too narrow'}
+ $style=[DcmFilenameStyle]::GetWindowLongPtr($file,-16).ToInt64()
+ if(($style -band 0x800) -eq 0){throw 'Actual filename edit is unexpectedly writable'}
+ $snapshot=@([DcmNative]::Snapshot($hwnd,$app.Id))
+ if(@($snapshot|Where-Object {$_.Text -eq 'Actual File:' -and $_.Visible}).Count -ne 1){throw 'Actual File label not visible'}
+ Step 'actual-filename-layout' @{readonly=$true;no_overlap=$true;file_width=$fileRect.Right-$fileRect.Left;
+   file_left=$fileRect.Left;file_right=$fileRect.Right;type_left=$typeRect.Left;rename_top=$renameRect.Top}
 }
 function Hash([string]$path){return (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()}
 function Exclusive([string]$path){
@@ -140,6 +163,10 @@ function TealSpan([string]$path){
 }
 function Capture([string]$name,[string]$rgb){
  Owned
+ if($SkipScreenshots){
+  Step ('native-capture-skipped-'+$name) 'Desktop has another foreground window; filename text/layout checks do not require screenshots.'
+  return
+ }
  $area=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea
  [DcmNative]::Restore($hwnd,$app.Id,$area.Left+8,$area.Top+8)
  Start-Sleep -Milliseconds 450
@@ -162,6 +189,7 @@ function Capture([string]$name,[string]$rgb){
 try{
  Add-Type -AssemblyName System.Drawing
  Add-Type -AssemblyName System.Windows.Forms
+ Add-Type -TypeDefinition 'using System;using System.Runtime.InteropServices;public static class DcmFilenameStyle{[DllImport("user32.dll",EntryPoint="GetWindowLongPtrW")]public static extern IntPtr GetWindowLongPtr(IntPtr h,int index);}'
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-native.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-undo-input.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-sumatra-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','Accessibility.dll','System.Drawing.dll')
@@ -207,7 +235,10 @@ try{
  if($hwnd -eq [IntPtr]::Zero){throw 'Candidate HWND missing'}
  Wait 'fixture loaded' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 4}
  List-Selected '08-preview.pdf'
- if($VerifyActualFilename){Assert-ActualFile '08-preview.pdf' 'PDF'}
+ if($VerifyActualFilename){
+  Assert-ActualFile '08-preview.pdf' 'PDF'
+  Assert-ActualFilenameLayout
+ }
  PageReady 'Page 1 of 2'
  Step 'page-one-controls' (PreviewSnapshot)
  Capture '01-page-one' 'teal'
