@@ -38,3 +38,16 @@ jobs:
         run: go build -tags pdfium_dev .
       - name: Rotation and native renderer argument tests
         run: go test -tags pdfium_dev -run "TestPDFRotation|TestPDFRenderer|TestBundledPDFRenderer|TestPDFProvider" -count=1 -v .
+      - name: Create disposable two-page PDF for Windows.Data.Pdf
+        working-directory: .
+        shell: powershell
+        run: |
+          . .\tests\native\new-fixtures.ps1
+          $fixture = New-DcmFixtures (Join-Path $env:RUNNER_TEMP 'pdf-rotation-fixture')
+          $pdf = Join-Path $fixture.inbox '08-preview.pdf'
+          Add-Content -Path $env:GITHUB_ENV -Value ("DCM_PDFIUM_TEST_PDF=" + $pdf)
+      - name: Verify real Windows.Data.Pdf quarter-turn rendering
+        shell: powershell
+        env:
+          DCM_PDF_ROTATION_ACCEPTANCE: "1"
+        run: go test -tags pdfium_dev -run "TestWindowsDataPDFRotationQuarterTurns" -count=1 -v .
