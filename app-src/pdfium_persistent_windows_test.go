@@ -4,6 +4,8 @@ package main
 
 import (
  "fmt"
+ "bytes"
+ "image/png"
  "errors"
  "os"
  "path/filepath"
@@ -212,4 +214,36 @@ func TestPersistentPDFiumCancelAndResumeWithLiveWorker(t *testing.T){
  if err!=nil {t.Fatalf("replacement PDF failed: %v",err)}
  if pid<=0||meta.PageIndex!=1 {t.Fatalf("replacement page or worker invalid: pid=%d meta=%+v",pid,meta)}
  if st,err:=os.Stat(newer.OutputPath);err!=nil||st.Size()==0{t.Fatalf("replacement output missing: %v",err)}
+}
+
+func TestPersistentPDFiumQuarterTurnPreview(t *testing.T) {
+ worker:=strings.TrimSpace(os.Getenv("DCM_FLOWPDF_WORKER"))
+ source:=strings.TrimSpace(os.Getenv("DCM_PDFIUM_TEST_PDF"))
+ if worker==""||source==""{t.Skip("native PDFium worker/test fixture not configured")}
+ root:=t.TempDir()
+ host:=&flowPDFiumProcess{}
+ defer host.close()
+ type dims struct{width,height int}
+ sizes:=map[int]dims{}
+ pid:=0
+ for index,angle:=range []int{0,90,180,270,0}{
+  req:=PDFRenderRequest{InputPath:source,OutputPath:filepath.Join(root,fmt.Sprintf("rotation-%03d-%d.png",angle,index)),
+   PageIndex:0,Rotation:angle,Zoom:100,ViewportWidth:900,ViewportHeight:700,Generation:uint64(120+index)}
+  meta,child,err:=host.render(worker,req,8*time.Second,nil)
+  if err!=nil{t.Fatalf("PDFium rotation %d failed: %v",angle,err)}
+  if pid==0{pid=child}else if child!=pid {t.Fatalf("rotation restarted worker %d -> %d",pid,child)}
+  data,err:=os.ReadFile(req.OutputPath);if err!=nil{t.Fatal(err)}
+  cfg,err:=png.DecodeConfig(bytes.NewReader(data));if err!=nil{t.Fatal(err)}
+  if cfg.Width!=meta.Width||cfg.Height!=meta.Height {t.Fatalf("angle %d PNG %dx%d metadata %+v",angle,cfg.Width,cfg.Height,meta)}
+  if err:=os.Remove(req.OutputPath);err!=nil{t.Fatal(err)}
+  sizes[angle]=dims{cfg.Width,cfg.Height}
+ }
+ if sizes[0].width==sizes[0].height {t.Fatal("test fixture must be a non-square PDF page")}
+ if sizes[90].width!=sizes[0].height||sizes[90].height!=sizes[0].width {
+  t.Fatalf("90 degrees did not swap dimensions: %+v",sizes)
+ }
+ if sizes[180]!=sizes[0] || sizes[270]!=sizes[90] {
+  t.Fatalf("rotation was not preserved across turns: %+v",sizes)
+ }
+ t.Logf("PDFium quarter-turns on one PID %d: 0=%+v 90=%+v 180=%+v 270=%+v",pid,sizes[0],sizes[90],sizes[180],sizes[270])
 }
