@@ -58,6 +58,11 @@ func TestPDFProviderDefaultAndRollback(t *testing.T){
  worker:=filepath.Join(root,"worker.exe")
  if err:=os.WriteFile(worker,[]byte("fake worker"),0600);err!=nil{t.Fatal(err)}
  t.Setenv("DCM_FLOWPDF_WORKER",worker)
+ // A dummy DLL is sufficient for provider selection; no DLL is loaded
+ // by this policy test.
+ library:=filepath.Join(root,"pdfium.dll")
+ if err:=os.WriteFile(library,[]byte("dummy"),0600);err!=nil{t.Fatal(err)}
+ t.Setenv("FILEWORKSPACE_PDFIUM",library)
  t.Setenv("DCM_PDF_PROVIDER","")
  t.Setenv("DCM_FLOWPDF_PERSISTENT","")
  if defaultPersistentPDFiumDevelopment {
@@ -90,4 +95,31 @@ func TestPDFProviderWorkerMissingAndExplicitFailClosed(t *testing.T){
  if usingFlowPDFiumProvider(){t.Fatal("auto-selected a missing PDFium worker")}
  t.Setenv("DCM_PDF_PROVIDER","pdfium")
  if _,err:=pdfRendererExecutable();err==nil{t.Fatal("explicit PDFium must reject missing worker")}
+}
+
+func TestPDFProviderRuntimeMustBePresentForAutomaticDefault(t *testing.T) {
+ root:=t.TempDir()
+ worker:=filepath.Join(root,"worker.exe")
+ if err:=os.WriteFile(worker,[]byte("test worker"),0600);err!=nil{t.Fatal(err)}
+ t.Setenv("DCM_FLOWPDF_WORKER",worker)
+ t.Setenv("DCM_PDF_PROVIDER","auto")
+ t.Setenv("FILEWORKSPACE_PDFIUM","")
+ t.Setenv("FILEWORKSPACE_RUNTIME_DIR",filepath.Join(root,"missing-runtime"))
+ if usingFlowPDFiumProvider(){t.Fatal("auto-selected PDFium without runtime DLL")}
+ runtime:=filepath.Join(root,"runtime")
+ if err:=os.MkdirAll(filepath.Join(runtime,"pdfium","bin"),0700);err!=nil{t.Fatal(err)}
+ if err:=os.WriteFile(filepath.Join(runtime,"pdfium","bin","pdfium.dll"),[]byte("dummy"),0600);err!=nil{t.Fatal(err)}
+ t.Setenv("FILEWORKSPACE_RUNTIME_DIR",runtime)
+ if defaultPersistentPDFiumDevelopment {
+  if !usingFlowPDFiumProvider()||!pdfiumPersistentOptIn(){t.Fatal("tagged build did not select PDFium with managed DLL")}
+ }else if usingFlowPDFiumProvider(){t.Fatal("release silently changed default")}
+}
+
+func TestPDFProviderDevelopmentWorkerDoesNotOverrideConfiguredRuntime(t *testing.T){
+ t.Setenv("FILEWORKSPACE_PDFIUM",filepath.Join(t.TempDir(),"custom.dll"))
+ t.Setenv("FILEWORKSPACE_RUNTIME_DIR","")
+ if env:=developmentPDFiumWorkerEnvironment();env!=nil{t.Fatal("worker environment overrode configured explicit PDFium DLL")}
+ t.Setenv("FILEWORKSPACE_PDFIUM","")
+ t.Setenv("FILEWORKSPACE_RUNTIME_DIR",filepath.Join(t.TempDir(),"custom-runtime"))
+ if env:=developmentPDFiumWorkerEnvironment();env!=nil{t.Fatal("worker environment overrode configured runtime directory")}
 }
