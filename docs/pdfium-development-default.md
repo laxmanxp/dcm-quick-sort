@@ -145,3 +145,31 @@ CLI/JSONL geometry and cache behavior.
 The rotation UI does **not** by itself qualify the PDFium engine as
 the production default, which remains Windows.Data.Pdf pending the
 separate release gates.
+
+
+## 19 November 2026 — bounded worker and GUI memory/handle qualification
+
+The next development-only resource gates passed on Lenovo:
+
+- One persistent FlowPDF worker completed **160** mixed synthetic
+  PDF renders across normal, 300-page, raster-like and vector-heavy
+  documents; input hashes and normal owned shutdown passed.
+  Sampled private-memory peak **93.34 MiB**, post-warm-up median
+  change **−1.67 MiB**, median handle change **0**.
+- The native Quick Sort GUI completed **64** PDF↔TXT switching cycles
+  and its regular Rename/Move/Undo lifecycle, with **81** PDF
+  render requests on one worker PID and no unexpected fallback.
+  Sampled median changes: Quick Sort private bytes **+1.60 MiB**,
+  PDFium worker **−4.83 MiB**; handle changes **+13** (host, which
+  plateaued for the final 17 cycles) and **0** (worker).
+- Pure two-axis pointer-anchor geometry tests passed at simulated
+  **96/120/144/192 DPI** without altering Windows display settings.
+
+These are bounded synthetic and one-session measurements, **not**
+proof of instantaneous memory peaks, indefinite leak freedom or
+physical multi-monitor DPI behavior. Details and the exact Lenovo
+receipt paths are in
+[`qualification/2026-11-19-pdfium-resource-soak.md`](../qualification/2026-11-19-pdfium-resource-soak.md).
+
+**Production remains unchanged**: persistent PDFium is still the
+`pdfium_dev` development default, not the release default.
