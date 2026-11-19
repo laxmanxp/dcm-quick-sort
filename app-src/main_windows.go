@@ -5379,12 +5379,14 @@ func updatePreviewZoomControls() {
 	if app.zoomFitWidthBtn != 0 {
 		setPreviewControlEnabled(app.zoomFitWidthBtn, fitWidthEnabled != 0)
 	}
-	// Embedded Sumatra has its own viewer controls. Rotation applies only
-	// to bitmaps owned by DCM (images and Windows.Data.Pdf pages).
+	// Rotation is part of the permanent QuickSort toolbar. Keep both
+	// buttons visible for every preview provider; disable only when the
+	// displayed image is not a DCM-owned bitmap (e.g. optional Sumatra).
+	// Do not hide these buttons when changing renderer backends.
 	canRotate := app.image != 0 && sumatraView == nil
 	for _, hwnd := range []uintptr{app.rotateLeftBtn, app.rotateRightBtn} {
 		if hwnd != 0 {
-			setPreviewControlVisible(hwnd, sumatraView == nil)
+			setPreviewControlVisible(hwnd, true)
 			setPreviewControlEnabled(hwnd, canRotate)
 		}
 	}

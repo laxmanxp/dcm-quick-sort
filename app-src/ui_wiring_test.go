@@ -787,3 +787,37 @@ func TestBatchUndoButtonAndJournalTaggingAreWired(t *testing.T) {
 		t.Fatal("conflict completion must preserve the admitted batch instead of restamping a later active batch")
 	}
 }
+
+func TestRotationToolbarIsPermanentAndWired(t *testing.T) {
+	src := windowsMainSource(t)
+	// Enforce the user's layout contract. Refactoring a preview provider must
+	// never silently remove these controls or their WM_COMMAND handlers.
+	for _, want := range []string{
+		"ID_ROTATE_LEFT", "ID_ROTATE_RIGHT",
+		"app.rotateLeftBtn = createControl",
+		"app.rotateRightBtn = createControl",
+		"case ID_ROTATE_LEFT:\\n",
+		"rotateCurrentPreview(-1)",
+		"case ID_ROTATE_RIGHT:\\n",
+		"rotateCurrentPreview(1)",
+	} {
+		if !strings.Contains(src, strings.ReplaceAll(want, "\\n", "\n")) {
+			t.Fatalf("permanent rotation toolbar wiring missing %q", want)
+		}
+	}
+	start := strings.Index(src, "func updatePreviewZoomControls()")
+	end := strings.Index(src, "func resetPreviewZoomState()")
+	if start < 0 || end <= start {
+		t.Fatal("rotation toolbar visibility policy cannot be verified")
+	}
+	body := src[start:end]
+	if !strings.Contains(body, "setPreviewControlVisible(hwnd, true)") {
+		t.Fatal("rotation buttons must stay visible even when the provider cannot rotate")
+	}
+	if !strings.Contains(body, "setPreviewControlEnabled(hwnd, canRotate)") {
+		t.Fatal("unsupported rotation actions must be disabled, not removed")
+	}
+	if strings.Contains(body, "setPreviewControlVisible(hwnd, sumatraView == nil)") {
+		t.Fatal("rotation buttons must not disappear when Sumatra is active")
+	}
+}
