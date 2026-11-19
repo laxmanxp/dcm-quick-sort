@@ -3811,7 +3811,7 @@ func layoutUI(hwnd uintptr) {
 	procMoveWindow.Call(app.currentExtensionLabel, uintptr(extX), uintptr(filenameY+4), uintptr(extW), 20, 0)
 	procMoveWindow.Call(app.rotateLeftBtn, uintptr(rotateLeftX), uintptr(filenameY), uintptr(rotateW), 26, 0)
 	procMoveWindow.Call(app.rotateRightBtn, uintptr(rotateRightX), uintptr(filenameY), uintptr(rotateW), 26, 0)
-	y := previewTop + 10 + previewH + 32
+	y := previewTop + previewH + 32
 	// Keep the lower form on a single alignment grid. Labels and controls move
 	// together so DPI/window changes cannot make rows drift independently.
 	labelX := int32(20)
