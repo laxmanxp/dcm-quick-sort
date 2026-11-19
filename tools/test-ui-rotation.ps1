@@ -138,8 +138,10 @@ try{
     Add-Type -AssemblyName System.Drawing
     Add-Type -AssemblyName System.Windows.Forms
     Add-Type -Path (Join-Path $repo 'tests\native\dcm-native.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
-    Add-Type -Path (Join-Path $repo 'tests\native\dcm-image-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
-    Add-Type -Path (Join-Path $repo 'tests\native\dcm-rotation-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
+    # Compile dependent C# probes in one assembly so the rotation oracle can
+    # share DcmImageProbe.View without relying on transient Add-Type assembly refs.
+    $probeSources=@((Join-Path $repo 'tests\native\dcm-image-probe.cs'),(Join-Path $repo 'tests\native\dcm-rotation-probe.cs'))
+    Add-Type -Path $probeSources -ReferencedAssemblies @('System.dll','System.Core.dll','System.Drawing.dll')
     . (Join-Path $repo 'tests\native\new-fixtures.ps1')
     $fixture=New-DcmFixtures $lab
     $temp=Join-Path $lab 'temp'
