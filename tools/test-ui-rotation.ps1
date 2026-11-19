@@ -64,7 +64,10 @@ function Assert-Toolbar([bool]$Enabled,[string]$Filename){
 function Select-File([string]$Name){
     Require-App
     $null=[DcmNative]::SelectFiles($hwnd,$app.Id,1016,[string[]]@($Name))
-    Wait-For ('file selection '+$Name) { ( [DcmNative]::Text([DcmNative]::Control($hwnd,$app.Id,1005),$app.Id) ) -ceq [IO.Path]::GetFileNameWithoutExtension($Name) }
+    # Resolve the stem outside Wait-For: its own $Name parameter would
+    # shadow this function's $Name inside the dynamic PowerShell scriptblock.
+    $stem=[IO.Path]::GetFileNameWithoutExtension($Name)
+    Wait-For ('file selection '+$Name) { ( [DcmNative]::Text([DcmNative]::Control($hwnd,$app.Id,1005),$app.Id) ) -ceq $stem }
 }
 function Capture([string]$Name){
     Require-App
