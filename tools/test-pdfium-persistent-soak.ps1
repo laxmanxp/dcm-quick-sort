@@ -112,9 +112,10 @@ try{
  for($i=0;$i -lt $Iterations;$i++){
   $entry=$pdfs[$i%$pdfs.Count]
   $out=Join-Path $lab ('render-'+$i.ToString('0000')+'.png')
-  $page=if($entry.pages -eq 300){@((0),(149),(299))[[int](($i/4)%3)]}elseif($entry.pages -eq 2){$i%2}else{0}
-  $angle=$angles[($i/4)%4]
-  $zoom=@(75,100,125,150)[([int][Math]::Floor($i/4))%4]
+  $cycle=[int][Math]::Floor($i/4)
+  $page=if($entry.pages -eq 300){@(0,149,299)[$cycle%3]}elseif($entry.pages -eq 2){$cycle%2}else{0}
+  $angle=$angles[$cycle%4]
+  $zoom=@(75,100,125,150)[$cycle%4]
   $command=@{version=1;id=('soak-'+$i.ToString('0000'));command='render';inputPath=$entry.path;outputPath=$out;
    mode='zoom';pageIndex=[int]$page;rotation=[int]$angle;zoom=[int]$zoom;viewportWidth=900;viewportHeight=700}
   $round=Service $command
