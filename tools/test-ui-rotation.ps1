@@ -83,6 +83,13 @@ function Capture([string]$Name){
     return $shot
 }
 function Click([int]$Id){Require-App;[DcmNative]::ClickAsync($hwnd,$app.Id,$Id)}
+function Rotate-PDF([int]$Id,[string]$Name){
+    Click $Id
+    # Require the actual asynchronous PDF renderer transition; a stale
+    # completed footer from before the click is not a successful rotation.
+    Wait-For ('PDF rendering started '+$Name) { (Status-Is 'Rendering PDF page') -or (Status-Is 'PDF zoom/page update queued') } 12
+    Wait-For ('PDF rendering completed '+$Name) { Status-Is 'DCM PDF Preview' } 35
+}
 function Image-State([string]$Name,[int]$Turns){
     Assert-Toolbar $true '04-rotation.png'
     $shot=Capture $Name
@@ -112,7 +119,7 @@ function Stop-App {
     [DcmNative]::CloseAsync($hwnd,$app.Id)
     if(-not $app.WaitForExit(18000)){throw 'Owned app did not close normally; refusal to claim acceptance.'}
     $owned['exit_code']=$app.ExitCode;$owned['closed_utc']=[DateTime]::UtcNow.ToString('o')
-    $code=$app.ExitCode;$app.Dispose();$app=$null
+    $code=$app.ExitCode;$app.Dispose();$script:app=$null
     if($code -ne 0){throw ('Owned app exit code '+$code)}
 }
 try{
@@ -180,16 +187,13 @@ try{
     $cases.Add([ordered]@{name='text-rotation-disabled-not-hidden';passed=$true})
     Select-File '08-preview.pdf'
     $normal=Pdf-State 'pdf-p1-000-original' 1 0
-    Click 1050
-    Wait-For 'pdf right renders' { (Status-Is 'DCM PDF Preview') -and [DcmNative]::IsWindowEnabled([DcmNative]::Control($hwnd,$app.Id,1049)) } 35
+    Rotate-PDF 1050 'right'
     $right=Pdf-State 'pdf-p1-090-right' 1 1
     if($right.Ratio -lt ($normal.Ratio*1.20)){throw ('PDF right-rotation orientation did not change: '+$normal.Ratio+' -> '+$right.Ratio)}
-    Click 1049
-    Wait-For 'pdf right then left renders' { (Status-Is 'DCM PDF Preview') -and [DcmNative]::IsWindowEnabled([DcmNative]::Control($hwnd,$app.Id,1049)) } 35
+    Rotate-PDF 1049 'right-then-left'
     $restored=Pdf-State 'pdf-p1-000-restored' 1 0
     if([Math]::Abs($restored.Ratio-$normal.Ratio) -gt .16){throw 'PDF orientation did not restore after right+left.'}
-    Click 1049
-    Wait-For 'pdf left renders' { (Status-Is 'DCM PDF Preview') -and [DcmNative]::IsWindowEnabled([DcmNative]::Control($hwnd,$app.Id,1049)) } 35
+    Rotate-PDF 1049 'left'
     $left=Pdf-State 'pdf-p1-270-left' 1 3
     if($left.Ratio -lt ($normal.Ratio*1.20)){throw 'PDF left rotation did not change orientation.'}
     Click 1061
