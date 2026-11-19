@@ -300,6 +300,7 @@ func requestPDFPreviewRender() {
 		Zoom:           app.previewZoom,
 		ViewportWidth:  vw,
 		ViewportHeight: vh,
+		QuarterTurns:   app.previewQuarterTurns,
 		Generation:     generation,
 	}
 	pdfPreview.busy = true
@@ -420,7 +421,8 @@ func finishPDFRender() {
 				rc = pdfContentRect(rc)
 				availH := rc.Bottom - rc.Top - 8
 				app.previewPanX = 0
-				app.previewPanY = previewTopPanOffset(int32(result.Meta.Height), availH)
+				_, rotatedHeight := rotatedPreviewDimensions(int32(result.Meta.Width), int32(result.Meta.Height), app.previewQuarterTurns)
+				app.previewPanY = previewTopPanOffset(rotatedHeight, availH)
 			}
 			showPDFPreviewControls()
 			updatePreviewZoomControls()

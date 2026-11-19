@@ -230,6 +230,8 @@ const (
 	ID_PROCESSED_SEARCH  = 1046
 	ID_ZOOM_FIT_WIDTH    = 1047
 	ID_UNDO_BATCH        = 1048
+	ID_ROTATE_LEFT       = 1049
+	ID_ROTATE_RIGHT      = 1050
 
 	ID_MENU_EXIT             = 2001
 	ID_MENU_ABOUT            = 2002
@@ -347,7 +349,8 @@ var (
 	procGdipGetImageHeight  = gdiplus.NewProc("GdipGetImageHeight")
 	procGdipCreateFromHDC   = gdiplus.NewProc("GdipCreateFromHDC")
 	procGdipDeleteGraphics  = gdiplus.NewProc("GdipDeleteGraphics")
-	procGdipDrawImageRectI  = gdiplus.NewProc("GdipDrawImageRectI")
+	procGdipDrawImageRectI       = gdiplus.NewProc("GdipDrawImageRectI")
+	procGdipDrawImagePointsRectI = gdiplus.NewProc("GdipDrawImagePointsRectI")
 
 	procCoInitializeEx        = ole32.NewProc("CoInitializeEx")
 	procCoUninitialize        = ole32.NewProc("CoUninitialize")
@@ -585,10 +588,12 @@ type appState struct {
 	renameToolCombo, renameToolBtn                                                                                                                     uintptr
 	destAliasCombo, destSuggestionList, fileList, processedList, processedSearchEdit                                                                   uintptr
 	currentLabel, countLabel, processedTitleLabel, statusLabel, keyboardHintLabel                                                                      uintptr
+	currentFilenameLabel, currentFilenameEdit, currentExtensionLabel                                                                             uintptr
 	nameLabel, renameToolLabel, destinationLabel, pathLabel                                                                                            uintptr
 	sourceBtn, destBtn, destOpenBtn, destConfigBtn, renameBtn, fileFlowBtn, moveBtn, nextBtn, undoBtn, undoBatchBtn, openBtn, openFolderBtn, reloadBtn uintptr
 	recoveryBtn, learningBtn, suggestionBtn                                                                                                            uintptr
 	zoomOutBtn, zoom100Btn, zoomInBtn, zoomFitBtn, zoomFitWidthBtn                                                                                     uintptr
+	rotateLeftBtn, rotateRightBtn                                                                                                                        uintptr
 	previewHwnd, textPreviewEdit, xlsxSheetCombo, xlsxGridEdit, pptxSlideCombo                                                                         uintptr
 	uiFont, headingFont, smallFont, textPreviewFont, xlsxGridFont                                                                                      uintptr
 	brushWindow, brushPanel, brushStatus, brushFooter                                                                                                  uintptr
@@ -624,6 +629,7 @@ type appState struct {
 	previewFit                                                                                                                                         bool
 	previewFitWidth                                                                                                                                    bool
 	previewZoom                                                                                                                                        int
+	previewQuarterTurns                                                                                                                                int
 	previewZoomWheelRemainder                                                                                                                          int
 	previewPanX, previewPanY                                                                                                                           int32
 	previewDragging                                                                                                                                    bool
@@ -3337,6 +3343,10 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 				fitPreview()
 			case ID_ZOOM_FIT_WIDTH:
 				fitPreviewWidth()
+			case ID_ROTATE_LEFT:
+				rotateCurrentPreview(-1)
+			case ID_ROTATE_RIGHT:
+				rotateCurrentPreview(1)
 			case ID_VAULT_LIBRARY:
 				chooseVaultRoot()
 			case ID_NAMING_TEMPLATES:
@@ -3534,6 +3544,13 @@ func createUI(hwnd uintptr) {
 	app.fileList = createControl("LISTBOX", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_TABSTOP|LBS_NOTIFY|LBS_EXTENDEDSEL|WS_VSCROLL, 20, 148, 220, 362, hwnd, ID_FILE_LIST)
 	app.previewHwnd = createControl("QuickSortPreview", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_CLIPCHILDREN, 250, 148, 720, 362, hwnd, 0)
 	createPDFPreviewControls()
+	// A separate, selectable field exposes the exact filename including its extension.
+	// It stays visible even when the narrow PREVIEW heading is ellipsized.
+	app.currentFilenameLabel = createControl("STATIC", "Filename:", WS_CHILD|WS_VISIBLE|SS_LEFT, 20, 510, 80, 20, hwnd, 0)
+	app.currentFilenameEdit = createControl("EDIT", "", WS_CHILD|WS_VISIBLE|WS_BORDER|ES_AUTOHSCROLL|ES_READONLY, 104, 506, 860, 26, hwnd, 0)
+	app.currentExtensionLabel = createControl("STATIC", "EXT: —", WS_CHILD|WS_VISIBLE|SS_LEFT, 972, 510, 112, 20, hwnd, 0)
+	app.rotateLeftBtn = createControl("BUTTON", "↶ 90°", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 1090, 506, 64, 26, hwnd, ID_ROTATE_LEFT)
+	app.rotateRightBtn = createControl("BUTTON", "↷ 90°", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 1160, 506, 64, 26, hwnd, ID_ROTATE_RIGHT)
 	app.processedSearchEdit = createControl("EDIT", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_TABSTOP|ES_AUTOHSCROLL, 980, 148, 260, 25, hwnd, ID_PROCESSED_SEARCH)
 	procSendMessageW.Call(app.processedSearchEdit, EM_SETCUEBANNER, 1, uintptr(unsafe.Pointer(wstr("Search processed..."))))
 	app.processedList = createControl("LISTBOX", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_TABSTOP|LBS_NOTIFY|WS_VSCROLL, 980, 181, 260, 329, hwnd, ID_PROCESSED_LIST)
@@ -3567,6 +3584,9 @@ func createUI(hwnd uintptr) {
 	setExplorerTheme(app.zoomInBtn)
 	setExplorerTheme(app.zoomFitBtn)
 	setExplorerTheme(app.zoomFitWidthBtn)
+	setExplorerTheme(app.currentFilenameEdit)
+	setExplorerTheme(app.rotateLeftBtn)
+	setExplorerTheme(app.rotateRightBtn)
 	app.textPreviewEdit = createControl("EDIT", "", WS_CHILD|WS_VSCROLL|ES_MULTILINE|ES_AUTOVSCROLL|ES_READONLY, 0, 0, 720, 395, app.previewHwnd, 0)
 	procSendMessageW.Call(app.textPreviewEdit, EM_SETLIMITTEXT, uintptr(defaultTextPreviewLimit+4096), 0)
 	app.xlsxSheetCombo = createControl("COMBOBOX", "", WS_CHILD|WS_TABSTOP|CBS_DROPDOWNLIST|WS_VSCROLL, 6, 4, 708, 280, app.previewHwnd, ID_XLSX_SHEET)
@@ -3634,6 +3654,8 @@ func layoutUI(hwnd uintptr) {
 	if previewH < 245 {
 		previewH = 245
 	}
+	// Reserve one compact row for the exact filename and rotation controls.
+	previewH -= 32
 	listW := int32(220)
 	processedW := int32(260)
 	if sumatraView != nil && sumatraView.child != 0 {
@@ -3771,7 +3793,25 @@ func layoutUI(hwnd uintptr) {
 	recordAttachmentTrace("layout-before-processedList")
 	procMoveWindow.Call(app.processedList, uintptr(processed.List.X), uintptr(processed.List.Y), uintptr(processed.List.W), uintptr(processed.List.H), 0)
 	recordAttachmentTrace("layout-after-processedList")
-	y := previewTop + 10 + previewH
+	// The filename field is horizontally scrollable and copyable; the separate
+	// extension indicator remains visible when an unusually long name overflows.
+	filenameY := previewTop + previewH + 5
+	rotateW, rotateGap := int32(64), int32(6)
+	rotateRightX := w - 20 - rotateW
+	rotateLeftX := rotateRightX - rotateGap - rotateW
+	extW := int32(112)
+	extX := rotateLeftX - 8 - extW
+	filenameEditX := int32(104)
+	filenameEditW := extX - 8 - filenameEditX
+	if filenameEditW < 140 {
+		filenameEditW = 140
+	}
+	procMoveWindow.Call(app.currentFilenameLabel, 20, uintptr(filenameY+4), 80, 20, 0)
+	procMoveWindow.Call(app.currentFilenameEdit, uintptr(filenameEditX), uintptr(filenameY), uintptr(filenameEditW), 26, 0)
+	procMoveWindow.Call(app.currentExtensionLabel, uintptr(extX), uintptr(filenameY+4), uintptr(extW), 20, 0)
+	procMoveWindow.Call(app.rotateLeftBtn, uintptr(rotateLeftX), uintptr(filenameY), uintptr(rotateW), 26, 0)
+	procMoveWindow.Call(app.rotateRightBtn, uintptr(rotateRightX), uintptr(filenameY), uintptr(rotateW), 26, 0)
+	y := previewTop + 10 + previewH + 32
 	// Keep the lower form on a single alignment grid. Labels and controls move
 	// together so DPI/window changes cannot make rows drift independently.
 	labelX := int32(20)
@@ -4402,6 +4442,8 @@ func showCurrentView(focusName, syncSelection bool) {
 		updateReadTextAvailability("")
 		heading, hint := inboxEmptyState(selectedInboxFilter(), len(app.files))
 		setText(app.currentLabel, "PREVIEW  ·  "+heading)
+		setText(app.currentFilenameEdit, "")
+		setText(app.currentExtensionLabel, "EXT: —")
 		setText(app.countLabel, "FILES  ·  0")
 		setText(app.nameEdit, "")
 		app.fallback = hint
@@ -4414,6 +4456,12 @@ func showCurrentView(focusName, syncSelection bool) {
 	ext := filepath.Ext(base)
 	stem := strings.TrimSuffix(base, ext)
 	setText(app.currentLabel, "PREVIEW  ·  "+base)
+	setText(app.currentFilenameEdit, base)
+	currentExtension := strings.ToUpper(ext)
+	if currentExtension == "" {
+		currentExtension = "(none)"
+	}
+	setText(app.currentExtensionLabel, "EXT: "+currentExtension)
 	if syncSelection {
 		syncFileListSelection()
 	}
@@ -5242,18 +5290,20 @@ func drawImagePreview(hdc uintptr, rc RECT) {
 	// selected percentage. Large zoomed images can be dragged inside the pane.
 	rc = pdfContentRect(rc)
 	availW, availH := rc.Right-rc.Left-8, rc.Bottom-rc.Top-8
+	// The drawn dimensions, unlike the source image, follow the preview orientation.
+	rotatedW, rotatedH := rotatedPreviewDimensions(int32(iw), int32(ih), app.previewQuarterTurns)
 	var dw, dh int32
 	if pdfPreview.active {
 		// Every owned PDF mode (Fit, Fit Width, and manual zoom) is rendered
 		// by Windows.Data.Pdf at its final pixel dimensions. Draw those pixels
 		// 1:1; scaling them again here would make wheel zoom nonlinear.
-		dw, dh = int32(iw), int32(ih)
+		dw, dh = rotatedW, rotatedH
 	} else if app.previewFit {
-		dw, dh = fitDimensions(int32(iw), int32(ih), availW, availH)
+		dw, dh = fitDimensions(rotatedW, rotatedH, availW, availH)
 	} else if app.previewFitWidth {
-		dw, dh = fitWidthDimensions(int32(iw), int32(ih), availW)
+		dw, dh = fitWidthDimensions(rotatedW, rotatedH, availW)
 	} else {
-		dw, dh = zoomDimensions(int32(iw), int32(ih), app.previewZoom)
+		dw, dh = zoomDimensions(rotatedW, rotatedH, app.previewZoom)
 	}
 	if dw <= 0 || dh <= 0 {
 		return
@@ -5266,7 +5316,14 @@ func drawImagePreview(hdc uintptr, rc RECT) {
 	if st, _, _ := procGdipCreateFromHDC.Call(hdc, uintptr(unsafe.Pointer(&graphics))); st != 0 || graphics == 0 {
 		return
 	}
-	procGdipDrawImageRectI.Call(graphics, app.image, uintptr(x), uintptr(y), uintptr(dw), uintptr(dh))
+	if app.previewQuarterTurns == 0 {
+		procGdipDrawImageRectI.Call(graphics, app.image, uintptr(x), uintptr(y), uintptr(dw), uintptr(dh))
+	} else {
+		points := previewRotationPoints(x, y, dw, dh, app.previewQuarterTurns)
+		// UnitPixel=2. GDI+ rotates the drawn pixels without changing the
+		// image object or saving any change back to the source file.
+		procGdipDrawImagePointsRectI.Call(graphics, app.image, uintptr(unsafe.Pointer(&points[0])), 3, 0, 0, uintptr(iw), uintptr(ih), 2, 0, 0, 0)
+	}
 	procGdipDeleteGraphics.Call(graphics)
 }
 
@@ -5322,12 +5379,22 @@ func updatePreviewZoomControls() {
 	if app.zoomFitWidthBtn != 0 {
 		setPreviewControlEnabled(app.zoomFitWidthBtn, fitWidthEnabled != 0)
 	}
+	// Embedded Sumatra has its own viewer controls. Rotation applies only
+	// to bitmaps owned by DCM (images and Windows.Data.Pdf pages).
+	canRotate := app.image != 0 && sumatraView == nil
+	for _, hwnd := range []uintptr{app.rotateLeftBtn, app.rotateRightBtn} {
+		if hwnd != 0 {
+			setPreviewControlVisible(hwnd, sumatraView == nil)
+			setPreviewControlEnabled(hwnd, canRotate)
+		}
+	}
 }
 
 func resetPreviewZoomState() {
 	app.previewFit = true
 	app.previewFitWidth = false
 	app.previewZoom = 100
+	app.previewQuarterTurns = 0
 	app.previewZoomWheelRemainder = 0
 	app.previewPanX, app.previewPanY = 0, 0
 	app.previewDragging = false
@@ -5345,11 +5412,12 @@ func imageFitWidthZoomPercent() int {
 	procGetClientRect.Call(app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
 	rc = pdfContentRect(rc)
 	availW := rc.Right - rc.Left - 8
-	dw, _ := fitWidthDimensions(int32(iw), int32(ih), availW)
-	if iw == 0 || dw <= 0 {
+	rotatedW, rotatedH := rotatedPreviewDimensions(int32(iw), int32(ih), app.previewQuarterTurns)
+	dw, _ := fitWidthDimensions(rotatedW, rotatedH, availW)
+	if rotatedW == 0 || dw <= 0 {
 		return 100
 	}
-	percent := int((int64(dw)*100 + int64(iw)/2) / int64(iw))
+	percent := int((int64(dw)*100 + int64(rotatedW)/2) / int64(rotatedW))
 	return clampPreviewZoom(percent)
 }
 
@@ -5363,11 +5431,12 @@ func imageFitZoomPercent() int {
 	var rc RECT
 	procGetClientRect.Call(app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
 	availW, availH := rc.Right-rc.Left-8, rc.Bottom-rc.Top-8
-	dw, _ := fitDimensions(int32(iw), int32(ih), availW, availH)
-	if iw == 0 || dw <= 0 {
+	rotatedW, rotatedH := rotatedPreviewDimensions(int32(iw), int32(ih), app.previewQuarterTurns)
+	dw, _ := fitDimensions(rotatedW, rotatedH, availW, availH)
+	if rotatedW == 0 || dw <= 0 {
 		return 100
 	}
-	percent := int((int64(dw)*100 + int64(iw)/2) / int64(iw))
+	percent := int((int64(dw)*100 + int64(rotatedW)/2) / int64(rotatedW))
 	return clampPreviewZoom(percent)
 }
 
@@ -5378,6 +5447,27 @@ func setImageZoom(percent int) {
 	app.previewPanX, app.previewPanY = 0, 0
 	procInvalidateRect.Call(app.previewHwnd, 0, 1)
 	setText(app.statusLabel, fmt.Sprintf("Image preview zoom: %d%% | Ctrl+mouse wheel or drag to inspect", app.previewZoom))
+}
+
+func rotateCurrentPreview(delta int) {
+	if delta == 0 || app.image == 0 || sumatraView != nil {
+		return
+	}
+	app.previewQuarterTurns = rotatePreviewQuarterTurns(app.previewQuarterTurns, delta)
+	app.previewPanX, app.previewPanY = 0, 0
+	if pdfPreview.active {
+		// Re-render with the rotated page's geometry at the source resolution.
+		// A previous in-flight render is superseded by the normal generation guard.
+		requestPDFPreviewRender()
+	} else {
+		if app.previewFit {
+			app.previewZoom = imageFitZoomPercent()
+		} else if app.previewFitWidth {
+			app.previewZoom = imageFitWidthZoomPercent()
+		}
+		setText(app.statusLabel, fmt.Sprintf("Image preview rotated %d° clockwise (view only)", app.previewQuarterTurns*90))
+	}
+	procInvalidateRect.Call(app.previewHwnd, 0, 1)
 }
 
 func sendPreviewCtrlKey(vk uintptr, shift bool) bool {

@@ -5,7 +5,8 @@ param(
     [ValidateSet('fit','fitwidth','zoom')][string]$Mode = 'fit',
     [int]$Zoom = 100,
     [int]$ViewportWidth = 1000,
-    [int]$ViewportHeight = 1000
+    [int]$ViewportHeight = 1000,
+    [ValidateRange(0,3)][int]$QuarterTurns = 0
 )
 
 $ErrorActionPreference = 'Stop'
@@ -59,14 +60,23 @@ try {
         throw 'PDF page reported an invalid size'
     }
 
+    # The host rotates the displayed bitmap. Fit/Width scale must be based
+    # on the final on-screen orientation; source PDF bytes are untouched.
+    $displayWidth = $pageWidth
+    $displayHeight = $pageHeight
+    if (($QuarterTurns % 2) -ne 0) {
+        $displayWidth = $pageHeight
+        $displayHeight = $pageWidth
+    }
+
     if ($Mode -eq 'fit') {
         $vw = [Math]::Max(64, $ViewportWidth)
         $vh = [Math]::Max(64, $ViewportHeight)
-        $scale = [Math]::Min($vw / $pageWidth, $vh / $pageHeight)
+        $scale = [Math]::Min($vw / $displayWidth, $vh / $displayHeight)
         if ($scale -le 0) { $scale = 1.0 }
     } elseif ($Mode -eq 'fitwidth') {
         $vw = [Math]::Max(64, $ViewportWidth)
-        $scale = $vw / $pageWidth
+        $scale = $vw / $displayWidth
         if ($scale -le 0) { $scale = 1.0 }
     } else {
         $scale = [Math]::Max(0.10, [Math]::Min(8.0, $Zoom / 100.0))

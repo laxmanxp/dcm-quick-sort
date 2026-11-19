@@ -22,6 +22,7 @@ type PDFRenderRequest struct {
 	Zoom           int
 	ViewportWidth  int
 	ViewportHeight int
+	QuarterTurns   int
 	Generation     uint64
 }
 
@@ -70,6 +71,7 @@ func pdfRendererArgs(scriptPath string, req PDFRenderRequest) []string {
 		"-Zoom", strconv.Itoa(clampPDFZoom(req.Zoom)),
 		"-ViewportWidth", strconv.Itoa(req.ViewportWidth),
 		"-ViewportHeight", strconv.Itoa(req.ViewportHeight),
+		"-QuarterTurns", strconv.Itoa(rotatePreviewQuarterTurns(req.QuarterTurns, 0)),
 	}
 }
 

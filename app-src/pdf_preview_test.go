@@ -64,3 +64,19 @@ func TestPDFRendererReportsEffectiveScaleAndSupportsFitWidth(t *testing.T) {
 		t.Fatalf("fit-width args missing fitwidth mode: %s", args)
 	}
 }
+
+func TestPDFRendererPassesRotatedOrientation(t *testing.T) {
+	args := strings.Join(pdfRendererArgs("render.ps1", PDFRenderRequest{FitWidth: true, QuarterTurns: 3, Zoom: 100, ViewportWidth: 900, ViewportHeight: 700}), " ")
+	if !strings.Contains(args, "-QuarterTurns 3") || !strings.Contains(args, "-Mode fitwidth") {
+		t.Fatalf("rotated fit-width rendering not requested: %s", args)
+	}
+	data, err := os.ReadFile("assets/pdf_render.ps1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, fragment := range []string{"$displayWidth = $pageHeight", "$displayHeight = $pageWidth", "$vw / $displayWidth"} {
+		if !strings.Contains(string(data), fragment) {
+			t.Fatalf("PDF fit/fit-width script not orientation-aware: missing %q", fragment)
+		}
+	}
+}
