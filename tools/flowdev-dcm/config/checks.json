@@ -803,6 +803,13 @@
           "tools/run-ui.ps1",
           "-Suite",
           "final-workflow"
+        ],
+        "ui-rotation": [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "tools/test-ui-rotation.ps1"
         ]
       }
     }
