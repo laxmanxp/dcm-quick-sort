@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "feature": "DCM-32",
+  "app": "DCM QuickSort",
+  "candidate_version": "v1.0.71",
+  "recorded_on": "2026-11-14",
+  "timezone": "Asia/Kolkata",
+  "repository": "laxmanxp/dcm-quick-sort",
+  "branch": "release/v1.0.71",
+  "result": "PARTIAL",
+  "numbered_step_complete": false,
+  "completed_steps": 30,
+  "remaining_steps": 20,
+  "next_step": "DCM-32",
+  "production_source": "ec7a02349e9f53c6fcfd889cf21f800f36c68b4a",
+  "production_preview_code_changed": false,
+  "last_confirmed_lenovo_source": "7f4690616cc50d206b3d43953a3c2a509fa8c928",
+  "fixture": {
+    "file": "tests/fixtures/dcm32-slides.pptx",
+    "bytes": 31109,
+    "sha256": "af42fff55297109195b95039d2ac39c5d53b1fae23b59e7b40a7184d679b93f1",
+    "slide_count": 2,
+    "slide_1": "Bridge Inspection; September 2026; embedded synthetic bridge picture",
+    "slide_2": "Payments; Scheme/Amount table; Bridge/125000; Road/86000",
+    "generator": "tests/fixtures/generate-pptx-fixture.py",
+    "reproducible_byte_identity_verified": true
+  },
+  "historical_fixture": {
+    "bytes": 37897,
+    "sha256": "c8d9b1597e64de6426356a923c3fb5dc288a1841391431be72c6b2f6b517477d",
+    "result": "Unchanged real integration assertion failed: historical file has different text and no embedded media. Fixture mismatch, not demonstrated application regression."
+  },
+  "local_unit": {
+    "passed": 29,
+    "failed": 0,
+    "skipped": 0,
+    "real_test": {
+      "run": 1,
+      "pass": 1,
+      "fail_or_skip": 0
+    },
+    "compiler": "go1.27.3 linux/amd64",
+    "note": "PPTX/Open XML app tests; does not compile or execute the Windows PowerShell/C# navigation harness.",
+    "log": "local/pptx-unit-navigation-check.jsonl"
+  },
+  "native_wrapper_failure": {
+    "source": "3b2978fb50d207de9b96dec29ba535483e1fcbb3",
+    "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-regressions-20261114-070557-4c20ba28",
+    "core_tests": {
+      "passed": 29,
+      "failed": 0,
+      "skipped": 0
+    },
+    "wrapper_passed": false,
+    "cause": "Windows PowerShell 5.1 nested the parsed source-manifest array inside @(...), so fixture membership was not read as individual entries.",
+    "fix": "Assign ConvertFrom-Json array directly; source 7f46906."
+  },
+  "native_unit": {
+    "source": "7f4690616cc50d206b3d43953a3c2a509fa8c928",
+    "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-regressions-20261114-070759-9c7fff5a",
+    "flowdev_selector": "pptx-unit",
+    "flowdev_exit_code": 0,
+    "passed": 29,
+    "failed": 0,
+    "skipped": 0,
+    "real_test": {
+      "run": 1,
+      "pass": 1,
+      "fail_or_skip": 0
+    },
+    "fixture_verification_passed": true,
+    "native_receipt_sha256": "6d22e23e1be4a57382ab613088bc53c9eafd956ce3b57569990a26e62202be73",
+    "native_test_log_sha256": "602b3760e1cfb0fabc009bd28a5b4f6445c85bc0d6956234dbcc744c11a6ac49",
+    "fixture_manifest_windows_sha256": "9e36e7b65d05391fcdbeff4bfc9eb7ab63bcd66c63c75e48be29d42763b582ec",
+    "raw_artifacts": "Retained in the exact Lenovo report. Complete native archive retrieval was interrupted by the Desktop Commander connection timeout."
+  },
+  "native_build": {
+    "source": "7f4690616cc50d206b3d43953a3c2a509fa8c928",
+    "receipt": "D:\\FlowverseReportsRepo\\dcm-quicksort-build-20261114-070857-05f16c29\\receipt.json",
+    "passed": true,
+    "app_sha256": "7f51956e67dd7e0a33eef51a6ad8cf8a742ad6e2d64585348614eaa485e35827"
+  },
+  "preliminary_ui": {
+    "source": "7f4690616cc50d206b3d43953a3c2a509fa8c928",
+    "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-pptx-20261114-070938-51df3033",
+    "selector": "ui-pptx",
+    "flowdev_exit_code": 0,
+    "raw_passed": true,
+    "raw_feature_accepted": false,
+    "cases_passed": 6,
+    "captures": 6,
+    "provider": "Installed Windows PowerPoint preview handler",
+    "observed_class": "childClass",
+    "all_fixture_slides_captured": false,
+    "native_slide_navigation": "not_exercised in this preliminary run",
+    "source_unchanged": true,
+    "fixtures_preserved": true,
+    "journal_empty": true,
+    "host_exit_code": 0,
+    "file_release": true,
+    "text_recovery": true,
+    "reopened_first_slide": true,
+    "reviewed_images": 2,
+    "unreviewed_images": 4,
+    "raw_flags_unchanged": true,
+    "receipt_export": "preliminary/receipt.export.json",
+    "window_tree_export": "preliminary/02-native-slide1.native-windows.export.json",
+    "export_note": "JSON parsed from Desktop Commander text output and normalized for readability; exports are not claimed as byte-exact native JSON files."
+  },
+  "visual_review": [
+    {
+      "file": "preliminary/02-native-slide1.png",
+      "sha256": "a3ca959a02283671b972075ff9107bfb814d0219c2155421b2d4af3a32826b0f",
+      "native_hash_verified": true,
+      "reviewed": true,
+      "result": "representative_first_slide_pass",
+      "observation": "Main preview body visibly contains Bridge Inspection, September 2026 and the synthetic bridge image. Representative image caption and slide1 footer are visible. Host footer says Windows preview: PPTX. This is not a slide2/navigation/fill-the-pane acceptance."
+    },
+    {
+      "file": "preliminary/02-native-slide1.preview.png",
+      "sha256": "67734687a99d88d40951ce256ac7ddab3bae13abda871d2bcbd347f3ece9726d",
+      "native_hash_verified": true,
+      "reviewed": true,
+      "result": "capture_limitation_title_clipped",
+      "observation": "Old preview-only crop clips the top of the title although the full-window screenshot includes it. Date and main bridge image remain visible. New harness derives a physical native-surface crop from the same full screenshot; that correction remains unvalidated on Lenovo."
+    }
+  ],
+  "navigation_candidate": {
+    "implemented": true,
+    "native_tooling_compile": "pending",
+    "lenovo_update": "pending",
+    "native_feature_test": "pending",
+    "input": "Revalidated unique direct PowerPoint childClass; bound host/pane/HWND/PID/thread/path/start; only scoped posted PageDown/PageUp.",
+    "sequence": "TXT -> slide1 -> slide2 -> slide1 -> TXT -> reopen -> close",
+    "capture": "Same-frame physical crop; all bounded readiness attempts retained; separate semantic image review required.",
+    "local_validation": [
+      "git diff --check",
+      "pinned fixture identity",
+      "29 existing focused app tests; not Windows harness execution"
+    ]
+  },
+  "connection_blocker": {
+    "device": "Laxman_Lenovo",
+    "device_id": "d18227f2-0b54-4b11-9026-56ac40305f02",
+    "status": "Desktop Commander device requests timed out after the preliminary UI run.",
+    "observed_failures": [
+      "read_multiple_files for three remaining screenshots: Timeout - no response from device",
+      "read-only metadata start_process: MCP request timed out",
+      "single .git/HEAD read: Timeout - no response from device"
+    ],
+    "last_probe_completed_utc": "2026-11-14T07:18:14.418335+00:00",
+    "inventory_caveat": "Inventory still reported Online with stale last-seen time; successful device response was not observed."
+  },
+  "scope_limits": [
+    "Headed built-in fallback not exercised.",
+    "No native slide2 or 1->2->1 acceptance yet.",
+    "Four preliminary captures are not reviewed.",
+    "Old full baseline remains 383 pass / 0 fail / 1 skip; focused 29/0/0 does not relabel that historical run.",
+    "Damaged/protected handling DCM34, broader lifecycle DCM35, final package/full baseline DCM47 and user acceptance remain open."
+  ],
+  "user_test": "not_recorded",
+  "final_package_qualified": false,
+  "restart": [
+    "Restore Desktop Commander connectivity to Lenovo.",
+    "flowdev update dcm-quicksort",
+    "flowdev test dcm-quicksort ui-tooling",
+    "flowdev test dcm-quicksort pptx-unit",
+    "flowdev test dcm-quicksort build",
+    "Set DCM_BUILD_RECEIPT to that exact new build receipt.",
+    "flowdev test dcm-quicksort ui-pptx",
+    "Review every retained image and confirm both slides, return/reopen, recovery and close before completing DCM32."
+  ],
+  "reports": {
+    "repository": "laxmanxp/flowverse-reports",
+    "path": "apps/dcm-quicksort/dcm32-20261114-070938/preliminary-7f46906",
+    "commit": "86d0e95a02f60098f34a17d6450473d8f4c2757a",
+    "completeness": "Partial recovered evidence: normalized preliminary receipt/tree, exact 2 PNG files, local test log and progress summary. Full native archive remains on Lenovo."
+  }
+}

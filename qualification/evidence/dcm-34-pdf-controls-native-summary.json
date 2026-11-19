@@ -1,0 +1,90 @@
+{
+  "schema": 1,
+  "feature": "DCM-34-PDF-CONTROLS-01",
+  "status": "fixed_with_bounded_acceptance",
+  "recorded_on": "2026-11-15",
+  "tested_source": "c20ad2649df9f78847dab2058c27ab8852e0062e",
+  "implementation_commit": "bece916245fc77eaa03b8328511d8a1ec1750777",
+  "red": {
+    "source": "4f29d698732b5c503f206707f61d1c4843adb9a5",
+    "report": "native/red-ui/receipt.json",
+    "exit_code": 1,
+    "passed_prior_records": 2,
+    "observed_failure": "Stable explicit native PDF error retained enabled zoom_out, zoom_actual, zoom_in and fit; Width was disabled."
+  },
+  "native": {
+    "registered_update_passed": true,
+    "pdf_control_unit": {
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0,
+      "native_states": 7
+    },
+    "pdf_failure_unit": {
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    "baseline": {
+      "passed": 399,
+      "failed": 0,
+      "skipped": 0
+    },
+    "ui_tooling_passed": true,
+    "exact_build_passed": true,
+    "ui_pdf_error_controls_records": 9,
+    "ui_pdf_records": 19,
+    "ui_docx_records": 7
+  },
+  "artifact": {
+    "bytes": 7374848,
+    "sha256": "4b97b95da663d84fa2f8984b822303f773202baa738ed7d677822e6a3c896157",
+    "independently_rehashed": true
+  },
+  "review": {
+    "full_frames_covered": 34,
+    "unique_sha256_groups": 25,
+    "all_seven_completed_error_recovery_frames_directly_inspected": true,
+    "red_full_frame_inspected": true,
+    "raw_acceptance_flags_modified": false,
+    "preview_crops_separately_reviewed": false,
+    "zoomed_views": "Bounded cropped/panned viewport evidence, not whole-page visibility at 100/110 percent."
+  },
+  "preservation": {
+    "tracked_source_files_rehashed": 489,
+    "original_reports_rehashed": 405,
+    "published_files": 410,
+    "source_clean": true,
+    "fixture_bytes_preserved": true,
+    "journals_empty": true,
+    "owned_hosts_closed_normally": true,
+    "registry_unchanged_in_failure_workflow": true
+  },
+  "publication": {
+    "repository": "laxmanxp/flowverse-reports",
+    "commit": "acf8d7287a227f2cbd9703afcbfe7f71f55954fa",
+    "prefix": "apps/dcm-quicksort/dcm34-20261115-pdf-controls/c20ad26",
+    "raw_manifest": "raw-manifest.json",
+    "review": "separate-full-frame-review.json",
+    "summary": "summary.json",
+    "exact_staged_report_blobs_checked": true,
+    "shared_report_index_and_worktree_not_modified": true
+  },
+  "policy_limit": "QuickSort host sizing is disabled for ALL attached native PDF fallbacks, including valid PDFs, until document readiness is known. Primary Windows.Data.Pdf behavior is retained. Provider-owned controls and ordinary SetRect layout are unchanged; valid native-fallback rendering was not separately requalified.",
+  "scope": "Stable native PDF error controls, guarded direct and WM_COMMAND sizing routes, text/primary-PDF recovery, representative normal PDF and DOCX regressions. No claim about all Office errors or physical input.",
+  "local_validation": "Focused portable/race tests and Windows cross-compilation passed. The full Linux run retained the same 32 Windows-operation guard failures as its baseline; not a full Linux PASS.",
+  "history": "Original RED, build-selection UTC wrapper refusal, concurrency holds, pre-execution test thread-ownership correction and evidence-collector refusals retained/disclosed in report summary. No failing app run relabeled PASS.",
+  "parent_step_status": "PARTIAL",
+  "numbered_complete": 32,
+  "numbered_remaining": 18,
+  "user_test": "not_recorded",
+  "next_smallest_step": "Default-PDF protected-file refusal and recovery through registered FlowDev tests.",
+  "remaining": [
+    "Default-PDF protected-file behavior",
+    "Observed in-flight interruption and late-result rejection",
+    "Broader Office failure coverage",
+    "DCM-35 lifecycle",
+    "Final workflow and actual user acceptance",
+    "Final suite package/install waits for Flow Search and DeepSearch readiness"
+  ]
+}

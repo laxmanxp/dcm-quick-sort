@@ -1,0 +1,25 @@
+name: Record bounded async-startup checkpoint and rollback
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/record-sumatra-async.yml]
+permissions:
+  contents: write
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply locally validated tracker transformation
+        run: |
+          python qualification/record-sumatra-async.py
+          echo 'f80d4ab9df63aef9997feb689e3d85ad6959cf8eacac64d65f5c0888cda5c299  todo.json' | sha256sum -c -
+          echo '54dc33c4e0c36b64f7c27d74db0c9c0b98130aa911200de827486e473b8237da  qualification/completion-50.json' | sha256sum -c -
+      - name: Save metadata only
+        run: |
+          git config user.name 'DCM reviewed-checkpoint automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add todo.json qualification/completion-50.json
+          git commit -m 'test: record async startup implementation and retained latency gate'
+          git push origin HEAD:release/v1.0.71

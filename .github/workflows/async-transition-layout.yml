@@ -1,0 +1,31 @@
+name: Avoid redundant unchanged-width viewer transition layout
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/async-transition-layout.yml]
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply locally compiled bounded transition correction
+        shell: python
+        run: |
+          import pathlib,hashlib
+          p=pathlib.Path('app-src/sumatra_preview_windows.go');b=p.read_bytes()
+          assert hashlib.sha256(b).hexdigest()=='c72a651b6c5ad029d2a1a9f82f358db8ca1909cd5955961cf8fe99c28dd706d6'
+          s=b.decode();assert s.count('layoutUI(app.hwnd)')==2
+          s=s.replace('layoutUI(app.hwnd)','layoutSumatraTransition()')
+          assert hashlib.sha256(s.encode()).hexdigest()=='14c6a429b387b5893df0a01ac10648e445f0f082fe2ba748920de40816d084cb'
+          assert hashlib.sha256(pathlib.Path('app-src/sumatra_transition_windows.go').read_bytes()).hexdigest()=='1eb578f2911f2e44e6e50925bfef23be607ed0ded4315f7a91dd41335d499fcc'
+          p.write_bytes(s.encode())
+      - name: Save exact product change
+        run: |
+          git config user.name 'DCM reviewed-patch automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app-src/sumatra_preview_windows.go
+          git commit -m 'perf: skip redundant full host layout at unchanged viewer widths'
+          git push origin HEAD:release/v1.0.71

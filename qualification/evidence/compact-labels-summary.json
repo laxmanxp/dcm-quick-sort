@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "feature": "DCM-UI-LABEL-01",
+  "date_ist": "2026-11-13",
+  "tested_commit": "2cafe818b16ccb2c861ac1d5cd74731ab446c7db",
+  "report_root": "D:\\FlowverseReportsRepo",
+  "status": "fixed_for_tested_compact_geometry_and_font",
+  "numbered_steps_closed": [],
+  "layout": {"filter_wrap_rows":2,"processed_title_separate_from_undo":true,"form_labels_widened":true,"native_client_sizes":[[1264,761],[1200,697],[1136,697]],"coordinate_units":"host logical client coordinates","one_row_branch":"unit tested; no new native wide-screen image","physical_monitor_DPI_changes_tested":false,"extra_compact_filter_row_height":34,"geometry_cache":false,"full_preview_sizing_retained":true},
+  "label_checks": {"focused_runs":2,"behavior_records_per_run":24,"audits_per_run":20,"failed_audits":0,"observed_processed_counts":[0,2],"long_sort_value":"Date Created > Type > Name","measurement":"Owned direct-child geometry plus Segoe UI 16px label/value extent estimate; separate screenshot review. Not OCR or universal font/DPI certification.","timing":"Raw capture before audit and diagnostic redraw"},
+  "baseline": {"report":"dcm-quicksort-baseline-20261113-053940-7203938f","receipt_sha256":"5345cad93caa92e04f16ae157127590fa8be76dcb2201dc6c44f01c68cd2eca4","parents":380,"passed":379,"failed":0,"skipped":["TestRealGeneratedPPTXIntegration"],"exit_code":0,"timed_out":false,"new_parents":["TestCompactFilterLayout","TestCompactProcessedHeader"]},
+  "runs": [
+    {"selector":"ui-compact-labels","report":"dcm-quicksort-ui-sumatra-20261113-054106-fcd91764","records":24,"receipt_sha256":"20e6c3501599452c29c8d185b303cb81d361d28093e159ac9c199c7833e71682","passed":true,"command_exit":0,"source_unchanged":true},
+    {"selector":"ui-compact-labels-repeat","report":"dcm-quicksort-ui-sumatra-20261113-054251-7d7c4d3c","records":24,"receipt_sha256":"bcd7dd87fd352ed773935bed20e1b29f7b32eff536a1ba3feb2d2fd3922e8902","passed":true,"command_exit":0,"source_unchanged":true},
+    {"selector":"ui-sumatra-resize-timing","report":"dcm-quicksort-ui-sumatra-20261113-054340-87572ecb","records":23,"receipt_sha256":"ebbab4dd1179958b2cbf517b84651e30b5a73b8c8c17e0f5cd1ba45dfb76b7f7","passed":true,"command_exit":0,"source_unchanged":true},
+    {"selector":"ui-filters","report":"dcm-quicksort-ui-filters-20261113-054553-81786828","records":74,"receipt_sha256":"be4f7a1f16e285a009fcdafd01d6b2909f0d8b43e6277ad9960a151ac5f3548f","passed":true,"command_exit":0,"source_unchanged":true},
+    {"selector":"ui-sort","report":"dcm-quicksort-ui-sort-20261113-054643-f561ef95","records":9,"receipt_sha256":"4dedab1d06ea718979f29390d465fa307952104caee41379883b113a18c1257f","passed":true,"command_exit":0,"source_unchanged":true},
+    {"selector":"ui-selection","report":"dcm-quicksort-ui-selection-20261113-054710-2c3fb6ea","records":16,"receipt_sha256":"a3b963f8330f0ca7f59a02f8d91c261a696cad17e5e542e25e074b78b0bbefc2","passed":true,"command_exit":0,"source_unchanged":true},
+    {"selector":"ui-sumatra-undo","report":"dcm-quicksort-ui-sumatra-undo-20261113-054743-aff20f70","records":9,"receipt_sha256":"3f7e8e9e83529c62f4e36d8d5c1c05dfcbab22470381c755d2264f1588ba7eb6","passed":true,"command_exit":0,"source_unchanged":true},
+    {"selector":"ui-sumatra-scroll","report":"dcm-quicksort-ui-sumatra-scroll-20261113-054812-9ec7368f","records":14,"receipt_sha256":"4f3bc4b7c43b3011a4567c9b22e9883af46b113cf8adaee2a77dd98fe4849e98","passed":true,"command_exit":0,"source_unchanged":true},
+    {"selector":"ui-text","report":"dcm-quicksort-ui-text-20261113-054843-5691fb5c","records":17,"receipt_sha256":"24cc45c195f8e9532943700cb486bdc9845383ace0c444bd9f8bfd872a2533ad","passed":true,"command_exit":0,"source_unchanged":true},
+    {"selector":"ui-image","report":"dcm-quicksort-ui-image-20261113-054905-5999393a","records":23,"receipt_sha256":"8a05e13f7c8363d9f985bc8ab905f3391b1ab18e1508d2b598055a23d655ebf1","passed":true,"command_exit":0,"source_unchanged":true},
+    {"selector":"ui-launch","report":"dcm-quicksort-ui-launch-20261113-054932-bec97bcf","records":12,"receipt_sha256":"dbcf063f752e8ac1de412280c9d6e4af8c8d92099174de71f80714c8ba7b7b67","passed":true,"command_exit":0,"source_unchanged":true}
+  ],
+  "resize_timing": {"bursts":12,"raw_natural_comparisons":24,"all_sampled_differences_zero":true},
+  "startup_runs": [
+    {"report":"dcm-quicksort-ui-sumatra-startup-20261113-054510-7213d66e","receipt_sha256":"06781a37b106889a38868b72f4b69e4b37422bbe60267314e7bccda1882544e1","passed":true,"responsiveness_accepted":true,"ready_status_ms":[1469.4881,373.3866,371.3587,355.6357],"max_queue_ack_ms":[17.5774,30.8591,30.8496,16.3531],"exit_code":0,"source_unchanged":true,"fixtures_preserved":true},
+    {"report":"dcm-quicksort-ui-sumatra-startup-20261113-054532-d4f5fccb","receipt_sha256":"01811427e6ac98e70e521b4499f3393bc749d6e11ba9e6f48f46354cfdcfc27f","passed":true,"responsiveness_accepted":true,"ready_status_ms":[1476.6533,404.0051,356.0596,372.0386],"max_queue_ack_ms":[30.7308,61.5998,30.5553,47.1804],"exit_code":0,"source_unchanged":true,"fixtures_preserved":true}
+  ],
+  "startup_scope": "Same provisional 250ms criterion, timing and guard conditions. Shared machine, not an isolated/cold-boot benchmark or first-pixel timestamp. No universal guarantee.",
+  "visual_review": {
+    "report":"dcm-quicksort-ui-sumatra-20261113-054106-fcd91764",
+    "green_full_images_individually_reviewed": {
+      "01-embedded-first-page.png":"20eb87bf9d508bcc1a5c98e7160c34634bd2dcce72b50a231af8e2b803fc8b1f",
+      "02-next-page.png":"6add87af0dae81a567e7f56ed01530dbb968d9500586da3648f8c249b00fea4d",
+      "04g-actual-size-100.png":"750eba7f9d6587c378210572e989cca825b9fe1c4bd8c498f29d5a12f0cf5d80",
+      "04h-fit-width.png":"d07ec50dba093ef4ade484322ad862cace736bc4269511191b87adc6941de515",
+      "04j-resized-smaller.png":"a62e003629b3c00ab97315a614d9a8efad3e310d8d7ef7864779031103916139",
+      "04k-resize-restored.png":"1a2b0facae55263e76a9b8d53135eb1ee78a1b63e143de4ea84ca538553254ce",
+      "07-narrower.png":"52700f76da6f2a0f185db89ddfac1fc56c60782f32cdca949a53535fb40c304c",
+      "07-repeat-restored.png":"1a2b0facae55263e76a9b8d53135eb1ee78a1b63e143de4ea84ca538553254ce",
+      "06-moved-and-text-restored.png":"979f04f7f5f93d1da03c23b94cab70f4c679de1345d3cdabfb66f5f4f5c8e2cd"
+    },
+    "green_count":9,"raw_flags_changed":false,"repeat_and_other_regression_images_reviewed":false,"content_crops_individually_reviewed":false,
+    "finding":"Full labels, long sort value and Processed 0/2 counts readable; no target overlaps, preview contained at all three reviewed sizes; text controls restored. Magnified PDF frames are not semantic readable-text evidence.",
+    "desktop_edge_images_uploaded_to_public_repo":false
+  },
+  "retained_failures": [
+    {"source":"9162bb0cdb528f6ba543d161b7c2953041782caa","report":"dcm-quicksort-ui-sumatra-20261113-053510-efa3a574","receipt_sha256":"4217216300b1e408b7313b31d23000d297d68df4e75d458af4a189c767695cd8","kind":"visibility guard","error":"Capture sample belonged to MozillaWindowClass rather than the host; no capture accepted.","cleanup_exit":0},
+    {"source":"9162bb0cdb528f6ba543d161b7c2953041782caa","report":"dcm-quicksort-ui-sumatra-20261113-053600-eb508067","receipt_sha256":"92fa24063fca7f6df21edf4d1fca116e86de1ed7731011ff702d4832b30b00d2","kind":"product clipping RED","findings":["File Type","Extension","Sort By","long selected sort value","New Name","Vault Location","Processed heading/count"],"reviewed_image":"01-embedded-first-page.png","reviewed_image_sha256":"9451eb92bbd1f6bf8e097095743550d9aab0b4709b902b360e2fa6d3b09e2ee4","cleanup_exit":0}
+  ],
+  "build": {"report":"dcm-quicksort-build-20261113-054033-794d1c59","receipt_sha256":"9b3f0838c563d3d22490dda8e570e4c178ab08abdc0b47a09c0dd7f063fe605d","app_sha256":"9298cc004fbfc3029ad7385704702e305d6b413ccf4be8ffe124265de19763e0","app_bytes":7336960,"manifest_files":403,"manifest_sha256":"1f2c2d0b5b9030d1ef421c8cbdb1f9f7a5d9bfd978e524d55c8abaaa64bddec3"},
+  "provider_audit": {"optional_sumatra":"Page/zoom/lifecycle evidence retained; current focused workflow passes.","default_provider":"Windows.Data.Pdf remains default; current-source visible page/manual-zoom qualification not run in this task.","next":"Qualify default-provider actual displayed page/zoom content, then disposition DCM-28/29 within demonstrated scope."},
+  "default_provider_changed":false,"runtime_policy_changed":false,"user_acceptance":"not_recorded","final_package_qualified":false,"merged":false,"published":false
+}

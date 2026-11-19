@@ -1,0 +1,28 @@
+name: Record verified Sumatra lifecycle coverage
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/record-sumatra-lifecycle.yml]
+permissions:
+  contents: write
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Guard source and record only verified metadata
+        run: |
+          git diff --exit-code deb8373dbb52c44d963f20fce49b9ea074f7d59e -- app-src installer-src tools tests
+          python qualification/record-sumatra-lifecycle.py
+          echo 'eb8ffaf5093fd89440111bbf05c343a8cf1988aaa5820fe02de245394abb29ff  todo.json' | sha256sum -c -
+          echo '2a0f25a0576ac583898d22b595a1c20c4ba10587abde6118429bfc65e6411d40  qualification/completion-50.json' | sha256sum -c -
+      - name: Save metadata without force or publication
+        run: |
+          git config user.name 'DCM reviewed-checkpoint automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add todo.json qualification/completion-50.json
+          git commit -m 'test: record bounded Sumatra lifecycle acceptance and remaining gates'
+          git push origin HEAD:release/v1.0.71

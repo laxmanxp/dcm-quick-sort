@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "step": "DCM-11",
+  "date": "2026-11-09",
+  "result": "pass_at_journal_native_test_boundary",
+  "tested_commit": "5782984f9064179a5dd75c5799560e15e26f588d",
+  "last_application_implementation_change": "26eeaed3b9041a31b17c197ef2a095f53ee2a9e6",
+  "new_native_run": true,
+  "application_behavior_changed": false,
+  "test_added": "app-src/d3_standard_batch_journal_regression_test.go",
+  "test_blob": "a28cb28f4846293cf03e8354139ab25521684776",
+  "report": "C:\\FlowverseReports\\dcm-quicksort-regressions-20261109-163302-7366e944",
+  "command": "flowdev test dcm-quicksort regressions",
+  "pattern": "^Test(D[1-6]|Release)",
+  "summary": {
+    "count": 22,
+    "passed_count": 22,
+    "failures": [],
+    "skipped": [],
+    "exit_code": 0,
+    "timed_out": false
+  },
+  "source_unchanged": true,
+  "go_version": "go1.27.0 windows/amd64",
+  "started_utc": "2026-11-09T16:33:02.1863603Z",
+  "finished_utc": "2026-11-09T16:33:41.2334422Z",
+  "manifest": {
+    "files": 198,
+    "sha256": "1b15bb5141dde0db91b17595b7447b1515278dd74fba23924a7b4279de6128f2"
+  },
+  "reviewed_stdout_lines_one_based": [
+    146,
+    175
+  ],
+  "d3_parent_count": 2,
+  "d3_nested_case_count": 5,
+  "pass_events": [
+    {
+      "test": "TestD3ConflictBatchJournalPrecedesUICompletion/replace",
+      "time": "2026-11-09T22:03:38.0882614+05:30"
+    },
+    {
+      "test": "TestD3ConflictBatchJournalPrecedesUICompletion/duplicate",
+      "time": "2026-11-09T22:03:38.1902144+05:30"
+    },
+    {
+      "test": "TestD3ConflictBatchJournalPrecedesUICompletion",
+      "time": "2026-11-09T22:03:38.1902144+05:30"
+    },
+    {
+      "test": "TestD3StandardBatchJournalSurvivesInterruption/before-move",
+      "time": "2026-11-09T22:03:38.2313548+05:30"
+    },
+    {
+      "test": "TestD3StandardBatchJournalSurvivesInterruption/after-move-before-completion",
+      "time": "2026-11-09T22:03:38.2606973+05:30"
+    },
+    {
+      "test": "TestD3StandardBatchJournalSurvivesInterruption/completed",
+      "time": "2026-11-09T22:03:38.3122204+05:30"
+    },
+    {
+      "test": "TestD3StandardBatchJournalSurvivesInterruption",
+      "time": "2026-11-09T22:03:38.3122204+05:30"
+    }
+  ],
+  "limits": [
+    "One new parent test; nested cases are not additional top-level tests.",
+    "Ordinary cases call journal/move functions; conflict cases use Windows workers with zero handles.",
+    "No actual window, process-kill, power-cut or crash-atomic batch rollback test is claimed.",
+    "Full suites, visible UI, final package and user acceptance remain open."
+  ]
+}

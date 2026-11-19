@@ -1,0 +1,54 @@
+name: Apply reviewed DCM-25 text patch
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths:
+      - qualification/proposed-fixes/dcm25-refresh.json
+      - .github/workflows/apply-dcm25-reviewed.yml
+permissions:
+  contents: write
+concurrency:
+  group: dcm25-reviewed-patch
+  cancel-in-progress: false
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/v1.0.71
+      - name: Apply only exact locally authored replacements
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 - <<'PYCODE'
+          import hashlib, json, pathlib, subprocess
+          proposal = json.loads(pathlib.Path('qualification/proposed-fixes/dcm25-refresh.json').read_text())
+          allowed = {'app-src/main_windows.go', 'tools/test-ui-refresh.ps1'}
+          paths = [f['path'] for f in proposal['files']]
+          assert paths and len(paths) == len(set(paths)) and set(paths) <= allowed
+          pending = []
+          for item in proposal['files']:
+              path = pathlib.Path(item['path'])
+              original = path.read_bytes()
+              blob = hashlib.sha1(b'blob '+str(len(original)).encode()+b'\0'+original).hexdigest()
+              assert blob == item['before_blob'], (item['path'], blob, 'base changed')
+              text = original.decode('utf-8')
+              for change in item['replacements']:
+                  assert text.count(change['old']) == 1, ('ambiguous replacement', item['path'])
+                  text = text.replace(change['old'], change['new'])
+              data = text.encode('utf-8')
+              assert hashlib.sha256(data).hexdigest() == item['after_sha256']
+              pending.append((path, data))
+          for path, data in pending:
+              path.write_bytes(data)
+          assert set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines()) == set(paths)
+          PYCODE
+          git diff --check
+          git config user.name 'DCM reviewed-patch automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app-src/main_windows.go tools/test-ui-refresh.ps1
+          git commit -m 'test: apply verified DCM-25 source and harness patch'
+          git push origin HEAD:refs/heads/release/v1.0.71

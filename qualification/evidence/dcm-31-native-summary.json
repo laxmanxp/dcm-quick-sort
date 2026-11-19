@@ -1,0 +1,446 @@
+{
+  "schema_version": 1,
+  "feature": "DCM-31",
+  "app": "DCM QuickSort",
+  "candidate_version": "v1.0.71",
+  "recorded_on_utc_date": "2026-11-14",
+  "timezone": "UTC",
+  "tested_source": "ec7a02349e9f53c6fcfd889cf21f800f36c68b4a",
+  "branch": "release/v1.0.71",
+  "repository": "laxmanxp/dcm-quick-sort",
+  "result": "accepted_for_representative_native_XLSX_content_and_125_percent_viewport",
+  "tested_source_accepted": true,
+  "app_completion_record": "The production source ec7a02349e9f53c6fcfd889cf21f800f36c68b4a passed the recorded native qualification. This application completion record is being finalized from that retained evidence. Its own documentation commit, push and Lenovo synchronization were not yet observed when this file was prepared; the earlier test receipts do not establish those later actions.",
+  "production_change": "Preserve logical COM sizing, then request a guarded asynchronous resize of the unique owned Excel outer child after successful SetRect. The request result is traced separately from rendered-layout acceptance.",
+  "flowdev": {
+    "app_id": "dcm-quicksort",
+    "origin": "https://github.com/laxmanxp/dcm-quick-sort.git",
+    "source_received": "ec7a02349e9f53c6fcfd889cf21f800f36c68b4a",
+    "native_runs": {
+      "unit": "dcm-quicksort-regressions-20261114-011840-a131e6b7",
+      "build": "dcm-quicksort-build-20261114-011936-e3a17b9f",
+      "layout": "dcm-quicksort-ui-xlsx-20261114-012003-6ce3d109",
+      "normal": "dcm-quicksort-ui-xlsx-20261114-012116-fbdc6385",
+      "docx": "dcm-quicksort-ui-docx-20261114-012139-efd939a9",
+      "baseline": "dcm-quicksort-baseline-20261114-012309-4ee29c99"
+    },
+    "workflow_note": "Registered FlowDev native acceptance was performed in the prior task. Independent review records and the recovery audit verify the retained receipts, raw logs, exact geometry, source identity and image hashes. This completion record does not claim a new native run or synchronization of its own documentation commit."
+  },
+  "native_build": {
+    "run": "dcm-quicksort-build-20261114-011936-e3a17b9f",
+    "passed": true,
+    "compiler": "go version go1.27.0 windows/amd64",
+    "app_bytes": 7365632,
+    "app_sha256": "7f51956e67dd7e0a33eef51a6ad8cf8a742ad6e2d64585348614eaa485e35827",
+    "source_manifest_entries": 434,
+    "source_manifest_sha256": "27cdc9c9ffb27681e81f94427d1b0412a7dff102d72ee250e39fb20fccca06a9",
+    "source_unchanged": true,
+    "source_entries_match_tested_git_commit": {
+      "matched": 434,
+      "mismatches": 0,
+      "git_blob_exact": 12,
+      "expected_Windows_CRLF_checkout": 422,
+      "evidence": "native/source-identity-audit.json",
+      "url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native/source-identity-audit.json"
+    }
+  },
+  "local_verification": {
+    "top_level_pass": 31,
+    "fail": 0,
+    "skip": 0,
+    "groups": {
+      "xlsx_openxml": 24,
+      "docx_font": 7
+    },
+    "windows_app_crossbuild_passed": true,
+    "windows_helper_test_crosscompile_passed": true,
+    "windows_executables_run_locally": false,
+    "compiler": "go version go1.27.4 linux/amd64",
+    "app_source_entries_matching_tested_commit": 138,
+    "local_manifest_before_after_sha256": "5b67e6777759b9a0dc8f190932a168657b445759bcaab88ffa87515d35e847fd",
+    "local_app_binary_sha256": "4cc8785b1fa48da947a803f5bfb73dbd59267d9e60cc52ec583cc6dc5a27c2a5",
+    "local_binary_is_not_native_build": true
+  },
+  "native_helper": {
+    "run": "dcm-quicksort-regressions-20261114-011840-a131e6b7",
+    "top_level_pass": 2,
+    "geometry_leaf_pass": 9,
+    "guard_leaf_pass": 39,
+    "total_leaf_pass": 48,
+    "fail": 0,
+    "skip": 0,
+    "exit_code": 0,
+    "timed_out": false,
+    "test_source_unchanged_from_clean_RED": true,
+    "test_source_sha256": "b30d463cb111f6837a0400919e795deb31d0540fbf89cc4e6296907a29e3991c",
+    "actual_non_100_percent_witness": {
+      "unaware_client": [
+        320,
+        240
+      ],
+      "PMv2_borderless_window": [
+        400,
+        300
+      ]
+    },
+    "scope": "Private owned HWND unit tests; installed Excel rendering is covered by the separate feature runs."
+  },
+  "native_xlsx": {
+    "diagnostic_run": "dcm-quicksort-ui-xlsx-20261114-012003-6ce3d109",
+    "ordinary_run": "dcm-quicksort-ui-xlsx-20261114-012116-fbdc6385",
+    "diagnostic_workflow_records_pass": 6,
+    "ordinary_workflow_records_pass": 6,
+    "diagnostic_bounds_pass": 10,
+    "ordinary_bounds_pass": 2,
+    "bounds_fail": 0,
+    "pane_client_in_PMv2_observer": [
+      902,
+      487
+    ],
+    "outer_EXCEL9_in_all_checks": [
+      903,
+      488
+    ],
+    "inner_EXCEL7_in_all_checks": [
+      903,
+      488
+    ],
+    "tolerance_pixels": 4,
+    "tolerance_unchanged": true,
+    "diagnostic_images_reviewed": 12,
+    "ordinary_images_reviewed": 4,
+    "all_images_pass": true,
+    "raw_feature_accepted_values": [
+      false,
+      false
+    ],
+    "raw_feature_flags_unchanged": true,
+    "scope": "Synthetic Orders workbook; first open, before-Restore and natural adjacent observations, TXT recovery, release, reopen, normal host close and fixture preservation. Separate direct image review supplies the content/layout judgment absent from raw machine flags.",
+    "native_sheet_navigation": "not_exercised",
+    "fixture_sha256": "5059729f4390ecd2e169bb2d1eb850c768532ebbb24b9733e87b82b012d6d24f"
+  },
+  "layout_trace": {
+    "sha256": "b0c7957cb20b3196d24e128be4fa3a8ee55529c5c40bb658cdc74a0303888a86",
+    "byte_exact_original_retained": true,
+    "completed_records": 14,
+    "retention_limit": 128,
+    "truncated": false,
+    "sessions": 2,
+    "COM_HRESULTs_S_OK": 8,
+    "GetClientRect_true": 4,
+    "outer_repair_requests_accepted": 2,
+    "SetWindow_rect_each_session": [
+      0,
+      0,
+      722,
+      390
+    ],
+    "SetRect_rect_each_session": [
+      0,
+      0,
+      722,
+      390
+    ],
+    "caller_context_before_after": 24592,
+    "caller_awareness_before_after": 0,
+    "interpretation": "Request acceptance alone is not proof of layout completion. The independent later bounds and full-window captures establish fit and readable content at every sampled native state; intermediate Excel layout between calls is not observed."
+  },
+  "docx_regression": {
+    "run": "dcm-quicksort-ui-docx-20261114-012139-efd939a9",
+    "passed_records": 7,
+    "failed_records": 0,
+    "images_reviewed": 5,
+    "all_images_pass": true,
+    "scope": "Original formatted letter and structured DOCX, TXT recovery, release/reopen, normal owned-host close and original bytes. Letter currency glyph is judged from the image, not console conversion.",
+    "shared_Word_process_termination_claimed": false
+  },
+  "fresh_native_baseline": {
+    "run": "dcm-quicksort-baseline-20261114-012309-4ee29c99",
+    "total_top_level": 384,
+    "passed": 383,
+    "failed": 0,
+    "skipped": [
+      "TestRealGeneratedPPTXIntegration"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "source_unchanged": true,
+    "skip_note": "The external real-generated-PPTX prerequisite remains explicitly skipped; this run does not qualify PPTX."
+  },
+  "source_unchanged_in_all_native_runs": true,
+  "fixtures_preserved_in_all_UI_runs": true,
+  "journal_empty_in_all_UI_runs": true,
+  "owned_host_exit_code_in_each_UI_run": 0,
+  "visual_review": {
+    "reviewer": "ChatGPT independent direct full-window image inspection",
+    "reviewed_captures": 21,
+    "raw_visual_reviewed_flags_unchanged": true,
+    "images": [
+      {
+        "run": "dcm-quicksort-ui-xlsx-20261114-012003-6ce3d109",
+        "file": "native/layout/01-initial-text.png",
+        "sha256": "7f27195aedf532bf9e84c0da974994e3a625e70a15849efef76047b68981b0a2",
+        "reviewed": true,
+        "result": "bounded_visual_pass",
+        "observation": "Expected three-line alpha TXT fixture is readable, with matching preview title and Plain-text preview: TXT footer. Host controls are fully painted; recovery frame has no stale worksheet content.",
+        "url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native/layout/01-initial-text.png"
+      },
+      {
+        "run": "dcm-quicksort-ui-xlsx-20261114-012003-6ce3d109",
+        "file": "native/layout/02-native-workbook-before-restore.png",
+        "sha256": "33b36bbea273a14de92df9688bb30289e2d65b3a1e520a370118278c6e7c3e3c",
+        "reviewed": true,
+        "result": "bounded_visual_pass",
+        "observation": "Workbook fills the pane. Orders and Read me tabs plus horizontal and vertical scrollbars are visible. Headers office/order_number/date, Sample Office, sequential visible order numbers and full dates 26-09-2026 are readable. Part of the recipient column is visible; further columns extend normally beyond the horizontally scrollable viewport. No unused right/bottom bands, clipped worksheet controls or stale TXT body are visible. Host controls and Windows preview: XLSX footer are fully painted.",
+        "url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native/layout/02-native-workbook-before-restore.png"
+      },
+      {
+        "run": "dcm-quicksort-ui-xlsx-20261114-012003-6ce3d109",
+        "file": "native/layout/02-native-workbook.png",
+        "sha256": "33b36bbea273a14de92df9688bb30289e2d65b3a1e520a370118278c6e7c3e3c",
+        "reviewed": true,
+        "result": "bounded_visual_pass",
+        "observation": "Workbook fills the pane. Orders and Read me tabs plus horizontal and vertical scrollbars are visible. Headers office/order_number/date, Sample Office, sequential visible order numbers and full dates 26-09-2026 are readable. Part of the recipient column is visible; further columns extend normally beyond the horizontally scrollable viewport. No unused right/bottom bands, clipped worksheet controls or stale TXT body are visible. Host controls and Windows preview: XLSX footer are fully painted.",
+        "url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native/layout/02-native-workbook.png"
+      },
+      {
+        "run": "dcm-quicksort-ui-xlsx-20261114-012003-6ce3d109",
+        "file": "native/layout/02-native-workbook-natural-250.png",
+        "sha256": "0d45dc288f91d80871a4271c25d72100c70934b1a5c4025dfe6da3a29b9b0990",
+        "reviewed": true,
+        "result": "bounded_visual_pass",
+        "observation": "Workbook fills the pane. Orders and Read me tabs plus horizontal and vertical scrollbars are visible. Headers office/order_number/date, Sample Office, sequential visible order numbers and full dates 26-09-2026 are readable. Part of the recipient column is visible; further columns extend normally beyond the horizontally scrollable viewport. No unused right/bottom bands, clipped worksheet controls or stale TXT body are visible. Host controls and Windows preview: XLSX footer are fully painted.",
+        "url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native/layout/02-native-workbook-natural-250.png"
+      },
+      {
+        "run": "dcm-quicksort-ui-xlsx-20261114-012003-6ce3d109",
+        "file": "native/layout/02-native-workbook-natural-1000.png",
+        "sha256": "33b36bbea273a14de92df9688bb30289e2d65b3a1e520a370118278c6e7c3e3c",
+        "reviewed": true,
+        "result": "bounded_visual_pass",
+        "observation": "Workbook fills the pane. Orders and Read me tabs plus horizontal and vertical scrollbars are visible. Headers office/order_number/date, Sample Office, sequential visible order numbers and full dates 26-09-2026 are readable. Part of the recipient column is visible; further columns extend normally beyond the horizontally scrollable viewport. No unused right/bottom bands, clipped worksheet controls or stale TXT body are visible. Host controls and Windows preview: XLSX footer are fully painted.",
+        "url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native/layout/02-native-workbook-natural-1000.png"
+      },
+      {
+        "run": "dcm-quicksort-ui-xlsx-20261114-012003-6ce3d109",
+        "file": "native/layout/02-native-workbook-natural-4000.png",
+        "sha256": "33b36bbea273a14de92df9688bb30289e2d65b3a1e520a370118278c6e7c3e3c",
+        "reviewed": true,
+        "result": "bounded_visual_pass",
+        "observation": "Workbook fills the pane. Orders and Read me tabs plus horizontal and vertical scrollbars are visible. Headers office/order_number/date, Sample Office, sequential visible order numbers and full dates 26-09-2026 are readable. Part of the recipient column is visible; further columns extend normally beyond the horizontally scrollable viewport. No unused right/bottom bands, clipped worksheet controls or stale TXT body are visible. Host controls and Windows preview: XLSX footer are fully painted.",
+        "url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native/layout/02-native-workbook-natural-4000.png"
+      },
+      {
+        "run": "dcm-quicksort-ui-xlsx-20261114-012003-6ce3d109",
+        "file": "native/layout/04-text-recovery.png",
+        "sha256": "bdb154b08f6f9db8ed005935ea56c5334a864a6d9d07b54a04af451e055d80a2",
+        "reviewed": true,
+        "result": "bounded_visual_pass",
+        "observation": "Expected three-line alpha TXT fixture is readable, with matching preview title and Plain-text preview: TXT footer. Host controls are fully painted; recovery frame has no stale worksheet content.",
+        "url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native/layout/04-text-recovery.png"
+      },
+      {
+        "run": "dcm-quicksort-ui-xlsx-20261114-012003-6ce3d109",
+        "file": "native/layout/06-native-workbook-reopened-before-restore.png",
+        "sha256": "0d45dc288f91d80871a4271c25d72100c70934b1a5c4025dfe6da3a29b9b0990",
+        "reviewed": true,
+        "result": "bounded_visual_pass",
+        "observation": "Workbook fills the pane. Orders and Read me tabs plus horizontal and vertical scrollbars are visible. Headers office/order_number/date, Sample Office, sequential visible order numbers and full dates 26-09-2026 are readable. Part of the recipient column is visible; further columns extend normally beyond the horizontally scrollable viewport. No unused right/bottom bands, clipped worksheet controls or stale TXT body are visible. Host controls and Windows preview: XLSX footer are fully painted.",
+        "url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native/layout/06-native-workbook-reopened-before-restore.png"
+      },
+      {
+        "run": "dcm-quicksort-ui-xlsx-20261114-012003-6ce3d109",
+        "file": "native/layout/06-native-workbook-reopened.png",
+        "sha256": "0d45dc288f91d80871a4271c25d72100c70934b1a5c4025dfe6da3a29b9b0990",
+        "reviewed": true,
+        "result": "bounded_visual_pass",
+        "observation": "Workbook fills the pane. Orders and Read me tabs plus horizontal and vertical scrollbars are visible. Headers office/order_number/date, Sample Office, sequential visible order numbers and full dates 26-09-2026 are readable. Part of the recipient column is visible; further columns extend normally beyond the horizontally scrollable viewport. No unused right/bottom bands, clipped worksheet controls or stale TXT body are visible. Host controls and Windows preview: XLSX footer are fully painted.",
+        "url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native/layout/06-native-workbook-reopened.png"
+      },
+      {
+        "run": "dcm-quicksort-ui-xlsx-20261114-012003-6ce3d109",
+        "file": "native/layout/06-native-workbook-reopened-natural-250.png",
+        "sha256": "33b36bbea273a14de92df9688bb30289e2d65b3a1e520a370118278c6e7c3e3c",
+        "reviewed": true,
+        "result": "bounded_visual_pass",
+        "observation": "Workbook fills the pane. Orders and Read me tabs plus horizontal and vertical scrollbars are visible. Headers office/order_number/date, Sample Office, sequential visible order numbers and full dates 26-09-2026 are readable. Part of the recipient column is visible; further columns extend normally beyond the horizontally scrollable viewport. No unused right/bottom bands, clipped worksheet controls or stale TXT body are visible. Host controls and Windows preview: XLSX footer are fully painted.",
+        "url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native/layout/06-native-workbook-reopened-natural-250.png"
+      },
+      {
+        "run": "dcm-quicksort-ui-xlsx-20261114-012003-6ce3d109",
+        "file": "native/layout/06-native-workbook-reopened-natural-1000.png",
+        "sha256": "33b36bbea273a14de92df9688bb30289e2d65b3a1e520a370118278c6e7c3e3c",
+        "reviewed": true,
+        "result": "bounded_visual_pass",
+        "observation": "Workbook fills the pane. Orders and Read me tabs plus horizontal and vertical scrollbars are visible. Headers office/order_number/date, Sample Office, sequential visible order numbers and full dates 26-09-2026 are readable. Part of the recipient column is visible; further columns extend normally beyond the horizontally scrollable viewport. No unused right/bottom bands, clipped worksheet controls or stale TXT body are visible. Host controls and Windows preview: XLSX footer are fully painted.",
+        "url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native/layout/06-native-workbook-reopened-natural-1000.png"
+      },
+      {
+        "run": "dcm-quicksort-ui-xlsx-20261114-012003-6ce3d109",
+        "file": "native/layout/06-native-workbook-reopened-natural-4000.png",
+        "sha256": "33b36bbea273a14de92df9688bb30289e2d65b3a1e520a370118278c6e7c3e3c",
+        "reviewed": true,
+        "result": "bounded_visual_pass",
+        "observation": "Workbook fills the pane. Orders and Read me tabs plus horizontal and vertical scrollbars are visible. Headers office/order_number/date, Sample Office, sequential visible order numbers and full dates 26-09-2026 are readable. Part of the recipient column is visible; further columns extend normally beyond the horizontally scrollable viewport. No unused right/bottom bands, clipped worksheet controls or stale TXT body are visible. Host controls and Windows preview: XLSX footer are fully painted.",
+        "url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native/layout/06-native-workbook-reopened-natural-4000.png"
+      },
+      {
+        "run": "dcm-quicksort-ui-xlsx-20261114-012116-fbdc6385",
+        "file": "native/normal/01-initial-text.png",
+        "sha256": "596e1bfd03c2839466b6d5e8387cdf0c3c0bf21e94821b871015405c49dd0bd7",
+        "reviewed": true,
+        "result": "bounded_visual_pass",
+        "observation": "The selected 01-alpha.txt fixture shows all three expected text lines, the matching preview title and Plain-text preview: TXT footer. The host controls are fully painted. Recovery returns to TXT without stale Office content.",
+        "url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native/normal/01-initial-text.png"
+      },
+      {
+        "run": "dcm-quicksort-ui-xlsx-20261114-012116-fbdc6385",
+        "file": "native/normal/02-native-workbook.png",
+        "sha256": "75bdb5feb33e507168cdbf5c11b2a7428085208a7b7f3caebd3ed3430ec73872",
+        "reviewed": true,
+        "result": "bounded_visual_pass",
+        "observation": "The worksheet fills the preview pane. Orders and Read me tabs and both scrollbars are visible. The office, order_number and date headers, Sample Office, sequential order numbers and complete 26-09-2026 dates are readable. The recipient column is partly visible; later columns extend normally beyond the horizontally scrollable viewport. The shell and Windows preview: XLSX footer are fully painted. No unused right/bottom band or oversized inner window clips the worksheet controls.",
+        "url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native/normal/02-native-workbook.png"
+      },
+      {
+        "run": "dcm-quicksort-ui-xlsx-20261114-012116-fbdc6385",
+        "file": "native/normal/04-text-recovery.png",
+        "sha256": "91bcf5cae2328c1b068f5d465dae2e665cebc0755b44b13eb78cc493695d8ee1",
+        "reviewed": true,
+        "result": "bounded_visual_pass",
+        "observation": "The selected 01-alpha.txt fixture shows all three expected text lines, the matching preview title and Plain-text preview: TXT footer. The host controls are fully painted. Recovery returns to TXT without stale Office content.",
+        "url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native/normal/04-text-recovery.png"
+      },
+      {
+        "run": "dcm-quicksort-ui-xlsx-20261114-012116-fbdc6385",
+        "file": "native/normal/06-native-workbook-reopened.png",
+        "sha256": "39de81893619b485d947e66fb60a91f9d5458969da5534e7b033dc0f7613ad9c",
+        "reviewed": true,
+        "result": "bounded_visual_pass",
+        "observation": "The worksheet fills the preview pane. Orders and Read me tabs and both scrollbars are visible. The office, order_number and date headers, Sample Office, sequential order numbers and complete 26-09-2026 dates are readable. The recipient column is partly visible; later columns extend normally beyond the horizontally scrollable viewport. The shell and Windows preview: XLSX footer are fully painted. No unused right/bottom band or oversized inner window clips the worksheet controls.",
+        "url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native/normal/06-native-workbook-reopened.png"
+      },
+      {
+        "run": "dcm-quicksort-ui-docx-20261114-012139-efd939a9",
+        "file": "native/docx/01-initial-text.png",
+        "sha256": "70a51bed2ee762963c39a1a71d7bc07396a235d36a2446e717c3e0b9908ba300",
+        "reviewed": true,
+        "result": "bounded_visual_pass",
+        "observation": "The selected 01-alpha.txt fixture shows all three expected text lines, the matching preview title and Plain-text preview: TXT footer. The host controls are fully painted. Recovery returns to TXT without stale Office content.",
+        "url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native/docx/01-initial-text.png"
+      },
+      {
+        "run": "dcm-quicksort-ui-docx-20261114-012139-efd939a9",
+        "file": "native/docx/02-native-letter.png",
+        "sha256": "926b34d039134aea804ee20bfd54f6e9e6d4b4d46b11276b722aa2e9abf1f7dd",
+        "reviewed": true,
+        "result": "bounded_visual_pass",
+        "observation": "The formatted Government of Odisha — Gurundia Block heading, Road Repair subject, ₹25,000 amount, Generated by FlowDoc text and right-aligned Block Development Officer signature are readable. The host controls and Windows preview: DOCX footer are fully painted.",
+        "url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native/docx/02-native-letter.png"
+      },
+      {
+        "run": "dcm-quicksort-ui-docx-20261114-012139-efd939a9",
+        "file": "native/docx/04-native-structured.png",
+        "sha256": "26cfb0566c8b221158dd785d32cc5de8721bb2fcd82123d3cc4aeb1b2b572706",
+        "reviewed": true,
+        "result": "bounded_visual_pass",
+        "observation": "DCM-30 FIELD REPORT, Alpha parcel: 31 units, bold and regular text, Unicode: Café, Measurements, the Item/Quantity table with Bolts/12 and Panels/3, the green image and END DCM-30 ALPHA are visible. The preview scrollbar, shell controls and Windows preview: DOCX footer are fully painted.",
+        "url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native/docx/04-native-structured.png"
+      },
+      {
+        "run": "dcm-quicksort-ui-docx-20261114-012139-efd939a9",
+        "file": "native/docx/08-text-recovery.png",
+        "sha256": "f79b33ca9529e1f449fb45dda3948e2fb97aea3b5d722c1b439cd4b3016afc16",
+        "reviewed": true,
+        "result": "bounded_visual_pass",
+        "observation": "The selected 01-alpha.txt fixture shows all three expected text lines, the matching preview title and Plain-text preview: TXT footer. The host controls are fully painted. Recovery returns to TXT without stale Office content.",
+        "url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native/docx/08-text-recovery.png"
+      },
+      {
+        "run": "dcm-quicksort-ui-docx-20261114-012139-efd939a9",
+        "file": "native/docx/10-native-letter-reopened.png",
+        "sha256": "263064cca9185a92a7c7f75a070b70ecbfbfa2471f87c8d21157325089f6fab4",
+        "reviewed": true,
+        "result": "bounded_visual_pass",
+        "observation": "The formatted Government of Odisha — Gurundia Block heading, Road Repair subject, ₹25,000 amount, Generated by FlowDoc text and right-aligned Block Development Officer signature are readable. The host controls and Windows preview: DOCX footer are fully painted.",
+        "url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native/docx/10-native-letter-reopened.png"
+      }
+    ]
+  },
+  "retained_negative_history": {
+    "prior_layout_candidates": "Earlier diagnostic/RED/failed physical-policy trials remain evidence of failure, not earlier feature acceptance. See the parent bundle history and staged raw reports.",
+    "first_outer_unit_RED_5c608ca": {
+      "geometry_assertion_fail": 9,
+      "guard_pass": 36,
+      "fixture_setup_fail_before_helper": 3,
+      "clean_RED": false
+    },
+    "corrected_outer_unit_RED_95cab148": {
+      "geometry_assertion_fail": 9,
+      "guard_pass": 39,
+      "fixture_setup_fail": 0,
+      "skip": 0,
+      "clean_RED": true
+    },
+    "GREEN_ec7a023": "All 48 unchanged corrected test leaf cases pass; the real installed Excel bounds and visuals also pass."
+  },
+  "limits": [
+    "Acceptance is bounded to the representative synthetic workbook and recorded Lenovo/installed Office provider at the observed scale, not every workbook or display configuration.",
+    "Visible native sheet tabs and scrollbars were not interacted with; no native worksheet-switch, later-column scrolling, formula editing or navigation qualification is claimed.",
+    "Native programmatic content access refusal was not bypassed; rendered-cell conclusions come from visual inspection.",
+    "Geometry readings are sequential, not atomic snapshots; no internal Excel timing or intermediate per-call geometry is inferred.",
+    "Fallback local units passed; this stage does not establish headed acceptance on a machine without an Office preview handler.",
+    "No general DOCX fidelity, arbitrary document, protected/corrupt-file, zoom/pagination or shared Office-process termination claim.",
+    "The pre-existing real-generated-PPTX baseline skip remains; PPTX and broader preview errors/cleanup remain separately scoped.",
+    "User acceptance and final installer/package/release qualification are not recorded."
+  ],
+  "user_test": "not_recorded",
+  "final_package_qualified": false,
+  "durable_report_target": {
+    "repository": "laxmanxp/flowverse-reports",
+    "branch": "main",
+    "path": "apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023",
+    "publication_status_at_preparation": "Pending parent commit/push; upload manifest prepared locally",
+    "publication_status": "pushed_and_confirmed_on_GitHub",
+    "commit": "69fee755a94468165018b499fe7d876779e57ec8",
+    "url": "https://github.com/laxmanxp/flowverse-reports/tree/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023",
+    "source_summary_url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native-acceptance-summary.json",
+    "source_summary_blob_sha": "69957161bb9fa76494a99b9052324b00911daa74",
+    "verification_note": "The source acceptance summary was retrieved from this exact GitHub report commit during recovery. The former publication_status_at_preparation is preserved as historical preparation state, not current publication status."
+  },
+  "exact_native_archive": {
+    "file": "native/native-exact.zip",
+    "bytes": 316274,
+    "sha256": "8a403965beb5357b0114bddb3819376293be3c82b037a938849bdbacd9634ac9",
+    "members": 131,
+    "content": "Six exact native receipts; command/test logs; all three native tracked-source manifests; all 12 XLSX bounds originals, 24 adjacent geometry files, and the host trace, plus text/native-window evidence. PNGs are retained separately.",
+    "manifest": "native/native-exact.manifest.exported.json",
+    "independent_audit_passed": true,
+    "all131_member_lengths_and_hashes_verified": true,
+    "six_exported_receipts_equal_original_JSON_values": true,
+    "helper_stdout_export_byte_exact": true,
+    "helper_stderr_export_note": "Native stderr is empty; the readable export has one added LF. Original bytes are retained in ZIP.",
+    "url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native/native-exact.zip",
+    "manifest_url": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023/native/native-exact.manifest.exported.json"
+  },
+  "recorded_on": "2026-11-14",
+  "record_timezone": "Asia/Kolkata",
+  "completion_record_preparation": {
+    "state_at_preparation": "prepared_for_commit",
+    "accepted_production_source": "ec7a02349e9f53c6fcfd889cf21f800f36c68b4a",
+    "prepared_numbered_plan": {
+      "complete": 30,
+      "remaining": 20,
+      "total": 50,
+      "next_runnable_step": "DCM-32",
+      "blocked_steps": [
+        "DCM-19"
+      ]
+    },
+    "application_documentation_commit_at_preparation": null,
+    "application_documentation_push_observed_at_preparation": false,
+    "lenovo_documentation_sync_observed_at_preparation": false,
+    "completion_rule": "Commit and push this application record, then confirm Lenovo receives it through flowdev update dcm-quicksort before reporting the production task DONE. Retain ec7a023 as the tested implementation identity."
+  },
+  "report_evidence_path_base": "https://github.com/laxmanxp/flowverse-reports/blob/69fee755a94468165018b499fe7d876779e57ec8/apps/dcm-quicksort/dcm31-20261113-225138/outer-layout-fix-ec7a023"
+}

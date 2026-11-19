@@ -1,0 +1,22 @@
+name: Record measured attachment phase costs
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/record-attachment-profile.yml]
+permissions:
+  contents: write
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply locally validated exact metadata update
+        run: python qualification/record-attachment-profile.py
+      - name: Save only tracker metadata
+        run: |
+          git config user.name 'DCM reviewed-checkpoint automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add todo.json qualification/completion-50.json
+          git commit -m 'test: preserve attachment phase evidence and open latency gate'
+          git push origin HEAD:release/v1.0.71

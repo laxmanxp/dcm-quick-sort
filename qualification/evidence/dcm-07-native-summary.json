@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "app": "DCM QuickSort",
+  "step": "DCM-07",
+  "evidence_kind": "compact transcription of retrieved native receipt, summary and raw stdout events; not a copy of the full report",
+  "commit": "26eeaed3b9041a31b17c197ef2a095f53ee2a9e6",
+  "branch": "release/v1.0.71",
+  "report": "C:\\FlowverseReports\\dcm-quicksort-regressions-20261109-151557-80d9f368",
+  "command": "flowdev test dcm-quicksort regressions",
+  "pattern": "^Test(D[1-6]|Release)",
+  "started_utc": "2026-11-09T15:15:57.4930772Z",
+  "finished_utc": "2026-11-09T15:16:44.4131993Z",
+  "count": 21,
+  "passed_count": 21,
+  "failures": [],
+  "skipped": [],
+  "exit_code": 0,
+  "timed_out": false,
+  "source_unchanged": true,
+  "go_version": "go version go1.27.0 windows/amd64",
+  "source_manifest": {
+    "files": 189,
+    "sha256": "3f9dd6e0f9fe7d518dbeaea6be8f2a1c8b3bda62d7e22231f06deea885af296d"
+  },
+  "raw_events": [
+    {
+      "Time": "2026-11-09T20:46:37.953184+05:30",
+      "Action": "pass",
+      "Package": "quicksort",
+      "Test": "TestD6MovedDuplicateSurvivorRequiresAttentionAfterRestart",
+      "Elapsed": 0.3
+    },
+    {
+      "Time": "2026-11-09T20:46:37.997379+05:30",
+      "Action": "pass",
+      "Package": "quicksort",
+      "Test": "TestD2MoveFileRefusesExistingForeignDestination",
+      "Elapsed": 0.04
+    }
+  ],
+  "previous_native_red": {
+    "commit": "c88abef150de794a028b466b6a0a28a5fab7707d",
+    "report": "20261109-141655-4b4f9621",
+    "passed": 20,
+    "failed": 1
+  },
+  "scope": "selected native regression group only; not full app suite, UI, installer, user acceptance or release certification"
+}

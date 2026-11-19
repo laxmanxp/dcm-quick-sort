@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "app": "DCM QuickSort",
+  "step": "DCM-15",
+  "date": "2026-11-10",
+  "branch": "release/v1.0.71",
+  "tested_commit": "99f07c1559f3519e1d9ddcb06b2c28014168c55e",
+  "result": "complete_at_installer_unit_and_tooling_boundary",
+  "product_code_changed": false,
+  "test_code_changed": false,
+  "workflow": [
+    "flowdev update dcm-quicksort",
+    "flowdev test dcm-quicksort ui-tooling",
+    "flowdev test dcm-quicksort installer-unit"
+  ],
+  "ui_tooling": {
+    "report": "C:\\FlowverseReports\\dcm-quicksort-ui-tooling-20261110-151151-1e75a08f",
+    "started_utc": "2026-11-10T15:11:51.5544290Z",
+    "finished_utc": "2026-11-10T15:11:53.4878176Z",
+    "passed": true,
+    "flowdev_exit_code": 0,
+    "scope": "tooling syntax and fixture construction only",
+    "scripts_parsed": 7,
+    "script_errors": 0,
+    "native_adapter_compiled": true,
+    "fixtures_count": 4,
+    "script_sha256": {
+      "tools/diagnose-host.ps1": "d93911fe0666d3638d7af7c9e312b715b5abf9a286f995fcd2ed9f2a906ffa82",
+      "tools/publish-release.ps1": "0054768fe1e44043c2ec1a1f95cf2f8cb0bd39541a0a7d1e34fc6bafae242000",
+      "tools/run-native.ps1": "6ae6ece11431056fa2f963e0e0815f8204f4575be874ef40fffa99105c88c8c9",
+      "tools/run-ui.ps1": "196bd854c33a5599ce9648c115b044951717a97615165882eaa306d37ed0a382",
+      "tools/test-installer-ui.ps1": "c252939990edeaab8133203c70e96fcaa799d0b6ffb9b94fc5cc0d63575bc658",
+      "tools/test-ui-tooling.ps1": "09e1b6bff69060c6774f9305ddd031d784327cf4629b65244abbcede9386393f",
+      "tests/native/new-fixtures.ps1": "ce760941d2fdb6798e84b9c1d244c1364cf202ac8418074150d932a79e481de7"
+    },
+    "fixture_sha256": {
+      "01-alpha.txt": "ed80c15fbda9a2955adb26430305a1753afcae571f85eeee37c5d89cecbbc70d",
+      "02-bravo.txt": "694044d87f1e08fe266fa4a98d5a3c2dbcb2c718f4641005684cb1513971b6a3",
+      "03-charlie.txt": "6fbd1356de6bec94c5658e39207be639dcb93bdfbaf807f81b90b5bd80120852",
+      "08-preview.pdf": "7a5724909e8367d2e680fa525506bcedf1bf711eddfb109a0f4046081f3a250a"
+    }
+  },
+  "installer_unit": {
+    "report": "C:\\FlowverseReports\\dcm-quicksort-installer-unit-20261110-151249-eefc7658",
+    "started_utc": "2026-11-10T15:12:49.7366666Z",
+    "finished_utc": "2026-11-10T15:13:51.0095874Z",
+    "pattern": "",
+    "count": 26,
+    "passed": 26,
+    "failed": 0,
+    "skipped": [],
+    "flowdev_exit_code": 0,
+    "test_exit_code": 0,
+    "timed_out": false,
+    "source_unchanged": true,
+    "go_version": "go version go1.27.0 windows/amd64",
+    "source_manifest_files": 213,
+    "source_manifest_sha256": "53e64654c7a765d6bec0a3fc1a80c153ddd7442fdf29e500b0dde57bf6d2b6ea",
+    "app_artifact_sha256": "a10e368eef249dbb38b340c52cfc8e2c2cb583758d14f07d09778c5ab9ee98c5",
+    "app_artifact_size": 7166464,
+    "setup_executed": false
+  },
+  "limits": [
+    "No visible app interaction or screenshot review occurred.",
+    "The UI-tooling receipt records script hashes and compile/fixture checks, not full UI behavior.",
+    "Installer engine and full application suites were not rerun in this retry.",
+    "The external PPTX fixture skip remains open under DCM-32 / DCM-PREVIEW-01 / DCM-47.",
+    "No packaged setup/uninstaller lifecycle, user acceptance, merge or publication.",
+    "The installer-unit build is not silently accepted as DCM-16; build a source-bound UI candidate after this tracker commit."
+  ],
+  "next_step": "DCM-16"
+}

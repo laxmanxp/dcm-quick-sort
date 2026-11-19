@@ -1,0 +1,209 @@
+{
+  "schema": 1,
+  "feature": "DCM-34-DOCX-FALLBACK-01",
+  "status": "fixed_with_bounded_acceptance",
+  "recorded_on": "2026-11-15",
+  "tested_source": "bfbb731dc131e2ba691c432555aff2641f44af8a",
+  "parent_step_status": "PARTIAL",
+  "numbered_plan": {
+    "complete": 32,
+    "remaining": 18
+  },
+  "new_native_run_claimed": false,
+  "user_test": "not_recorded",
+  "red": {
+    "source": "12655696e591f5bc0ea0b9ca4ff2544855c7145f",
+    "top_level": 4,
+    "passed_top_level": 2,
+    "failed_top_level": 2,
+    "failed_tests": [
+      "TestDCM34DOCXDamageStates",
+      "TestDCM34DOCXDocumentStructure"
+    ],
+    "skipped": 0,
+    "exit_code": 1
+  },
+  "native_gates": {
+    "update": {
+      "passed": true,
+      "received_commit": "bfbb731dc131e2ba691c432555aff2641f44af8a"
+    },
+    "docx-failure-unit": {
+      "passed_top_level": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    "docx-unit": {
+      "passed_top_level": 23,
+      "failed": 0,
+      "skipped": 0
+    },
+    "ui-tooling": {
+      "passed": true
+    },
+    "baseline": {
+      "passed": 396,
+      "failed": 0,
+      "skipped": 0,
+      "real_pptx_one_run_one_pass": true
+    },
+    "build": {
+      "passed": true,
+      "source_files": 478,
+      "app_size": 7372288,
+      "app_sha256": "e25bb96009872a8cd0a09f6bbac886f814d9ac68a4a5207895cbb4c21a69a084"
+    },
+    "docx-fallback-component": {
+      "passed_top_level": 1,
+      "headed_states": 16,
+      "captures": 16,
+      "scope": "Owned Windows component invokes production loadOfficeFallbackPreview and previewWindowProc with explicit missing/failed boundary inputs; no Office activation or registry changes."
+    },
+    "ui-docx": {
+      "passed_records": 7,
+      "captures": 5,
+      "scope": "Representative normal-app installed Word success, TXT recovery and reopening regression."
+    }
+  },
+  "normal_app_missing_or_failed_word_environment_qualified": false,
+  "separate_visual_review": {
+    "reviewed_on": "2026-11-15",
+    "images_reviewed": 21,
+    "method": "Each of the 21 original PNGs read and visually inspected separately through Desktop Commander.",
+    "raw_flags_modified": false,
+    "images": [
+      {
+        "path": "native/regressions-20261114-232504-ac6f1c6e/docx-component/missing-handler-boundary/01-empty-pane.png",
+        "observation": "Empty preview; no stale document; sizing controls disabled.",
+        "review": "pass_bounded_scope"
+      },
+      {
+        "path": "native/regressions-20261114-232504-ac6f1c6e/docx-component/missing-handler-boundary/02-malformed-after-empty.png",
+        "observation": "Explicit unavailable body and correct missing/failed-handler footer; controls disabled.",
+        "review": "pass_bounded_scope"
+      },
+      {
+        "path": "native/regressions-20261114-232504-ac6f1c6e/docx-component/missing-handler-boundary/03-valid-blank.png",
+        "observation": "Legitimate zero-paragraph DOCX accepted; zero counts and ready footer; generic sizing controls enabled, Width disabled.",
+        "review": "pass_bounded_scope"
+      },
+      {
+        "path": "native/regressions-20261114-232504-ac6f1c6e/docx-component/missing-handler-boundary/04-valid-body.png",
+        "observation": "Recovery body and Bridge count 7 readable; one-paragraph footer.",
+        "review": "pass_bounded_scope"
+      },
+      {
+        "path": "native/regressions-20261114-232504-ac6f1c6e/docx-component/missing-handler-boundary/05-malformed-after-success.png",
+        "observation": "Explicit unavailable state replaces the prior success body and footer.",
+        "review": "pass_bounded_scope"
+      },
+      {
+        "path": "native/regressions-20261114-232504-ac6f1c6e/docx-component/missing-handler-boundary/06-valid-recovery.png",
+        "observation": "Correct body and one-paragraph ready footer restored.",
+        "review": "pass_bounded_scope"
+      },
+      {
+        "path": "native/regressions-20261114-232504-ac6f1c6e/docx-component/missing-handler-boundary/07-missing-body-after-success.png",
+        "observation": "Missing-body DOCX unavailable; no stale successful content.",
+        "review": "pass_bounded_scope"
+      },
+      {
+        "path": "native/regressions-20261114-232504-ac6f1c6e/docx-component/missing-handler-boundary/08-valid-second-recovery.png",
+        "observation": "Correct body and ready footer restored again.",
+        "review": "pass_bounded_scope"
+      },
+      {
+        "path": "native/regressions-20261114-232504-ac6f1c6e/docx-component/failed-handler-boundary/01-empty-pane.png",
+        "observation": "Empty preview; no stale document; sizing controls disabled.",
+        "review": "pass_bounded_scope"
+      },
+      {
+        "path": "native/regressions-20261114-232504-ac6f1c6e/docx-component/failed-handler-boundary/02-malformed-after-empty.png",
+        "observation": "Explicit unavailable body and correct missing/failed-handler footer; controls disabled.",
+        "review": "pass_bounded_scope"
+      },
+      {
+        "path": "native/regressions-20261114-232504-ac6f1c6e/docx-component/failed-handler-boundary/03-valid-blank.png",
+        "observation": "Legitimate zero-paragraph DOCX accepted; zero counts and ready footer; generic sizing controls enabled, Width disabled.",
+        "review": "pass_bounded_scope"
+      },
+      {
+        "path": "native/regressions-20261114-232504-ac6f1c6e/docx-component/failed-handler-boundary/04-valid-body.png",
+        "observation": "Recovery body and Bridge count 7 readable; one-paragraph footer.",
+        "review": "pass_bounded_scope"
+      },
+      {
+        "path": "native/regressions-20261114-232504-ac6f1c6e/docx-component/failed-handler-boundary/05-malformed-after-success.png",
+        "observation": "Explicit unavailable state replaces the prior success body and footer.",
+        "review": "pass_bounded_scope"
+      },
+      {
+        "path": "native/regressions-20261114-232504-ac6f1c6e/docx-component/failed-handler-boundary/06-valid-recovery.png",
+        "observation": "Correct body and one-paragraph ready footer restored.",
+        "review": "pass_bounded_scope"
+      },
+      {
+        "path": "native/regressions-20261114-232504-ac6f1c6e/docx-component/failed-handler-boundary/07-missing-body-after-success.png",
+        "observation": "Missing-body DOCX unavailable; no stale successful content.",
+        "review": "pass_bounded_scope"
+      },
+      {
+        "path": "native/regressions-20261114-232504-ac6f1c6e/docx-component/failed-handler-boundary/08-valid-second-recovery.png",
+        "observation": "Correct body and ready footer restored again.",
+        "review": "pass_bounded_scope"
+      },
+      {
+        "path": "native/ui-docx-20261114-232542-a73d445b/01-initial-text.png",
+        "observation": "All three TXT fixture lines readable; no DOCX remnants.",
+        "review": "pass_bounded_scope"
+      },
+      {
+        "path": "native/ui-docx-20261114-232542-a73d445b/02-native-letter.png",
+        "observation": "Gurundia Block letter, Road Repair, amount 25,000 with rupee symbol and signature readable.",
+        "review": "pass_bounded_scope"
+      },
+      {
+        "path": "native/ui-docx-20261114-232542-a73d445b/04-native-structured.png",
+        "observation": "Field-report heading, 31 units, mixed formatting, Cafe with accent, table Bolts 12/Panels 3, green image and end marker readable.",
+        "review": "pass_bounded_scope"
+      },
+      {
+        "path": "native/ui-docx-20261114-232542-a73d445b/08-text-recovery.png",
+        "observation": "Original three TXT lines restored; no document overlay.",
+        "review": "pass_bounded_scope"
+      },
+      {
+        "path": "native/ui-docx-20261114-232542-a73d445b/10-native-letter-reopened.png",
+        "observation": "Same correct letter content readable after reopening.",
+        "review": "pass_bounded_scope"
+      }
+    ]
+  },
+  "preservation": {
+    "source_unchanged": true,
+    "fixtures_preserved": true,
+    "normal_app_journal_empty": true,
+    "component_exclusive_release_passed": true,
+    "normal_app_release_and_close_passed": true
+  },
+  "publication": {
+    "repository": "laxmanxp/flowverse-reports",
+    "commit": "f0caef5efb0f4f3ac370b412577d38ab94aa3fdb",
+    "prefix": "apps/dcm-quicksort/dcm34-20261114-232225/docx-fallback-bfbb731",
+    "raw_files": 213,
+    "publication_files": 217,
+    "archive_sha256": "1cae8ad7f5662be2e26f1754c2aebd0ecc0520705738e67599557364bc5da31a",
+    "identity_checks": "213 archive entries, source originals and extracted files matched the existing SHA-256 manifest; all 217 staged report blobs matched exact unfiltered bytes.",
+    "limit": "The earlier PDF documentation-sync subset has no execution.json; its available raw files are preserved. No recovered prior 305-check audit is claimed."
+  },
+  "remaining": [
+    "Default PDF protected-file handling",
+    "Observed in-flight interruption and late-result rejection",
+    "Generic sizing readiness on native PDF error",
+    "Broader Office failure/protection scope",
+    "DCM-35 lifecycle",
+    "DCM-46 final workflow",
+    "Suite packaging/installer readiness",
+    "Actual user acceptance"
+  ]
+}

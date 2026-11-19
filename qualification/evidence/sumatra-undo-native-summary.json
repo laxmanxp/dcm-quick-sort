@@ -1,0 +1,110 @@
+{
+  "schema": 1,
+  "record_type": "review_summary_not_raw_receipt",
+  "feature": "DCM-SUMATRA-UNDO-01",
+  "date_ist": "2026-11-12",
+  "tested_commit": "cc04ae7cd8932cffc4e13d7e181ae51eb78095fc",
+  "product_fix": "0c9cdf87084bd9f18c0e062bee9f40ce8f6f0ace",
+  "numbered_steps_closed": [],
+  "product_red": {
+    "commit": "55e2b877e6ad305c083d1380deb447534ead889e",
+    "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-sumatra-undo-20261112-125742-ee1f4895",
+    "error": "Deadline: destination clears stale selection after Undo",
+    "preceding_records_passed": 5,
+    "restored_bytes_and_journal_checked_before_failure": true,
+    "failure_image_reviewed": true,
+    "wrong_file_operation_or_data_loss_observed": false,
+    "cleanup_exit": 0
+  },
+  "ui_runs": [
+    {
+      "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-sumatra-undo-20261112-131419-c530aae7",
+      "receipt_sha256": "7820fdbcf410594c31996a7a128593473b9dcb7b782bdfc0e785f6cba9fc28c6",
+      "passed": true,
+      "cases": 9,
+      "exit_code": 0,
+      "source_unchanged": true,
+      "fixtures_restored": true,
+      "journal_final": "two original transactions undone",
+      "recorded_viewer_pids": [20524, 22592, 15404, 8412, 24184, 7296],
+      "selection_readiness_ms": [1437, 520, 395, 352],
+      "full_images_reviewed": 8,
+      "content_crops_separately_reviewed": false
+    },
+    {
+      "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-sumatra-undo-20261112-131747-1db5aef1",
+      "receipt_sha256": "a8772c06a0ad77fde626f9ef9aafc4270f76f4a3ab935dd3329bbec03dd26ba3",
+      "passed": true,
+      "cases": 9,
+      "exit_code": 0,
+      "source_unchanged": true,
+      "fixtures_restored": true,
+      "selection_readiness_ms": [1610, 369, 340, 352],
+      "images_reviewed": false
+    }
+  ],
+  "visual_review": {
+    "directory": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-sumatra-undo-20261112-131419-c530aae7",
+    "raw_flags_modified": false,
+    "full_window_hashes": {
+      "01-original-active.png": "96a26b69ddd32a3daa343eb297bdfff7e3ad7a4222ff0c93d651762b344fba89",
+      "02-renamed-active-before-undo.png": "543acf8f945a7d19c219bee995e945937426ca7f905055ae2cb1abf2eff190d7",
+      "03-rename-undone-and-reopened.png": "96a26b69ddd32a3daa343eb297bdfff7e3ad7a4222ff0c93d651762b344fba89",
+      "04-moved-PDF-reopened-before-undo.png": "fe60c74b09486e59314e1ca5dc2e3ce772303a901778c15ecd09b17c714f5843",
+      "05-destination-empty-after-undo.png": "5f8b0d3964dd9a471811a15a09c19475fbf1bb1195073a463752a6f6d074cb4f",
+      "06-restored-PDF-before-viewer-failure.png": "96a26b69ddd32a3daa343eb297bdfff7e3ad7a4222ff0c93d651762b344fba89",
+      "07-viewer-exit-error.png": "1f692e1dd78c97ce04542ce81f037a8a0a9d4bd065a4c1a048069fe14528944a",
+      "08-reload-recovers-correct-PDF.png": "96a26b69ddd32a3daa343eb297bdfff7e3ad7a4222ff0c93d651762b344fba89"
+    },
+    "observations": "Correct original/renamed/restored PDF, empty destination after Undo, truthful viewer-exit error and correct Reload recovery; existing general label crowding not waived."
+  },
+  "baseline": {
+    "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-baseline-20261112-131448-2a7ddc9c",
+    "receipt_sha256": "7823b0bd3c18d2bdc0496d03106f9dc705555487c161b1838ef0e1464a092be1",
+    "count": 369,
+    "passed": 368,
+    "failed": 0,
+    "skipped": ["TestRealGeneratedPPTXIntegration"],
+    "exit_code": 0,
+    "timed_out": false,
+    "source_unchanged": true
+  },
+  "release_refusal": {
+    "parent": "TestSumatraReleaseFailurePreservesOperations",
+    "nested_passes": ["wait-failed/rename", "wait-failed/move", "wait-failed/undo", "termination-failed/rename", "termination-failed/move", "termination-failed/undo"],
+    "already_included_in_baseline": true,
+    "method": "Test-local invalid wait handle or unsignalled event plus invalid job handle, real production handlers; hidden owned fixture windows. No production failure switch or live process ACL modification.",
+    "limitation": "Not a complete live-viewer GUI permission-denial test, every exit-wait timeout branch or batch-Undo guard qualification."
+  },
+  "regressions": [
+    {"selector":"ui-refresh","report":"D:\\FlowverseReportsRepo\\dcm-quicksort-ui-refresh-20261112-131625-5574d080","receipt_sha256":"1497c968bed8b1013f99cb4f4bda9ed97964115359a57709b0e830d4a89e8c3c","cases":23,"passed":true,"command_exit":0,"source_unchanged":true,"images_reviewed":false},
+    {"selector":"ui-sumatra-lifecycle","report":"D:\\FlowverseReportsRepo\\dcm-quicksort-ui-sumatra-lifecycle-20261112-131711-6f3ca1c6","receipt_sha256":"2f27fa6bc2e00e4d5a7f2e2f98e5d776bf7e0fe1e65649dc2b8d4b5b29ddf406","cases":11,"passed":true,"exit_code":0,"source_unchanged":true,"fixtures_preserved":true,"images_reviewed":false}
+  ],
+  "build": {
+    "receipt": "D:\\FlowverseReportsRepo\\dcm-quicksort-build-20261112-131140-4a0e53b7\\receipt.json",
+    "receipt_sha256": "5e4d210d3c78e2a6b8c36ed524ecedac4e88e72f71381562142837dd9763458e",
+    "app_sha256": "81c516b0a84442dec493f21ef1ff3562b988eb66fc76c0c177959c3afcb3bdb0",
+    "size_bytes": 7230976,
+    "manifest_files": 318,
+    "manifest_sha256": "e6899c708207f4c62d56cd429a03326d6b01d40a4dc0628fd4b6b8341169825a"
+  },
+  "runtime_sha256": "719f689b34f47be8ca105ce8484948474dafde0e106bab599e4a89326070c3d0",
+  "policy_sha256": "f82ee9c3ff09da529f67f2ee73ab716dd53678d0f52b00ddcffc9d6dc0a908aa",
+  "retained_failures": [
+    {"suffix":"20261112-124531-b1b33c46","source":"7b0aca98","error":"Native message deadline: 273","acceptance_records":0},
+    {"suffix":"20261112-124705-2ef93a76","source":"7b0aca98","error":"Native message deadline: 273","acceptance_records":0},
+    {"suffix":"20261112-125742-ee1f4895","source":"55e2b877","error":"destination clears stale selection after Undo","kind":"actual product RED"},
+    {"suffix":"20261112-130158-54c9fdd9","source":"0c9cdf87","error":"Native message deadline: 14","acceptance_records":0},
+    {"suffix":"20261112-130457-ec8ed176","source":"0c9cdf87","error":"Native message deadline: 14"},
+    {"suffix":"20261112-131234-d8f1e1a0","source":"cc04ae7c","error":"Window minimized during capture","acceptance_records_before_failure":7,"cleanup_exit":0}
+  ],
+  "retained_failure_report_prefix": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-sumatra-undo-",
+  "startup_finding": {
+    "id":"DCM-SUMATRA-STARTUP-01",
+    "status":"open",
+    "test_change":"Post the actual owned selection notification; poll owned filename readiness with 50ms queries inside existing20s readiness deadline. Exact target/row/content assertions retained.",
+    "product_startup_optimized":false,
+    "every_timeout_root_cause_established":false
+  },
+  "boundaries": {"default_provider_changed":false,"runtime_bundled":false,"printing_enabled":false,"user_documents_changed":false,"host_installation_or_associations_changed":false,"user_acceptance":"not_recorded","merged":false,"published":false}
+}

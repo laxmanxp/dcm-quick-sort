@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "app": "DCM QuickSort",
+  "step": "DCM-12",
+  "kind": "compact transcription of reviewed native receipt and PASS events; full logs retained on Lenovo",
+  "tested_commit": "4619e0ef2bed51b7685c5f84d0fc0f87702bb1ca",
+  "implementation_commit": "26eeaed3b9041a31b17c197ef2a095f53ee2a9e6",
+  "branch": "release/v1.0.71",
+  "report": "C:\\FlowverseReports\\dcm-quicksort-regressions-20261109-170738-0bc02f13",
+  "commands": [
+    "flowdev update dcm-quicksort",
+    "flowdev test dcm-quicksort regressions"
+  ],
+  "summary": {
+    "pattern": "^Test(D[1-6]|Release)",
+    "top_level_count": 23,
+    "passed_count": 23,
+    "failures": [],
+    "skipped": [],
+    "exit_code": 0,
+    "timed_out": false,
+    "source_unchanged": true
+  },
+  "receipt": {
+    "started_utc": "2026-11-09T17:07:39.0597597Z",
+    "finished_utc": "2026-11-09T17:07:55.5119359Z",
+    "go_version": "go version go1.27.0 windows/amd64",
+    "manifest_files": 201,
+    "manifest_sha256": "eefe6e316685b4603f09e31272b55431a9e9c1bb229c89d74e5f67424848955f"
+  },
+  "reviewed_stdout_lines_1_based": [
+    174,
+    207
+  ],
+  "d4_top_level_count": 3,
+  "d4_nested_count": 5,
+  "pass_events": [
+    {
+      "Test": "TestD4InvalidTemplatePackagesPreserveAllCurrentConfiguration/archive-template-modified",
+      "Action": "pass",
+      "Time": "2026-11-09T22:37:53.3131154+05:30",
+      "Elapsed": 0.14
+    },
+    {
+      "Test": "TestD4InvalidTemplatePackagesPreserveAllCurrentConfiguration/archive-truncated",
+      "Action": "pass",
+      "Time": "2026-11-09T22:37:53.3687384+05:30",
+      "Elapsed": 0.06
+    },
+    {
+      "Test": "TestD4InvalidTemplatePackagesPreserveAllCurrentConfiguration/latest-template-modified",
+      "Action": "pass",
+      "Time": "2026-11-09T22:37:53.460169+05:30",
+      "Elapsed": 0.09
+    },
+    {
+      "Test": "TestD4InvalidTemplatePackagesPreserveAllCurrentConfiguration",
+      "Action": "pass",
+      "Time": "2026-11-09T22:37:53.460169+05:30",
+      "Elapsed": 0.28
+    },
+    {
+      "Test": "TestD4NamingTemplatesSurviveExportImportAndLatestRestore/archive-import",
+      "Action": "pass",
+      "Time": "2026-11-09T22:37:53.6076341+05:30",
+      "Elapsed": 0.15
+    },
+    {
+      "Test": "TestD4NamingTemplatesSurviveExportImportAndLatestRestore/latest-restore",
+      "Action": "pass",
+      "Time": "2026-11-09T22:37:53.7310694+05:30",
+      "Elapsed": 0.12
+    },
+    {
+      "Test": "TestD4NamingTemplatesSurviveExportImportAndLatestRestore",
+      "Action": "pass",
+      "Time": "2026-11-09T22:37:53.7316096+05:30",
+      "Elapsed": 0.27
+    },
+    {
+      "Test": "TestD4TamperedNamingTemplateBackupLeavesCurrentConfigurationUntouched",
+      "Action": "pass",
+      "Time": "2026-11-09T22:37:53.7831277+05:30",
+      "Elapsed": 0.05
+    }
+  ],
+  "new_test_file": "app-src/d4_invalid_archive_regression_test.go",
+  "new_test_blob": "9844eb1d8637d9958ef687a65a2fb9b61c63f88e",
+  "claims": {
+    "new_product_fix": false,
+    "existing_assertions_changed": false,
+    "full_app_suite": false,
+    "visible_ui_acceptance": false,
+    "installer_lifecycle": false,
+    "user_acceptance": "not_recorded",
+    "release_qualified": false
+  }
+}

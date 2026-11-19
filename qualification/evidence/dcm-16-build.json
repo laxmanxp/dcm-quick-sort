@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "step": "DCM-16",
+  "scope": "dedicated native build and provenance only",
+  "repository": "laxmanxp/dcm-quick-sort",
+  "branch": "release/v1.0.71",
+  "commit": "4eec87801ed31b64ed9d71d91005b81dfcade481",
+  "commands": [
+    "flowdev update dcm-quicksort",
+    "flowdev test dcm-quicksort build"
+  ],
+  "report": "C:\\FlowverseReports\\dcm-quicksort-build-20261110-154145-94223282",
+  "receipt": "C:\\FlowverseReports\\dcm-quicksort-build-20261110-154145-94223282\\receipt.json",
+  "passed": true,
+  "exit_code": 0,
+  "timed_out": false,
+  "source_unchanged": true,
+  "started_utc": "2026-11-10T15:41:45.4902996Z",
+  "finished_utc": "2026-11-10T15:42:34.6451263Z",
+  "go_version": "go version go1.27.0 windows/amd64",
+  "source_manifest": {
+    "files": 215,
+    "sha256": "1a512c36525f5fd0ec17f07ddcf4cd81fdf16bb99e3e53d6eff630766d375911"
+  },
+  "app_artifact": {
+    "path": "C:\\FlowverseReports\\dcm-quicksort-build-20261110-154145-94223282\\artifacts\\DCM-QuickSort.exe",
+    "size": 7166464,
+    "sha256": "a10e368eef249dbb38b340c52cfc8e2c2cb583758d14f07d09778c5ab9ee98c5"
+  },
+  "staged_payload_matches_app": true,
+  "build_stderr_empty": true,
+  "test_runs": [],
+  "product_ui_executed": false,
+  "setup_executed": false,
+  "visual_reviewed": false,
+  "user_acceptance": "not_recorded",
+  "binding_rule": "Receipt must match the current clean checkout. After any new HEAD, rebuild and bind the exact new receipt; do not weaken validation.",
+  "next_step": "DCM-17"
+}

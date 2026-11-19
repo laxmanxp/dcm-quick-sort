@@ -1,0 +1,34 @@
+name: Apply tested compact layout correction
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/apply-compact-layout.yml]
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.2'
+          cache: false
+      - name: Replay exact local patch
+        run: |
+          echo '8f34800024a6bffb24af7e97eab76bf4028550cb07d74bb1d676aa25c24daab9  app-src/compact_layout.go' | sha256sum -c -
+          echo 'cab8f4d71ba8b3a275ec70d129c9fee6bebbd95be8a2da2a7d3cbd09044cc7bc  app-src/compact_layout_test.go' | sha256sum -c -
+          python qualification/apply-compact-layout.py
+      - name: Test layout contracts and compile Windows tests
+        working-directory: app-src
+        run: |
+          go test -race -count=1 -run 'Test(Compact|Sumatra|Prepared)' ./...
+          GOOS=windows GOARCH=amd64 go test -c -o "$RUNNER_TEMP/compact.test.exe" .
+      - name: Save exact main layout correction
+        run: |
+          git config user.name 'DCM reviewed-patch automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app-src/main_windows.go
+          git commit -m 'fix: wrap compact filters and separate Processed title from Undo controls'
+          git push origin HEAD:release/v1.0.71

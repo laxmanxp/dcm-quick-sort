@@ -1,0 +1,31 @@
+{
+  "files": [
+    {
+      "path": "tools/test-ui-image.ps1",
+      "before_blob": "1d3ce5e254984b4a0a421bf093898e01b3bb8ce6",
+      "after_sha256": "bad642ff2336e81c51a0f05963f3b8829b7bb78dfd6467eeadfe53d270998ade",
+      "replacements": [
+        {
+          "old": "$captures=New-Object 'Collections.Generic.List[object]'",
+          "new": "$captures=New-Object 'Collections.Generic.List[object]'\n$captureAttempts=New-Object 'Collections.Generic.List[object]'"
+        },
+        {
+          "old": "passed=$false;visual_reviewed=$false;cases=$cases;captures=$captures}",
+          "new": "passed=$false;visual_reviewed=$false;cases=$cases;captures=$captures;capture_attempts=$captureAttempts}"
+        },
+        {
+          "old": "function Shot([string]$Name){\n    Require-App\n    $screen=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea\n    if([DcmNative]::IsIconic($hwnd) -or -not [DcmNative]::IsWindowVisible($hwnd) -or -not $script:capturePositioned){\n        [DcmNative]::Restore($hwnd,$app.Id,$screen.Left+12,$screen.Top+12)\n        Wait-For 'owned capture window restored' { -not [DcmNative]::IsIconic($hwnd) -and [DcmNative]::IsWindowVisible($hwnd) }\n        $script:capturePositioned=$true\n    }\n    Start-Sleep -Milliseconds 300\n    Write-Json (Join-Path $lab ($Name+'.controls.json')) ([DcmNative]::Snapshot($hwnd,$app.Id))\n    $shot=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ($Name+'.png')),$false)\n    $captures.Add([ordered]@{feature='DCM-27';name=$Name;path=$shot.Path;sha256=(Hash $shot.Path);width=$shot.Width;height=$shot.Height;visual_reviewed=$false})\n    return $shot\n}",
+          "new": "function Shot([string]$Name){\n    # Only transient minimization is retried, once. Every attempt remains recorded;\n    # a successful image still must pass the unmodified native capture guards.\n    for($attempt=1;$attempt -le 2;$attempt++){\n        Require-App\n        $path=Join-Path $lab ($Name+'-attempt-'+$attempt+'.png')\n        try{\n            $screen=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea\n            if([DcmNative]::IsIconic($hwnd) -or -not [DcmNative]::IsWindowVisible($hwnd) -or -not $script:capturePositioned){\n                [DcmNative]::Restore($hwnd,$app.Id,$screen.Left+12,$screen.Top+12)\n                Wait-For 'owned capture window restored' { -not [DcmNative]::IsIconic($hwnd) -and [DcmNative]::IsWindowVisible($hwnd) }\n                $script:capturePositioned=$true\n            }\n            Start-Sleep -Milliseconds 300\n            Write-Json (Join-Path $lab ($Name+'-attempt-'+$attempt+'.controls.json')) ([DcmNative]::Snapshot($hwnd,$app.Id))\n            $shot=[DcmNative]::Capture($hwnd,$app.Id,$path,$false)\n            $captureAttempts.Add([ordered]@{name=$Name;attempt=$attempt;passed=$true;path=$path;utc=[DateTime]::UtcNow.ToString('o')})\n            $captures.Add([ordered]@{feature='DCM-27';name=$Name;path=$shot.Path;sha256=(Hash $shot.Path);width=$shot.Width;height=$shot.Height;visual_reviewed=$false})\n            return $shot\n        }catch{\n            $message=$_.Exception.Message\n            $minimized=$message.Contains('minimized') -or $message.Contains('hidden capture')\n            $captureAttempts.Add([ordered]@{name=$Name;attempt=$attempt;passed=$false;error=$message;path=$path;file_exists=(Test-Path -LiteralPath $path);utc=[DateTime]::UtcNow.ToString('o');retry=($minimized -and $attempt -lt 2)})\n            if(-not $minimized -or $attempt -ge 2){throw}\n            $script:capturePositioned=$false\n        }\n    }\n    throw 'No verified capture produced.'\n}"
+        },
+        {
+          "old": "    $shot=Shot $Case\n    $preview=",
+          "new": "    $shot=Shot $Case\n    Require-App\n    $afterItems=@([DcmNative]::ListItems($hwnd,$app.Id,1016));$afterSelected=@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016))\n    if($afterSelected.Count -ne 1 -or $afterItems[$afterSelected[0]] -cne $Spec.name -or (Text 1005) -cne [IO.Path]::GetFileNameWithoutExtension($Spec.name)){throw 'Image target changed during capture.'}\n    $preview="
+        },
+        {
+          "old": "    $null=Shot $Case\n    $cases.Add([ordered]@{name=$Case;file=$File;passed=$true;status=$errors[0].Text})",
+          "new": "    $null=Shot $Case\n    $after=@([DcmNative]::Snapshot($hwnd,$app.Id))\n    if((Text 1005) -cne [IO.Path]::GetFileNameWithoutExtension($File) -or -not @($after | Where-Object {$_.Visible -and $_.Text -ceq $errors[0].Text}).Count){throw 'Image error state changed during capture.'}\n    $cases.Add([ordered]@{name=$Case;file=$File;passed=$true;status=$errors[0].Text})"
+        }
+      ]
+    }
+  ]
+}

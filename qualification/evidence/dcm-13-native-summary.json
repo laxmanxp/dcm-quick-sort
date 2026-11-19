@@ -1,0 +1,83 @@
+{
+  "schema": 1,
+  "step": "DCM-13",
+  "completion": "pending",
+  "next_step": "DCM-13",
+  "open_blocker": "DCM-INSTALL-CLEANUP-01",
+  "scope": "installer unit tests and in-process private-HKCU installer engine; not packaged setup/uninstaller end-to-end",
+  "installer_unit": {
+    "commit": "1c5bbcae5eaf21f147958dab52e5fdc949df4dd0",
+    "report": "C:\\FlowverseReports\\dcm-quicksort-installer-unit-20261109-172517-35406408",
+    "count": 24,
+    "passed_count": 24,
+    "failures": [],
+    "skipped": [],
+    "exit_code": 0,
+    "timed_out": false,
+    "source_unchanged": true,
+    "source_manifest_sha256": "764e162c01dd9160b58a343003a0ec5e5b16e984fb239828e04ad130cc5c2d33",
+    "finished_utc": "2026-11-09T17:25:42.9565497Z"
+  },
+  "initial_engine_failure": {
+    "commit": "1c5bbcae5eaf21f147958dab52e5fdc949df4dd0",
+    "report": "C:\\FlowverseReports\\dcm-quicksort-installer-integration-20261109-172606-e2b5f2f5",
+    "error": "HKCU override failed; no installer call is permitted: 6",
+    "installer_calls_reached": false,
+    "live_registry_unchanged": true,
+    "private_registry_removed": true
+  },
+  "harness_fix": {
+    "commit": "2a302e38c92b271e97d484e7eb77010559dfba03",
+    "file": "tests/native/installer_isolated_windows_test.go",
+    "blob": "4dd2e4fe6e310925c4ce5e37349c976a64b33524",
+    "sha256": "b0fdcfb7c1cb2c15c356f2e48ef6487ad254abc3c70b5cf2fa4f996ffc5040d5",
+    "change": "Use pointer-width sign-extended HKCU for RegOverridePredefKey activation/reset; production-handle marker checks unchanged.",
+    "product_implementation_changed": false
+  },
+  "latest_engine": {
+    "commit": "2a302e38c92b271e97d484e7eb77010559dfba03",
+    "report": "C:\\FlowverseReports\\dcm-quicksort-installer-integration-20261109-173550-9f982691",
+    "count": 1,
+    "passed_count": 0,
+    "failures": [
+      "TestNativeInstallerIsolatedRegistryLifecycle"
+    ],
+    "exit_code": 1,
+    "timed_out": false,
+    "source_unchanged": true,
+    "failure": "owned uninstall cleanup exited 1",
+    "failure_time": "2026-11-09T23:06:36.3042322+05:30",
+    "source_manifest_sha256": "c0da568a6cb95af6aa95b1470b8dcbef8fffa48fe537aaf2a9a102e455f1d2d7",
+    "finished_utc": "2026-11-09T17:36:42.5494979Z",
+    "upgrade_configuration": {
+      "destinations.conf": "9dcec2036ad6c6459c3e9e00d17b987901cac89dd74b99f79eebb4cc7ce0540d",
+      "learning.json": "221b93366f3d65cf425744b4014ebd93a0e8e634c7856fd41c7b5ad0f30bf827",
+      "naming-templates.json": "8f1f2b92710dc211f1594b559a5c451f7d95cf3316ede626e5ca9e3742f29226",
+      "settings.json": "4e6c4bc2689fc6f4a9860e49e96a0d12fc608b837bc62b77c7616de8b16d8de1",
+      "sources.conf": "7fb57e556c4a3825b9ba7d4f566884ef3501f26b7799b44c70f9e9626dc6b49c"
+    },
+    "restored_configuration": {
+      "destinations.conf": "9dcec2036ad6c6459c3e9e00d17b987901cac89dd74b99f79eebb4cc7ce0540d",
+      "learning.json": "221b93366f3d65cf425744b4014ebd93a0e8e634c7856fd41c7b5ad0f30bf827",
+      "naming-templates.json": "8f1f2b92710dc211f1594b559a5c451f7d95cf3316ede626e5ca9e3742f29226",
+      "settings.json": "4e6c4bc2689fc6f4a9860e49e96a0d12fc608b837bc62b77c7616de8b16d8de1",
+      "sources.conf": "7fb57e556c4a3825b9ba7d4f566884ef3501f26b7799b44c70f9e9626dc6b49c"
+    },
+    "live_registry_unchanged": true,
+    "registry_override_reset": true,
+    "private_registry_removed": true,
+    "overall_passed": false
+  },
+  "app_build": {
+    "size": 7166464,
+    "sha256": "a10e368eef249dbb38b340c52cfc8e2c2cb583758d14f07d09778c5ab9ee98c5",
+    "source": "identical app artifact recorded in both unit and latest engine receipts; no release package built"
+  },
+  "limits": [
+    "All 50 step IDs retained; DCM-01 through DCM-12 stay complete; DCM-13 remains pending despite passing preference assertions.",
+    "The failed engine result is not relabeled PASS. Final uninstall assertions were not reached.",
+    "Registry snapshots are summarized, not published with host paths/values. Full raw reports remain on Lenovo.",
+    "Read-only post-run listing found the owned install directory and cleanup script absent; this does not replace a clean subprocess exit or full lifecycle PASS.",
+    "Uninstall exit-code root cause remains unproven. Inspect commands and their outcomes before changing any success criteria."
+  ]
+}

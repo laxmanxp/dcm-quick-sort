@@ -1,0 +1,36 @@
+DCM - Quick Sort v1.0.70 — Qualification
+
+FEATURE: Batch Undo
+PASS  batch IDs stored on MoveRecord and durable journal events
+PASS  latest completed batch can be identified after restart recovery
+PASS  batch undo targets only records belonging to that batch
+PASS  batch undo preflights all records before first filesystem mutation
+PASS  batch undo runs newest-first
+PASS  failed preflight leaves the whole batch unchanged
+PASS  individual Undo remains available
+PASS  Processed pane exposes Undo Batch
+PASS  regular moves inherit active batch ID
+PASS  background fallback moves inherit journal batch ID
+PASS  conflict replacement/duplicate records are re-finalized with batch metadata
+
+AUTOMATED QUALIFICATION
+PASS  app go test ./...
+PASS  app go test -race ./...
+PASS  app go vet ./...
+PASS  app Windows x64 test compile
+PASS  app Windows x64 vet (-unsafeptr=false)
+PASS  app Windows x64 GUI build
+PASS  installer go test ./...
+PASS  installer go vet ./...
+PASS  installer Windows x64 test compile
+PASS  installer Windows x64 vet (-unsafeptr=false)
+PASS  installer Windows x64 GUI build
+PASS  installer embedded payload equals qualified app
+PASS  clean second app build byte-for-byte identical (-buildid=)
+PASS  clean second installer build byte-for-byte identical (-buildid=)
+
+Qualified app SHA-256:
+458fbc737047fb9b783dde06724a514215f6a71db53f4d6cc24da3c7acc52ad7
+
+Qualified installer SHA-256:
+4c021a5871bc70e58efb6492a0cbb12313300ba7faca6e7aa7404089740511fc

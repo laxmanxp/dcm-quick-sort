@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "feature": "DCM-34-PDF-INTERRUPT-01",
+  "status": "PARTIAL",
+  "recorded_on": "2026-11-15",
+  "trace_implementation_source": "3f07fe2c0e60c63240101ef642100bba4a7dfb1c",
+  "corrected_observer_source": "32b906ed818bc8b9d57af751fd5c423a3555a8d5",
+  "baseline": {
+    "source": "3f07fe2c0e60c63240101ef642100bba4a7dfb1c",
+    "passed": 409,
+    "failed": 0,
+    "skipped": 0,
+    "PPTX_integration_run_and_pass_verified": true
+  },
+  "trace_unit": {
+    "source": "3f07fe2c0e60c63240101ef642100bba4a7dfb1c",
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0
+  },
+  "worker_unit": {
+    "source": "32b906ed818bc8b9d57af751fd5c423a3555a8d5",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "tooling": {
+    "source": "32b906ed818bc8b9d57af751fd5c423a3555a8d5",
+    "passed": true,
+    "trace_contract_checks": 11,
+    "process_observer_checks": 1
+  },
+  "build": {
+    "source": "32b906ed818bc8b9d57af751fd5c423a3555a8d5",
+    "passed": true,
+    "app_bytes": 7382016,
+    "app_sha256": "37924ed04cb9e23ce2ffafba49c581f1aada7235fb042a3b4cfd3ffc3f6da858",
+    "source_files_rehashed": 501,
+    "application_unchanged_from": "3f07fe2c0e60c63240101ef642100bba4a7dfb1c"
+  },
+  "original_headed_attempt": {
+    "source": "3f07fe2c0e60c63240101ef642100bba4a7dfb1c",
+    "passed": false,
+    "completed_records": 1,
+    "error": "Renderer did not exit with expected status",
+    "real_valid_to_text_lifecycle_observed": [
+      "worker-started",
+      "selection-stopped",
+      "worker-finished",
+      "result-discarded"
+    ],
+    "full_inflight_workflow_accepted": false,
+    "owned_host_exit": 0,
+    "source_and_fixtures_preserved": true,
+    "journal_empty": true
+  },
+  "observer_diagnosis": "A disposable process diagnostic observed null external ExitCode without a retained handle and correct exit 7 with one. The diagnostic is tool output only; the new repeatable native observer regression is retained in tooling evidence.",
+  "corrected_headed_retry": {
+    "started": false,
+    "reason": "Shared desktop occupied by flowdev run unoembed during bounded wait",
+    "foreign_process_stopped": false
+  },
+  "pending_tests": [
+    "ui-pdf-inflight",
+    "ui-pdf",
+    "ui-pdf-error-controls",
+    "ui-pdf-protected"
+  ],
+  "trace": {
+    "disabled_by_default": true,
+    "max_bytes": 4194304,
+    "records_document_content": false
+  },
+  "artificial_worker_delay_suspension_substitution": false,
+  "process_cancellation_added": false,
+  "new_baseline_at_corrected_source_claimed": false,
+  "full_inflight_UI_accepted": false,
+  "raw_visual_flags_modified": false,
+  "user_test": "not_recorded",
+  "parent_DCM34": "PARTIAL",
+  "numbered_complete": 32,
+  "numbered_remaining": 18,
+  "open_observation": "DCM-PDF-RENDER-SIZE-01 unchanged",
+  "suite_gate": "FILEFLOW-SUITE-READY-01 unchanged",
+  "report_repository": "laxmanxp/flowverse-reports",
+  "report_commit": "f65c71c547ba4fafd8d48ed27683e5fd0a1fb7bd",
+  "report_prefix": "apps/dcm-quicksort/dcm34-20261115-inflight/32b906e",
+  "raw_files": 185,
+  "published_files": 189,
+  "local_validation": {
+    "portable_race_passed": 30,
+    "portable_race_nested_passed": 94,
+    "failed": 0,
+    "skipped": 0,
+    "patch_guards": 8,
+    "windows_compilation": "passed"
+  }
+}

@@ -1,0 +1,28 @@
+name: Record bounded Sumatra PDF error evidence
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/record-sumatra-errors.yml]
+permissions:
+  contents: write
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply locally validated metadata only
+        run: |
+          git diff --exit-code 39af1659c01cbfa6bdb38106370197001027e946 -- app-src installer-src tools tests
+          python qualification/record-sumatra-errors.py
+          echo '2776d619a99829643c9925b3b9d7c08b3d6864ff7f361a3ef73ae72c83625e1c  todo.json' | sha256sum -c -
+          echo '6a4ee4ba8775e8fd44dd63b4ebdb643be0fe51bd8f960ab24c9121a934051bf8  qualification/completion-50.json' | sha256sum -c -
+      - name: Save without force, merge or release
+        run: |
+          git config user.name 'DCM reviewed-checkpoint automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add todo.json qualification/completion-50.json
+          git commit -m 'test: track PDF error fixes and incomplete UI reruns'
+          git push origin HEAD:release/v1.0.71

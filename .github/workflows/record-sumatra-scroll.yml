@@ -1,0 +1,25 @@
+name: Record verified readable PDF scrolling
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/record-sumatra-scroll.yml]
+permissions:
+  contents: write
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply locally validated checkpoint without numbered closure
+        run: |
+          python qualification/record-sumatra-scroll.py
+          echo 'e8494f979236b8f114d9f8d0eb940a0c6855ed075f0cb6efdea8029188094cc7  todo.json' | sha256sum -c -
+          echo '732077ed06bdf5b562685fc9735810e891997c3440eaff12e4fbc3a54ac646bc  qualification/completion-50.json' | sha256sum -c -
+      - name: Save tracker metadata only
+        run: |
+          git config user.name 'DCM reviewed-checkpoint automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add todo.json qualification/completion-50.json
+          git commit -m 'test: track readable PDF scrolling and preserved release gates'
+          git push origin HEAD:release/v1.0.71

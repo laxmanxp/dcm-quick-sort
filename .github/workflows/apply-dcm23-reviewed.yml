@@ -1,0 +1,55 @@
+name: Apply reviewed DCM-23 selection patch
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths:
+      - qualification/proposed-fixes/dcm23-next-selection.json
+      - .github/workflows/apply-dcm23-reviewed.yml
+permissions:
+  contents: write
+concurrency:
+  group: dcm23-reviewed-patch
+  cancel-in-progress: false
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/v1.0.71
+      - name: Apply exact locally authored replacements
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 - <<'PY'
+          import hashlib, json, pathlib, subprocess
+          proposal = json.loads(pathlib.Path('qualification/proposed-fixes/dcm23-next-selection.json').read_text())
+          allowed = {'app-src/main_windows.go', 'tools/test-ui-navigation.ps1'}
+          assert len(proposal['files']) == 2 and {f['path'] for f in proposal['files']} == allowed
+          pending = []
+          for item in proposal['files']:
+              path = pathlib.Path(item['path'])
+              original = path.read_bytes()
+              blob = hashlib.sha1(b'blob '+str(len(original)).encode()+b'\0'+original).hexdigest()
+              assert blob == item['before_blob'], (item['path'], blob, 'base changed; refusing')
+              text = original.decode('utf-8')
+              for change in item['replacements']:
+                  assert text.count(change['old']) == change['count'], ('replacement count changed', item['path'])
+                  text = text.replace(change['old'], change['new'])
+              data = text.encode('utf-8')
+              assert hashlib.sha256(data).hexdigest() == item['after_sha256'], ('output differs from local review', item['path'])
+              pending.append((path, data))
+          for path, data in pending:
+              path.write_bytes(data)
+              print(path, hashlib.sha256(data).hexdigest())
+          assert set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines()) == allowed
+          PY
+          git diff --check
+          git diff --stat
+          git config user.name 'DCM reviewed-patch automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app-src/main_windows.go tools/test-ui-navigation.ps1
+          git commit -m 'fix: align explicit Next with single-file selection after native RED'
+          git push origin HEAD:refs/heads/release/v1.0.71

@@ -1,0 +1,13 @@
+diff --git a/app-src/core.go b/app-src/core.go
+--- a/app-src/core.go
++++ b/app-src/core.go
+@@ -503,6 +503,9 @@
+ }
+ 
+ func isRenameOnlyRecord(rec MoveRecord) bool {
++	if rec.Kind != "" && rec.Kind != MoveKindMove {
++		return false
++	}
+ 	if strings.TrimSpace(rec.From) == "" || strings.TrimSpace(rec.To) == "" {
+ 		return false
+ 	}

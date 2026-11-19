@@ -1,0 +1,46 @@
+name: Record verified DCM-26 checkpoint
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths:
+      - qualification/record-dcm26-checkpoint.py
+      - .github/workflows/record-dcm26-checkpoint.yml
+permissions:
+  contents: write
+concurrency:
+  group: dcm26-checkpoint
+  cancel-in-progress: false
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/v1.0.71
+      - name: Apply only guarded and locally verified tracker updates
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 qualification/record-dcm26-checkpoint.py
+          echo '7c861b4c00f85a8e90f0e10f28651c08f2b55a9dcf4fb76af4b45987a9dffbab  todo.json' | sha256sum -c -
+          echo '75c41b54d77ce8f3d3c780b51cca050fa3ce7ba0cbd37507707f1714fbb84772  qualification/completion-50.json' | sha256sum -c -
+          test "$(git diff --name-only | sort | tr '\n' ' ')" = 'qualification/completion-50.json todo.json '
+          git diff --check
+          git config user.name 'DCM reviewed-checkpoint automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add todo.json qualification/completion-50.json
+          git commit -m 'docs: close only DCM-26 with verified text-preview evidence'
+          git push origin HEAD:refs/heads/release/v1.0.71
+          git rev-parse HEAD > checkpoint-exports/source-commit.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dcm26-verified-checkpoint
+          path: |
+            checkpoint-exports
+            qualification/dcm26-complete.md
+            qualification/evidence/dcm-26-native-summary.json
+            qualification/completion-50.json
+            todo.json
+          retention-days: 1

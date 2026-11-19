@@ -1,0 +1,242 @@
+{
+  "schema": 1,
+  "app": "dcm-quicksort",
+  "feature": "DCM-34",
+  "milestone": "Default PDF damaged-file preview and completed-state recovery",
+  "created_utc": "2026-11-14T17:52:27.546886Z",
+  "result": "accepted_with_limits",
+  "full_dcm34_status": "PARTIAL",
+  "full_dcm34_accepted": false,
+  "numbered_plan": {
+    "complete": 32,
+    "remaining": 18,
+    "next_step": "DCM-34"
+  },
+  "source": {
+    "native_ui_build_tooling": "3847a157feba71b4d34dd2c2ba35ed2f0214cc0d",
+    "native_unit": "499b015ee11c3554f65c3a1bc9368888c16542fc",
+    "unit_reused_without_rerun": true,
+    "unit_inputs_unchanged": true,
+    "production_renderer_changed": false,
+    "later_change_scope": "Harness and qualification documentation only; application, installer, tests/fixtures/helpers, native runner, tooling, selectors and attributes unchanged from the unit-tested candidate."
+  },
+  "native": {
+    "unit": {
+      "selector": "pdf-failure-unit",
+      "source": "499b015ee11c3554f65c3a1bc9368888c16542fc",
+      "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-regressions-20261114-170709-24e362ea",
+      "receipt": "exact/native/unit/receipt.json",
+      "receipt_sha256": "8808f6c8ff100b215d10231d66af6497018c937cea0454e6c35545932131ca05",
+      "top_level_passed": 14,
+      "nested_subcases_passed": 23,
+      "standalone_tests_passed": 11,
+      "terminal_leaf_tests_passed": 34,
+      "failures": 0,
+      "skips": 0,
+      "each_test_ran_once": true,
+      "count_definition": "14 top-level tests comprise three grouping parents and 11 standalone tests; the three parents contain 23 nested subcases, giving 34 terminal cases."
+    },
+    "tooling": {
+      "selector": "ui-tooling",
+      "source": "3847a157feba71b4d34dd2c2ba35ed2f0214cc0d",
+      "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-tooling-20261114-173020-abcd4938",
+      "receipt_sha256": "bcaddf043b693bbcca4d1f853cce5ab742159ae1008e5151692bcb7950043039",
+      "scripts": 33,
+      "binding_guards": 9,
+      "title_contracts": 2,
+      "base_fixtures": 4,
+      "native_helpers_compiled": true
+    },
+    "build": {
+      "source": "3847a157feba71b4d34dd2c2ba35ed2f0214cc0d",
+      "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-build-20261114-173029-fcc69290",
+      "receipt_sha256": "af48901bef18744b92ac30ea2aa1b09dea54c4864f0fdce25701049aa433958a",
+      "source_files": 475,
+      "source_matches": {
+        "observed_sole_lf_to_crlf": 456,
+        "exact_git_blob": 19
+      },
+      "app_artifact": {
+        "path": "D:\\FlowverseReportsRepo\\dcm-quicksort-build-20261114-173029-fcc69290\\artifacts\\DCM-QuickSort.exe",
+        "size": 7367168,
+        "sha256": "d8df2a791b736ecbee517f7efaff742a5b64271516c97fed96cc604a7ee45b7b"
+      },
+      "executable_in_transfer": false
+    },
+    "ui": {
+      "selector": "ui-pdf-failure",
+      "source": "3847a157feba71b4d34dd2c2ba35ed2f0214cc0d",
+      "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-pdf-failure-20261114-173102-5c08f5b2",
+      "receipt_sha256": "412f2a4472ff6acfc68ee289b16d1b3994848c46a02113b9892b39856b40fffb",
+      "machine_checks_passed": true,
+      "cases": 9,
+      "captures": 34,
+      "full_frames": 17,
+      "preview_crops": 17,
+      "readiness_attempts": 14,
+      "accepted_preview_states": 7,
+      "pdf_state_accepted_attempts": [
+        3,
+        4,
+        3,
+        4
+      ],
+      "txt_recovery_changed_samples": [
+        0,
+        0
+      ],
+      "damaged_terminal_state": "windows_fallback",
+      "explicit_error_phrase": "We can't open this file",
+      "valid_terminal_state": "default_page",
+      "source_unchanged": true,
+      "fixtures_preserved": true,
+      "registry_unchanged": true,
+      "journal_empty": true,
+      "pdfs_exclusively_released": true,
+      "normal_exit": true,
+      "exit_code": 0,
+      "forced_cleanup": false
+    }
+  },
+  "fixture": {
+    "schema_version": 1,
+    "file": "dcm34-damaged.pdf",
+    "sha256": "fdad2113a9af07bbc4c3f5d8d9eb83777169e13aab879c00cd4e4a81163e338f",
+    "bytes": 59,
+    "format": "PDF with a genuine %PDF-1.7 header",
+    "damage": "Catalog refers to missing object 99; page tree, cross-reference table, trailer and EOF marker are absent.",
+    "origin": "Byte-identical to the existing disposable 10-damaged.pdf case in tools/test-ui-sumatra-errors.ps1.",
+    "expected_result": "An honest visible error from Windows.Data.Pdf or its naturally selected Windows preview fallback; never a successful blank page.",
+    "scope": "Damaged-file qualification only; not password protection, unsupported type, interruption or cancellation."
+  },
+  "acceptance": {
+    "derived_bounded_milestone_accepted": true,
+    "semantic_review": {
+      "status": "passed_with_limits",
+      "all_final_captures_reviewed": 34,
+      "accepted_preview_states": 7,
+      "full_frames": {
+        "path": "final-full-frame-semantic-review.json",
+        "sha256": "e74e585077827c6946610c47b8c461a4becca6e7adcb3808961bc9a26f3147cc",
+        "files": 17,
+        "unique_images_directly_viewed": 10
+      },
+      "preview_crops": {
+        "path": "final-crop-semantic-review.json",
+        "sha256": "68e60cf5d89e73c99edcf6dccf9bf17f4f650c481af764b6da174f29ecec7062",
+        "files": 17,
+        "unique_images_directly_viewed": 6
+      },
+      "transition_frames_are_not_accepted_terminal_states": true
+    },
+    "raw_flags_preserved": {
+      "feature_accepted": false,
+      "visual_accepted": false,
+      "capture_visual_reviewed": false,
+      "native_error_control_readiness_accepted": false,
+      "interruption_or_cancellation_tested": false,
+      "user_test": "not_recorded"
+    },
+    "native_error_control_limit": {
+      "enabled_generic_controls": [
+        "zoom_out",
+        "zoom_actual",
+        "zoom_in",
+        "fit"
+      ],
+      "width_enabled": false,
+      "loaded_document_readiness_accepted": false,
+      "button_behavior_qualified": false
+    }
+  },
+  "retained_history": [
+    {
+      "category": "execution-initial",
+      "source": "499b015ee11c3554f65c3a1bc9368888c16542fc",
+      "outcome": "concurrency_hold_after_update_and_unit_pass",
+      "passed": false,
+      "unit_rerun_claimed": false
+    },
+    {
+      "category": "ui-initial",
+      "source": "499b015ee11c3554f65c3a1bc9368888c16542fc",
+      "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-pdf-failure-20261114-171254-482555d5",
+      "passed": false,
+      "cases": 0,
+      "captures": 4,
+      "reason": "Initial clean TXT rejected by absolute colour threshold; no PDF selection occurred.",
+      "normal_exit_code": 0,
+      "original_envelope_retained": true,
+      "wrapper_command_row_and_stdout_retained": false
+    },
+    {
+      "category": "ui-second",
+      "source": "dd1f03ae42b44d0003df176a79eb591ac2a08f06",
+      "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-pdf-failure-20261114-172254-9e118143",
+      "passed": false,
+      "cases": 2,
+      "captures": 66,
+      "readiness_attempts": 31,
+      "valid_attempts": 4,
+      "damaged_attempts": 27,
+      "reason": "Scoped native error phrase omitted from harness allowlist; last-state pixel/identity conditions pass and exact phrase is retained.",
+      "normal_exit_code": 0
+    }
+  ],
+  "independent_audit": {
+    "path": "native-source-audit.json",
+    "sha256": "58381330f0a1a5fea59b0c2fd4224ef5d8e6f6cb3c090f66726fa7b20ecc6fc1",
+    "result": "PASS_WITH_LIMITS",
+    "checks_passed": 172,
+    "checks_failed": 0,
+    "recorded_limits": 1,
+    "limit": "First failed UI wrapper has no saved CLI command row/stdout. Original FlowDev envelope and failed UI receipt remain hash-bound."
+  },
+  "archives": {
+    "files": 349,
+    "bytes": 18752438,
+    "bundles": [
+      {
+        "label": "history",
+        "files": 241,
+        "bytes": 12816314,
+        "archive_sha256": "2c325bdd5d23113772300631b2ab9d0e451792154259bd3d21a469274618f3e0",
+        "manifest_sha256": "744adb9acdf87fa6a94db4d35e546508f6c78c1282b9fae0ebded6edf6aa8fe8",
+        "transfer_sha256": "d4b2de965bb9bc0bb31d8d88af969a187d27b8aa2fa43b47533b18acc0835760"
+      },
+      {
+        "label": "final",
+        "files": 108,
+        "bytes": 5936124,
+        "archive_sha256": "9be0231984b373a29d5e491a976196af7108e2536084bcca58f5c7b1500631e6",
+        "manifest_sha256": "e7e0a8dafe452b3b2cb0b7c0fe416b04713a5b347787b00298f762698bf61d0d",
+        "transfer_sha256": "03fb6d48d07460f27c1676df9878086e7e6c55f7bd9f876adbb1c5a99457f534"
+      }
+    ]
+  },
+  "historical_baseline": {
+    "source": "b3d46b9e2003dbbfa2ae431e134e0692b8168d34",
+    "passed": 388,
+    "failed": 0,
+    "skipped": 0,
+    "rerun_for_this_milestone": false
+  },
+  "limits": [
+    "One pinned damaged PDF and the observed default renderer/natural Windows fallback path at the captured Lenovo geometry; arbitrary damaged PDFs or other providers are not certified.",
+    "Four generic sizing controls remain enabled on the native error; their loaded-document readiness and click behavior remain unaccepted.",
+    "Completed-state selection/recovery is covered; protected input and observed in-flight interruption/cancellation remain open.",
+    "Broader Office damaged/protected coverage remains open, including unfixed DCM-34-DOCX-FALLBACK-01.",
+    "All raw acceptance/review flags remain unchanged. Physical-user acceptance, DCM-19 disposable Explorer qualification and release publication remain open.",
+    "This milestone does not close DCM-34 or alter the 32-complete/18-remaining numbered count.",
+    "Build executable identity is receipt-bound; no independent rehash of a transferred executable is claimed."
+  ],
+  "next_smallest_step": "Continue DCM-34 with one remaining failure-state slice; the confirmed DOCX parse-error-to-metadata-success defect has retained local RED evidence.",
+  "report_publication": {
+    "repository": "laxmanxp/flowverse-reports",
+    "branch": "main",
+    "path": "apps/dcm-quicksort/dcm34-20261114-173102/default-pdf-3847a15",
+    "commit": "d65d3bae8cd5e9e5db773d93cace361ac8c361d3",
+    "immutable_pin_status": "published_and_tree_verified",
+    "readme_url": "https://github.com/laxmanxp/flowverse-reports/blob/d65d3bae8cd5e9e5db773d93cace361ac8c361d3/apps/dcm-quicksort/dcm34-20261114-173102/default-pdf-3847a15/README.md"
+  }
+}

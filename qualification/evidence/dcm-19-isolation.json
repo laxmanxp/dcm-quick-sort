@@ -1,0 +1,104 @@
+{
+  "schema": 1,
+  "feature": "DCM-19",
+  "checkpoint_date_ist": "2026-11-11",
+  "status": "blocked_environment",
+  "completion": "pending",
+  "newly_completed_steps": [],
+  "tested_commit": "e1a8cc6c9ab8765263b8c163494f005ca80352b3",
+  "added_tool": "tools/check-explorer-isolation.ps1",
+  "registered_selector": "explorer-isolation",
+  "source_review": {
+    "path": "installer-src/core.go",
+    "blob": "d67dcfc9d98a9f829c9b36de47e75ab095deb926",
+    "label": "Sort with DCM Quick Sort",
+    "commands": {
+      "file": "\"<app.exe>\" \"%1\"",
+      "folder": "\"<app.exe>\" \"%1\"",
+      "folder_background": "\"<app.exe>\" \"%V\""
+    },
+    "actual_menu_click_verified": false
+  },
+  "isolation": {
+    "commit": "e1a8cc6c9ab8765263b8c163494f005ca80352b3",
+    "discovery_report": "C:\\FlowverseReports\\dcm-quicksort-explorer-isolation-20261110-194731-af6004b0",
+    "discovery_passed": true,
+    "feature_accepted": false,
+    "explorer_clicked": false,
+    "source_unchanged": true,
+    "os": "Microsoft Windows 11 Home Single Language",
+    "build": "26200",
+    "sandbox_feature": "not_returned_by_successful_query",
+    "sandbox_executable_exists": false,
+    "hyperv_module_available": false,
+    "vmms_service_present": false,
+    "vm_launchers_on_path": false,
+    "approved_disposable_environment": "not configured in DCM profile",
+    "status": "blocked_environment_not_product_failure",
+    "blocker": "DCM-EXPLORER-ISOLATION-01",
+    "evidence": "qualification/evidence/dcm-19-isolation.json"
+  },
+  "discovery_details": {
+    "started_utc": "2026-11-10T19:47:31.2695566Z",
+    "finished_utc": "2026-11-10T19:47:33.9009177Z",
+    "issues": [],
+    "sandbox_optional_feature": "not_returned",
+    "hyperv_optional_features": "not_returned",
+    "virtual_machine_platform": "disabled",
+    "hypervisor_present": true,
+    "launchers_not_on_path": [
+      "WindowsSandbox.exe",
+      "wsb.exe",
+      "vmconnect.exe",
+      "VBoxManage.exe",
+      "vmrun.exe"
+    ],
+    "limitation": "Launcher absence on PATH is not an exhaustive installed-software or VM inventory. No account names or credentials were enumerated; no existing VM assumed disposable."
+  },
+  "installer_units": {
+    "commit": "e1a8cc6c9ab8765263b8c163494f005ca80352b3",
+    "result": "26 passed, 0 failed, 0 skipped",
+    "report": "20261110-194833-ca9af37a",
+    "exit_code": 0,
+    "timed_out": false,
+    "source_unchanged": true,
+    "count": 26,
+    "passed": 26,
+    "failed": 0,
+    "skipped": [],
+    "source_manifest_files": 224,
+    "source_manifest_sha256": "23ec78a744ca8bb801e8d4ad31ac0f5008f843de6d0574e7cfc2d4f3e79f6bc5",
+    "explorer_contract_test": "TestExplorerShellEntriesUsePerUserFileFolderAndBackgroundTargets",
+    "explorer_contract_result": "pass",
+    "explorer_contract_event": "2026-11-11T01:18:55.8931481+05:30",
+    "raw_event_lines": "74-77",
+    "app_sha256": "a10e368eef249dbb38b340c52cfc8e2c2cb583758d14f07d09778c5ab9ee98c5",
+    "finished_utc": "2026-11-10T19:49:08.0150743Z"
+  },
+  "tooling": {
+    "selector": "ui-tooling",
+    "exit_code": 0,
+    "report": "C:\\FlowverseReports\\dcm-quicksort-ui-tooling-20261110-194729-5bd2d103",
+    "scope": "infrastructure only; no UI acceptance"
+  },
+  "boundaries": {
+    "product_code_changed": false,
+    "installer_code_changed": false,
+    "test_assertions_changed": false,
+    "host_installation": false,
+    "live_registry_mutated": false,
+    "account_created": false,
+    "feature_enabled": false,
+    "rebooted": false,
+    "explorer_ui_run": false,
+    "screenshots_reviewed": 0,
+    "user_acceptance": "not_recorded",
+    "merged": false,
+    "published": false
+  },
+  "continuation": {
+    "blocked_step": "DCM-19",
+    "next_independent_step": "DCM-20",
+    "rule": "Do not mark DCM-19 complete or silently waive it. Continue app-owned right-click checks with disposable fixtures and fresh source-bound build; retain Explorer registration and packaged setup gates for approved isolation."
+  }
+}

@@ -1,0 +1,320 @@
+{
+  "schema": 1,
+  "feature": "DCM-ROTATE-01",
+  "tested_source": "31394a446f4223b7789d6287761d0fac916df5b3",
+  "app_sha256": "57eebc831b630eb445c6d7bec02f962707f193b18aca0b6521ae9490c1e66f67",
+  "build_receipt": {
+    "path": "D:\\FlowverseReportsRepo\\dcm-quicksort-build-20261119-075828-8dfa6ef8\\receipt.json",
+    "sha256": "e5109437d5e1933762a1abe2a7f7cda846fb8113f2ebfa5be7a30825e4f1338f"
+  },
+  "device": "Laxman_Lenovo",
+  "native_test": {
+    "selector": "ui-rotation",
+    "passed": true,
+    "cases": 13,
+    "captures": 13,
+    "original_visual_reviewed": false,
+    "separately_reviewed_original_images": [
+      "image-000-original",
+      "image-270-left",
+      "image-000-return",
+      "image-090-right",
+      "image-180-double",
+      "image-270-three",
+      "image-000-four",
+      "text-buttons-visible-disabled",
+      "pdf-p1-000-original",
+      "pdf-p1-090-right",
+      "pdf-p1-000-restored",
+      "pdf-p1-270-left",
+      "pdf-p2-270-left"
+    ],
+    "visual_review_complete": true,
+    "app_exit_code": 0,
+    "source_unchanged": true,
+    "fixtures_unchanged": true,
+    "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-rotation-20261119-075921-99002df7"
+  },
+  "cases": [
+    {
+      "name": "image-000-original",
+      "family": "image",
+      "turns": 0,
+      "passed": true,
+      "pixels": {
+        "Orientation": 0,
+        "Matches": 12,
+        "DrawX": 98,
+        "DrawY": 4,
+        "DrawWidth": 525,
+        "DrawHeight": 350
+      }
+    },
+    {
+      "name": "image-270-left",
+      "family": "image",
+      "turns": 3,
+      "passed": true,
+      "pixels": {
+        "Orientation": 3,
+        "Matches": 12,
+        "DrawX": 244,
+        "DrawY": 4,
+        "DrawWidth": 233,
+        "DrawHeight": 350
+      }
+    },
+    {
+      "name": "image-000-return",
+      "family": "image",
+      "turns": 0,
+      "passed": true,
+      "pixels": {
+        "Orientation": 0,
+        "Matches": 12,
+        "DrawX": 98,
+        "DrawY": 4,
+        "DrawWidth": 525,
+        "DrawHeight": 350
+      }
+    },
+    {
+      "name": "image-090-right",
+      "family": "image",
+      "turns": 1,
+      "passed": true,
+      "pixels": {
+        "Orientation": 1,
+        "Matches": 12,
+        "DrawX": 244,
+        "DrawY": 4,
+        "DrawWidth": 233,
+        "DrawHeight": 350
+      }
+    },
+    {
+      "name": "image-180-double",
+      "family": "image",
+      "turns": 2,
+      "passed": true,
+      "pixels": {
+        "Orientation": 2,
+        "Matches": 12,
+        "DrawX": 98,
+        "DrawY": 4,
+        "DrawWidth": 525,
+        "DrawHeight": 350
+      }
+    },
+    {
+      "name": "image-270-three",
+      "family": "image",
+      "turns": 3,
+      "passed": true,
+      "pixels": {
+        "Orientation": 3,
+        "Matches": 12,
+        "DrawX": 244,
+        "DrawY": 4,
+        "DrawWidth": 233,
+        "DrawHeight": 350
+      }
+    },
+    {
+      "name": "image-000-four",
+      "family": "image",
+      "turns": 0,
+      "passed": true,
+      "pixels": {
+        "Orientation": 0,
+        "Matches": 12,
+        "DrawX": 98,
+        "DrawY": 4,
+        "DrawWidth": 525,
+        "DrawHeight": 350
+      }
+    },
+    {
+      "name": "text-rotation-disabled-not-hidden",
+      "passed": true
+    },
+    {
+      "name": "pdf-p1-000-original",
+      "family": "pdf",
+      "page": 1,
+      "turns": 0,
+      "passed": true,
+      "panel": {
+        "Color": "teal",
+        "Samples": 7673,
+        "Left": 242,
+        "Top": 55,
+        "Right": 479,
+        "Bottom": 343,
+        "Ratio": 0.8229166666666666
+      }
+    },
+    {
+      "name": "pdf-p1-090-right",
+      "family": "pdf",
+      "page": 1,
+      "turns": 1,
+      "passed": true,
+      "panel": {
+        "Color": "teal",
+        "Samples": 13070,
+        "Left": 170,
+        "Top": 40,
+        "Right": 545,
+        "Bottom": 352,
+        "Ratio": 1.2019230769230769
+      }
+    },
+    {
+      "name": "pdf-p1-000-restored",
+      "family": "pdf",
+      "page": 1,
+      "turns": 0,
+      "passed": true,
+      "panel": {
+        "Color": "teal",
+        "Samples": 7673,
+        "Left": 242,
+        "Top": 55,
+        "Right": 479,
+        "Bottom": 343,
+        "Ratio": 0.8229166666666666
+      }
+    },
+    {
+      "name": "pdf-p1-270-left",
+      "family": "pdf",
+      "page": 1,
+      "turns": 3,
+      "passed": true,
+      "panel": {
+        "Color": "teal",
+        "Samples": 13040,
+        "Left": 176,
+        "Top": 40,
+        "Right": 551,
+        "Bottom": 352,
+        "Ratio": 1.2019230769230769
+      }
+    },
+    {
+      "name": "pdf-p2-270-left",
+      "family": "pdf",
+      "page": 2,
+      "turns": 3,
+      "passed": true,
+      "panel": {
+        "Color": "orange",
+        "Samples": 12727,
+        "Left": 179,
+        "Top": 43,
+        "Right": 551,
+        "Bottom": 352,
+        "Ratio": 1.203883495145631
+      }
+    }
+  ],
+  "capture_manifest": [
+    {
+      "name": "image-000-original",
+      "sha256": "74f70f01059d7d201226c334342b473592bbade2db9553f67fc2b6d3172b649d",
+      "width": 1600,
+      "height": 1025
+    },
+    {
+      "name": "image-270-left",
+      "sha256": "c07983b82fe48d2e26aefddfa5111092feebd31d8f703be86aaab1a14a369a27",
+      "width": 1600,
+      "height": 1025
+    },
+    {
+      "name": "image-000-return",
+      "sha256": "15b062ebd18e942724fadc4083b220af3e9b2560de6f00496ec07dfcbfb1a59a",
+      "width": 1600,
+      "height": 1025
+    },
+    {
+      "name": "image-090-right",
+      "sha256": "2b02cc6c592db13e374bf3c78f0468550380ef64ae02ecd4a41542829dd98453",
+      "width": 1600,
+      "height": 1025
+    },
+    {
+      "name": "image-180-double",
+      "sha256": "6360eb0fd46ed696cf684bb5f460432a4cef8eda30dbc2183deb219c4bc101ad",
+      "width": 1600,
+      "height": 1025
+    },
+    {
+      "name": "image-270-three",
+      "sha256": "b5eb1fff0ca0eba58408b6bc15bd6b4821f18dd20e5cd6017630f6c080397f12",
+      "width": 1600,
+      "height": 1025
+    },
+    {
+      "name": "image-000-four",
+      "sha256": "15b062ebd18e942724fadc4083b220af3e9b2560de6f00496ec07dfcbfb1a59a",
+      "width": 1600,
+      "height": 1025
+    },
+    {
+      "name": "text-buttons-visible-disabled",
+      "sha256": "e753659f6dbefad4a5c628bb71771ac1259be14aa5e48e1eb8d25e32f75037ba",
+      "width": 1600,
+      "height": 1025
+    },
+    {
+      "name": "pdf-p1-000-original",
+      "sha256": "0a32924b63d4162bd80b41fe2daf2bdfc3511f966424c1a3a67eaaa8a195aa6b",
+      "width": 1600,
+      "height": 1025
+    },
+    {
+      "name": "pdf-p1-090-right",
+      "sha256": "f3dd79cdfb7030958fe215c0d677196a65f1a0e6ee4d8c275ff43bd6f7349c91",
+      "width": 1600,
+      "height": 1025
+    },
+    {
+      "name": "pdf-p1-000-restored",
+      "sha256": "b52381444439d5a2ae502cdaa1270b3a90010be6ac15073de6f16ab7b37c1977",
+      "width": 1600,
+      "height": 1025
+    },
+    {
+      "name": "pdf-p1-270-left",
+      "sha256": "f47565db97a5e2ebff452a71de5fcfe6ef9e0a180e61393890f279ff7c2b083c",
+      "width": 1600,
+      "height": 1025
+    },
+    {
+      "name": "pdf-p2-270-left",
+      "sha256": "ea6f580c76c182a27e96c3849938c2fd2320d56d21f4f7c9a9b0c4cb1c658448",
+      "width": 1600,
+      "height": 1025
+    }
+  ],
+  "optional_sumatra": {
+    "passed": false,
+    "preliminary_cases": 14,
+    "retained_captures": 32,
+    "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-sumatra-20261119-080510-edf17856",
+    "blocker": "Exception calling \"Capture\" with \"4\" argument(s): \"Refusing occluded/offscreen capture: point=(1306,151); expected_root=2884828; actual_root=3083256; actual_pid=4048; class=Xaml_WindowedPopupClass; bounds=(10,10,1450,955)\"",
+    "first_capture": "01-embedded-first-page",
+    "first_capture_sha256": "54ffe8e25c6bb9898343b26241d6003f19cc060f391f87c9b6aefdad86765968",
+    "first_capture_visual_conclusion": "QuickSort rotation controls visible and disabled in embedded Sumatra; Sumatra retains own rotate controls"
+  },
+  "limitations": [
+    "No physical user input acceptance",
+    "No blanket DPI/resize approval",
+    "Do not relabel raw native visual flags",
+    "Sumatra full regression is incomplete; keep failed capture evidence",
+    "No installer/release publication"
+  ],
+  "review_date": "2026-11-19"
+}

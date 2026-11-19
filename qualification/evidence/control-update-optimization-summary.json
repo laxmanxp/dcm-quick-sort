@@ -1,0 +1,121 @@
+{
+  "schema": 1,
+  "feature": "DCM-SUMATRA-STARTUP-01",
+  "date_ist": "2026-11-13",
+  "tested_commit": "cc6a1a37308ba57be37c33c81e743b668bb89a1c",
+  "report_root": "D:\\FlowverseReportsRepo",
+  "status": "bounded_live_control_optimization_implemented_and_verified",
+  "numbered_steps_closed": [],
+  "change": {
+    "full_layout_calculation_retained": true,
+    "preview_pane_moves_retained": true,
+    "changed_dropdown_requests_use_original_MoveWindow": true,
+    "cached_geometry": false,
+    "dropdown_call_sites": 8,
+    "live_guards": ["same owning UI thread", "ComboBox class", "equivalent current thread/control/parent DPI contexts", "non-mirrored parent", "closed drop list", "exact parent-relative x/y and width", "exact complete dropped-down height"],
+    "zoom_state": "Compare own WS_VISIBLE/WS_DISABLED, not ancestor visibility. Real changes still applied.",
+    "runtime_policy_changed": false,
+    "default_provider_changed": false,
+    "startup_test_timing_changed": false
+  },
+  "runs": [
+    {"run":"A","report":"dcm-quicksort-ui-sumatra-startup-20261113-044603-f0245667","receipt_sha256":"872ea6ae90c4e8206a67e626576eb6fb6e5abe7cfa7c2247af261ee090f0596b","trace_sha256":"43e6af6768c3b5fe8bac3eac1fc134e886e2a70c3e153c805d5b29adecb480ee","measurement_passed":true,"responsiveness_accepted":true,"exit_code":0,"source_unchanged":true,"fixtures_preserved":true},
+    {"run":"B","report":"dcm-quicksort-ui-sumatra-startup-20261113-044715-bf9926c4","receipt_sha256":"8307405eeb2940f9562c4a5c9d8848297d18613051576ff761b82637470305a3","trace_sha256":"bc9675aecd92d6fd5595e0e9d230b3e5172534795dd7ba3185545e0c40f122a2","measurement_passed":true,"responsiveness_accepted":true,"exit_code":0,"source_unchanged":true,"fixtures_preserved":true}
+  ],
+  "samples": [
+    {"run":"A","sequence":1,"ready_status_ms":2258.1232,"max_queue_ack_ms":59.8338,"attachment_handler_ms":79.62,"host_layout_ms":9.584,"host_zoom_state_ms":44.292,"combo_calls_skipped":8,"enable_calls_skipped":5,"visibility_calls_skipped":0},
+    {"run":"A","sequence":2,"ready_status_ms":390.1025,"max_queue_ack_ms":108.0138,"attachment_handler_ms":102.606,"host_layout_ms":24.61,"host_zoom_state_ms":52.204,"combo_calls_skipped":8,"enable_calls_skipped":5,"visibility_calls_skipped":0},
+    {"run":"A","sequence":3,"ready_status_ms":392.7195,"max_queue_ack_ms":79.6821,"attachment_handler_ms":91.591,"host_layout_ms":20.308,"host_zoom_state_ms":47.036,"combo_calls_skipped":8,"enable_calls_skipped":5,"visibility_calls_skipped":0},
+    {"run":"A","sequence":4,"ready_status_ms":391.7405,"max_queue_ack_ms":31.0088,"attachment_handler_ms":72.696,"host_layout_ms":30.186,"host_zoom_state_ms":29.198,"combo_calls_skipped":8,"enable_calls_skipped":5,"visibility_calls_skipped":0},
+    {"run":"B","sequence":1,"ready_status_ms":1579.0698,"max_queue_ack_ms":16.8288,"attachment_handler_ms":49.78,"host_layout_ms":11.538,"host_zoom_state_ms":25.186,"combo_calls_skipped":8,"enable_calls_skipped":5,"visibility_calls_skipped":0},
+    {"run":"B","sequence":2,"ready_status_ms":533.8335,"max_queue_ack_ms":122.5526,"attachment_handler_ms":118.21,"host_layout_ms":52.769,"host_zoom_state_ms":39.894,"combo_calls_skipped":8,"enable_calls_skipped":5,"visibility_calls_skipped":0},
+    {"run":"B","sequence":3,"ready_status_ms":693.8472,"max_queue_ack_ms":156.3303,"attachment_handler_ms":166.016,"host_layout_ms":35.012,"host_zoom_state_ms":74.51,"combo_calls_skipped":8,"enable_calls_skipped":5,"visibility_calls_skipped":0},
+    {"run":"B","sequence":4,"ready_status_ms":486.305,"max_queue_ack_ms":16.8132,"attachment_handler_ms":67.565,"host_layout_ms":10.306,"host_zoom_state_ms":35.819,"combo_calls_skipped":8,"enable_calls_skipped":5,"visibility_calls_skipped":0}
+  ],
+  "provisional_queue_budget_ms": 250,
+  "all_eight_current_samples_within_budget": true,
+  "universal_latency_guarantee": false,
+  "comparison": {
+    "prior_source": "5294d6cf32e84038aeed93750800bd7308bad7ad",
+    "prior_evidence": "qualification/evidence/sumatra-attachment-profile-summary.json",
+    "prior_queue_ms_range": [139.725,327.4957],
+    "prior_layout_ms_range": [113.56,246.036],
+    "prior_attachment_ms_range": [176.998,339.372],
+    "current_queue_ms_range": [16.8132,156.3303],
+    "current_layout_ms_range": [9.584,52.769],
+    "current_attachment_ms_range": [49.78,166.016],
+    "caveat": "Shared machine, tracing overhead and small sample. Not paired isolated benchmarks, true cold-boot/cache tests, or exact first-pixel timing. First-PDF completion is not uniformly faster."
+  },
+  "baseline": {
+    "report": "dcm-quicksort-baseline-20261113-044443-a6a2f74c",
+    "receipt_sha256": "9d583a2917f34af52a86b6ac9b80fdad4d884b8b702db15a61512d0c4289c6d2",
+    "parent_count": 378,
+    "passed": 377,
+    "failed": 0,
+    "skipped": ["TestRealGeneratedPPTXIntegration"],
+    "exit_code": 0,
+    "timed_out": false,
+    "source_unchanged": true,
+    "new_parents": ["TestControlUpdateGeometry","TestControlUpdateState","TestControlUpdatePreviewTransitions","TestControlUpdateMixedDPI"],
+    "DPI_qualification": "Actual test controls under unaware and per-monitor-v2 contexts plus mixed caller context; not a physical monitor move or OS scaling-setting change."
+  },
+  "regressions": [
+    {"selector":"ui-sumatra-resize-timing","report":"dcm-quicksort-ui-sumatra-20261113-044738-5024b52e","record_count":23,"receipt_sha256":"7d13c5516e62ef6fa327d991ee06dae588bd4495252ac25ab0904ccd40af1d9b","passed":true,"command_exit":0,"source_unchanged":true},
+    {"selector":"ui-sumatra-pending-close","report":"dcm-quicksort-ui-sumatra-lifecycle-20261113-044909-514cd363","record_count":3,"receipt_sha256":"fdc3c56de9a7345e75dbbc88afa1c3eac6434def5e41e77e5f5e21325c4e49ff","passed":true,"command_exit":0,"source_unchanged":true},
+    {"selector":"ui-sumatra-lifecycle","report":"dcm-quicksort-ui-sumatra-lifecycle-20261113-044922-fea0725e","record_count":11,"receipt_sha256":"48cac25274f3244e6568f9065a4758e188292ae21c0f4b45be00b4253282c6f0","passed":true,"command_exit":0,"source_unchanged":true},
+    {"selector":"ui-sumatra-undo","report":"dcm-quicksort-ui-sumatra-undo-20261113-044956-d50d770b","record_count":9,"receipt_sha256":"7928664632e94eb1b5d979afc9716ac39af1ee6d9b4ea8bb5931e3c3503d5dc9","passed":true,"command_exit":0,"source_unchanged":true},
+    {"selector":"ui-sumatra-errors","report":"dcm-quicksort-ui-sumatra-errors-20261113-045021-9ef968b2","record_count":12,"receipt_sha256":"069957a0af8c5b8637f629f6dd0ceda584dd9aae0ca29122b6a5aca5d2ed8a0e","passed":true,"command_exit":0,"source_unchanged":true},
+    {"selector":"ui-sumatra-scroll","report":"dcm-quicksort-ui-sumatra-scroll-20261113-045109-3b7998e3","record_count":14,"receipt_sha256":"32d2dd14b0825cf1db4e16b279b0b234fbad6444c2feb9ff8b01a5887c4c9fc6","passed":true,"command_exit":0,"source_unchanged":true},
+    {"selector":"ui-text","report":"dcm-quicksort-ui-text-20261113-045145-fbb89b20","record_count":17,"receipt_sha256":"9a4aad4fab4e2eb6e84b484bc52849442ec45441f639d38745fdd812767c42b2","passed":true,"command_exit":0,"source_unchanged":true},
+    {"selector":"ui-image","report":"dcm-quicksort-ui-image-20261113-045213-99082a6c","record_count":23,"receipt_sha256":"3c60b7c497e93c4cef18c98f36edaae91ccb293caccf4f21be449420f42909a0","passed":true,"command_exit":0,"source_unchanged":true},
+    {"selector":"ui-sort","report":"dcm-quicksort-ui-sort-20261113-045245-4d2d1f4b","record_count":9,"receipt_sha256":"d809b87a32dd3f5db4e70c8c7d7219765ec552c60e6d59c74bebfdf34a574972","passed":true,"command_exit":0,"source_unchanged":true},
+    {"selector":"ui-filters","report":"dcm-quicksort-ui-filters-20261113-045303-264562c8","record_count":74,"receipt_sha256":"a795e30002ce2658403103a5c69b1a20d7801573fb4bc0c72d72438643fb7f55","passed":true,"command_exit":0,"source_unchanged":true}
+  ],
+  "resize_timing": {"bursts":12,"raw_natural_comparisons":24,"all_sampled_differences_zero":true},
+  "filter_count_note": "74 receipt records include action and independent readback entries, not 74 distinct features. No UI records or repetitions are added to Go totals.",
+  "visual_review": {
+    "full_images_individually_reviewed": 9,
+    "startup_run_A": {
+      "startup-1.png":"a3275de9ae01a35ec0046b900ff0dc04ae20beb47bc0f98a428f2c8924c042b9",
+      "startup-2.png":"a3275de9ae01a35ec0046b900ff0dc04ae20beb47bc0f98a428f2c8924c042b9",
+      "startup-3.png":"a3275de9ae01a35ec0046b900ff0dc04ae20beb47bc0f98a428f2c8924c042b9",
+      "startup-4.png":"a3275de9ae01a35ec0046b900ff0dc04ae20beb47bc0f98a428f2c8924c042b9"
+    },
+    "resize_report": "dcm-quicksort-ui-sumatra-20261113-044738-5024b52e",
+    "resize_images": {
+      "04j-resized-smaller.png":"5fb7a5054569736368250aff0dfc6ce7813244fd0b4054d439efd59365c897f0",
+      "04k-resize-restored.png":"aa479236d3a0dcbb8968e2ba7af2424367d44a42b3b86308e92188845bf16879",
+      "07-narrower.png":"7b3a008aa40ce0f81b326ef130deb571a1fa54d83d6b11dcd86a48fa25fe921b",
+      "07-repeat-restored.png":"aa479236d3a0dcbb8968e2ba7af2424367d44a42b3b86308e92188845bf16879",
+      "06-moved-and-text-restored.png":"724d6c8ed387232f8ea6f6b049ed66dccb9299767584ac6665532eeb027325d8"
+    },
+    "review": "Correct PDF identity/content/containment, clean restored layout and text zoom-control restoration. Existing narrow Size/Sort and Processed-heading overlap remains open.",
+    "raw_flags_modified": false,
+    "startup_run_B_reviewed": false,
+    "other_regression_images_reviewed": false,
+    "desktop_edge_images_uploaded_to_repository": false
+  },
+  "preserved_failures": {
+    "native_red": {"source":"95ad5af279025d21c42383904e6f541922c74061","report":"dcm-quicksort-baseline-20261113-043206-3f9cba35","passed":373,"failed":["TestControlUpdateGeometry","TestControlUpdateState"],"skipped":["TestRealGeneratedPPTXIntegration"],"reason":"New contract tests demonstrate redundant dropdown moves and hidden-parent child-visibility update. Main product wiring unchanged."},
+    "preapplication_workflow_failures": [
+      {"source":"23c81acb687b952c702396056825a94224ac78fa","run":43366708061,"cause":"Helper exact-byte mismatch before main wiring."},
+      {"source":"26be2f6b20bf8025d3c606f681a7b2dbfa3bb4d1","run":43367088428,"cause":"Transition-test comment placement mismatch before main wiring."}
+    ],
+    "resolution": "Canonical formatting/comment placement and trace-counter expected bytes reconciled to locally compiled source. Exact checks retained; no native assertion, timeout or screenshot guard relaxed."
+  },
+  "build": {
+    "report": "dcm-quicksort-build-20261113-044538-b6b19d38",
+    "receipt_sha256": "009ea9790ee3e8ef3a3b94d97245e9c5b892608ee27ac85b674d663fbde7c383",
+    "app_sha256": "13fdc03eca1d049c8f88e6bb4ed2c402015bbb6a4ad30aa0aa4ef30c1356d5cd",
+    "app_bytes": 7331840,
+    "manifest_files": 392,
+    "manifest_sha256": "26d659c1a3f30f0b314b8876750b9b846bc0326bf95359fb3f0eae439a31b3fc"
+  },
+  "source": {
+    "main_sha256": "9957928f4c8f3f6ee962ec3e5583b349b888c2caaedd0d58fc7beaf16c1edac4",
+    "helper_sha256": "6ddf79ea3b47a884935e4d7b11ef1c35bccc063bf92fa915f5041b33e72fd42d"
+  },
+  "user_acceptance": "not_recorded",
+  "merged": false,
+  "published": false
+}

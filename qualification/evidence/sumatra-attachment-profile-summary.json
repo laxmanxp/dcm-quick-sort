@@ -1,0 +1,79 @@
+{
+  "schema": 1,
+  "feature": "DCM-SUMATRA-STARTUP-01",
+  "date_ist": "2026-11-13",
+  "tested_commit": "5294d6cf32e84038aeed93750800bd7308bad7ad",
+  "report_root": "D:\\FlowverseReportsRepo",
+  "work_kind": "opt_in_phase_diagnosis_not_performance_fix",
+  "numbered_steps_closed": [],
+  "provisional_queue_target_ms": 250,
+  "overall_performance_accepted": false,
+  "sample_fields": ["ready_status_ms", "max_queue_ack_ms", "attachment_ui_total_ms", "full_layout_ms", "move_call_sum_ms", "queued_redraw_ms", "viewer_resize_request_ms", "initial_status_ms", "host_zoom_control_update_ms", "toolbar_repair_ms", "final_status_ms"],
+  "samples_are_in_open_sequence_order": true,
+  "observed_layout_move_count_each_open": 49,
+  "runs": [
+    {
+      "name": "A",
+      "report": "dcm-quicksort-ui-sumatra-startup-20261113-032014-6ac5acb9",
+      "receipt_sha256": "84c3f0d64a5c7aa9562c7340b2f76ce0a3c505131124d5f25067c1433c0b88b8",
+      "trace_sha256": "767a6e6df0cc9609a0f3a8c3f8b286787b35076689c994ef5674ac0b7e5c946b",
+      "measurement_complete": true,
+      "responsiveness_accepted": false,
+      "exit_code": 0,
+      "source_unchanged": true,
+      "fixtures_preserved": true,
+      "samples": [
+        [1860.9015,218.4492,225.683,155.79,155.79,0,12.331,5.958,44.261,6.225,1.118],
+        [692.3522,297.0317,315.184,191.178,191.178,0,17.943,6.761,87.91,10.839,0.553],
+        [874.6578,327.4957,339.372,246.036,246.036,0,12.846,10.743,49.623,18.898,1.226],
+        [736.4893,203.6431,203.746,131.81,131.229,0.581,11.229,6.515,47.275,6.347,0.57]
+      ]
+    },
+    {
+      "name": "B",
+      "report": "dcm-quicksort-ui-sumatra-startup-20261113-032205-3e83c8ae",
+      "receipt_sha256": "23df6901cfb6b32ac3527a6fb01f0b7fb58e71bbefbb777c5f177d24390bf2a1",
+      "trace_sha256": "d48f0d49214b81bd494b199143155f591c5175873f2e499954bdf53b051023a1",
+      "measurement_complete": true,
+      "responsiveness_accepted": true,
+      "exit_code": 0,
+      "source_unchanged": true,
+      "fixtures_preserved": true,
+      "samples": [
+        [1844.5371,200.7428,206.515,139.182,139.182,0,14.001,6.372,39.885,6.488,0.587],
+        [888.9728,246.485,263.378,179.806,179.485,0,15.406,5.753,52.344,8.271,1.798],
+        [605.3302,167.4977,196.351,124.417,123.352,0,12.567,6.222,46.523,6.065,0.557],
+        [595.0457,139.725,176.998,113.56,113.56,0,14.355,5.364,38.038,5.681,0]
+      ]
+    }
+  ],
+  "interpretation": "Full host layout plus host zoom-control updates account for 85.6-88.6% of recorded first-attachment handler time across eight observations. Expensive control moves are chiefly drop-downs. This localizes elapsed call intervals, not internal Windows/driver/scheduling causes or proof all calls can safely be skipped.",
+  "worst_sample_top_moves_ms": {"extensionCombo":43.359,"filterSizeCombo":33.474,"sourceAliasCombo":28.063,"renameToolCombo":23.687,"filterAgeCombo":22.641,"filterSortCombo":19.005,"categoryCombo":18.856,"processedList":8.775},
+  "visual_review": {
+    "run": "A",
+    "individually_opened_full_windows": 4,
+    "reviewed_files": ["startup-1.png", "startup-2.png", "startup-3.png", "startup-4.png"],
+    "all_four_full_window_sha256": "c28e18adeefe9481373a7bf6477235a31bb080738e24cc0b60d74892abeba7bb",
+    "content_crops_separately_reviewed": false,
+    "repeat_images_reviewed": false,
+    "regression_images_reviewed": false,
+    "raw_review_flags_changed": false
+  },
+  "baseline": {"report":"dcm-quicksort-baseline-20261113-032229-c7441c1d","receipt_sha256":"0994757bdc863a4a725b03e6a892ccf78ecf446250e669d841aa17adabc927a2","passed":373,"failed":0,"count":374,"skipped":["TestRealGeneratedPPTXIntegration"],"exit_code":0,"timed_out":false,"source_unchanged":true},
+  "regressions": [
+    {"selector":"ui-sumatra-pending-close","report":"dcm-quicksort-ui-sumatra-lifecycle-20261113-032325-7e5b69e1","receipt_sha256":"88885d151d2d51582d9cac506007bb766158227ff3156953aca51f33de0fa10c","cases":3,"passed":true,"close_ms":1495,"exit_code":0,"source_unchanged":true,"fixtures_preserved":true},
+    {"selector":"ui-sumatra-lifecycle","report":"dcm-quicksort-ui-sumatra-lifecycle-20261113-032340-62160fbf","receipt_sha256":"8c9fbacbe007fc6d70bd5509427e18b62af8a39c7ad8c07e5507c525c5b0f150","cases":11,"passed":true,"close_ms":520,"exit_code":0,"source_unchanged":true,"fixtures_preserved":true},
+    {"selector":"ui-sumatra-resize-timing","report":"dcm-quicksort-ui-sumatra-20261113-032419-b0e1cc88","receipt_sha256":"f845ce287cc49a312cb8c9ecd5d2ccd48c60e212bd23f57219bedbd16590fc75","cases":23,"timing_bursts":12,"raw_natural_comparisons":24,"all_sampled_differences_zero":true,"passed":true,"exit_code":0,"source_unchanged":true,"fixtures_preserved":true}
+  ],
+  "build": {"report":"dcm-quicksort-build-20261113-031920-176d38b8","receipt_sha256":"e114fadaaf3434992802194722bc8c8c102f95576787155232b296eb660e2ba1","app_sha256":"34c17d1ccc72259fffc4425210b4839674cb1d3e3a75d36b5bba6da9b9188b18","app_bytes":7327232,"source_manifest_sha256":"9c9109c92fa556ae46c7f85049859739468c6bd81fc504468838f316f8323a9d","manifest_files":383},
+  "preserved_behavior": {"all_49_MoveWindow_calls_arguments_and_order_unchanged":true,"final_redraw_unchanged":true,"startup_harness_unchanged":true,"runtime_policy_unchanged":true,"default_provider_changed":false},
+  "limitations": [
+    "Eight observed openings, shared machine, opt-in tracing overhead; not a cold-boot or isolated performance benchmark.",
+    "Queue acknowledgement and whole attachment handler duration are different metrics; ready status precedes some tail work.",
+    "No product speed correction or universal 250ms claim.",
+    "No fresh Undo, full PDF-error, scroll, text/image, installer or human acceptance beyond listed regressions."
+  ],
+  "user_acceptance": "not_recorded",
+  "merged": false,
+  "published": false
+}

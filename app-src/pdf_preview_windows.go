@@ -1,0 +1,473 @@
+//go:build windows
+
+package main
+
+import (
+	"bytes"
+	_ "embed"
+	"errors"
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"syscall"
+	"unsafe"
+)
+
+const (
+	WM_PDF_RENDER_DONE = 0x8007 // WM_APP + 7
+	ID_PDF_PREV        = 1060
+	ID_PDF_NEXT        = 1061
+	pdfToolbarHeight   = int32(34)
+	createNoWindow     = 0x08000000
+)
+
+//go:embed assets/pdf_render.ps1
+var bundledPDFRendererScript []byte
+
+type pdfPreviewState struct {
+	active           bool
+	path             string
+	page             int
+	pageCount        int
+	generation       uint64
+	workerGeneration uint64 // identity of the request that owns busy/pending
+	busy             bool
+	pending          bool
+	prevBtn          uintptr
+	nextBtn          uintptr
+	pageLabel        uintptr
+	lastWidth        int
+	lastHeight       int
+	lastScalePercent int
+	lastFallback     string
+}
+
+var pdfPreview pdfPreviewState
+var pdfRenderResults = make(chan PDFRenderResult, 8)
+// GUI-thread-only lifecycle state: a stopped selection can still own live workers.
+var pdfShutdown pdfShutdownCoordinator
+
+func createPDFPreviewControls() {
+	if app.previewHwnd == 0 {
+		return
+	}
+	pdfPreview.prevBtn = createControl("BUTTON", "‹", WS_CHILD|WS_TABSTOP|BS_PUSHBUTTON, 6, 4, 34, 26, app.previewHwnd, ID_PDF_PREV)
+	pdfPreview.pageLabel = createControl("STATIC", "Page", WS_CHILD|SS_LEFT, 46, 9, 130, 20, app.previewHwnd, 0)
+	pdfPreview.nextBtn = createControl("BUTTON", "›", WS_CHILD|WS_TABSTOP|BS_PUSHBUTTON, 182, 4, 34, 26, app.previewHwnd, ID_PDF_NEXT)
+	setExplorerTheme(pdfPreview.prevBtn)
+	setExplorerTheme(pdfPreview.nextBtn)
+	hidePDFPreviewControls()
+}
+
+func hidePDFPreviewControls() {
+	for _, hwnd := range []uintptr{pdfPreview.prevBtn, pdfPreview.pageLabel, pdfPreview.nextBtn} {
+		if hwnd != 0 {
+			procShowWindow.Call(hwnd, 0)
+		}
+	}
+}
+
+func showPDFPreviewControls() {
+	for _, hwnd := range []uintptr{pdfPreview.prevBtn, pdfPreview.pageLabel, pdfPreview.nextBtn} {
+		if hwnd != 0 {
+			procShowWindow.Call(hwnd, SW_SHOW)
+		}
+	}
+	layoutPDFPreviewControls()
+	updatePDFPreviewControls()
+}
+
+func layoutPDFPreviewControls() {
+	if app.previewHwnd == 0 || pdfPreview.pageLabel == 0 {
+		return
+	}
+	var rc RECT
+	procGetClientRect.Call(app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
+	labelW := int32(150)
+	center := (rc.Right - rc.Left) / 2
+	procMoveWindow.Call(pdfPreview.prevBtn, uintptr(center-labelW/2-42), 4, 34, 26, 1)
+	procMoveWindow.Call(pdfPreview.pageLabel, uintptr(center-labelW/2), 9, uintptr(labelW), 20, 1)
+	procMoveWindow.Call(pdfPreview.nextBtn, uintptr(center+labelW/2+8), 4, 34, 26, 1)
+}
+
+func updatePDFPreviewControls() {
+	if !pdfPreview.active {
+		hidePDFPreviewControls()
+		return
+	}
+	label := "Rendering PDF…"
+	if pdfPreview.pageCount > 0 {
+		label = fmt.Sprintf("Page %d of %d", pdfPreview.page+1, pdfPreview.pageCount)
+	}
+	setText(pdfPreview.pageLabel, label)
+	prevEnabled := uintptr(0)
+	nextEnabled := uintptr(0)
+	if pdfPreview.page > 0 {
+		prevEnabled = 1
+	}
+	if pdfPreview.pageCount > 0 && pdfPreview.page+1 < pdfPreview.pageCount {
+		nextEnabled = 1
+	}
+	procEnableWindow.Call(pdfPreview.prevBtn, prevEnabled)
+	procEnableWindow.Call(pdfPreview.nextBtn, nextEnabled)
+}
+
+func pdfContentRect(rc RECT) RECT {
+	if pdfPreview.active {
+		rc.Top += pdfToolbarHeight
+		if rc.Top > rc.Bottom {
+			rc.Top = rc.Bottom
+		}
+	}
+	return rc
+}
+
+func pdfRendererRuntimePath() string {
+	base := settingsDirectory()
+	if strings.TrimSpace(base) == "" {
+		base = filepath.Join(os.TempDir(), "DCM Quick Sort")
+	}
+	return filepath.Join(base, "runtime", "pdf_render.ps1")
+}
+
+func ensurePDFRendererScript() (string, error) {
+	path := pdfRendererRuntimePath()
+	if data, err := os.ReadFile(path); err == nil && bytes.Equal(data, bundledPDFRendererScript) {
+		return path, nil
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return "", err
+	}
+	tmp := path + ".new"
+	if err := os.WriteFile(tmp, bundledPDFRendererScript, 0o644); err != nil {
+		return "", err
+	}
+	_ = os.Remove(path)
+	if err := os.Rename(tmp, path); err != nil {
+		_ = os.Remove(tmp)
+		return "", err
+	}
+	return path, nil
+}
+
+func findPDFPowerShell() (string, error) {
+	for _, name := range []string{"powershell.exe", "pwsh.exe"} {
+		if path, err := exec.LookPath(name); err == nil {
+			return path, nil
+		}
+	}
+	return "", errors.New("Windows PowerShell was not found")
+}
+
+func pdfRenderViewport() (int, int) {
+	if app.previewHwnd == 0 {
+		return 900, 700
+	}
+	var rc RECT
+	procGetClientRect.Call(app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
+	w := int(rc.Right - rc.Left - 12)
+	h := int(rc.Bottom - rc.Top - pdfToolbarHeight - 12)
+	if w < 64 {
+		w = 64
+	}
+	if h < 64 {
+		h = 64
+	}
+	return w, h
+}
+
+func startPDFPreview(path string) bool {
+	if pdfShutdown.closing || !isPDFPath(path) {
+		return false
+	}
+	if _, err := findPDFPowerShell(); err != nil {
+		return false
+	}
+	if _, err := ensurePDFRendererScript(); err != nil {
+		return false
+	}
+	full, err := filepath.Abs(path)
+	if err != nil {
+		full = filepath.Clean(path)
+	}
+	pdfPreview.active = true
+	pdfPreview.path = full
+	pdfPreview.page = 0
+	pdfPreview.pageCount = 0
+	pdfPreview.lastWidth = 0
+	pdfPreview.lastHeight = 0
+	pdfPreview.lastScalePercent = 0
+	pdfPreview.lastFallback = ""
+	defaultView := normalizePDFDefaultView(app.pdfDefaultView)
+	app.previewFitWidth = defaultView == pdfDefaultViewFitWidth
+	app.previewFit = !app.previewFitWidth
+	app.previewZoom = 100
+	app.previewPanX, app.previewPanY = 0, 0
+	app.fallback = "Rendering PDF…"
+	showPDFPreviewControls()
+	updatePreviewZoomControls()
+	requestPDFPreviewRender()
+	procInvalidateRect.Call(app.previewHwnd, 0, 1)
+	return true
+}
+
+func tracePDFPreview(event string, req PDFRenderRequest, failed bool) {
+	recordPDFTrace(PDFTraceEvent{Event: event, Generation: req.Generation, InputPath: req.InputPath, OutputPath: req.OutputPath, Failed: failed,
+		State: &PDFTraceState{Generation: pdfPreview.generation, WorkerGeneration: pdfPreview.workerGeneration, Active: pdfPreview.active, Busy: pdfPreview.busy, Pending: pdfPreview.pending, Path: pdfPreview.path}})
+}
+
+func stopPDFPreview() {
+	previous := PDFRenderRequest{Generation: pdfPreview.generation, InputPath: pdfPreview.path}
+	pdfPreview.generation++ // makes any in-flight renderer result stale
+	pdfPreview.active = false
+	pdfPreview.path = ""
+	pdfPreview.page = 0
+	pdfPreview.pageCount = 0
+	pdfPreview.busy = false
+	pdfPreview.workerGeneration = 0
+	pdfPreview.pending = false
+	pdfPreview.lastWidth = 0
+	pdfPreview.lastHeight = 0
+	pdfPreview.lastScalePercent = 0
+	hidePDFPreviewControls()
+	tracePDFPreview("selection-stopped", previous, false)
+}
+
+func goToPDFPage(delta int) {
+	if !pdfPreview.active || delta == 0 || pdfPreview.pageCount <= 0 {
+		return
+	}
+	next := pdfPreview.page + delta
+	if next < 0 || next >= pdfPreview.pageCount || next == pdfPreview.page {
+		return
+	}
+	pdfPreview.page = next
+	app.previewPanX, app.previewPanY = 0, 0
+	updatePDFPreviewControls()
+	requestPDFPreviewRender()
+}
+
+func requestPDFPreviewRender() {
+	if pdfShutdown.closing || !pdfPreview.active || strings.TrimSpace(pdfPreview.path) == "" {
+		return
+	}
+	// Coalesce rapid Ctrl+wheel/button clicks. Only one PowerShell/WinRT render
+	// runs at a time per selection; changes during that run become one latest
+	// render. Workers from stopped selections can finish later but own no slot.
+	pdfPreview.generation++
+	if pdfPreview.busy {
+		pdfPreview.pending = true
+		setText(app.statusLabel, "PDF zoom/page update queued…")
+		return
+	}
+	powershell, err := findPDFPowerShell()
+	if err != nil {
+		finishPDFRendererUnavailable(err)
+		return
+	}
+	script, err := ensurePDFRendererScript()
+	if err != nil {
+		finishPDFRendererUnavailable(err)
+		return
+	}
+	dir := filepath.Join(settingsDirectory(), "preview-cache")
+	if strings.TrimSpace(settingsDirectory()) == "" {
+		dir = filepath.Join(os.TempDir(), "DCM Quick Sort", "preview-cache")
+	}
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		finishPDFRendererUnavailable(err)
+		return
+	}
+	out, err := os.CreateTemp(dir, "pdf-page-*.png")
+	if err != nil {
+		finishPDFRendererUnavailable(err)
+		return
+	}
+	outputPath := out.Name()
+	_ = out.Close()
+	_ = os.Remove(outputPath)
+
+	generation := pdfPreview.generation
+	vw, vh := pdfRenderViewport()
+	req := PDFRenderRequest{
+		InputPath:      pdfPreview.path,
+		OutputPath:     outputPath,
+		PageIndex:      pdfPreview.page,
+		Fit:            app.previewFit,
+		FitWidth:       app.previewFitWidth,
+		Zoom:           app.previewZoom,
+		ViewportWidth:  vw,
+		ViewportHeight: vh,
+		QuarterTurns:   app.previewQuarterTurns,
+		Generation:     generation,
+	}
+	pdfPreview.busy = true
+	pdfPreview.workerGeneration = req.Generation
+	mode := fmt.Sprintf("%d%%", clampPDFZoom(app.previewZoom))
+	if app.previewFit {
+		mode = "Fit"
+	} else if app.previewFitWidth {
+		mode = "Fit Width"
+	}
+	setText(app.statusLabel, fmt.Sprintf("Rendering PDF page %d · %s…", pdfPreview.page+1, mode))
+	updatePDFPreviewControls()
+
+	// The GUI must remain alive until this goroutine's result is consumed.
+	// No other thread mutates pdfShutdown.
+	if !pdfShutdown.workerStarted() {
+		_ = os.Remove(outputPath)
+		pdfPreview.busy = false
+		pdfPreview.workerGeneration = 0
+		return
+	}
+	go func() {
+		cmd := exec.Command(powershell, pdfRendererArgs(script, req)...)
+		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: createNoWindow}
+		var combined bytes.Buffer
+		cmd.Stdout = &combined
+		cmd.Stderr = &combined
+		runErr := cmd.Start()
+		childPID := 0
+		if runErr == nil {
+			childPID = cmd.Process.Pid
+			recordPDFTrace(PDFTraceEvent{Event: "worker-started", Generation: req.Generation, InputPath: req.InputPath, OutputPath: req.OutputPath, RendererPID: childPID})
+			runErr = cmd.Wait()
+		}
+		output := combined.Bytes()
+		recordPDFTrace(PDFTraceEvent{Event: "worker-finished", Generation: req.Generation, InputPath: req.InputPath, OutputPath: req.OutputPath, RendererPID: childPID, Failed: runErr != nil})
+		result := PDFRenderResult{Request: req}
+		if runErr != nil {
+			result.Err = fmt.Errorf("%w: %s", runErr, strings.TrimSpace(string(output)))
+		} else {
+			result.Meta, result.Err = parsePDFRendererOutput(string(output))
+			if result.Err == nil {
+				if st, statErr := os.Stat(outputPath); statErr != nil || st.Size() == 0 {
+					if statErr != nil {
+						result.Err = statErr
+					} else {
+						result.Err = errors.New("PDF renderer produced an empty image")
+					}
+				}
+			}
+		}
+		pdfRenderResults <- result
+		procPostMessageW.Call(app.hwnd, WM_PDF_RENDER_DONE, 0, 0)
+	}()
+}
+
+func finishPDFRender() {
+	for {
+		select {
+		case result := <-pdfRenderResults:
+			// Run after the stale-result cleanup (or successful presentation)
+			// has finished. Only then may a deferred WM_CLOSE proceed.
+			defer func() {
+				if pdfShutdown.resultConsumed() {
+					procPostMessageW.Call(app.hwnd, WM_CLOSE, 0, 0)
+				}
+			}()
+			if result.Request.Generation != pdfPreview.generation || !pdfPreview.active || !strings.EqualFold(filepath.Clean(result.Request.InputPath), filepath.Clean(pdfPreview.path)) {
+				_ = os.Remove(result.Request.OutputPath)
+				// A stopped selection may finish after its replacement has started.
+				// Only the completing worker can release its slot. A superseded
+				// zoom/page request still owns that slot and may start its queued
+				// successor; a prior selection must not touch the newer worker.
+				if pdfCompletionOwnsWorker(pdfPreview.busy, pdfPreview.workerGeneration, result.Request.Generation) {
+					pdfPreview.busy = false
+					pdfPreview.workerGeneration = 0
+					if pdfPreview.active && pdfPreview.pending {
+						pdfPreview.pending = false
+						requestPDFPreviewRender()
+					}
+				}
+				tracePDFPreview("result-discarded", result.Request, result.Err != nil)
+				return
+			}
+			pdfPreview.busy = false
+			pdfPreview.workerGeneration = 0
+			pdfPreview.pending = false
+			if result.Err != nil {
+				_ = os.Remove(result.Request.OutputPath)
+				tracePDFPreview("result-unavailable", result.Request, true)
+				finishPDFRendererUnavailable(result.Err)
+				return
+			}
+			releasePreviewImage()
+			if !loadImage(result.Request.OutputPath) {
+				_ = os.Remove(result.Request.OutputPath)
+				finishPDFRendererUnavailable(errors.New("rendered PDF page could not be decoded"))
+				return
+			}
+			_ = os.Remove(result.Request.OutputPath)
+			pdfPreview.pageCount = result.Meta.PageCount
+			pdfPreview.page = result.Meta.PageIndex
+			pdfPreview.lastWidth = result.Meta.Width
+			pdfPreview.lastHeight = result.Meta.Height
+			if result.Meta.ScalePercent > 0 {
+				pdfPreview.lastScalePercent = result.Meta.ScalePercent
+				app.previewZoom = result.Meta.ScalePercent
+			}
+			app.fallback = ""
+			if app.previewFit {
+				app.previewPanX, app.previewPanY = 0, 0
+			} else if app.previewFitWidth {
+				// Fit Width is a reading mode: enter at the top of the page.
+				// The drawing model is centered, so top alignment is represented
+				// by the maximum positive vertical pan offset.
+				var rc RECT
+				procGetClientRect.Call(app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
+				rc = pdfContentRect(rc)
+				availH := rc.Bottom - rc.Top - 8
+				app.previewPanX = 0
+				_, rotatedHeight := rotatedPreviewDimensions(int32(result.Meta.Width), int32(result.Meta.Height), app.previewQuarterTurns)
+				app.previewPanY = previewTopPanOffset(rotatedHeight, availH)
+			}
+			showPDFPreviewControls()
+			updatePreviewZoomControls()
+			procInvalidateRect.Call(app.previewHwnd, 0, 1)
+			mode := fmt.Sprintf("%d%%", clampPDFZoom(app.previewZoom))
+			if app.previewFit {
+				mode = fmt.Sprintf("Fit · %d%%", app.previewZoom)
+			} else if app.previewFitWidth {
+				mode = fmt.Sprintf("Fit Width · %d%%", app.previewZoom)
+			}
+			setText(app.statusLabel, fmt.Sprintf("DCM PDF Preview · Page %d/%d · %s", pdfPreview.page+1, pdfPreview.pageCount, mode))
+			tracePDFPreview("result-applied", result.Request, false)
+			return
+		default:
+			return
+		}
+	}
+}
+
+func finishPDFRendererUnavailable(err error) {
+	if !pdfPreview.active {
+		return
+	}
+	path := pdfPreview.path
+	pdfPreview.lastFallback = err.Error()
+	stopPDFPreview()
+	releasePreviewImage()
+	if loadWindowsPreviewHandler(path) {
+		app.previewActive = true
+		setText(app.statusLabel, "DCM PDF renderer unavailable; using Windows PDF preview fallback")
+		return
+	}
+	app.fallback = "PDF preview unavailable\n\n" + err.Error()
+	setText(app.statusLabel, "PDF preview unavailable: "+err.Error())
+	updatePreviewZoomControls()
+	procInvalidateRect.Call(app.previewHwnd, 0, 1)
+}
+
+func releasePreviewImage() {
+	if app.image != 0 {
+		procGdipDisposeImage.Call(app.image)
+		app.image = 0
+	}
+	if app.imageStream != nil {
+		releaseUnknown(app.imageStream)
+		app.imageStream = nil
+	}
+}

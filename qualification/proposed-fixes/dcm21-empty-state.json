@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "files": [
+    {
+      "path": "app-src/main_windows.go",
+      "before_blob": "6d85a97f943894617ef4aa55e607a87e6168e7fd",
+      "replacements": [
+        {
+          "old": "\t\tsetText(app.currentLabel, \"PREVIEW  ·  No files remaining\")",
+          "new": "\t\theading, hint := inboxEmptyState(selectedInboxFilter(), len(app.files))\n\t\tsetText(app.currentLabel, \"PREVIEW  ·  \"+heading)"
+        },
+        {
+          "old": "\t\tapp.fallback = \"Folder complete\"",
+          "new": "\t\tapp.fallback = hint"
+        }
+      ]
+    },
+    {
+      "path": "tools/test-ui-launch.ps1",
+      "before_blob": "63822da5daee4af18cb3486a7af8f331b0b15841",
+      "replacements": [
+        {
+          "old": "    if(-not @($snapshot | Where-Object {$_.Visible -and $_.Text -like '*No files remaining*'}).Count){throw 'Empty preview message missing.'}",
+          "new": "    $expectedHeading=if($expected.Count -eq 0){'No files remaining'}else{'No files match the current filters'}\n    if(-not @($snapshot | Where-Object {$_.Visible -and $_.Text.EndsWith($expectedHeading)}).Count){throw ('Empty preview message missing: '+$expectedHeading)}"
+        }
+      ]
+    },
+    {
+      "path": "tools/run-ui.ps1",
+      "before_blob": "7fa4c1f2103b0683a28f3779e27b4567b58c7f4c",
+      "replacements": [
+        {
+          "old": "        Assert-Fixtures\n    }\n    if($Suite -in @('basics','rename')){",
+          "new": "        Assert-Fixtures\n        if($Suite -eq 'filters'){. (Join-Path $repo 'tests\\native\\filter-matrix.ps1')}\n    }\n    if($Suite -in @('basics','rename')){"
+        }
+      ]
+    }
+  ]
+}

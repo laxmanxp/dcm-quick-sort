@@ -1,0 +1,31 @@
+name: Apply exact nonblocking PDF startup patch
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/apply-async-startup.yml]
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.2'
+          cache: false
+      - name: Apply locally tested edits with exact identities
+        run: python qualification/apply-async-startup.py
+      - name: Test ownership and compile Windows test binary
+        working-directory: app-src
+        run: |
+          go test -race -run 'TestPreparedResourceOwnership|TestSumatra' -count=1
+          GOOS=windows GOARCH=amd64 go test -c -o "$RUNNER_TEMP/dcm-async.test.exe"
+      - name: Save verified source without force push
+        run: |
+          git config user.name 'DCM reviewed-patch automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app-src tools
+          git commit -m 'fix: prepare PDF viewer off UI thread with cancelled-result ownership'
+          git push origin HEAD:release/v1.0.71

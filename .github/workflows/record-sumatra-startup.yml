@@ -1,0 +1,22 @@
+name: Record measured startup responsiveness failure
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/record-sumatra-startup.yml]
+permissions:
+  contents: write
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply hash-guarded tracker update preserving completion states
+        run: python qualification/record-sumatra-startup.py
+      - name: Save only diagnostic tracker metadata
+        run: |
+          git config user.name 'DCM reviewed-checkpoint automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add todo.json qualification/completion-50.json
+          git commit -m 'test: preserve measured startup responsiveness failure'
+          git push origin HEAD:release/v1.0.71

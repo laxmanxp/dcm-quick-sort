@@ -1,0 +1,155 @@
+{
+  "schema": 1,
+  "feature": "DCM-21",
+  "date": "2026-11-11",
+  "completion": "complete",
+  "newly_completed_steps": [
+    "DCM-21"
+  ],
+  "blocked_steps": [
+    "DCM-19"
+  ],
+  "tested_commit": "a363333ede3243ead62ce11f5a22c8665205ffe5",
+  "product_source_changed_this_retry": false,
+  "new_tooling": [
+    "tests/native/filter-empty-destination-probe.ps1",
+    "tests/native/filter-matrix.ps1 (opt-in diagnostic call only)"
+  ],
+  "baseline": {
+    "report": "C:\\FlowverseReports\\dcm-quicksort-baseline-20261111-025742-6ba62701",
+    "count": 358,
+    "passed": 357,
+    "failed": 0,
+    "skipped": [
+      "TestRealGeneratedPPTXIntegration"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "source_unchanged": true
+  },
+  "build": {
+    "receipt": "C:\\FlowverseReports\\dcm-quicksort-build-20261111-025820-58006f2e\\receipt.json",
+    "receipt_sha256": "707d0c3596535d712c2fd8347c1c683e7ab87c4099972cfebd5096923ecd0c5e",
+    "app_sha256": "55fd13c689b55c09d6e464cd75735fbff4c2becf3e9c49a0c093e61e62f28f56",
+    "app_size_bytes": 7184896,
+    "source_manifest_files": 240,
+    "source_manifest_sha256": "bc4b4cf70ba6a23ef7e35fe2a44d988f546c9da3a7c6fd858d3acede83ffe4c9",
+    "source_unchanged": true
+  },
+  "filters": {
+    "report": "C:\\FlowverseReports\\dcm-quicksort-ui-filters-20261111-030030-c87ccf31",
+    "passed": true,
+    "source_unchanged": true,
+    "app_exit_code": 0,
+    "all_owned_processes_closed": true,
+    "source_files": 4,
+    "fixtures_unchanged": true,
+    "operation_journal_empty": true,
+    "scope": "All 10 category choices, 5 age choices, 5 size choices; three representative extensions; case-insensitive name; combined intersection/no-match; Clear Filters and no-selection action safety. The four UI fixtures are three small TXT files and one PDF; non-document category and larger-size positive coverage remains in units, not this UI matrix."
+  },
+  "launch": {
+    "report": "C:\\FlowverseReports\\dcm-quicksort-ui-launch-20261111-030053-ac91402e",
+    "passed": true,
+    "case_count": 12,
+    "source_unchanged": true,
+    "app_exit_codes": [
+      0,
+      0
+    ],
+    "children_drained": true
+  },
+  "diagnostic": {
+    "report": "C:\\FlowverseReports\\dcm-quicksort-ui-filters-20261111-025935-9589eb6f",
+    "exit_code": 1,
+    "diagnostic_only": true,
+    "feature_accepted": false,
+    "trigger": "Move with no selected file and empty destination",
+    "observed_message": "Choose an existing logical location inside the configured Vault.\n\nlogical address is empty",
+    "expected_message_observed": true,
+    "fixtures_unchanged": true,
+    "dialog_answered": false,
+    "interpretation": "Reproduces destination validation before selection checking. The historic run recorded only the title, so its exact old dialog body is not retroactively claimed observed. Current replay and source identify the test-setup cause."
+  },
+  "prior_failure": "C:\\FlowverseReports\\dcm-quicksort-ui-filters-20261111-021101-c58e206d",
+  "prior_success_found": "C:\\FlowverseReports\\dcm-quicksort-ui-filters-20261111-021651-d5f15140",
+  "visual_review": {
+    "separate_from_raw_receipts": true,
+    "raw_visual_reviewed_unchanged": false,
+    "images_opened_and_reviewed": 10,
+    "existing_open_finding": "DCM-UI-LABEL-01",
+    "captures": [
+      {
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-filters-20261111-030030-c87ccf31\\launch-1.png",
+        "sha256": "3cbba9719dcffdedab0b81e079e5dbd2ec5062ee6c4d29d8b0137e7ea207586a",
+        "reviewed": true,
+        "observation": "Four files listed; alpha selected with readable text."
+      },
+      {
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-filters-20261111-030030-c87ccf31\\no-match-state.png",
+        "sha256": "ede8c2c63406bf700b115a2a7664592fd1a3b0a6525cb62fb4388c8d02d1b813",
+        "reviewed": true,
+        "observation": "No-match header and clear/change hint; list and draft empty."
+      },
+      {
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-filters-20261111-030030-c87ccf31\\DCM-21-combined-match.png",
+        "sha256": "33fe51d2321d0754840f842ba93a9aebcee9b646c502aa9cff0f0832c27724ec",
+        "reviewed": true,
+        "observation": "Combined filters show only charlie and its readable text."
+      },
+      {
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-filters-20261111-030030-c87ccf31\\DCM-21-filtered-empty.png",
+        "sha256": "da55151b16c9f43d591f17da2fc6cd706299b1e4df37bf485d5838bad690a35d",
+        "reviewed": true,
+        "observation": "Combined no-match retains correct header/hint; no stale draft."
+      },
+      {
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-filters-20261111-030030-c87ccf31\\DCM-21-clear-restored.png",
+        "sha256": "3604188a401926a8a234852ebfaa318ba2698fb2b59172364f771afdd1620619",
+        "reviewed": true,
+        "observation": "All four files restored, membership controls cleared, alpha preview and draft restored."
+      },
+      {
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-filters-20261111-030030-c87ccf31\\final.png",
+        "sha256": "3604188a401926a8a234852ebfaa318ba2698fb2b59172364f771afdd1620619",
+        "reviewed": true,
+        "observation": "Final state matches restored state; same image hash, separately opened."
+      },
+      {
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-launch-20261111-030053-ac91402e\\DCM-17-empty-launch.png",
+        "sha256": "4c936ed53789742a077d27f27d565628b94ec34836b882f6a22cc2f46c512f7a",
+        "reviewed": true,
+        "observation": "Genuinely empty folder retains No files remaining / Folder complete."
+      },
+      {
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-launch-20261111-030053-ac91402e\\DCM-17-empty-after-actions.png",
+        "sha256": "59241ca707c700af8bbb0c20ccbe9c4c245433c3073ba65abe91d09425e22618",
+        "reviewed": true,
+        "observation": "Empty state remains safe after actions; valid disposable destination shown."
+      },
+      {
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-launch-20261111-030053-ac91402e\\DCM-17-no-selection.png",
+        "sha256": "14e7ab803171861fe16523639a30d8d10869bca5e65ee4e630941b53f899ae68",
+        "reviewed": true,
+        "observation": "Filtered sentinel uses no-match wording, empty list/draft and clear/change hint."
+      },
+      {
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-launch-20261111-030053-ac91402e\\DCM-17-restored-selection.png",
+        "sha256": "870cb468361c41d58f65db1610829d5a5b024b73078e2ec0d9f86b5ccabe11d5",
+        "reviewed": true,
+        "observation": "Sentinel selection, filename draft and readable preview restored."
+      }
+    ]
+  },
+  "remaining": [
+    "DCM-19 / DCM-EXPLORER-ISOLATION-01",
+    "DCM-UI-LABEL-01",
+    "DCM_REAL_PPTX fixture for DCM-32/47",
+    "Remaining UI workflows",
+    "Final package and actual setup/uninstaller lifecycle",
+    "User acceptance"
+  ],
+  "next_step": "DCM-22",
+  "user_acceptance": "not_recorded",
+  "merged": false,
+  "published": false
+}

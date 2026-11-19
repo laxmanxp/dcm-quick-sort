@@ -1,0 +1,113 @@
+{
+  "schema": 1,
+  "feature": "DCM-34-PDF-PROTECTED-01",
+  "status": "accepted_with_limits",
+  "completion": "complete",
+  "recorded_on": "2026-11-15",
+  "scope": "One pinned synthetic encrypted PDF opened without a password; explicit refusal, TXT/default-PDF recovery and shared damaged-file regression.",
+  "protected_UI_and_baseline_source": "1170e844c56ec019ae219abc8e3248092482e54d",
+  "protected_renderer_source": "0786a42342f99dd059cd41d1078bbc33c8a43a2b",
+  "earlier_protected_evidence": "qualification/evidence/dcm-34-pdf-protected-progress.json",
+  "earlier_protected_report_commit": "0d0ca7b2871190bae66affd159d5f8fcf7c69b14",
+  "earlier_baseline": {
+    "passed": 402,
+    "failed": 0,
+    "skipped": 0,
+    "rerun_in_this_step": false
+  },
+  "earlier_protected_UI": {
+    "records": 9,
+    "reviewed_full_frames": 7,
+    "rerun_in_this_step": false,
+    "password_supplied": false
+  },
+  "damaged_regression": {
+    "source": "42a6c1da83604284c2c2e97b341df98e93c62d0e",
+    "selector": "ui-pdf-error-controls",
+    "registered_update_passed": true,
+    "passed": true,
+    "records": 9,
+    "captures_retained": 34,
+    "readiness_attempts": 14,
+    "error_controls_disabled_checks": 2,
+    "txt_recovery_pixel_deltas": [
+      0,
+      0
+    ],
+    "source_files_verified_before_run": 493,
+    "source_unchanged": true,
+    "fixtures_preserved": true,
+    "journal_empty": true,
+    "handler_registrations_unchanged": true,
+    "owned_host_exit": 0,
+    "exclusive_release_passed": true,
+    "build_receipt_sha256": "f27d16fbef01653cd9ddc4b442440fbbf68b44b6dfcc3adc9a493dc7df7916cd",
+    "binary_sha256": "4b97b95da663d84fa2f8984b822303f773202baa738ed7d677822e6a3c896157",
+    "binary_bytes": 7374848,
+    "implementation_changed": false,
+    "report_repository": "laxmanxp/flowverse-reports",
+    "report_commit": "dca830554ba1b3305a6efef1f0e1e7b657830700",
+    "report_prefix": "apps/dcm-quicksort/dcm34-20261115-protected/damage-regression-42a6c1d-083159",
+    "raw_files": 101,
+    "published_files": 104,
+    "separate_visual_review": {
+      "full_frames_reviewed": 7,
+      "raw_visual_flags_modified": false,
+      "other_transitions_and_crops_separately_reviewed": false,
+      "images": [
+        {
+          "path": "native/01-initial-text.png",
+          "observation": "All three TXT fixture lines readable; no PDF overlay.",
+          "review": "pass_bounded_scope"
+        },
+        {
+          "path": "native/02-valid-before-damage-attempt-03.png",
+          "observation": "Correct teal first PDF page, Page 1 of 2; supported sizing controls enabled.",
+          "review": "pass_bounded_scope"
+        },
+        {
+          "path": "native/03-first-damaged-attempt-04.png",
+          "observation": "Explicit native cannot-open error; no stale teal page; all five host sizing controls disabled.",
+          "review": "pass_bounded_scope"
+        },
+        {
+          "path": "native/04-first-text-recovery.png",
+          "observation": "Original three TXT lines restored; no native overlay.",
+          "review": "pass_bounded_scope"
+        },
+        {
+          "path": "native/05-valid-pdf-recovery-attempt-03.png",
+          "observation": "Correct teal PDF page and supported controls restored.",
+          "review": "pass_bounded_scope"
+        },
+        {
+          "path": "native/06-second-damaged-attempt-04.png",
+          "observation": "Second explicit cannot-open error; all five host sizing controls disabled.",
+          "review": "pass_bounded_scope"
+        },
+        {
+          "path": "native/07-final-text-recovery.png",
+          "observation": "Original three TXT lines restored after the second error.",
+          "review": "pass_bounded_scope"
+        }
+      ]
+    }
+  },
+  "history_preserved": true,
+  "parent_DCM34": "PARTIAL",
+  "numbered_complete": 32,
+  "numbered_remaining": 18,
+  "user_test": "not_recorded",
+  "open_observations": [
+    "DCM-PDF-RENDER-SIZE-01"
+  ],
+  "suite_release_gate": "FILEFLOW-SUITE-READY-01 unchanged; final packaging/installation await Flow Search and DeepSearch readiness",
+  "limits": [
+    "No password entry, unlocking or prompt cancellation acceptance.",
+    "No observed in-flight interruption/late-result rejection acceptance.",
+    "No new full baseline or protected-file UI run in this closeout.",
+    "No metadata-to-bitmap size equivalence or sizing fix claimed.",
+    "No human acceptance, installer qualification or release publication."
+  ],
+  "next_DCM34_task": "Qualify observed in-flight preview interruption and late-result rejection; keep the separate renderer-size gate open."
+}

@@ -1,0 +1,28 @@
+name: Extend default-provider PDF acceptance
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/qualify-default-pdf.yml]
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact source and replay locally validated test patch
+        run: |
+          test "$(git hash-object tools/run-ui.ps1)" = 030d2121ce510ffc3a1c8fb03aad0c6b73c69824
+          echo '07672bec975b94ed5a22ab725a91e1c2be62fdfab9ec195baf60aab7837335a7  qualification/default-pdf-acceptance.patch' | sha256sum -c -
+          git apply --check qualification/default-pdf-acceptance.patch
+          git apply qualification/default-pdf-acceptance.patch
+          echo '239d9a13476c60210187a35dc13ba2e00618647edbf91181e45f65bf163f49a7  tools/run-ui.ps1' | sha256sum -c -
+          git diff --exit-code -- app-src tests/native
+      - name: Commit test-only acceptance extension
+        run: |
+          git config user.name 'DCM reviewed-test automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tools/run-ui.ps1
+          git commit -m 'test: qualify default PDF boundaries fit page and readable manual zoom'
+          git push origin HEAD:release/v1.0.71

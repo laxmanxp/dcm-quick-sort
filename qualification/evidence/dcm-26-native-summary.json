@@ -1,0 +1,239 @@
+{
+  "schema": 1,
+  "feature": "DCM-26",
+  "feature_accepted": true,
+  "tested_commit": "921f3616da39e8c67f27ba1d496eaaf3594526ad",
+  "reviewed_images": 17,
+  "qualification_summary": "921f3616: 17 native text-preview cases passed with 17 final screenshots inspected, including actual limit notices and corrected manual status. UTF-8/BOM UTF-16 content, invalid encodings, safe binary interpretation, empty/locked/recovery and 256-KiB boundaries verified; all 15 source fixtures unchanged, normal exit 0. Fresh full baseline 361 passed / 0 failed / 1 retained external-PPTX skip. Launch/Refresh regression commands pass. Earlier native REDs, capture failures and tooling corrections retained. Only DCM-26 newly closed.",
+  "scope_note": "Automatic built-in routing remains TXT/MD/CSV; UTF-8 and BOM-marked UTF-16 only, no legacy code-page guessing or UTF-32 support. Markdown/CSV shown as literal text. Only the bounded prefix is decoded. Human acceptance, all I/O errors and final packaging remain separate.",
+  "baseline": {
+    "commit": "921f3616da39e8c67f27ba1d496eaaf3594526ad",
+    "report": "dcm-quicksort-baseline-20261111-144109-ae0c2e92",
+    "count": 362,
+    "passed": 361,
+    "failed": 0,
+    "skipped": [
+      "TestRealGeneratedPPTXIntegration"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "source_unchanged": true,
+    "skip_disposition": "Identified DCM_REAL_PPTX still required before DCM-32/47; not executed, not passed."
+  },
+  "native_ui": {
+    "commit": "921f3616da39e8c67f27ba1d496eaaf3594526ad",
+    "report": "C:\\FlowverseReports\\dcm-quicksort-ui-text-20261111-144427-b716381b",
+    "passed": true,
+    "case_count": 17,
+    "fixture_count": 15,
+    "reviewed_images": 17,
+    "app_exit_code": 0,
+    "app_pid": 15940,
+    "children_drained": true,
+    "source_unchanged": true,
+    "fixtures_unchanged": true,
+    "operation_journal_empty": true,
+    "preview_limit_bytes": 262144,
+    "manual_status_verified": true,
+    "tail_first_visible_lines": [
+      4749,
+      4749
+    ],
+    "raw_visual_reviewed": false,
+    "review_evidence": "qualification/evidence/dcm-26-native-summary.json",
+    "finished_utc": "2026-11-11T14:44:55.0400546Z"
+  },
+  "build": {
+    "commit": "921f3616da39e8c67f27ba1d496eaaf3594526ad",
+    "receipt": "C:\\FlowverseReports\\dcm-quicksort-build-20261111-144207-01065b1a\\receipt.json",
+    "receipt_sha256": "c4f3ca07b37d5ff3fcb9660f0027bfe5a77fc794aa461cbb8d55836f0c084565",
+    "app_sha256": "0522a02560bea2355c6d307eca807320836a51b4e9a8553470c8107b33f2523e",
+    "app_size": 7183360,
+    "manifest_files": 277,
+    "manifest_sha256": "008ac8411a9f4d02f38103ffb6ebf52680f50a5679a004138b66b4ef93d47628",
+    "source_unchanged": true
+  },
+  "new_go_tests": {
+    "parents": 3,
+    "nested_cases": 31,
+    "local_focused_pass": true,
+    "windows_test_cross_compile_pass": true,
+    "counting_rule": "Nested cases are included in parents, not added to the baseline total."
+  },
+  "regressions": [
+    {
+      "selector": "ui-launch",
+      "report": "dcm-quicksort-ui-launch-20261111-144456-9fa864b0",
+      "command_passed": true,
+      "exit_code": 0,
+      "images_reviewed": false
+    },
+    {
+      "selector": "ui-refresh",
+      "report": "dcm-quicksort-ui-refresh-20261111-144512-afa1b71e",
+      "command_passed": true,
+      "exit_code": 0,
+      "images_reviewed": false
+    }
+  ],
+  "retained_attempts": [
+    {
+      "report": "dcm-quicksort-regressions-20261111-141153-7e5bea1f",
+      "commit": "9c0b9154189b384085bd938cfea8e96003143528",
+      "kind": "native_unit_RED",
+      "passed_parents": 1,
+      "failed_parents": 2,
+      "skips": 0,
+      "timeout": false
+    },
+    {
+      "report": "dcm-quicksort-ui-text-20261111-141531-cda04fbe",
+      "kind": "test_wait_variable_shadowing",
+      "product_failure": false
+    },
+    {
+      "report": "dcm-quicksort-ui-text-20261111-142205-eb06165d",
+      "commit": "b74d5f368765fc0347d7a7b54cf0d7196c93ca98",
+      "kind": "native_locked_file_error_RED",
+      "failure_image_reviewed": true
+    },
+    {
+      "report": "dcm-quicksort-ui-text-20261111-142616-080dd881",
+      "commit": "8e88430f72d536320628e3b367c8b140ef06f347",
+      "kind": "assertions_passed_but_review_found_gaps",
+      "reviewed_images": 17,
+      "final_acceptance": false
+    },
+    {
+      "report": "dcm-quicksort-ui-text-20261111-143806-39aac57c",
+      "kind": "minimized_hidden_capture_guard",
+      "cause": "not established"
+    },
+    {
+      "report": "dcm-quicksort-ui-text-20261111-143856-cb24c34d",
+      "commit": "ae0c9f5eb8ecb184684f7303ee7391ad6aadc0a7",
+      "kind": "native_manual_status_RED"
+    },
+    {
+      "report": "dcm-quicksort-ui-text-20261111-144244-3cb4b562",
+      "commit": "921f3616da39e8c67f27ba1d496eaaf3594526ad",
+      "kind": "minimized_hidden_capture_guard",
+      "cause": "not established",
+      "unchanged_retry_passed": true
+    }
+  ],
+  "images": [
+    {
+      "name": "DCM-26-01-plain.txt",
+      "sha256": "0ac3e4523bdd91db4d3c689305561219843c22082bcfc12f946cd8dec83a08d7",
+      "reviewed": true,
+      "review_note": "Four normalized lines and correct TXT label."
+    },
+    {
+      "name": "DCM-26-02-markdown.md",
+      "sha256": "729e2824bd21c5ca9bd7fc3c3a765b891098020374e8a4b1ceb2207f7f5d93ca",
+      "reviewed": true,
+      "review_note": "Literal Markdown markers preserved."
+    },
+    {
+      "name": "DCM-26-03-records.csv",
+      "sha256": "e01624522d7c7870c36cd96085e5784b54fc69adbc9a122997862498151a0f63",
+      "reviewed": true,
+      "review_note": "CSV quotes and comma preserved; no grid claim."
+    },
+    {
+      "name": "DCM-26-04-utf8.TXT",
+      "sha256": "fb64ad8a6256fb4ea3e15261e4723c1752b90d25005a0aad24f0e2a3996c4514",
+      "reviewed": true,
+      "review_note": "Accent, Greek, Odia and emoji visible."
+    },
+    {
+      "name": "DCM-26-05-utf16-le.txt",
+      "sha256": "a669cde01ce57aff57948b7ba6b0a9f0a46241beff07e41a96bb7f36e56ad687",
+      "reviewed": true,
+      "review_note": "Same Unicode visible from BOM UTF-16LE."
+    },
+    {
+      "name": "DCM-26-06-utf16-be.txt",
+      "sha256": "60597fd6cadfd00c85a3db65308c03ca74f149701a9955da9919bf86e4f82727",
+      "reviewed": true,
+      "review_note": "Same Unicode visible from BOM UTF-16BE."
+    },
+    {
+      "name": "DCM-26-07-empty.txt",
+      "sha256": "71f2dcf29e5b2b814b83148e84d8f46d9897a3d1d0d141f2c3859a5a5275432a",
+      "reviewed": true,
+      "review_note": "Explicit empty-file marker; no stale content."
+    },
+    {
+      "name": "DCM-26-sharing-violation",
+      "sha256": "28f54aa9f6a1eb0bbdc37b8bc36d8ae38a956474cb479ea9773b6bca43cc6d6d",
+      "reviewed": true,
+      "review_note": "Specific sharing violation in preview and footer."
+    },
+    {
+      "name": "DCM-26-read-recovery",
+      "sha256": "84d8250649af0152e8520701c154a7350a602214630683ccbb5afc08d29c53da",
+      "reviewed": true,
+      "review_note": "Readable correct contents after releasing the owned lock."
+    },
+    {
+      "name": "DCM-26-09-invalid-utf8.txt",
+      "sha256": "17b23ecd5a8f74d0baf46f83fdb0d7ee86078542178b3bd153f67fc2c1d6ec9b",
+      "reviewed": true,
+      "review_note": "Invalid encoding reason shown without old text."
+    },
+    {
+      "name": "DCM-26-10-odd-utf16.txt",
+      "sha256": "4412182c97d8163d472228f2eae8c12e7c8a56c5eb94e84075d38da7f00e7dd1",
+      "reviewed": true,
+      "review_note": "Incomplete UTF-16 code-unit reason shown."
+    },
+    {
+      "name": "DCM-26-11-utf32.txt",
+      "sha256": "3b42f7aab756f1fe60db03fb6e84e3cbe104a3396927791e7f2cd4094c3bc905",
+      "reviewed": true,
+      "review_note": "Unsupported UTF-32 and supported-encoding guidance shown."
+    },
+    {
+      "name": "DCM-26-12-binary.txt",
+      "sha256": "3a1706c0fd479fb252c386b7f1d959ae484a12b9a1e61697ec879b18aaf9c9a6",
+      "reviewed": true,
+      "review_note": "Safe binary interpretation warning and sanitized controls."
+    },
+    {
+      "name": "DCM-26-13-limit-utf8.txt",
+      "sha256": "3618e28d3cc3055b44eb5c3310b242151a04df3d69c3edbccd6b9d8de6917a39",
+      "reviewed": true,
+      "review_note": "Actual tail and 256.0 KiB notice visible; no replacement at cutoff."
+    },
+    {
+      "name": "DCM-26-14-limit-ascii.txt",
+      "sha256": "18a0ec7ccff80df60c8ee2f96e498ba954bf5a91bdd012a9db36b2bf11a4af8a",
+      "reviewed": true,
+      "review_note": "Actual tail, final XY and 256.0 KiB notice visible."
+    },
+    {
+      "name": "DCM-26-explicit-read-as-text",
+      "sha256": "cd4c679bd465b0c002ae1d7a9cfef3e948dd2c50d95774d0b74cfd5f6d11e406",
+      "reviewed": true,
+      "review_note": "Checked manual toggle, expected text and Read as text: DCM26TEXT footer."
+    },
+    {
+      "name": "DCM-26-final-recovery",
+      "sha256": "77ba0d0ff9f5e307f403da328659db14c159bf49e49d92311d48969626831bde",
+      "reviewed": true,
+      "review_note": "Original plain text and TXT status restored."
+    }
+  ],
+  "image_review_method": "Each final native capture opened through the remote file tool and visually inspected; original raw receipt flags unmodified. Images retained on Lenovo because a desktop edge can be present.",
+  "untouched_boundaries": {
+    "user_documents": true,
+    "host_installation": true,
+    "registry_and_associations": true,
+    "installer_code": true
+  },
+  "human_acceptance": "not_recorded",
+  "merged": false,
+  "published": false
+}

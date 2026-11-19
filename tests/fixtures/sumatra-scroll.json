@@ -1,0 +1,116 @@
+{
+  "schema": 1,
+  "filename": "sumatra-scroll.pdf",
+  "sha256": "05304a98a830954b4f5bfedf0187e78aa847248a80b0ca2ba2b5b5f843352bb0",
+  "pages": 2,
+  "media_box": [
+    0,
+    0,
+    612,
+    1000
+  ],
+  "regions": [
+    {
+      "page": 1,
+      "section": "TOP",
+      "token": "ALPHA",
+      "text": "PAGE 1 - TOP - ALPHA",
+      "rgb": [
+        0,
+        140,
+        160
+      ],
+      "marker": [
+        60,
+        880,
+        16,
+        54
+      ]
+    },
+    {
+      "page": 1,
+      "section": "MIDDLE",
+      "token": "BRAVO",
+      "text": "PAGE 1 - MIDDLE - BRAVO",
+      "rgb": [
+        40,
+        80,
+        210
+      ],
+      "marker": [
+        60,
+        480,
+        16,
+        54
+      ]
+    },
+    {
+      "page": 1,
+      "section": "BOTTOM",
+      "token": "CHARLIE",
+      "text": "PAGE 1 - BOTTOM - CHARLIE",
+      "rgb": [
+        0,
+        140,
+        60
+      ],
+      "marker": [
+        60,
+        80,
+        16,
+        54
+      ]
+    },
+    {
+      "page": 2,
+      "section": "TOP",
+      "token": "DELTA",
+      "text": "PAGE 2 - TOP - DELTA",
+      "rgb": [
+        230,
+        100,
+        0
+      ],
+      "marker": [
+        60,
+        880,
+        16,
+        54
+      ]
+    },
+    {
+      "page": 2,
+      "section": "MIDDLE",
+      "token": "ECHO",
+      "text": "PAGE 2 - MIDDLE - ECHO",
+      "rgb": [
+        150,
+        40,
+        180
+      ],
+      "marker": [
+        60,
+        480,
+        16,
+        54
+      ]
+    },
+    {
+      "page": 2,
+      "section": "BOTTOM",
+      "token": "FOXTROT",
+      "text": "PAGE 2 - BOTTOM - FOXTROT",
+      "rgb": [
+        200,
+        30,
+        40
+      ],
+      "marker": [
+        60,
+        80,
+        16,
+        54
+      ]
+    }
+  ]
+}

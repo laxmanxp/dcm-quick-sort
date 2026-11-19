@@ -1,0 +1,317 @@
+{
+  "schema": 1,
+  "app": "dcm-quicksort",
+  "feature": "DCM-33",
+  "milestone": "Representative genuine legacy XLS installed-handler qualification",
+  "created_utc": "2026-11-14T13:36:44.261429+00:00",
+  "result": "PASS_XLS_MILESTONE",
+  "full_dcm33_status": "PARTIAL",
+  "full_dcm33_accepted": false,
+  "numbered_plan": {
+    "complete": 31,
+    "remaining": 19,
+    "numbered_steps_closed": []
+  },
+  "source": {
+    "repository": "https://github.com/laxmanxp/dcm-quick-sort.git",
+    "branch": "release/v1.0.71",
+    "tested_commit": "e19ff30b1663a4b5bb385a3667ab6342f299cc1e",
+    "tree": "0e423eb3cb1e63ea48b8dbc449406ef88e1a618e",
+    "tracked_files": 461,
+    "native_source_manifest_sha256": "fa6c8e3122a83c9cf2886c0f2903a4273364e55f911b655b4d6153cde48d6964",
+    "unchanged_application_and_installer_source_since": "b3d46b9e2003dbbfa2ae431e134e0692b8168d34",
+    "app_bytes_identical_to_accepted_doc_build": true
+  },
+  "change": {
+    "production_source_changed": false,
+    "new_product_defect_observed": false,
+    "new_product_red_claimed": false,
+    "description": "Adds a genuine binary BIFF8 XLS fixture, independent validator/negative probes and the registered ui-legacy-xls lifecycle/geometry qualification gate. Existing legacy routing, unavailable-footer handling and CLSID-gated Excel layout behavior were exercised unchanged.",
+    "prior_flowdev_selectors_preserved": 53
+  },
+  "local_validation": {
+    "focused_top_level_pass": 3,
+    "focused_leaf_pass": 24,
+    "fail": 0,
+    "skip": 0,
+    "native_execution": false,
+    "evidence": "local/local-unit-summary.json",
+    "binary_validator": "local/fixture/validation-final.json",
+    "negative_checks": "local/fixture/negative-checks.json",
+    "negative_outcomes": "Renamed XLSX, wrong numeric value and wrong formula with unchanged cached total all rejected at their intended guards.",
+    "regeneration": "Two XLS exports were byte-identical in the pinned runtime; source XLSX relationship IDs differ and are not normalized."
+  },
+  "native": {
+    "mechanism": "Remote Desktop Commander; registered FlowDev update and test selectors",
+    "device": "Laxman_Lenovo",
+    "device_id": "d18227f2-0b54-4b11-9026-56ac40305f02",
+    "checkout": "D:\\FlowverseReportsRepo\\dcm-quicksort-candidate",
+    "flowdev_registration_matches_repository": true,
+    "update": {
+      "observed_pass": true,
+      "native_update_json_available": false,
+      "evidence": "execution-observation.json",
+      "limit": "The original console PASS and command are retained as primary-agent execution observation. Native receipts independently bind the tested clean source; no native update JSON was available."
+    },
+    "legacy_unit": {
+      "selector": "legacy-preview-unit",
+      "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-regressions-20261114-131559-93a60d28",
+      "top_level_pass": 4,
+      "leaf_pass": 33,
+      "fail": 0,
+      "skip": 0
+    },
+    "excel_unit": {
+      "selector": "excel-preview-layout-unit",
+      "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-regressions-20261114-131705-b50e60c8",
+      "top_level_pass": 2,
+      "leaf_pass": 48,
+      "fail": 0,
+      "skip": 0
+    },
+    "tooling": {
+      "selector": "ui-tooling",
+      "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-tooling-20261114-131742-34c89720",
+      "passed": true,
+      "scripts_parsed": 31
+    },
+    "build": {
+      "selector": "build",
+      "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-build-20261114-131747-caf81c29",
+      "passed": true,
+      "app_bytes": 7367168,
+      "app_sha256": "d8df2a791b736ecbee517f7efaff742a5b64271516c97fed96cc604a7ee45b7b",
+      "source_manifest_files": 461
+    },
+    "ui": {
+      "selector": "ui-legacy-xls",
+      "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-legacy-xls-20261114-132721-e381a696",
+      "passed": true,
+      "cases_passed": 6,
+      "captures": 12,
+      "images_reviewed": 12,
+      "native_capture_attempts": 5,
+      "strict_native_bounds_passed": 5,
+      "bounds_tolerance_pixels": 4,
+      "observed_excel_rect": [
+        903,
+        488
+      ],
+      "expected_pane_client": [
+        902,
+        487
+      ],
+      "origin_deltas": [
+        1,
+        2
+      ],
+      "provider": "Installed Windows XLS preview handler",
+      "source_unchanged": true,
+      "fixtures_preserved": true,
+      "journal_empty": true,
+      "owned_host_exit_code": 0,
+      "file_exclusively_released": true,
+      "registry_unchanged": true,
+      "shared_unavailable_control_exercised": false,
+      "missing_xls_handler_case_exercised": false,
+      "native_sheet_navigation": "not_exercised"
+    }
+  },
+  "historical_baseline": {
+    "rerun_this_turn": false,
+    "tested_source": "b3d46b9e2003dbbfa2ae431e134e0692b8168d34",
+    "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-baseline-20261114-122523-cf1f5a00",
+    "pass": 388,
+    "fail": 0,
+    "skip": 0,
+    "reason_not_repeated": "Application and installer source, and native app bytes, are unchanged. Focused unit/layout/tooling/build/XLS gates ran at the new candidate.",
+    "prior_doc_summary": "qualification/evidence/dcm-33-doc-native-summary.json",
+    "historical_dcm31_383_0_1": "Preserved unchanged; not reclassified."
+  },
+  "fixture": {
+    "git_path": "tests/fixtures/dcm33-legacy-xls.xls",
+    "format": "Genuine CFBF v3 with Workbook BIFF8 stream; not renamed XLSX/CSV",
+    "bytes": 6656,
+    "sha256": "aac8c2cacf614339bb743d0e7da6e2d06dfc155a0a44626832e740907318721f",
+    "manifest_git_lf_sha256": "0362b9cf5bbf04ab25467dd90fa60d6aa1cb55d9074d7a1f4da25bd9299dd84a",
+    "manifest_native_crlf_sha256": "b230622329a4b92843e06b87ea9247d6f98bedab63f47dd2b69c59f22c813b56",
+    "sheet_name": "Inspection",
+    "cell_oracles": [
+      {
+        "address": "A2",
+        "type": "text",
+        "value": "DCM-33 LEGACY XLS",
+        "display_text": "DCM-33 LEGACY XLS",
+        "number_format": "General"
+      },
+      {
+        "address": "A3",
+        "type": "text",
+        "value": "Inspection date",
+        "display_text": "Inspection date",
+        "number_format": "General"
+      },
+      {
+        "address": "B3",
+        "type": "date",
+        "value": 46340,
+        "display_text": "14 November 2026",
+        "number_format": "dd mmmm yyyy",
+        "iso_date": "2026-11-14",
+        "xls_number_format": "dd\\ mmmm\\ yyyy"
+      },
+      {
+        "address": "A5",
+        "type": "text",
+        "value": "Description",
+        "display_text": "Description",
+        "number_format": "General"
+      },
+      {
+        "address": "B5",
+        "type": "text",
+        "value": "Amount",
+        "display_text": "Amount",
+        "number_format": "General"
+      },
+      {
+        "address": "A6",
+        "type": "text",
+        "value": "Bridge inspection",
+        "display_text": "Bridge inspection",
+        "number_format": "General"
+      },
+      {
+        "address": "B6",
+        "type": "number",
+        "value": 125000,
+        "display_text": "125,000",
+        "number_format": "#,##0"
+      },
+      {
+        "address": "A7",
+        "type": "text",
+        "value": "Road repair",
+        "display_text": "Road repair",
+        "number_format": "General"
+      },
+      {
+        "address": "B7",
+        "type": "number",
+        "value": 86000,
+        "display_text": "86,000",
+        "number_format": "#,##0"
+      },
+      {
+        "address": "A8",
+        "type": "text",
+        "value": "Total",
+        "display_text": "Total",
+        "number_format": "General"
+      },
+      {
+        "address": "B8",
+        "type": "formula",
+        "value": 211000,
+        "display_text": "211,000",
+        "number_format": "#,##0",
+        "formula": "=SUM(B6:B7)",
+        "cached_value": 211000
+      }
+    ],
+    "formula": {
+      "cell": "B8",
+      "expression": "=SUM(B6:B7)",
+      "cached_value": 211000,
+      "biff_tokens": "250500060001c001c019100000"
+    },
+    "formula_limit": "The binary expression and cache were parsed; preview pixels show the total, without claiming an independent recalculation test."
+  },
+  "acceptance": {
+    "representative_xls_installed_handler_milestone_accepted": true,
+    "semantic_image_review": "image-review.json",
+    "machine_audit": "verification-summary.json",
+    "image_integrity_audit": "image-integrity-verification.json",
+    "semantically_correct_cell_oracles": 11,
+    "exact_display_text_literals": 9,
+    "regional_grouping_equivalents": [
+      {
+        "cell": "B6",
+        "stored_value": 125000,
+        "manifest_display_text": "125,000",
+        "observed": "1,25,000"
+      },
+      {
+        "cell": "B8",
+        "stored_formula": "=SUM(B6:B7)",
+        "stored_cached_value": 211000,
+        "manifest_display_text": "211,000",
+        "observed": "2,11,000"
+      }
+    ],
+    "locale_evidence": "lenovo-locale-observation.json",
+    "locale": "en-IN",
+    "all_11_display_literals_matched": false,
+    "readiness": {
+      "first_open_attempts": 3,
+      "first_open_stable_attempt": 3,
+      "reopened_attempts": 2,
+      "reopened_stable_attempt": 2,
+      "first_open_first_attempt_sheet_tab": "not yet painted; workbook cells already visible",
+      "classifications_unchanged": true
+    },
+    "raw_ui_flags_unchanged": {
+      "feature_accepted": false,
+      "format_accepted": false,
+      "capture_visual_reviewed": false
+    },
+    "user_test": "not_recorded"
+  },
+  "evidence": {
+    "archive": "native-exact.zip",
+    "archive_bytes": 2492988,
+    "archive_sha256": "1eb8fea4ba78eae18e844285a28b4ff701e4bb3251bc194cb200ff46a09071a4",
+    "archive_members": 103,
+    "archive_uncompressed_bytes": 3359983,
+    "manifest": "native-exact-manifest.json",
+    "manifest_sha256": "60e16d6ecba907e5ca0a6512bdc01ba237dae7eb777900e27f90ce74177860fc",
+    "image_review_sha256": "8f3b997c1a2c07235fac2d4bf2af1de5a75f26d11d05fb9b979e58ad7b4ce2ac",
+    "raw_ui_receipt_sha256": "1ff2b5d3c162166c976066cf0263812f284f54efc3dc15b436afb87e9029fef9",
+    "native_audit_sha256": "4d85fabb12e3f3aaf326a76ba1a91a58acbb5989836588bb76ab9d03a3f4a3e2",
+    "image_integrity_audit_sha256": "d479399110211249019adaf3091fde83cfa140d8c65ef64d29de0ad35ab30047",
+    "locale_observation_sha256": "ff8ead4b13adcefced8884da83956c81bab12de60202f81007c1db8d6d117100",
+    "execution_observation_sha256": "419b9b75d02e54049f256f66396f4e1481779027e1257a16ddf009bc09712e93",
+    "report_repository": "laxmanxp/flowverse-reports",
+    "report_path": "apps/dcm-quicksort/dcm33-20261114-132721/legacy-xls-e19ff30"
+  },
+  "limits": [
+    "Installed Excel handler and one synthetic workbook at the observed geometry only; no headed absent/failing XLS-handler environment was configured.",
+    "No sheet navigation, arbitrary fidelity, corrupted/protected document, repeated lifecycle or physical user acceptance claim.",
+    "DOC and shared unavailable-control evidence remain at their earlier accepted revision and were not rerun here.",
+    "Two display strings use observed en-IN grouping; all eleven cell meanings are correct, but only nine manifest display literals match exactly.",
+    "Original native flags remain false; separate review accepts only the XLS milestone.",
+    "Legacy PPT remains pending, so DCM-33 is PARTIAL and the numbered plan stays31/50."
+  ],
+  "next_smallest_step": "Genuine legacy PPT native/unavailable qualification, preserving the established focused FlowDev sequence.",
+  "independent_audit": {
+    "available_native_checks_passed": 54,
+    "available_native_checks_failed": 0,
+    "source_git_blob_matches": 17,
+    "source_only_lf_to_crlf_matches": 444,
+    "source_mismatches": 0,
+    "image_hashes_verified": 12,
+    "same_frame_crops_verified": 5,
+    "strict_bounds_independently_verified": 5,
+    "native_update_provenance": "Separately observed; not archive-certified."
+  },
+  "report_publication": {
+    "repository": "laxmanxp/flowverse-reports",
+    "branch": "main",
+    "path": "apps/dcm-quicksort/dcm33-20261114-132721/legacy-xls-e19ff30",
+    "commit": "a643af913ff56cccd0f5bdb91b6a016dc2483402",
+    "files": 149,
+    "readme_url": "https://github.com/laxmanxp/flowverse-reports/blob/a643af913ff56cccd0f5bdb91b6a016dc2483402/apps/dcm-quicksort/dcm33-20261114-132721/legacy-xls-e19ff30/README.md",
+    "summary_url": "https://github.com/laxmanxp/flowverse-reports/blob/a643af913ff56cccd0f5bdb91b6a016dc2483402/apps/dcm-quicksort/dcm33-20261114-132721/legacy-xls-e19ff30/native-xls-acceptance-summary.json",
+    "verification": "Report commit and all 149 published paths independently checked; original eight pinned evidence hashes and all 103 exact native archive members verified. Source acceptance remains at e19ff30; this completion record does not claim a new native run."
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "app": "dcm-quicksort",
+  "scope": "Host diagnostic excerpt; not product acceptance",
+  "native_receipt": "C:\\FlowverseReports\\dcm-quicksort-host-diagnostics-20261109-050254-de270969\\receipt.json",
+  "flowdev_commit": "59b9d9cd4611ae71edd139913fdae51a5d93286d",
+  "observed_from": "Read-only PowerShell Get-Content of retained FlowDev diagnostic receipt; process 952 completed exit 0",
+  "started_utc": "2026-11-09T05:03:06.7812587Z",
+  "finished_utc": "2026-11-09T05:03:37.5201923Z",
+  "diagnostic_passed": true,
+  "diagnostic_data_status": "complete",
+  "logical_processors": 12,
+  "c_drive": {
+    "total_bytes": 184759087104,
+    "available_free_bytes": 650547200
+  },
+  "memory": {
+    "total_physical_bytes": 16857817088,
+    "available_physical_bytes": 478658560
+  },
+  "observed_filtered_process_names": [
+    "powershell",
+    "flowdev-test"
+  ],
+  "qualification_result": "blocked; no product PASS inferred",
+  "interpretation": "Very low free disk and available memory are consistent with the observed slow file access and command deadlines. This diagnostic does not prove which resource caused each timeout.",
+  "remaining_native_work": "Restore resource headroom; retrieve prior partial results; complete two new regression RED/fix/GREEN cycles, fixed-candidate suite, package and visible acceptance."
+}

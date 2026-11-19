@@ -1,0 +1,30 @@
+name: Apply exact attachment phase instrumentation
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [qualification/prepare-attachment-profile.py, .github/workflows/prepare-attachment-profile.yml]
+permissions:
+  contents: write
+jobs:
+  profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.x'
+          cache: false
+      - name: Apply exact locally compiled diagnostic edits
+        run: python qualification/prepare-attachment-profile.py
+      - name: Cross-compile Windows tests
+        working-directory: app-src
+        run: GOOS=windows GOARCH=amd64 go test -c -o "$RUNNER_TEMP/dcm-profile.test.exe"
+      - name: Commit only diagnostic wiring
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'DCM reviewed-tooling automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app-src/main_windows.go app-src/sumatra_preview_windows.go
+          git commit -m 'test: profile attachment operations without changing pane geometry'
+          git push origin HEAD:release/v1.0.71

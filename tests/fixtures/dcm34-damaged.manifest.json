@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "file": "dcm34-damaged.pdf",
+  "sha256": "fdad2113a9af07bbc4c3f5d8d9eb83777169e13aab879c00cd4e4a81163e338f",
+  "bytes": 59,
+  "format": "PDF with a genuine %PDF-1.7 header",
+  "damage": "Catalog refers to missing object 99; page tree, cross-reference table, trailer and EOF marker are absent.",
+  "origin": "Byte-identical to the existing disposable 10-damaged.pdf case in tools/test-ui-sumatra-errors.ps1.",
+  "expected_result": "An honest visible error from Windows.Data.Pdf or its naturally selected Windows preview fallback; never a successful blank page.",
+  "scope": "Damaged-file qualification only; not password protection, unsupported type, interruption or cancellation."
+}

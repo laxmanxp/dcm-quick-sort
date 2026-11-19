@@ -1,0 +1,37 @@
+name: Apply reviewed optional Sumatra provider wiring
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [qualification/proposed-fixes/sumatra-provider.json, .github/workflows/apply-sumatra-provider.yml]
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply exact locally reviewed source replacements
+        shell: python
+        run: |
+          import hashlib,json,pathlib
+          allowed={'app-src/main_windows.go','app-src/sumatra_preview_windows.go','app-src/sumatra_policy.go','app-src/sumatra_policy_test.go','tools/test-ui-sumatra.ps1','tests/native/dcm-sumatra-probe.cs','tools/test-ui-sumatra-errors.ps1','tests/native/dcm-native.cs','tests/native/dcm-scroll-probe.cs','tools/test-ui-sumatra-scroll.ps1'}
+          for item in json.loads(pathlib.Path('qualification/proposed-fixes/sumatra-provider.json').read_text())['files']:
+              assert item['path'] in allowed
+              p=pathlib.Path(item['path']); raw=p.read_bytes()
+              if hashlib.sha256(raw).hexdigest()==item['after_sha256']: continue
+              assert hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()==item['before_blob'], 'input changed'
+              s=raw.decode()
+              for change in item['replacements']:
+                  assert s.count(change['old'])==1, 'replacement not unique'
+                  s=s.replace(change['old'],change['new'])
+              assert hashlib.sha256(s.encode()).hexdigest()==item['after_sha256'], 'output mismatch'
+              p.write_bytes(s.encode())
+      - name: Save guarded source changes
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'DCM reviewed-patch automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app-src/main_windows.go app-src/sumatra_preview_windows.go app-src/sumatra_policy.go app-src/sumatra_policy_test.go tools/test-ui-sumatra.ps1 tests/native/dcm-sumatra-probe.cs tools/test-ui-sumatra-errors.ps1 tests/native/dcm-native.cs tests/native/dcm-scroll-probe.cs tools/test-ui-sumatra-scroll.ps1
+          git commit -m 'fix: apply exact reviewed Sumatra provider corrections'
+          git push origin HEAD:release/v1.0.71

@@ -1,0 +1,22 @@
+name: Register locally authored PDF scroll qualification
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/prepare-scroll-tooling.yml]
+permissions:
+  contents: write
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply exact locally validated tooling and fixture output
+        run: python qualification/prepare-scroll-tooling.py
+      - name: Commit only tooling and disposable fixture
+        run: |
+          git config user.name 'DCM reviewed-tooling automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tools/flowdev-dcm/config/checks.json tools/test-ui-tooling.ps1 tests/fixtures/sumatra-scroll.pdf tests/fixtures/sumatra-scroll.json
+          git commit -m 'test: register readable PDF scrolling with pinned two-page fixture'
+          git push origin HEAD:release/v1.0.71

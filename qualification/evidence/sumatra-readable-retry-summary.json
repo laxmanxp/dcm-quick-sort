@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "feature": "DCM-SUMATRA-READABLE-RETRY",
+  "date_ist": "2026-11-12",
+  "tested_commit": "715cd61d7da00ee0125eb006246e77711411acc2",
+  "application_or_test_implementation_changed_in_retry": false,
+  "recovered_changes": "Existing missing-dependency display wrapper, one new parent test and visibility diagnostics from the interrupted attempt; not reauthored in this retry.",
+  "summary": "715cd61d: recovered concise dependency errors verified; two fresh 12-check error runs pass and all 10 first-run captures reviewed. Baseline 370/0/1; lifecycle11 passes. Navigation fails repeated-resize paint comparison (32603 changed samples), then unchanged23-check retry passes. Reopen DCM-UI-RESIZE-01 as intermittent; native damaged-PDF banner still clips. No new product/test implementation in this retry, numbered closure, default switch or release.",
+  "baseline": {"report":"dcm-quicksort-baseline-20261112-152048-fc05ebbe","receipt_sha256":"50fc3d2b8e60f0a03bac9620e2025db7af4733c691942fd8a328789d0bfd7394","count":371,"passed":370,"failed":0,"skipped":["TestRealGeneratedPPTXIntegration"],"exit_code":0,"timed_out":false,"source_unchanged":true},
+  "report_root": "D:\\FlowverseReportsRepo",
+  "runs": {
+    "errors_reviewed": {"report":"dcm-quicksort-ui-sumatra-errors-20261112-151918-97d90d78","receipt_sha256":"1a9d772e5d02e4616daa0691e091dab13eea5731c94b27792f0653fd8e40d59c","behavior_records":12,"passed":true,"host_exit_code":0,"source_unchanged":true,"fixtures_preserved":true},
+    "errors_repeat": {"report":"dcm-quicksort-ui-sumatra-errors-20261112-152522-13a95983","receipt_sha256":"3914d48b4017c46d55cac52a116c4b072adcdb3ae29c75ba3723bfbe40ad99b2","behavior_records":12,"passed":true,"host_exit_code":0,"source_unchanged":true,"fixtures_preserved":true},
+    "lifecycle": {"report":"dcm-quicksort-ui-sumatra-lifecycle-20261112-152440-8d22ee27","receipt_sha256":"b3388abb16689d01c10cea42593c4857425532b9318a517ae5429767a90916c4","behavior_records":11,"passed":true,"host_exit_code":0,"source_unchanged":true,"fixtures_preserved":true},
+    "navigation_resize_failure": {"report":"dcm-quicksort-ui-sumatra-20261112-152144-1254fe66","receipt_sha256":"b557c80e08d2610ddd8c5ed4afbc553ef6d77548949639cfa23ffd01edd75cba","behavior_records":21,"passed":false,"host_exit_code":0,"source_unchanged":true,"fixtures_preserved":true},
+    "navigation_resize_repeat": {"report":"dcm-quicksort-ui-sumatra-20261112-152939-74d333d0","receipt_sha256":"00fcfff3855bd74aa1951e7cab9729f49b2bbed3606a21dc56aa511ccce5aa56","behavior_records":23,"passed":true,"host_exit_code":0,"source_unchanged":true,"fixtures_preserved":true,"paint_differences":[0,null,0,null,0,0,null],"images_reviewed":false}
+  },
+  "build": {"report":"dcm-quicksort-build-20261112-151848-8d41b96a","receipt_sha256":"29aa8731636035b9824da6bc195564f43e53f655fc7842081e51f27ce900294f","app_sha256":"e20c2b160f3b315d2a58b9d1bbf3effd9b105b89e03cc44b8fe92d8062b2ecab","app_bytes":7242752,"source_manifest_sha256":"b1ae57b1e4b52ed0f3edca91062ad2591dd396858fc490a2de65871267163eb1","manifest_files":331},
+  "runtime_sha256": "719f689b34f47be8ca105ce8484948474dafde0e106bab599e4a89326070c3d0",
+  "policy_sha256": "f82ee9c3ff09da529f67f2ee73ab716dd53678d0f52b00ddcffc9d6dc0a908aa",
+  "review": {
+    "errors_reviewed_captures":10,"host_windows":6,"modal_password_dialog":1,"content_crops":3,"raw_review_flags_changed":false,
+    "images": [
+      {"name":"01-runtime-missing","sha256":"62294b949e7faad1f9843ddb2f0169ce5ad9301a155ac59ae8cb16e707268bd9","reviewed":true},
+      {"name":"02-runtime-restored","sha256":"c5cb846edc817e379dcfef4f578db36d8aa851cfef6be632b297a0157b9a3901","reviewed":true},
+      {"name":"02-runtime-restored-content","sha256":"8ca89dca4f415dce69f2e6e553f7351ecf82b5dbb8020517c57a91b069f8d3db","reviewed":true},
+      {"name":"03-damaged","sha256":"01845607beba94d23098eb0f86efc7ef7e869dc36257c62a5d8fce17256b7490","reviewed":true},
+      {"name":"04-password-prompt","sha256":"fd309258d710877b605d3becc3f1957e555d44d5dcd13f4892687eb7034f6052","reviewed":true},
+      {"name":"05-password-cancelled-to-text","sha256":"04b9b66cd8a0d29d461b88fc322034e6b6ea21edf0340849ebcb7b1214d6874a","reviewed":true},
+      {"name":"06-password-unlocked","sha256":"7b088e631d296512712dd3cd8e0b74d96cdcb34f43b1059c4d4ca0a373cdb2a4","reviewed":true},
+      {"name":"06-password-unlocked-content","sha256":"4bdded5f2d3f89b37b786b9331dc66c62810b7b8285515386d27e55bb2db5343","reviewed":true},
+      {"name":"07-final-valid-recovery","sha256":"d99980189ecfc8d0ddce3f7d65c161fe8c2b9a1ad8a82f437780dc3ef1fcdff9","reviewed":true},
+      {"name":"07-final-valid-recovery-content","sha256":"8ca89dca4f415dce69f2e6e553f7351ecf82b5dbb8020517c57a91b069f8d3db","reviewed":true}
+    ],
+    "navigation_failure_images_reviewed":["07-repeat-restored.png","07-repeat-restored-repaint-reference.png","07-restored.png"],"other_run_images_reviewed":false
+  },
+  "error_copy": {"missing_runtime_message":"SumatraPDF.exe is missing. Restore the approved private viewer, then Reload.","missing_runtime_fully_readable_at_tested_geometry":true,"underlying_error_unwrap_preserved":true,"native_damaged_document_banner_long_path_still_clipped":true,"ticket":"DCM-SUMATRA-ERROR-COPY-01","ticket_resolution":"partial"},
+  "repaint_failure": {"ticket":"DCM-UI-RESIZE-01","resolution":"reopened","changed_samples":32603,"comparison_samples":107276,"background_bad_samples":1746,"raw_capture":"07-repeat-restored.png","diagnostic_reference":"07-repeat-restored-repaint-reference.png","cause":"not established; raw image visibly incomplete after repeated resize, explicit redraw reference clean; do not infer the dependency-message change caused it","image_sha256":{"07-repeat-restored.png":"83f7f47cdaa22d9b8fb784caa69ce69c9407a949e8fa40e7dbbebff720b62c7b","07-repeat-restored-repaint-reference.png":"f732867b58148b28bfb33f0033c7486969a29523c8f5e1cc52f7bce9695dff25","07-restored.png":"e2253af97dfa30a103ce15836b28d34125ee3be3def0769589f0df166c527885"}},
+  "recovered_obstruction": {"report":"dcm-quicksort-ui-sumatra-lifecycle-20261112-145605-a92e04eb","commit":"715cd61d7da00ee0125eb006246e77711411acc2","host_pid":7332,"obstructing_pid":7332,"class":"#32768","point":[170,163],"finding":"QuickSort-owned popup window, not a foreign PDF-renderer window","why_menu_appeared":"not established","no_menu_dismissal_or_guard_bypass_in_retry":true},
+  "recovered_red": {"report":"dcm-quicksort-ui-sumatra-errors-20261112-144741-f11a6204","commit":"5c851e8449841811698eae93add3fabee3157cb2","error":"RUNTIME_ERROR_COPY_NOT_CONCISE","scope":"historical result inspected, not a new execution"},
+  "password_hold_ms":17000,"numbered_steps_closed":[],"default_provider_changed":false,"merged":false,"published":false,"user_acceptance":"not_recorded"
+}

@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "feature": "DCM-17",
+  "date": "2026-11-10",
+  "branch": "release/v1.0.71",
+  "tested_commit": "443153a35c09a85d2438b8aca0aba6a983c41539",
+  "scope": "Actual launch, empty-folder and filtered no-selection safety, responsiveness, clean shutdown and separate reviewed screenshots; not whole-product visual certification.",
+  "native": {
+    "report": "C:\\FlowverseReports\\dcm-quicksort-ui-launch-20261110-174648-a112f78b",
+    "receipt": "C:\\FlowverseReports\\dcm-quicksort-ui-launch-20261110-174648-a112f78b\\receipt.json",
+    "started_utc": "2026-11-10T17:46:48.9049100Z",
+    "finished_utc": "2026-11-10T17:47:12.6721691Z",
+    "passed": true,
+    "flowdev_exit_code": 0,
+    "source_unchanged": true,
+    "case_count": 12,
+    "native_state_and_filesystem_cases": 9,
+    "flowuivision_cases": 3,
+    "flowuivision_step_counts": [
+      6,
+      6,
+      7
+    ],
+    "count_rule": "Mixed UI/native acceptance cases; not Go unit tests, not added to earlier suite totals.",
+    "raw_visual_reviewed": false
+  },
+  "binding": {
+    "build_receipt": "C:\\FlowverseReports\\dcm-quicksort-build-20261110-174601-4def7398\\receipt.json",
+    "build_receipt_sha256": "d597d7a303b611d1cbf6eabb88ec8599426c53353902e6504b9bbeeb5e254aa9",
+    "app_sha256": "a10e368eef249dbb38b340c52cfc8e2c2cb583758d14f07d09778c5ab9ee98c5",
+    "version": "1.0.71",
+    "flowuivision_path": "C:\\FlowverseReports\\dcm-flowuivision-20261103\\FlowUIVision.exe",
+    "flowuivision_sha256": "56ea69fee3797d7ac1c043182b4633651609b5686fa015edfbf778ead90e4559",
+    "rule": "Successful build receipt, exact HEAD, clean checkout, branch/origin, manifest hash, each source file and copied executable verified before use; source rechecked afterward."
+  },
+  "processes": [
+    {
+      "pid": 22552,
+      "start_utc": "2026-11-10T17:46:57.3729585Z",
+      "close_requested_utc": "2026-11-10T17:47:02.9610197Z",
+      "closed_utc": "2026-11-10T17:47:03.9067753Z",
+      "exit_code": 0,
+      "children_drained": true,
+      "forced_stop": false
+    },
+    {
+      "pid": 25812,
+      "start_utc": "2026-11-10T17:47:04.0892702Z",
+      "close_requested_utc": "2026-11-10T17:47:09.5766870Z",
+      "closed_utc": "2026-11-10T17:47:10.3106445Z",
+      "exit_code": 0,
+      "children_drained": true,
+      "forced_stop": false
+    }
+  ],
+  "filesystem": {
+    "fixture": "01-sentinel.txt",
+    "sha256": "bbaf469d93ec5fd8c028ab4a5c0b244c189bf07c9cb6d4b0be06160bcb94210f",
+    "checks": "Empty source remains empty; filtered physical sentinel retains exact filename/bytes; destination remains empty; no operation journal entries are appended.",
+    "user_files_used": false
+  },
+  "visual_review": {
+    "reviewed": true,
+    "reviewer": "assistant inspection of the four actual images returned by Remote Desktop Commander",
+    "decision": "pass_for_DCM_17_functional_scope_with_open_visual_observations",
+    "raw_receipt_modified": false,
+    "captures": [
+      {
+        "name": "DCM-17-empty-launch",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-launch-20261110-174648-a112f78b\\DCM-17-empty-launch.png",
+        "sha256": "5a073d6b199193ed269b1958c5003725bd1ed38e05cff67e472398bf891603d5",
+        "width": 1600,
+        "height": 1025,
+        "method": "verified CopyFromScreen",
+        "reviewed": true,
+        "observations": "Visible version 1.0.71 and Empty Inbox path; FILES 0, No files remaining, Folder complete, blank draft, disabled Undo/Undo Batch and preview tools."
+      },
+      {
+        "name": "DCM-17-empty-after-actions",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-launch-20261110-174648-a112f78b\\DCM-17-empty-after-actions.png",
+        "sha256": "6dc945c3b32910e7a9956e9d249d9f6db0cbc2d9405de36e0ccb65fd81247c35",
+        "width": 1600,
+        "height": 1025,
+        "method": "verified CopyFromScreen",
+        "reviewed": true,
+        "observations": "Same empty state after Rename, Move, Next and Reload; Accepted destination remains displayed; no error dialog or spurious file/history."
+      },
+      {
+        "name": "DCM-17-no-selection",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-launch-20261110-174648-a112f78b\\DCM-17-no-selection.png",
+        "sha256": "7e58cc9ae4d7c648cbe8d15fc294fe6c4baebcc8d2f9c30fb031592ad6ec60d2",
+        "width": 1600,
+        "height": 1025,
+        "method": "verified CopyFromScreen",
+        "reviewed": true,
+        "observations": "No-match filter visible, zero displayed/selected files and blank filename draft; no stale preview. Folder complete wording is inaccurate for filtered results and remains an open follow-up."
+      },
+      {
+        "name": "DCM-17-restored-selection",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-launch-20261110-174648-a112f78b\\DCM-17-restored-selection.png",
+        "sha256": "57ccd35e90e48d5b8a1fadccb7d1cb68c8a5813084a66ed15d4dabf03049fb19",
+        "width": 1600,
+        "height": 1025,
+        "method": "verified CopyFromScreen",
+        "reviewed": true,
+        "observations": "Clear Filters restores selected 01-sentinel.txt, FILES 1 of 1, correct filename draft and readable sentinel text preview. No processed history is falsely created."
+      }
+    ],
+    "open_findings": [
+      "DCM-UI-EMPTY-COPY-01",
+      "DCM-UI-LABEL-01"
+    ]
+  },
+  "history": [
+    {
+      "commit": "74d7f6733cfb1ce3a9485cd12ad8d4384cc5dffd",
+      "report": "C:\\FlowverseReports\\dcm-quicksort-ui-launch-20261110-174035-26b9bb70",
+      "result": "Harness failure before any product process: nested JSON-array wrapper made manifest ChildPath an Object[].",
+      "corrected_by": "efd5f430d1d43fff0cb80dfd7f9597806addbeda"
+    },
+    {
+      "commit": "efd5f430d1d43fff0cb80dfd7f9597806addbeda",
+      "report": "C:\\FlowverseReports\\dcm-quicksort-ui-launch-20261110-174346-0470502a",
+      "result": "Empty launch and clean close passed; FlowUIVision expect read stale pre-typing observations. Reviewed screenshot showed Accepted destination already present.",
+      "corrected_by": "443153a35c09a85d2438b8aca0aba6a983c41539"
+    }
+  ],
+  "changes": {
+    "files": [
+      "tools/test-ui-launch.ps1",
+      "tools/flowdev-dcm/config/checks.json"
+    ],
+    "final_script_blob": "63822da5daee4af18cb3486a7af8f331b0b15841",
+    "product_implementation_changed": false,
+    "existing_assertions_weakened": false
+  },
+  "prerequisite_runs": {
+    "tooling": "C:\\FlowverseReports\\dcm-quicksort-ui-tooling-20261110-174600-87f74bec",
+    "build": "C:\\FlowverseReports\\dcm-quicksort-build-20261110-174601-4def7398\\receipt.json",
+    "result": "Registered ui-tooling and build commands both exited 0 at the tested revision before ui-launch."
+  },
+  "user_test": "not_recorded",
+  "next_step": "DCM-18",
+  "limitations": [
+    "No Browse dialog or Explorer integration acceptance.",
+    "No populated-list manual deselection acceptance beyond the tested no-match/no-selection state.",
+    "No whole-product layout/fidelity approval; two visual observations remain open.",
+    "Full app, installer unit and lifecycle suites were not rerun here.",
+    "External PPTX integration, final package, disposable-account setup/uninstaller and user acceptance remain open."
+  ]
+}

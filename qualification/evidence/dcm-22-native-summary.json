@@ -1,0 +1,143 @@
+{
+  "schema": 1,
+  "feature": "DCM-22",
+  "date": "2026-11-11",
+  "completion": "complete_at_recorded_single_selection_sorting_boundary",
+  "tested_commit": "238404a3f49e87ad997de3ef90b0df9294ec2eb1",
+  "baseline": {
+    "commit": "3803c1a1e243d8cc71e04cdc806cedee22e1408b",
+    "report": "C:\\FlowverseReports\\dcm-quicksort-baseline-20261111-035026-33ce584f",
+    "total": 358,
+    "passed": 357,
+    "failed": 0,
+    "skipped": [
+      "TestRealGeneratedPPTXIntegration"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "source_unchanged": true,
+    "reuse_basis": "The sole later code change is the test-ui-sort.ps1 manifest-array assignment. Product and Go-test source unchanged; Git compare verified."
+  },
+  "ui_sort": {
+    "commit": "238404a3f49e87ad997de3ef90b0df9294ec2eb1",
+    "report": "C:\\FlowverseReports\\dcm-quicksort-ui-sort-20261111-035630-12477290",
+    "passed": true,
+    "case_count": 9,
+    "reviewed_images": 9,
+    "app_exit_code": 0,
+    "children_drained": true,
+    "fixtures_unchanged": true,
+    "timestamps_unchanged": true,
+    "operation_journal_empty": true,
+    "source_unchanged": true,
+    "build_receipt": "C:\\FlowverseReports\\dcm-quicksort-build-20261111-035455-b98aca4f\\receipt.json",
+    "app_sha256": "55fd13c689b55c09d6e464cd75735fbff4c2becf3e9c49a0c093e61e62f28f56",
+    "review_evidence": "qualification/evidence/dcm-22-native-summary.json"
+  },
+  "receipt_times": {
+    "started_utc": "2026-11-11T03:56:30.8590474Z",
+    "finished_utc": "2026-11-11T03:56:46.6250814Z"
+  },
+  "build_receipt_sha256": "21b5b422fd39f3b7579905f0afd805382958120c091930c599cf28a5dbfdf6aa",
+  "fixtures": {
+    "count": 6,
+    "extensions": [
+      ".txt",
+      ".log",
+      ".csv"
+    ],
+    "selected_files": [
+      "middle.txt",
+      "alpha.txt"
+    ],
+    "timestamp_contract": "Windows creation time explicitly set and read back; same-date and same-timestamp ties; modification timestamps intentionally produce a different order. Creation and modification times remain unchanged during UI acceptance."
+  },
+  "case_contract": "Default Date Created startup plus four UI sort selections for middle.txt, then all four modes in reverse for alpha.txt. Independently assert exact ordered filenames, selected index, position counter, filename draft, visible preview heading and actual preview text, fixture bytes/timestamps, empty destination and operation journal.",
+  "owned_process": {
+    "pid": 25892,
+    "exit_code": 0,
+    "children_drained": true
+  },
+  "raw_visual_reviewed": false,
+  "separate_visual_review": {
+    "completed": true,
+    "image_count": 9,
+    "notes": "All nine images opened individually. Orders, selected rows, counters, filename drafts and readable matching previews agree. Existing labels and the combined-sort value are clipped; DCM-UI-LABEL-01 remains open.",
+    "images": [
+      {
+        "name": "DCM-22-default",
+        "sha256": "91a9cba85e19e7b14f3323389f6aca9a255f3cf78d28125af3d237c9a627eb99",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-sort-20261111-035630-12477290\\DCM-22-default.png"
+      },
+      {
+        "name": "DCM-22-middle-sort-0",
+        "sha256": "eda5477aedc6cf6d922d92e44328b76cbe7b800b59abeeffeafc3db30e0b1a4d",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-sort-20261111-035630-12477290\\DCM-22-middle-sort-0.png"
+      },
+      {
+        "name": "DCM-22-middle-sort-1",
+        "sha256": "6e89e33bd95001271b5c7c983de3e1324531341035787c350d14f65f364d8e9a",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-sort-20261111-035630-12477290\\DCM-22-middle-sort-1.png"
+      },
+      {
+        "name": "DCM-22-middle-sort-2",
+        "sha256": "f28a9971082537a3582c9b212651fc347a23ad17a9b18ba0b983b8769d05719a",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-sort-20261111-035630-12477290\\DCM-22-middle-sort-2.png"
+      },
+      {
+        "name": "DCM-22-middle-sort-3",
+        "sha256": "9fadb12b4a686a8d52ee80e7ee053d0a7ffd257869fbd448d29c69e9c9db79f6",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-sort-20261111-035630-12477290\\DCM-22-middle-sort-3.png"
+      },
+      {
+        "name": "DCM-22-alpha-sort-3",
+        "sha256": "849ae55ab89174d4170ea3ad7a530e55481e3400aaee6d13c137be3b9b2dd18f",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-sort-20261111-035630-12477290\\DCM-22-alpha-sort-3.png"
+      },
+      {
+        "name": "DCM-22-alpha-sort-2",
+        "sha256": "92b9d1c63b7ca52f9493527a3154d79b16ac1d4c53c433ec278e8d9424b01420",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-sort-20261111-035630-12477290\\DCM-22-alpha-sort-2.png"
+      },
+      {
+        "name": "DCM-22-alpha-sort-1",
+        "sha256": "2cfdeb72b1ba743e003d447542d33d148d1a3842436032e58964e355a826bae3",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-sort-20261111-035630-12477290\\DCM-22-alpha-sort-1.png"
+      },
+      {
+        "name": "DCM-22-alpha-sort-0",
+        "sha256": "4b56c8380958c3d0f3b3599fbce662f36cf157343e7fb0618d29a537f51901ca",
+        "path": "C:\\FlowverseReports\\dcm-quicksort-ui-sort-20261111-035630-12477290\\DCM-22-alpha-sort-0.png"
+      }
+    ]
+  },
+  "retained_failure": {
+    "report": "C:\\FlowverseReports\\dcm-quicksort-ui-sort-20261111-035239-fe49533e",
+    "commit": "3803c1a1e243d8cc71e04cdc806cedee22e1408b",
+    "kind": "test_harness_manifest_array_shape",
+    "app_launched": false,
+    "cases": 0,
+    "fixed_by": "238404a3f49e87ad997de3ef90b0df9294ec2eb1",
+    "note": "Direct ConvertFrom-Json assignment replaces a nested PowerShell array. Hash, source, ownership, preview and file-safety checks retained."
+  },
+  "changes": {
+    "product_code": false,
+    "installer_code": false,
+    "go_tests": false,
+    "tooling": [
+      "tools/test-ui-sort.ps1",
+      "tools/flowdev-dcm/config/checks.json"
+    ]
+  },
+  "scope_limits": [
+    "Single selected file; multi-selection remains DCM-24.",
+    "No new navigation acceptance; DCM-23 pending.",
+    "No large-folder performance or all filename-collation edge cases claimed.",
+    "External PPTX fixture, final packaging, installer lifecycle and actual user acceptance remain pending.",
+    "DCM-19 stays blocked; no host installation/association/Explorer registry changes."
+  ],
+  "next_step": "DCM-23",
+  "user_acceptance": "not_recorded",
+  "merged": false,
+  "published": false
+}

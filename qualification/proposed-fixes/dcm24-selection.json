@@ -1,0 +1,33 @@
+{
+  "base_commit": "f208e3ada8b2ff4b95ef55997caf751c0ce76d1b",
+  "red_report": "C:\\FlowverseReports\\dcm-quicksort-ui-selection-20261111-123543-ed7af16e",
+  "files": [
+    {
+      "path": "app-src/main_windows.go",
+      "before_blob": "816429740fb5cba444a54944b3c52c76fec4eda1",
+      "after_sha256": "02ea11f3beee3cd5be1fc8f1d0f0063a5a1e94613f6c832a270002ae78046afb",
+      "replacements": [
+        {
+          "old": "\t\t\tcase ID_FILE_LIST:\n\t\t\t\tif !app.updatingFileList {\n\t\t\t\t\tif idx, _, _ := procSendMessageW.Call(app.fileList, LB_GETCARETINDEX, 0, 0); idx != LB_ERR && int(idx) < len(app.files) {\n\t\t\t\t\t\tapp.index = int(idx)\n\t\t\t\t\t\tshowCurrent(false)\n\t\t\t\t\t}\n\t\t\t\t}",
+          "new": "\t\t\tcase ID_FILE_LIST:\n\t\t\t\tif !app.updatingFileList {\n\t\t\t\t\tupdateCurrentFromSourceSelection()\n\t\t\t\t}"
+        },
+        {
+          "old": "func selectedSourceFiles() []string {\n\tif app.fileList == 0 || len(app.files) == 0 {\n\t\treturn nil\n\t}\n\tcount := fileListSelectionCount()\n\tif count <= 0 {\n\t\tif current := currentFile(); current != \"\" {\n\t\t\treturn []string{current}\n\t\t}\n\t\treturn nil\n\t}\n\tindexes := make([]int32, count)\n\tgot, _, _ := procSendMessageW.Call(app.fileList, LB_GETSELITEMS, uintptr(count), uintptr(unsafe.Pointer(&indexes[0])))\n\tif got == LB_ERR || got == 0 {\n\t\tif current := currentFile(); current != \"\" {\n\t\t\treturn []string{current}\n\t\t}\n\t\treturn nil\n\t}\n\tselected := make([]string, 0, int(got))\n\tfor _, raw := range indexes[:int(got)] {\n\t\tidx := int(raw)\n\t\tif idx >= 0 && idx < len(app.files) {\n\t\t\tselected = append(selected, app.files[idx])\n\t\t}\n\t}\n\treturn selected\n}\n",
+          "new": "func selectedSourceFiles() []string {\n\tindexes := selectedSourceIndexes()\n\tselected := make([]string, 0, len(indexes))\n\tfor _, raw := range indexes {\n\t\tselected = append(selected, app.files[int(raw)])\n\t}\n\treturn selected\n}\n"
+        },
+        {
+          "old": "func showCurrent(focusName bool) {\n\tunloadPreview()",
+          "new": "func showCurrent(focusName bool) {\n\tshowCurrentView(focusName, true)\n}\n\n// Native selection notifications must not move the caret/anchor or reselect\n// a row the user just Ctrl-deselected. Programmatic navigation still syncs.\nfunc showCurrentView(focusName, syncSelection bool) {\n\tunloadPreview()"
+        },
+        {
+          "old": "\tsetText(app.currentLabel, \"PREVIEW  ·  \"+base)\n\tsyncFileListSelection()\n\tselectionCount := fileListSelectionCount()",
+          "new": "\tsetText(app.currentLabel, \"PREVIEW  ·  \"+base)\n\tif syncSelection {\n\t\tsyncFileListSelection()\n\t}\n\tselectionCount := fileListSelectionCount()"
+        },
+        {
+          "old": "\tselected := selectedSourceFiles()\n\tif len(selected) > 1 {\n\t\tstartBatchMove(selected, physicalDest, logicalDest)\n\t\treturn\n\t}\n\tsrc := currentFile()\n\tif src == \"\" {\n\t\treturn\n\t}",
+          "new": "\tselected := selectedSourceFiles()\n\tif len(selected) == 0 {\n\t\treturn\n\t}\n\tif len(selected) > 1 {\n\t\tstartBatchMove(selected, physicalDest, logicalDest)\n\t\treturn\n\t}\n\t// Move consumes the actual selected set, never an unselected caret row.\n\tsrc := selected[0]"
+        }
+      ]
+    }
+  ]
+}

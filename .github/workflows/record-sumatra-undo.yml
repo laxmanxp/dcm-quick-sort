@@ -1,0 +1,29 @@
+name: Record verified Sumatra Undo and failure coverage
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/record-sumatra-undo.yml]
+permissions:
+  contents: write
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - name: Apply exact locally validated metadata only
+        run: |
+          git diff --exit-code cc04ae7cd8932cffc4e13d7e181ae51eb78095fc -- app-src installer-src tools tests
+          python qualification/record-sumatra-undo.py
+          echo '1a82ccca23a6b76c53de0065885180b0f4c640c8d984b331a5ec151dc5de67f4  todo.json' | sha256sum -c -
+          echo '1fce9da4d44577dadfaa18249671e4b1fd6662a577400283b67323ea4aea47a8  qualification/completion-50.json' | sha256sum -c -
+      - name: Commit without force or release
+        run: |
+          git config user.name 'DCM reviewed-checkpoint automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add todo.json qualification/completion-50.json
+          git commit -m 'test: record verified individual Undo and retain provider gates'
+          git push origin HEAD:release/v1.0.71

@@ -1,0 +1,20 @@
+name: Prepare compact-label regression test
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/prepare-compact-label-test.yml]
+permissions:
+  contents: write
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - run: python qualification/prepare-compact-label-test.py
+      - run: |
+          git config user.name 'DCM reviewed-test automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tools/test-ui-sumatra.ps1 tools/test-ui-tooling.ps1 tools/flowdev-dcm/config/checks.json
+          git commit -m 'test: register visible label, value and overlap regression before repair'
+          git push origin HEAD:release/v1.0.71

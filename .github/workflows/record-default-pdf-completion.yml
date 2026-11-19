@@ -1,0 +1,26 @@
+name: Record bounded default PDF navigation and zoom acceptance
+on:
+  push:
+    branches: [release/v1.0.71]
+    paths: [.github/workflows/record-default-pdf-completion.yml]
+permissions:
+  contents: write
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply locally validated guarded tracker update
+        run: |
+          python qualification/record-default-pdf-completion.py
+          echo '876463c8fe7afd9116f166c25a4cf4a1d8ce9bbff4c2edbe2675480a227fa583  todo.json' | sha256sum -c -
+          echo '32da0648f9251bb71899bec6717e2d3de5a114f070aa9d9ca80e339be3db32af  qualification/completion-50.json' | sha256sum -c -
+          git diff --exit-code -- app-src tools tests installer-src
+      - name: Save only bounded PDF completion metadata
+        run: |
+          git config user.name 'DCM reviewed-checkpoint automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add todo.json qualification/completion-50.json
+          git commit -m 'test: close demonstrated DCM28 and DCM29 retaining failed repeat evidence'
+          git push origin HEAD:release/v1.0.71

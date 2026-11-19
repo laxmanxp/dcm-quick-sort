@@ -1,0 +1,145 @@
+# DCM QuickSort native qualification
+
+Use the existing standalone FlowDev runtime with this repository's isolated profile.
+Do not use FileFlow's profile, the historical DCM clone, or the installed app.
+
+```powershell
+$env:FLOWDEV_WORKSPACE_ROOT = 'C:\FlowverseReports'
+Set-Location 'C:\FlowverseReports\dcm-quicksort-candidate\tools\flowdev-dcm'
+$flowdev = 'C:\FlowverseReports\flowdev-standalone-validation\flowdev-test.exe'
+& $flowdev update dcm-quicksort
+& $flowdev test dcm-quicksort d3-journal
+& $flowdev test dcm-quicksort d4-templates
+& $flowdev test dcm-quicksort installer-regressions
+& $flowdev test dcm-quicksort baseline
+& $flowdev test dcm-quicksort package
+```
+
+The initial candidate clone is created by the committed FlowDev bootstrap selector,
+before changing to this profile. The updater itself intentionally does not clone.
+
+The runner sets `CGO_ENABLED=0` and uses the stable tooling cache
+`%FLOWDEV_WORKSPACE_ROOT%\dcm-quicksort-go-cache`; each run still has separate app
+configuration. `format` reports gofmt differences and emits formatted copies into
+its report only. It never reformats the committed checkout on the device.
+
+Each check requires a clean `release/v1.0.71` checkout with the expected origin. It
+copies tracked source into a uniquely named report directory outside the checkout,
+records commit and per-file SHA-256 identity, and verifies that the original source
+stays unchanged. Native `go test -json -count=1` runs preserve raw output, individual
+failures, and skips. Targeted selectors fail when they execute zero tests.
+
+`baseline` runs all app unit tests. `regressions` runs `^Test(D[1-6]|Release)`.
+`pptx-unit` runs the focused PPTX/Open XML parser tests through that same native
+runner. It supplies the committed `tests/fixtures/dcm32-slides.pptx` with its
+manifest, verifies both source identities, and requires the unchanged
+`TestRealGeneratedPPTXIntegration` to emit one run and one pass event with no skip.
+The wrapper restores any previous `DCM_REAL_PPTX` value and records a separate
+`pptx-fixture-verification.json`; the native receipt and raw test log are retained
+unchanged. A missing, altered or malformed fixture cannot pass by skipping the
+external-fixture test. This selector does not certify visible slides.
+`native-preview-rect-unit` runs the focused Windows DPI measurement tests on
+owned hidden borderless windows. Non-100% scaling and supported DPI contexts are
+required for qualification; skips are not accepted as a physical-coordinate pass.
+`excel-preview-layout-unit` checks the Excel outer-window repair boundary using
+hidden owned test windows: nine DPI geometry cases and 39 topology/handle/style
+guard cases. It does not launch Excel or replace foreign-provider UI acceptance.
+`installer-regressions` uses that pattern in the installer module; `installer-unit`
+runs its entire suite. `installer-integration` runs the in-process installer engine
+in a verified private HKCU mapping and disposable configuration. `build` produces
+the app for subsequent owned UI testing. `package` runs both full suites, the
+private-registry engine gate, and app/installer builds from the same snapshot.
+The exact app bytes are staged as the embedded installer payload, and the package
+verifier checks that those bytes occur exactly once in the Windows amd64 installer.
+Hashes and receipts accompany the artifacts. The core/package runner never starts
+the setup executable. `installer-ui-cancel` separately opens the hash-bound actual
+setup and activates only Cancel, while proving unchanged installed state.
+
+Passing these checks is source/package evidence. UI screenshots require separate
+review, and installer registration requires a disposable Windows user/VM because
+changing LOCALAPPDATA/APPDATA does not isolate HKCU integration keys.
+
+For the focused PPTX feature, use `pptx-unit`, `ui-tooling`, and `build` after the
+registered update. Set `DCM_BUILD_RECEIPT` to that exact build receipt, then run
+`flowdev test dcm-quicksort ui-pptx`. The harness observes the installed Windows
+handler or built-in fallback selected by the application. It does not change
+Office registration. Review the actual slide captures separately before recording
+DCM-32 acceptance; parser success and a ready provider footer are insufficient.
+Native Page Down/Up input is confined to the observed embedded PowerPoint slide
+window with revalidated process/window identity. Every capture attempt is retained;
+separate image review must confirm both slides, their order, and restored content.
+
+See `../tests/native/README.md` for `ui-tooling`, `ui-move`, `ui-batch`, `ui-pdf`,
+`ui-previews`, `ui-pptx`, their exact artifact binding, and the isolated installer test plan.
+
+## Protected PDF refusal and recovery
+
+After the registered update, run `pdf-protected-renderer`, `ui-tooling`, and
+`build`, then set `DCM_BUILD_RECEIPT` to that exact build and run
+`ui-pdf-protected`. This reuses the versioned synthetic encrypted fixture without
+supplying its test password. The renderer selector uses the embedded production
+script, successful valid-page controls before/after two refusal attempts,
+bounded owned processes, PNG validation and exclusive file-release checks.
+The headed gate retains the existing ownership, source, pixel/readback and
+cleanup checks; only the failure fixture is selected differently. An unexpected
+password dialog is a failure for investigation, never a target for blind input.
+Neither selector certifies password entry, unlocking or in-flight cancellation.
+
+### DCM-34 PDF completion ownership
+
+`flowdev test dcm-quicksort pdf-interruption-unit` checks obsolete success/error
+completion disposal across different-file and same-file-reopen selections, the
+blank/text state, and worker-generation ownership used by queued zoom/page work.
+The Windows tests call production stop/completion code with owned controls;
+this gate is not full normal-app observed in-flight selection or cancellation.
+
+### Observed PDF interruption
+
+Use `flowdev test dcm-quicksort pdf-trace-unit`, `pdf-interruption-unit`,
+`ui-tooling`, then a fresh exact-source `build`. Bind `DCM_BUILD_RECEIPT` and run
+`flowdev test dcm-quicksort ui-pdf-inflight` on an idle shared desktop.
+The normal application alone receives `DCM_PDF_TRACE=<absolute report path>`.
+The harness requires worker-started < selection-stopped < worker-finished <
+result-discarded, and checks the real child is alive after switching. The
+same-file reopen additionally requires overlapping old/new workers, a preserved
+new busy/generation state, and only the new result being applied.
+An already-finished render is a failed observation, never interruption acceptance.
+No worker suspension, artificial delay, renderer substitution or process
+cancellation is used. Complete-state damage/protected gates run without tracing.
+
+
+## DCM-35 same-file preview release to file operation
+
+For the source-bound native default-PDF integration gate, after
+`flowdev update dcm-quicksort`, run `ui-tooling` and `build`, set
+`DCM_BUILD_RECEIPT` to the exact resulting build receipt, then run
+`flowdev test dcm-quicksort ui-preview-release-operations`.
+This suite uses `08-preview.pdf` in its disposable inbox, renders the first
+page, switches to TXT and verifies exclusive PDF access, then reselects the
+same PDF to drive actual QuickSort Rename/Undo and Move/Undo. It checks the
+original/restored SHA-256 and durable journal identity and that the app's
+owned processes exit normally. Review the captured GUI states separately;
+raw visual flags are not automatically user acceptance.
+
+This is the **default PDF** same-file operation contract. It does not certify
+all installed Office preview providers or replace the `ui-rename`,
+`ui-move`, or focused PDF lifecycle selectors.
+
+
+## DCM-35 Office preview release operations
+
+After the registered update, run `ui-tooling`, an exact-source `build`,
+set `DCM_BUILD_RECEIPT` to that build's successful receipt and execute
+`flowdev test dcm-quicksort ui-office-preview-release-operations`.
+The selector pins a DOCX, XLSX and committed PPTX fixture; each is previewed,
+switched to TXT and exclusively opened with `FileShare.None`, then reselected
+and operated through QuickSort's own Rename/Undo and Move/Undo controls.
+Original/restored SHA-256, durable journal identity, fixture set, final
+file release and owned app shutdown are checked. Review the captured states
+separately.
+
+The provider may be either the installed Windows handler or the built-in
+OpenXML fallback. Record which was *actually observed*; do not infer installed
+handler acceptance from a fallback pass. The native Office release receipts
+remain separate evidence. No Office registration changes, user-file writes
+or production source edits on Lenovo are permitted.

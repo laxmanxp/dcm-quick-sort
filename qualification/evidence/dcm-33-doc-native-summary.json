@@ -1,0 +1,177 @@
+{
+  "schema": 1,
+  "app": "dcm-quicksort",
+  "feature": "DCM-33",
+  "milestone": "legacy DOC installed-handler qualification and shared unavailable-footer fix",
+  "created_utc": "2026-11-14T12:35:39.610449+00:00",
+  "result": "PASS_DOC_MILESTONE",
+  "full_dcm33_status": "PARTIAL",
+  "full_dcm33_accepted": false,
+  "numbered_plan": {
+    "complete": 31,
+    "remaining": 19
+  },
+  "source": {
+    "repository": "https://github.com/laxmanxp/dcm-quick-sort.git",
+    "branch": "release/v1.0.71",
+    "red_commit": "cc0948108bff8c6ccc7721a4dfda69faac59bc91",
+    "tested_commit": "b3d46b9e2003dbbfa2ae431e134e0692b8168d34",
+    "tree": "6357b00c348468f7241aa4ac142e5e063065311a",
+    "tracked_files": 454,
+    "native_source_manifest_sha256": "aa72e16a19be7fa1cd5c7c1debaa2f352e6160c908676338273e27c3e360b766"
+  },
+  "change": "The generic unavailable presenter now updates the footer to the current missing/failed-handler or extensionless outcome instead of retaining a blank or prior success caption.",
+  "tdd": {
+    "red": {
+      "selector": "legacy-preview-unit",
+      "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-regressions-20261114-121711-6f555113",
+      "top_level_pass": 2,
+      "top_level_fail": 1,
+      "skip": 0,
+      "intended_status_assertion_failures": 9,
+      "exit_code": 1,
+      "source_unchanged": true,
+      "raw_log_sha256": "8a33ebc502337b9388153a8df85b1ec153517d20509c593890ca2368602116d4"
+    },
+    "green": {
+      "selector": "legacy-preview-unit",
+      "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-regressions-20261114-122305-046d0bcc",
+      "top_level_pass": 4,
+      "top_level_fail": 0,
+      "skip": 0,
+      "leaf_pass": 33,
+      "exit_code": 0,
+      "source_unchanged": true
+    },
+    "unchanged_windows_regression_file": "app-src/preview_unavailable_windows_test.go",
+    "unchanged_windows_regression_sha256_git_lf": "ef9b85409852f9c13da261ffbb556d83a12e0414b93b6f55abbfacfaf96659e1"
+  },
+  "local_validation": {
+    "focused_top_level_pass": 9,
+    "focused_leaf_pass": 24,
+    "fail": 0,
+    "skip": 0,
+    "windows_app_and_test_cross_compilation": "PASS",
+    "native_execution": false,
+    "evidence": "local/fix-local-validation-summary.json"
+  },
+  "native": {
+    "mechanism": "Remote Desktop Commander; registered FlowDev update and test selectors",
+    "device": "Laxman_Lenovo",
+    "device_id": "d18227f2-0b54-4b11-9026-56ac40305f02",
+    "checkout": "D:\\FlowverseReportsRepo\\dcm-quicksort-candidate",
+    "flowdev_registration_matches_repository": true,
+    "tooling": {
+      "selector": "ui-tooling",
+      "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-tooling-20261114-122402-1c30522d",
+      "passed": true,
+      "scripts_parsed": 30
+    },
+    "build": {
+      "selector": "build",
+      "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-build-20261114-122409-a7d930fc",
+      "passed": true,
+      "app_bytes": 7367168,
+      "app_sha256": "d8df2a791b736ecbee517f7efaff742a5b64271516c97fed96cc604a7ee45b7b"
+    },
+    "baseline": {
+      "selector": "baseline",
+      "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-baseline-20261114-122523-cf1f5a00",
+      "pass": 388,
+      "fail": 0,
+      "skip": 0,
+      "real_generated_pptx_test_runs": 1,
+      "real_generated_pptx_test_passes": 1,
+      "source_unchanged": true,
+      "input_invocation_observation": "Root set DCM_REAL_PPTX to the committed candidate/tests/fixtures/dcm32-slides.pptx before invoking FlowDev. The raw receipt does not record that environment variable; the independent raw-log claim is one real-PPTX test run/pass, not a separately certified input-path binding."
+    },
+    "ui": {
+      "selector": "ui-legacy-doc",
+      "report": "D:\\FlowverseReportsRepo\\dcm-quicksort-ui-legacy-doc-20261114-122655-7ff7ee3e",
+      "passed": true,
+      "cases_passed": 8,
+      "captures": 15,
+      "images_reviewed": 15,
+      "provider": "Installed Windows DOC preview handler",
+      "source_unchanged": true,
+      "fixtures_preserved": true,
+      "journal_empty": true,
+      "owned_host_exit_code": 0,
+      "file_exclusively_released": true,
+      "registry_unchanged": true,
+      "shared_unavailable_control_exercised": true,
+      "missing_doc_handler_case_exercised": false
+    }
+  },
+  "fixture": {
+    "git_path": "tests/fixtures/dcm33-legacy.doc",
+    "format": "Genuine Word 97\u20132003 binary DOC exported with the MS Word 97 filter; CFBF streams and FIB/CLX main text independently parsed.",
+    "bytes": 18432,
+    "sha256": "a6e70ab1c1c6db3d720f7fe12b8268e7c74f55e27c27f926be0f6bf3df2c3105",
+    "manifest_git_lf_sha256": "b247e43cfcabd904a67dd2662eef00158e40236909182066b7e34832be8feeb5",
+    "manifest_native_crlf_sha256": "fe74c9e6beefebc263a836c96ed7b0adeee4e041f1e10486f80b463ae569d9b8",
+    "required_text": [
+      "DCM-33 LEGACY DOC",
+      "Inspection date: 14 November 2026",
+      "Bridge count: 7",
+      "Status: Ready for review"
+    ]
+  },
+  "acceptance": {
+    "unavailable_footer_fix_accepted": true,
+    "representative_doc_installed_handler_milestone_accepted": true,
+    "semantic_image_review": "image-review.json",
+    "machine_audit": "verification-summary.json",
+    "raw_ui_flags_unchanged": {
+      "feature_accepted": false,
+      "format_accepted": false,
+      "capture_visual_reviewed": false
+    },
+    "user_test": "not_recorded"
+  },
+  "evidence": {
+    "archive": "native-exact.zip",
+    "archive_bytes": 198225,
+    "archive_sha256": "561adf0a3a871d6579e19ec5ca72bc6cb78f8497acc9032430cedbcd6940a5f7",
+    "archive_members": 119,
+    "manifest": "native-exact-manifest.json",
+    "manifest_sha256": "62c61a1c6e84ac4ac4082ecd3a4ce13c3717e0441ec1ef322e1e4f9e0e5a1de1",
+    "image_review_sha256": "80010ddf73aa14e8308e928085a0738770ff872120c5a644c932c4ae9e6975db",
+    "raw_ui_receipt_sha256": "cf6f6f3486d41a0ed4a619b3f8c5ed1ff565dd5cda0baa07fea02cc9d4384cfc",
+    "raw_red_flowdev_check_retained": false,
+    "red_retention_note": "The latest per-selector FlowDev check overwrote RED; original RED native receipt, logs and source manifest are retained byte-exactly."
+  },
+  "limits": [
+    "The DOC success path uses the installed Windows Word preview handler. No headed absent/failing DOC-handler setup was performed.",
+    "The unsupported-extension control proves the shared unavailable message/footer only; it is not a DOC file.",
+    "Legacy XLS and PPT are pending. DCM-33 remains PARTIAL and the numbered count remains 31/50.",
+    "Broad damaged/protected-document and repeated lifecycle qualification remain DCM-34/35.",
+    "Final package/layout and physical user acceptance are not claimed. Existing DCM-19 blocker is unchanged."
+  ],
+  "next_smallest_step": "Qualify a genuine legacy XLS fixture through its naturally selected Windows handler in a separate focused baby step; then legacy PPT.",
+  "independent_audit": {
+    "result": "PASS",
+    "checks_passed": 76,
+    "failures": 0,
+    "source_files_compared": 454,
+    "source_exact_git_bytes": 15,
+    "source_only_lf_to_crlf": 439,
+    "report": "verification-summary.json",
+    "report_sha256": "5d4bcfef77e5cab629864f8ee44f5f7ba537a90536ae68f6c690119e3e2abd99",
+    "image_integrity_report": "image-integrity-verification.json",
+    "image_integrity_report_sha256": "1f3b9c85348978d88e892053c2d17485f66d4f1dc255bef5ed2c88045d5a45cb",
+    "all_15_image_hashes_verified": true,
+    "all_6_same_frame_crops_pixel_identical": true,
+    "raw_evidence_unchanged": true
+  },
+  "report_publication": {
+    "repository": "laxmanxp/flowverse-reports",
+    "branch": "main",
+    "path": "apps/dcm-quicksort/dcm33-20261114-122655/legacy-doc-b3d46b9",
+    "commit": "d201877a0d7f236e2f07102bc6cbbc38c4f2dcb2",
+    "files": 51,
+    "all_blob_shas_verified": true,
+    "readme_url": "https://github.com/laxmanxp/flowverse-reports/blob/d201877a0d7f236e2f07102bc6cbbc38c4f2dcb2/apps/dcm-quicksort/dcm33-20261114-122655/legacy-doc-b3d46b9/README.md",
+    "summary_url": "https://github.com/laxmanxp/flowverse-reports/blob/d201877a0d7f236e2f07102bc6cbbc38c4f2dcb2/apps/dcm-quicksort/dcm33-20261114-122655/legacy-doc-b3d46b9/native-doc-acceptance-summary.json"
+  }
+}

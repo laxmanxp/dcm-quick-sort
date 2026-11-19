@@ -1,0 +1,180 @@
+package main
+
+import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+)
+
+const sumatraRuntimeSHA256 = "719f689b34f47be8ca105ce8484948474dafde0e106bab599e4a89326070c3d0"
+const sumatraPreviewPolicy = `[Policies]
+InternetAccess = 0
+DiskAccess = 0
+SavePreferences = 0
+RegistryAccess = 0
+PrinterAccess = 0
+CopySelection = 0
+FullscreenAccess = 0
+LinkProtocols =
+SafeFileTypes =
+`
+
+// Deliberately opt-in while provider/lifecycle and distribution gates are open.
+func useSumatraProvider() bool {
+	return strings.EqualFold(strings.TrimSpace(os.Getenv("DCM_PDF_PROVIDER")), "sumatra")
+}
+
+func sumatraArguments(parent uintptr, document, profile string) ([]string, error) {
+	if parent == 0 || !filepath.IsAbs(document) || !filepath.IsAbs(profile) || strings.ContainsRune(document, 0) || strings.ContainsRune(profile, 0) {
+		return nil, errors.New("owned parent and absolute PDF/profile paths required")
+	}
+	if !strings.EqualFold(filepath.Ext(document), ".pdf") {
+		return nil, errors.New("Sumatra provider accepts PDF only")
+	}
+	return []string{"-restrict", "-appdata", profile, "-view", "single page", "-zoom", "fit page", "-plugin", strconv.FormatUint(uint64(parent), 10), document}, nil
+}
+
+// Keep actionable display text independent of an arbitrarily long install path.
+// Unwrap retains the full OS cause/path for diagnostics and errors.Is/As.
+type sumatraDependencyError struct {
+	message string
+	cause   error
+}
+
+func (e *sumatraDependencyError) Error() string { return e.message }
+func (e *sumatraDependencyError) Unwrap() error { return e.cause }
+
+func newSumatraDependencyError(component string, cause error) error {
+	reason := " could not be read."
+	action := " Check the approved private viewer, then Reload."
+	if errors.Is(cause, os.ErrNotExist) {
+		reason = " is missing."
+		action = " Restore the approved private viewer, then Reload."
+	} else if errors.Is(cause, os.ErrPermission) {
+		reason = " access was denied."
+		action = " Check file permissions, then Reload."
+	}
+	return &sumatraDependencyError{message: component + reason + action, cause: cause}
+}
+
+// No PATH search or user's installed viewer: require a pinned private runtime.
+func validateSumatraRuntime(path string) (string, error) {
+	if path == "" || !filepath.IsAbs(path) {
+		return "", errors.New("set DCM_SUMATRA_EXE to the pinned private runtime")
+	}
+	st, err := os.Lstat(path)
+	if err != nil {
+		return "", newSumatraDependencyError("SumatraPDF.exe", err)
+	}
+	if !st.Mode().IsRegular() {
+		return "", errors.New("Sumatra runtime must be a regular file")
+	}
+	policy := filepath.Join(filepath.Dir(path), "sumatrapdfrestrict.ini")
+	st, err = os.Lstat(policy)
+	if err != nil {
+		return "", newSumatraDependencyError("sumatrapdfrestrict.ini", err)
+	}
+	if !st.Mode().IsRegular() || st.Size() != int64(len(sumatraPreviewPolicy)) {
+		return "", errors.New("exact no-write/no-print Sumatra policy required")
+	}
+	data, err := os.ReadFile(policy)
+	if err != nil {
+		return "", newSumatraDependencyError("sumatrapdfrestrict.ini", err)
+	}
+	if !bytes.Equal(data, []byte(sumatraPreviewPolicy)) {
+		return "", errors.New("Sumatra restriction policy differs from the approved policy")
+	}
+	f, err := os.Open(path)
+	if err != nil {
+		return "", newSumatraDependencyError("SumatraPDF.exe", err)
+	}
+	defer f.Close()
+	h := sha256.New()
+	if _, err = io.Copy(h, f); err != nil {
+		return "", newSumatraDependencyError("SumatraPDF.exe", err)
+	}
+	if hex.EncodeToString(h.Sum(nil)) != sumatraRuntimeSHA256 {
+		return "", errors.New("Sumatra runtime hash is not the pinned unmodified 3.6.1 executable")
+	}
+	return filepath.Clean(path), nil
+}
+
+func validateSumatraDocument(path string) (string, error) {
+	path, err := filepath.Abs(path)
+	if err != nil {
+		return "", err
+	}
+	if !strings.EqualFold(filepath.Ext(path), ".pdf") {
+		return "", errors.New("PDF extension required")
+	}
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+	st, err := f.Stat()
+	if err != nil {
+		return "", err
+	}
+	if !st.Mode().IsRegular() || st.Size() < 8 {
+		return "", errors.New("PDF must be a nonempty regular file")
+	}
+	header := make([]byte, 1024)
+	n, err := f.Read(header)
+	if err != nil && err != io.EOF {
+		return "", err
+	}
+	if !bytes.Contains(header[:n], []byte("%PDF-")) {
+		return "", fmt.Errorf("%s has no PDF header", filepath.Base(path))
+	}
+	return path, nil
+}
+
+// Attachment proves that a viewer exists, not that it loaded a document. Page
+// labels may be non-numeric (e.g. roman numerals), so preserve those labels.
+func sumatraDocumentStatus(known bool, label string) string {
+	if !known {
+		return "Sumatra PDF viewer: checking document state; see viewer for details."
+	}
+	label = strings.TrimSpace(label)
+	if label == "" || label == "0" {
+		return "Sumatra preview unavailable: no PDF page loaded; see the viewer message or select another file."
+	}
+	return "Sumatra PDF preview · restricted · use viewer navigation/zoom"
+}
+
+// Only vertical clipping of a fully sized toolbar child is repaired. Unknown or
+// oversized geometry is left alone; the acceptance probe must still reject it.
+func sumatraToolbarChildY(top, height, toolbarHeight int32) (int32, bool) {
+	if height <= 0 || toolbarHeight <= 0 || toolbarHeight > 512 || height > toolbarHeight {
+		return top, false
+	}
+	if top >= 0 && top <= toolbarHeight-height {
+		return top, false
+	}
+	return (toolbarHeight - height) / 2, true
+}
+
+// Reserve the pinned viewer toolbar's normal preview width when the host is
+// narrowed. Borrow evenly from the two side panels, never below their readable
+// minima. This does not change the fixed-size window style or PDF restrictions.
+func sumatraSidebarWidths(clientWidth int32) (int32, int32) {
+	const desiredPreview, marginsAndGaps = int32(724), int32(60)
+	const minList, minProcessed = int32(160), int32(200)
+	if clientWidth <= desiredPreview+marginsAndGaps+minList+minProcessed {
+		return minList, minProcessed
+	}
+	available := clientWidth - desiredPreview - marginsAndGaps
+	if available >= 480 {
+		return 220, 260
+	}
+	reduction := 480 - available
+	return 220 - (reduction+1)/2, 260 - reduction/2
+}

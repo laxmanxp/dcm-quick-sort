@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "feature": "DCM-33",
+  "file": "dcm33-legacy-ppt.ppt",
+  "bytes": 510976,
+  "sha256": "b4e6a98d2f4dd27ab66566a58ae734b1b297e75a1053084b54867b5b3346a773",
+  "generator": "dcm33-legacy-ppt.generate.py",
+  "validator": "dcm33-legacy-ppt.validate.py",
+  "source": {
+    "file": "dcm32-slides.pptx",
+    "sha256": "af42fff55297109195b95039d2ac39c5d53b1fae23b59e7b40a7184d679b93f1",
+    "unchanged": true
+  },
+  "conversion": {
+    "libreoffice_version": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+    "filter": "MS PowerPoint 97",
+    "byte_identical_regeneration_assumed": false
+  },
+  "synthetic": true,
+  "slide_count": 2,
+  "slide_size_inches": [
+    12,
+    6.75
+  ],
+  "required_text": [
+    "Bridge Inspection",
+    "September 2026",
+    "Payments",
+    "Scheme",
+    "Amount",
+    "Bridge",
+    "125000",
+    "Road",
+    "86000"
+  ],
+  "slide_oracles": [
+    {
+      "number": 1,
+      "required_text": [
+        "Bridge Inspection",
+        "September 2026"
+      ],
+      "text_blocks": [
+        "Bridge Inspection",
+        "September 2026",
+        "Representative image",
+        "Text and embedded picture\rPreview qualification only",
+        "DCM-32 / SLIDE 1"
+      ],
+      "image": {
+        "part": "ppt/media/image1.png",
+        "size": [
+          360,
+          200
+        ],
+        "sha256": "5ef82f1dc22bb5098a3bbc4d7501e07bf9cec88a29ed547d3a86f88ff356303c",
+        "marker_rgb": {
+          "teal": [
+            20,
+            125,
+            146
+          ],
+          "orange": [
+            232,
+            123,
+            53
+          ]
+        }
+      }
+    },
+    {
+      "number": 2,
+      "required_text": [
+        "Payments",
+        "Scheme",
+        "Amount",
+        "Bridge",
+        "125000",
+        "Road",
+        "86000"
+      ],
+      "text_blocks": [
+        "Payments",
+        "Synthetic amounts for preview verification",
+        "Scheme",
+        "Amount",
+        "Bridge",
+        "125000",
+        "Road",
+        "86000",
+        "DCM-32 / SLIDE 2"
+      ],
+      "table_rows": [
+        [
+          "Scheme",
+          "Amount"
+        ],
+        [
+          "Bridge",
+          "125000"
+        ],
+        [
+          "Road",
+          "86000"
+        ]
+      ]
+    }
+  ],
+  "embedded_png_sha256": "5ef82f1dc22bb5098a3bbc4d7501e07bf9cec88a29ed547d3a86f88ff356303c",
+  "structure": {
+    "format": "PowerPoint 97-2003 binary in CFBF",
+    "required_streams": [
+      "PowerPoint Document",
+      "Current User",
+      "Pictures"
+    ],
+    "user_edit_count": 1
+  },
+  "scope": "Two representative static slides converted from the existing pinned DCM-32 source without content/layout edits. The source footer is intentionally retained. This is not a general PowerPoint parser or fidelity corpus. Native Windows rendering and navigation require separate qualification."
+}

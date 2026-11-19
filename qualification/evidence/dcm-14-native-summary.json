@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "step": "DCM-14",
+  "recorded_on": "2026-11-10",
+  "scope": "Full native app test selection with one explicitly dispositioned external-fixture skip; not visible UI or final release acceptance.",
+  "initial_baseline": {
+    "commit": "8dbe5f5e43875a72e1c10f5bb5187bad82d09a23",
+    "report": "C:\\FlowverseReports\\dcm-quicksort-baseline-20261110-025222-2c14b054",
+    "count": 351,
+    "passed": 343,
+    "failed": 7,
+    "failures": [
+      "TestInboxAgeFilters",
+      "TestInboxSortModes",
+      "TestClearFiltersButtonIsWiredToClearInboxFilters",
+      "TestRenameToolSelectionAutomaticallyAppliesSelectedTool",
+      "TestPDFRenderedBitmapIsNotDoubleScaled",
+      "TestBatchMoveDefersProcessedRefreshUntilBatchFinishes",
+      "TestFitWidthResetsVerticalPanToTop"
+    ],
+    "skipped": [
+      "TestRealGeneratedPPTXIntegration"
+    ],
+    "exit_code": 1,
+    "timed_out": false
+  },
+  "diagnostic_red": {
+    "commit": "15bfaa24fd4d6430c1837053f364d75de4046369",
+    "report": "C:\\FlowverseReports\\dcm-quicksort-regressions-20261110-025903-c4ae5422",
+    "count": 24,
+    "passed": 23,
+    "failed": 1,
+    "skipped": [],
+    "exit_code": 1,
+    "timed_out": false,
+    "parent": "TestReleaseWindowsFixtureContracts",
+    "failed_cases": [
+      "source-line-endings",
+      "explicit-created-time"
+    ],
+    "checkout_crlf_lines": 5960,
+    "normalized_clear_filters_pattern_present": true,
+    "observed_creation": "2026-11-10T08:29:47.369745+05:30",
+    "observed_modification": "2026-09-22T08:00:00+05:30",
+    "requested_time": "2026-09-22T08:00:00+05:30"
+  },
+  "final_baseline": {
+    "commit": "13f52cb0ed5e494bd838062c6b7e3fcca424f068",
+    "report": "C:\\FlowverseReports\\dcm-quicksort-baseline-20261110-030347-e80c1e53",
+    "command": "flowdev update dcm-quicksort; flowdev test dcm-quicksort baseline",
+    "go_arguments": [
+      "test",
+      "-json",
+      "-count=1",
+      "-timeout=180s",
+      "./..."
+    ],
+    "count": 352,
+    "passed": 351,
+    "failed": 0,
+    "failures": [],
+    "skipped": [
+      "TestRealGeneratedPPTXIntegration"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "source_unchanged": true,
+    "started_utc": "2026-11-10T03:03:47.7386686Z",
+    "finished_utc": "2026-11-10T03:05:13.6831834Z",
+    "go_version": "go version go1.27.0 windows/amd64",
+    "source_manifest_files": 211,
+    "source_manifest_sha256": "1458bc41e78339967bf7b001098fb9488b609639228034a6fe9749c2eeb7515f",
+    "stderr_empty": true
+  },
+  "diagnostic_green": {
+    "parent": "TestReleaseWindowsFixtureContracts",
+    "parent_pass_time": "2026-11-10T08:34:59.7214085+05:30",
+    "cases": {
+      "source-line-endings": "2026-11-10T08:34:59.710764+05:30",
+      "explicit-created-time": "2026-11-10T08:34:59.7214085+05:30"
+    },
+    "creation_modification_and_requested": "2026-09-22T08:00:00+05:30"
+  },
+  "skip_disposition": {
+    "test": "TestRealGeneratedPPTXIntegration",
+    "time": "2026-11-10T08:34:53.3749473+05:30",
+    "reason": "DCM_REAL_PPTX not set",
+    "classification": "Optional external-fixture integration test was selected but its body did not execute. Not a pass.",
+    "follow_up": [
+      "DCM-32",
+      "DCM-PREVIEW-01",
+      "DCM-47"
+    ],
+    "requirement": "Supply an identified two-slide fixture through committed FlowDev tooling and run unchanged assertions before PPTX/final-package qualification; reviewed visible screenshots remain a separate requirement."
+  },
+  "changes": {
+    "product_implementation_changed": false,
+    "installer_changed": false,
+    "existing_expectations_weakened": false,
+    "new_parent_test_count": 1,
+    "files": [
+      "app-src/release_fixture_contract_windows_test.go",
+      "app-src/inbox_fixture_windows_test.go",
+      "app-src/inbox_fixture_other_test.go",
+      "app-src/inbox_filter_test.go",
+      "app-src/ui_wiring_test.go"
+    ]
+  },
+  "evidence_reviewed": [
+    "initial baseline summary and failure log excerpts",
+    "diagnostic summary and raw failing cases",
+    "final full receipt and summary",
+    "final empty stderr",
+    "final stdout lines 978-982 (skip) and 1059-1072 (diagnostic GREEN), one-based",
+    "commit diff shows test-only corrections"
+  ],
+  "completion": "DCM-01 through DCM-14 complete at defined boundaries; only DCM-14 newly closed. Five setup/diagnostic steps are not a percentage.",
+  "next_step": "DCM-15",
+  "ui_test": "not_run",
+  "user_test": "not_recorded",
+  "publication": "not_published"
+}
