@@ -9,7 +9,8 @@ param(
   [switch]$VerifyRotation,
   [switch]$VerifyActualFilename,
   [switch]$SkipPointerWheel,
-  [switch]$SkipScreenshots
+  [switch]$SkipScreenshots,
+  [ValidateRange(0,160)][int]$StressSwitches=0
 )
 # Test-only. Source is GitHub; Lenovo is a disposable acceptance environment.
 $ErrorActionPreference='Stop'
@@ -350,6 +351,52 @@ try{
  Step 'ctrl-wheel-zoom-routed' @{before_render_count=$beforeEvents;after_render_count=$afterEvents;pointer_fraction_x=0.4;pointer_fraction_y=0.5;detents=2;cursor_anchoring_verified=$false}
  }else{
   Step 'pointer-wheel-not-in-scope' 'Separate cursor-wheel acceptance previously qualified; this run checks filename identity and file lifecycle.'
+ }
+ if($StressSwitches -gt 0){
+  if(-not($Persistent -or $DevDefault)){throw 'Persistent GUI soak requires the PDFium provider'}
+  $soakSamples=@()
+  $originalPdfHash=Hash $pdf
+  function Median-Soak([long[]]$numbers){
+   if($numbers.Count -lt 1){return 0L}
+   $sorted=@($numbers|Sort-Object)
+   return [long]$sorted[[int][Math]::Floor(($sorted.Count-1)/2)]
+  }
+  for($soakIndex=0;$soakIndex -lt $StressSwitches;$soakIndex++){
+   List-Selected '01-alpha.txt'
+   List-Selected '08-preview.pdf'
+   PageReady 'Page 1 of 2'
+   $events=@(Get-Content -LiteralPath $trace|ForEach-Object {$_|ConvertFrom-Json})
+   $starts=@($events|Where-Object {$_.event -eq 'worker-started' -and $_.renderer_pid -gt 0})
+   if(-not $starts.Count){throw 'No owned persistent PDFium worker during GUI soak'}
+   $workerPid=[int]$starts[-1].renderer_pid
+   $process=Get-Process -Id $workerPid -ErrorAction Stop
+   $app.Refresh()
+   $soakSamples+=@([ordered]@{cycle=$soakIndex;worker_pid=$workerPid;
+    host_private_bytes=[long]$app.PrivateMemorySize64;host_handles=[int]$app.HandleCount;
+    worker_private_bytes=[long]$process.PrivateMemorySize64;worker_handles=[int]$process.HandleCount})
+   if(($soakIndex+1)%20 -eq 0){Write-Output ('GUI_STRESS_SWITCHES='+($soakIndex+1)+'/'+$StressSwitches+' host_MiB='+[Math]::Round($app.PrivateMemorySize64/1MB,1)+' worker_MiB='+[Math]::Round($process.PrivateMemorySize64/1MB,1))}
+  }
+  if((Hash $pdf) -ne $originalPdfHash){throw 'PDF contents changed during switch endurance'}
+  $unique=@($soakSamples|ForEach-Object {$_.worker_pid}|Sort-Object -Unique)
+  if($unique.Count -ne 1){throw ('Unexpected worker restart during healthy switching: '+($unique -join ','))}
+  $events=@(Get-Content -LiteralPath $trace|ForEach-Object {$_|ConvertFrom-Json})
+  if(@($events|Where-Object {$_.event -match 'persistent-transport-fallback|persistent-fallback-started'}).Count){
+   throw 'GUI switch endurance triggered unplanned one-shot fallback'
+  }
+  $first=@($soakSamples|Select-Object -Skip 8 -First 12)
+  $last=@($soakSamples|Select-Object -Last 12)
+  $hostDelta=(Median-Soak ([long[]]@($last|ForEach-Object {$_.host_private_bytes})))-(Median-Soak ([long[]]@($first|ForEach-Object {$_.host_private_bytes})))
+  $workerDelta=(Median-Soak ([long[]]@($last|ForEach-Object {$_.worker_private_bytes})))-(Median-Soak ([long[]]@($first|ForEach-Object {$_.worker_private_bytes})))
+  $hostHandleDelta=(Median-Soak ([long[]]@($last|ForEach-Object {$_.host_handles})))-(Median-Soak ([long[]]@($first|ForEach-Object {$_.host_handles})))
+  $workerHandleDelta=(Median-Soak ([long[]]@($last|ForEach-Object {$_.worker_handles})))-(Median-Soak ([long[]]@($first|ForEach-Object {$_.worker_handles})))
+  $receipt['stress_samples']=$soakSamples
+  Step 'gui-pdf-switch-endurance' @{cycles=$StressSwitches;worker_pid=$unique[0];
+   host_private_delta_bytes=$hostDelta;worker_private_delta_bytes=$workerDelta;
+   host_handle_delta=$hostHandleDelta;worker_handle_delta=$workerHandleDelta;
+   source_hash_intact=$true;one_shot_fallbacks=0;peak_memory_is_sampled=$true}
+  if($hostDelta -gt 48MB -or $workerDelta -gt 32MB -or $hostHandleDelta -gt 48 -or $workerHandleDelta -gt 32){
+   throw ('Potential GUI/worker sustained resource growth: hostMiB='+[Math]::Round($hostDelta/1MB,1)+' workerMiB='+[Math]::Round($workerDelta/1MB,1)+' hostHandles='+$hostHandleDelta+' workerHandles='+$workerHandleDelta)
+  }
  }
  List-Selected '01-alpha.txt'
  if($VerifyActualFilename){Assert-ActualFile '01-alpha.txt' 'TXT'}
