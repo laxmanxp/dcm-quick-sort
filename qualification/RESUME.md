@@ -1,4 +1,16 @@
-# DCM QuickSort — DCM-28/29 complete within demonstrated scope; next DOCX
+# DCM QuickSort — resume 19 November 2026
+
+Latest dedicated acceptance: [Rotation GUI review](2026-11-19-rotation-gui.md) and [structured evidence](evidence/dcm-rotation-native-summary.json).
+
+- **Native-tested code `31394a446f4223b7789d6287761d0fac916df5b3`**: FlowDev tooling/build and `ui-rotation` passed; 13 cases, 13 original full-window screenshots separately reviewed. Image/PDF both directions and multi-page rotation verified; sources and test fixtures unchanged; normal exit.
+- Both rotation controls are a **permanent visible UI contract** protected by `TestRotationToolbarIsPermanentAndWired`. TXT and optional Sumatra show them disabled rather than disappearing. A valid Sumatra screenshot was reviewed, but the larger Sumatra regression remains incomplete owing to unrelated popup occlusion.
+- Current numbered plan **44/50 complete**: DCM-19 blocked, DCM-34 in progress, DCM-47–50 pending. This focused rotation test does not close another numbered release milestone.
+- PR #1 draft/unmerged, no installation or publication. FileFlow Suite final packaging waits for Flow Search and DeepSearch readiness. Human input, resizing/DPI and final-release acceptance remain separate.
+- Workflow: GitHub source of truth → isolated Lenovo FlowDev update/build/GUI tests; no source code edits on Lenovo. Tested executable receipts remain bound to `31394a446f4223b7789d6287761d0fac916df5b3`; later commits may be documentation-only and are not relabeled as tested.
+
+---
+
+## Historical checkpoint — 13 November 2026
 
 Latest: [default PDF completion](2026-11-13-default-pdf-completion.md).
 Native-tested source `9a2ed85a38e25c3ad9698ee41ec993379dff9686`.
