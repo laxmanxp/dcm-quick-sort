@@ -153,9 +153,14 @@ try{
  $lastPrivate=Median ([long[]]@($last|ForEach-Object {$_.private_bytes}))
  $firstHandles=Median ([long[]]@($first|ForEach-Object {$_.handles}))
  $lastHandles=Median ([long[]]@($last|ForEach-Object {$_.handles}))
- $maxPrivate=($receipt.samples|Measure-Object -Property sampled_peak_private_bytes -Maximum).Maximum
- $maxHandles=($receipt.samples|Measure-Object -Property sampled_peak_handles -Maximum).Maximum
- $maxCache=($receipt.samples|Measure-Object -Property cache_bytes -Maximum).Maximum
+ $maxPrivate=0L;$maxHandles=0;$maxCache=0L
+ foreach($sample in $receipt.samples){
+  # Samples are ordered dictionaries. Measure-Object -Property does not
+  # reliably expose dictionary keys as PowerShell object properties.
+  $maxPrivate=[Math]::Max($maxPrivate,[long]$sample.sampled_peak_private_bytes)
+  $maxHandles=[Math]::Max($maxHandles,[int]$sample.sampled_peak_handles)
+  $maxCache=[Math]::Max($maxCache,[long]$sample.cache_bytes)
+ }
  $deltaPrivate=$lastPrivate-$firstPrivate
  $deltaHandles=$lastHandles-$firstHandles
  $receipt['summary']=[ordered]@{
