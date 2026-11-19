@@ -148,3 +148,27 @@ Still pending before production promotion:
 The FileFlow Suite release remains gated on FlowSearch and DeepSearch
 readiness. No release branch, production PDF default, installer,
 or registered application was changed.
+
+
+## Final regression checks (19 November 2026)
+
+The two full Quick Sort suites ran on **Laxman_Lenovo** after
+the new Go cursor-anchor geometry tests were committed. Tested
+source commit `d73fd17cc8e6821383ba481acb1466941606aa61`
+(the CI workflow update changes no application code).
+
+- Untagged build, `go test ./... -count=1`: **PASS**,
+  `ok quicksort 65.315s`, exit 0.
+- Development-default build,
+  `go test -tags pdfium_dev ./... -count=1`: **PASS**,
+  `ok quicksort 35.436s`, exit 0.
+- Windows hosted CI including
+  `TestPDFCursorAnchorXYAcrossSimulatedDPIScales` and
+  `TestPDFCursorAnchorConstrainedPanDoesNotLeaveViewport`:
+  **PASS**,
+  [GitHub Actions run 44437694283](https://github.com/laxmanxp/dcm-quick-sort/actions/runs/44437694283).
+
+All added resource tests and DPI geometry tests are confined to the
+development branch. No official DCM-34 completion status, user-test
+acceptance, release provider setting or distribution approval is
+changed by this focused result.
