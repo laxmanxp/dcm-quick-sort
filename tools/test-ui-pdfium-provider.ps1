@@ -515,11 +515,35 @@ try{
   $events=@(Get-Content -LiteralPath $trace | ForEach-Object {$_|ConvertFrom-Json})
   $starts=@($events | Where-Object {$_.event -eq 'worker-started' -and $_.renderer_pid -gt 0})
   $unique=@($starts | Select-Object -ExpandProperty renderer_pid -Unique)
-  if($starts.Count -lt 6 -or $unique.Count -ne 1){throw ('Persistent worker PID was not reused: renders='+$starts.Count+' PIDs='+($unique -join ','))}
+  if($starts.Count -lt 6){throw ('Too few persistent PDFium render requests: '+$starts.Count)}
+  # A Move/Undo selection change can cancel an in-flight render. That
+  # deliberately kills the owned child, so the next request must start a
+  # replacement. Require a matching cancellation trace before permitting
+  # each PID transition; unaccounted restarts remain a hard failure.
+  $restarts=0
+  for($i=1;$i -lt $starts.Count;$i++){
+   if([int]$starts[$i].renderer_pid -eq [int]$starts[$i-1].renderer_pid){continue}
+   $prior=[int]$starts[$i-1].renderer_pid
+   $next=[int]$starts[$i].renderer_pid
+   $boundary=[long]$starts[$i].sequence
+   $cancels=@($events | Where-Object {
+    $_.event -eq 'worker-canceled' -and [int]$_.renderer_pid -eq $prior -and
+    [long]$_.sequence -gt [long]$starts[$i-1].sequence -and [long]$_.sequence -lt $boundary
+   })
+   $requests=@($events | Where-Object {
+    $_.event -eq 'worker-cancel-requested' -and
+    [long]$_.sequence -gt [long]$starts[$i-1].sequence -and [long]$_.sequence -lt $boundary
+   })
+   if($requests.Count -ne 1 -or $cancels.Count -ne 1){
+    throw ('Unexpected PDFium worker restart: '+$prior+' -> '+$next+' without a matching cancellation')
+   }
+   $restarts++
+  }
   $fallbacks=@($events | Where-Object {$_.event -match 'persistent-transport-fallback|persistent-fallback-started'})
   if($fallbacks.Count){throw ('Unexpected one-shot fallback during healthy GUI: '+$fallbacks.Count)}
-  $serviceChildPID=[int]$unique[0]
-  Step 'persistent-process-reuse' @{worker_pid=$serviceChildPID;render_requests=$starts.Count;distinct_pids=1;one_shot_fallbacks=0}
+  # Only the final owned worker may still be running at normal shutdown.
+  $serviceChildPID=[int]$starts[-1].renderer_pid
+  Step 'persistent-process-reuse' @{worker_pid=$serviceChildPID;render_requests=$starts.Count;distinct_pids=$unique.Count;cancel_restarts=$restarts;one_shot_fallbacks=0}
  }
  $receipt.passed=$true
 }catch{
