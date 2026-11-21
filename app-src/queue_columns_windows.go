@@ -70,6 +70,9 @@ func updateQueueHeaderCaptions() {
 
 func activateQueueColumnSort(key InboxSort) {
  if app.filterSortCombo==0 {return}
+ // Preserve the exact visible selection (including multi-select) across the
+ // reload. The normal reload keeps the active filename but selects one row.
+ selected:=selectedSourceFiles()
  current:=selectedInboxSort()
  if current==key {app.queueSortReverse=!app.queueSortReverse}else{app.queueSortReverse=false}
  index:=0
@@ -77,6 +80,21 @@ func activateQueueColumnSort(key InboxSort) {
  procSendMessageW.Call(app.filterSortCombo,CB_SETCURSEL,uintptr(index),0)
  updateQueueHeaderCaptions()
  reloadFilesWithFocus(false)
+ if len(selected)>0 {
+  selectedPaths:=make(map[string]bool,len(selected))
+  for _,path:=range selected {selectedPaths[strings.ToLower(filepath.Clean(path))]=true}
+  app.updatingFileList=true
+  procSendMessageW.Call(app.fileList,LB_SETSEL,0,^uintptr(0))
+  for i,path:=range app.files {
+   if selectedPaths[strings.ToLower(filepath.Clean(path))] {
+    procSendMessageW.Call(app.fileList,LB_SETSEL,1,uintptr(i))
+   }
+  }
+  procSendMessageW.Call(app.fileList,LB_SETCARETINDEX,uintptr(app.index),0)
+  app.updatingFileList=false
+  // Count and selected-file preview reflect the restored selection.
+  showCurrentView(false,false)
+ }
  procSetFocus.Call(app.fileList)
 }
 
