@@ -597,6 +597,9 @@ type appState struct {
 	queueTabControl uintptr
 	nativeFileList uintptr
 	nativeQueueSyncing bool
+	nativePreviewDeferred bool
+	nativePreviewTimerArmed bool
+	nativePreviewPendingPath string
 	queueNameHeader, queueExtHeader, queueCreatedHeader, queueUpdatedHeader uintptr
 	queueSortReverse bool
 	queueRowDetails []queueRowDetail
@@ -3495,7 +3498,11 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 	case WM_BATCH_MOVE_NEXT:
 		advanceBatchMove()
 		return 0
-	case 0x0113: // WM_TIMER: owned Sumatra startup/liveness, never a rendering wait.
+	case 0x0113: // WM_TIMER: short native Queue preview coalescing and Sumatra liveness.
+		if wParam == nativeQueuePreviewTimerID {
+			flushNativeQueuePreview()
+			return 0
+		}
 		if wParam == sumatraTimerID {
 			pollSumatraPreview()
 			return 0
@@ -4531,7 +4538,9 @@ func showCurrent(focusName bool) {
 // Native selection notifications must not move the caret/anchor or reselect
 // a row the user just Ctrl-deselected. Programmatic navigation still syncs.
 func showCurrentView(focusName, syncSelection bool) {
-	unloadPreview()
+	if !app.nativePreviewDeferred {
+		unloadPreview()
+	}
 	f := currentFile()
 	if f == "" {
 		updateReadTextAvailability("")
@@ -4565,7 +4574,9 @@ func showCurrentView(focusName, syncSelection bool) {
 	setText(app.nameEdit, stem)
 	procSendMessageW.Call(app.nameEdit, 0x00B1, 0, ^uintptr(0)) // EM_SETSEL all
 	updateReadTextAvailability(f)
-	loadPreview(f)
+	if !app.nativePreviewDeferred {
+		loadPreview(f)
+	}
 	refreshSuggestionForCurrent()
 	refreshFileFlowMetadataControls()
 	if focusName {
@@ -5227,6 +5238,7 @@ func loadImageWithError(path string) error {
 }
 
 func unloadPreview() {
+	cancelNativeQueuePreview()
 	// A retiring handler may cause nested size messages during COM cleanup.
 	// Preserve its normal cleanup calls, but do not request an outer repair.
 	app.previewExcelOuterRepair = false
