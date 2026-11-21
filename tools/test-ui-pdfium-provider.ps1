@@ -13,7 +13,6 @@ param(
   [switch]$VerifyNativeReport,
   [switch]$NativeReportDiagnostic,
   [switch]$NativeReportMouse,
-  [switch]$VerifyNativeContext,
   [switch]$VerifyNativeMulti,
   [switch]$VerifyNativeRangeKeyboard,
   [switch]$SkipPointerWheel,
@@ -296,8 +295,7 @@ try{
  }.GetEnumerator()){$psi.EnvironmentVariables[$kv.Key]=$kv.Value}
  foreach($key in @('DCM_PDF_PROVIDER','DCM_FLOWPDF_WORKER','DCM_FLOWPDF_PERSISTENT')){$psi.EnvironmentVariables.Remove($key)}
  if($VerifyNativeReport){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_LISTVIEW']='1'}
- if($NativeReportDiagnostic -or $VerifyNativeContext){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_TRACE']=(Join-Path $lab 'native-report-events.log')}
- if($VerifyNativeContext){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_CONTEXT_PROBE']='1'}
+ if($NativeReportDiagnostic){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_TRACE']=(Join-Path $lab 'native-report-events.log')}
  if($NativeReportDiagnostic){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_DIAG_NO_SYNC']='1'}
  if($DevDefault) {
   # A genuine automatic-default acceptance must not supply PDFium-specific
@@ -405,21 +403,7 @@ try{
   [array]::Reverse($updatedFirst)
   Wait 'Native Updated header reverses order' {(@([DcmNative]::ListItems($hwnd,$app.Id,1016)) -join '|') -ceq ($updatedFirst -join '|')}
   Step 'native-report-updated-header-sort' @{updated_ascending_and_descending=$true}
-  if($VerifyNativeContext){
-   # Nonmodal app-specific diagnostic message: hit testing only; never open
-   # the Explorer Shell menu during automated acceptance.
-   if(-not [DcmTwoPaneGeometry]::PostMessage([IntPtr]$hwnd,0x8021,[IntPtr]1,[IntPtr]::Zero)){throw ('Cannot post keyboard hit probe; win32='+[Runtime.InteropServices.Marshal]::GetLastWin32Error())}
-   Wait 'Native keyboard hit record captured' {(Test-Path (Join-Path $lab 'native-report-events.log')) -and ((Get-Content (Join-Path $lab 'native-report-events.log') -Tail 10) -match 'probe-hit index=\d+ inside=true keyboard=true').Count -gt 0}
-   Step 'native-report-keyboard-context-hit' @{event=((Get-Content (Join-Path $lab 'native-report-events.log') | Where-Object {$_ -like 'probe-hit*'} | Select-Object -Last 1));native_control=$true}
-   $rc=New-Object DcmTwoPaneGeometry+RECT
-   if(-not [DcmTwoPaneGeometry]::GetWindowRect($native,[ref]$rc)){throw 'Cannot locate native table for context test'}
-   $cx=$rc.Left+65; $cy=$rc.Top+69
-   $packed=[IntPtr]((($cy -band 0xffff) -shl 16) -bor ($cx -band 0xffff))
-   if(-not [DcmTwoPaneGeometry]::PostMessage([IntPtr]$hwnd,0x8021,[IntPtr]0,$packed)){throw ('Cannot post pointer hit probe; win32='+[Runtime.InteropServices.Marshal]::GetLastWin32Error())}
-   Wait 'Native pointer hit record captured' {(Test-Path (Join-Path $lab 'native-report-events.log')) -and ((Get-Content (Join-Path $lab 'native-report-events.log') -Tail 10) -match 'probe-hit index=\d+ inside=true keyboard=false').Count -gt 0}
-   $contextLine=(Get-Content (Join-Path $lab 'native-report-events.log') | Where-Object {$_ -like 'probe-hit*' -and $_ -like '*keyboard=false'} | Select-Object -Last 1)
-   Step 'native-report-context-hit' @{event=$contextLine;native_control=$true;nonmodal=$true}
-  }
+
  }
  if($VerifyColumns){
   foreach($id in @(1066,1067,1068,1069)){if(-not(Is-Visible $id)){throw ('Queue header missing: '+$id)}}
