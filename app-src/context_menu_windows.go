@@ -44,14 +44,17 @@ func qsContextWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintp
 	if result, handled := qsForwardMenuMessage(msg, wParam, lParam); handled {
 		return result
 	}
-	if msg == qsWMContextMenu && wParam == app.fileList && app.fileList != 0 {
+	if msg == qsWMContextMenu && ((wParam == app.fileList && app.fileList != 0) || (wParam == app.nativeFileList && app.nativeFileList != 0)) {
 		if app.backgroundMoveBusy || qsContextActive {
 			return 0
 		}
 		point := POINT{X: int32(int16(uint16(lParam))), Y: int32(int16(uint16(lParam >> 16)))}
 		keyboard := point.X == -1 && point.Y == -1
 		hit, inside := -1, false
-		if keyboard {
+		nativeContext:=app.nativeFileList!=0 && wParam==app.nativeFileList
+		if nativeContext {
+			hit,inside,point=nativeQueueContextHit(point,keyboard)
+		} else if keyboard {
 			if fileListSelectionCount() == 0 {
 				return 0
 			}
@@ -94,7 +97,9 @@ func qsContextWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintp
 		procSendMessageW.Call(app.fileList, LB_SETCARETINDEX, uintptr(index), 0)
 		app.updatingFileList = false
 		app.index = index
+		nativeQueueSelectionFromLegacy()
 		showCurrent(false)
+		if nativeContext && nativeQueueContextSelected(index) {return 0}
 		target := currentFile()
 		if target != "" {
 			if err := qsShowShellMenu(hwnd, target, point); err != nil {
