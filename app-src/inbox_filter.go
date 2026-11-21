@@ -14,6 +14,7 @@ const (
 	InboxSortName                InboxSort = "Name"
 	InboxSortFileType            InboxSort = "File Type"
 	InboxSortDateCreated         InboxSort = "Date Created"
+	InboxSortDateUpdated         InboxSort = "Date Updated"
 	InboxSortDateCreatedTypeName InboxSort = "Date Created > Type > Name"
 )
 
@@ -21,6 +22,7 @@ var inboxSortOrder = []InboxSort{
 	InboxSortName,
 	InboxSortFileType,
 	InboxSortDateCreated,
+	InboxSortDateUpdated,
 	InboxSortDateCreatedTypeName,
 }
 
@@ -155,6 +157,7 @@ func listFilesInbox(dir string, filter InboxFilter, now time.Time) ([]string, er
 	type candidate struct {
 		path    string
 		created time.Time
+		updated time.Time
 		ext     string
 		name    string
 	}
@@ -174,6 +177,7 @@ func listFilesInbox(dir string, filter InboxFilter, now time.Time) ([]string, er
 		items = append(items, candidate{
 			path:    path,
 			created: fileCreatedTime(path, info),
+			updated: info.ModTime(),
 			ext:     strings.ToLower(filepath.Ext(path)),
 			name:    strings.ToLower(filepath.Base(path)),
 		})
@@ -216,6 +220,9 @@ func listFilesInbox(dir string, filter InboxFilter, now time.Time) ([]string, er
 				return a.ext < b.ext
 			}
 			return a.name < b.name
+		case InboxSortDateUpdated:
+			if a.updated.Equal(b.updated) { return a.name < b.name }
+			return a.updated.After(b.updated)
 		case InboxSortDateCreated:
 			fallthrough
 		default:
