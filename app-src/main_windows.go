@@ -25,6 +25,7 @@ const (
 	WM_PAINT                    = 0x000F
 	WM_ERASEBKGND               = 0x0014
 	WM_DRAWITEM                 = 0x002B
+	WM_NOTIFY                   = 0x004E
 	WM_COMMAND                  = 0x0111
 	WM_HSCROLL                  = 0x0114
 	WM_VSCROLL                  = 0x0115
@@ -593,7 +594,7 @@ type appState struct {
 	filterNameEdit, filterAgeCombo, filterSizeCombo, filterSortLabel, filterSortCombo, filterClearBtn                                                  uintptr
 	renameToolCombo, renameToolBtn                                                                                                                     uintptr
 	destAliasCombo, destSuggestionList, fileList, processedList, processedSearchEdit                                                                   uintptr
-	queueTabBtn, historyTabBtn uintptr
+	queueTabControl uintptr
 	queueNameHeader, queueExtHeader, queueCreatedHeader, queueUpdatedHeader uintptr
 	queueSortReverse bool
 	queueRowDetails []queueRowDetail
@@ -3271,6 +3272,10 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 		procSetTextColor.Call(wParam, colorInk)
 		procSetBkMode.Call(wParam, TRANSPARENT)
 		return app.brushWindow
+	case WM_NOTIFY:
+		if lParam != 0 && app.queueTabControl != 0 {
+			if handleQueueNativeTabNotification(lParam) { return 0 }
+		}
 	case WM_DRAWITEM:
 		dis := (*DRAWITEMSTRUCT)(unsafe.Pointer(lParam))
 		if dis != nil && int(dis.CtlID) == ID_FILE_LIST {
@@ -3568,8 +3573,7 @@ func createUI(hwnd uintptr) {
 	app.zoomInBtn = createControl("BUTTON", "+", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 888, 116, 34, 27, hwnd, ID_ZOOM_IN)
 	app.zoomFitBtn = createControl("BUTTON", "Fit", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 926, 116, 44, 27, hwnd, ID_ZOOM_FIT)
 	app.zoomFitWidthBtn = createControl("BUTTON", "Width", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 974, 116, 54, 27, hwnd, ID_ZOOM_FIT_WIDTH)
-	app.queueTabBtn = createControl("BUTTON", "Queue", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 20, 116, 74, 26, hwnd, ID_QUEUE_TAB)
-	app.historyTabBtn = createControl("BUTTON", "History", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 100, 116, 74, 26, hwnd, ID_HISTORY_TAB)
+	app.queueTabControl = createNativeQueueHistoryTabs(hwnd)
 	app.queueNameHeader = createControl("BUTTON", "Name", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 20, 148, 160, 24, hwnd, ID_QUEUE_SORT_NAME)
 	app.queueExtHeader = createControl("BUTTON", "Ext", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 180, 148, 65, 24, hwnd, ID_QUEUE_SORT_EXT)
 	app.queueCreatedHeader = createControl("BUTTON", "Created", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 245, 148, 95, 24, hwnd, ID_QUEUE_SORT_CREATED)
@@ -3584,8 +3588,7 @@ func createUI(hwnd uintptr) {
 	setExplorerTheme(app.queueExtHeader)
 	setExplorerTheme(app.queueCreatedHeader)
 	setExplorerTheme(app.queueUpdatedHeader)
-	setExplorerTheme(app.queueTabBtn)
-	setExplorerTheme(app.historyTabBtn)
+	setExplorerTheme(app.queueTabControl)
 	setExplorerTheme(app.fileList)
 	setExplorerTheme(app.actualNameEdit)
 	setExplorerTheme(app.processedSearchEdit)
@@ -3688,13 +3691,7 @@ func syncQueueHistoryTabVisibility() {
  // History-only action. Both buttons live beside the lower action row.
  show(app.undoBatchBtn, true)
  show(app.undoBtn, true)
- if app.showHistoryTab {
-  setText(app.queueTabBtn, "Queue")
-  setText(app.historyTabBtn, "[History]")
- } else {
-  setText(app.queueTabBtn, "[Queue]")
-  setText(app.historyTabBtn, "History")
- }
+ syncNativeTabSelection()
 }
 
 func layoutUI(hwnd uintptr) {
@@ -3799,8 +3796,7 @@ func layoutUI(hwnd uintptr) {
 	recordAttachmentTrace("layout-after-filterClearBtn")
 	recordAttachmentTrace("layout-before-countLabel")
 	updateQueueHeaderCaptions()
-	procMoveWindow.Call(app.queueTabBtn, 20, uintptr(headerY-3), 76, 26, 0)
-	procMoveWindow.Call(app.historyTabBtn, 102, uintptr(headerY-3), 76, 26, 0)
+	procMoveWindow.Call(app.queueTabControl, 20, uintptr(headerY-3), uintptr(listW), 27, 0)
 	procMoveWindow.Call(app.countLabel, 184, uintptr(headerY), uintptr(listW-164), 24, 0)
 	recordAttachmentTrace("layout-after-countLabel")
 	zoomGap := int32(4)
