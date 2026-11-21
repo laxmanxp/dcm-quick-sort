@@ -502,6 +502,7 @@ try{
   if($selectedStems -cnotcontains $activeStem){throw ('QuickSort active name is absent from sorted selection: '+$activeStem+'; selected='+($selectedStems -join ','))}
   Step 'native-report-selection-after-sort' @{selected_indices=$nativeNow;selected_names=$selectedStems;active_name=$activeStem;preserved=$true}
   if($KeyboardSoakSteps -gt 0){
+   Write-Output 'KBD_STAGE=starting-mixed-queue'
    if(-not $NativeReportMouse){throw 'Keyboard soak requires native mouse-driven selection'}
    # Add 36 authentic disposable mixed-document fixtures after the basic
    # four-row checks and remove them before ordinary rename/move tests.
@@ -524,6 +525,7 @@ try{
    Wait 'Mixed keyboard queue loaded' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 40}
    if([DcmTwoPaneGeometry]::SendMessage($native,0x1004,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64() -ne 40){throw 'Native mixed queue did not load forty rows'}
    Step 'keyboard-mixed-queue-created' @{rows=40;extra_documents=36;types=@('TXT','DOCX','XLSX','PDF')}
+   Write-Output 'KBD_STAGE=mixed-queue-ready'
    $beforeHost=$app.PrivateMemorySize64
    $beforeHandles=$app.HandleCount
    # Home then traverse the 40-row queue down and back, repeatedly.
@@ -556,13 +558,16 @@ try{
    $handleGrowth=[int]$app.HandleCount-[int]$beforeHandles
    if($hostGrowth -gt 48MB -or $handleGrowth -gt 64){throw ('Keyboard soak resource growth: '+$hostGrowth+' bytes, '+$handleGrowth+' handles')}
    Step 'native-keyboard-mixed-endurance' @{steps=$KeyboardSoakSteps;rows=40;focused_index=$expectedCursor;host_private_growth_bytes=$hostGrowth;host_handle_growth=$handleGrowth;elapsed_ms=([DateTime]::UtcNow-$keyboardStart).TotalMilliseconds;responsive=$true}
+   Write-Output 'KBD_STAGE=keys-verified'
    [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1030,'01-alpha')
    Wait 'Keyboard soak cleanup filters to original file' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 1}
+   Write-Output 'KBD_STAGE=cleanup-filter-ready'
    List-Selected '01-alpha.txt'
    foreach($tempFile in $kbAdded){Remove-Item -LiteralPath $tempFile -Force}
    [DcmNative]::ClickAsync($hwnd,$app.Id,1033)
    Wait 'Mixed keyboard fixture cleanup' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 4}
    Step 'keyboard-mixed-fixtures-cleaned' @{removed=36;original_rows=4}
+   Write-Output 'KBD_STAGE=cleanup-complete'
   }
 
  }
