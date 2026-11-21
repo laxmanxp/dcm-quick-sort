@@ -88,7 +88,9 @@ func nativeQueueTrace(phase string) {
 }
 
 func nativeQueueEnabled() bool {
- return strings.TrimSpace(os.Getenv("DCM_NATIVE_QUEUE_LISTVIEW"))=="1"
+ // Native Win32 report view is the development default. Setting the value
+ // explicitly to 0 rolls back to the proven owner-drawn LISTBOX.
+ return strings.TrimSpace(os.Getenv("DCM_NATIVE_QUEUE_LISTVIEW"))!="0"
 }
 
 func createNativeQueueReport(parent uintptr) uintptr {
