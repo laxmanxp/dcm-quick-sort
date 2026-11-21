@@ -45,6 +45,7 @@ func qsContextWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintp
 		return result
 	}
 	if msg == qsWMContextMenu && ((wParam == app.fileList && app.fileList != 0) || (wParam == app.nativeFileList && app.nativeFileList != 0)) {
+		if wParam==app.nativeFileList && nativeQueueContextProbeEnabled() { nativeQueueTrace("context-enter") }
 		if app.backgroundMoveBusy || qsContextActive {
 			return 0
 		}
@@ -53,7 +54,9 @@ func qsContextWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintp
 		hit, inside := -1, false
 		nativeContext:=app.nativeFileList!=0 && wParam==app.nativeFileList
 		if nativeContext {
+			if nativeQueueContextProbeEnabled() { nativeQueueTrace("context-before-hit") }
 			hit,inside,point=nativeQueueContextHit(point,keyboard)
+			if nativeQueueContextProbeEnabled() { nativeQueueTrace(fmt.Sprintf("context-after-hit index=%d inside=%v keyboard=%v",hit,inside,keyboard)) }
 			// In an isolated acceptance process, validate native hit testing
 			// without opening a blocking Windows Shell popup.
 			if nativeQueueContextProbeEnabled() {
