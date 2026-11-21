@@ -283,7 +283,8 @@ try{
  $psi.Arguments='"'+(Join-Path $fixture.inbox '01-alpha.txt')+'"'
  $psi.WorkingDirectory=$lab
  $psi.UseShellExecute=$false
- if($VerifyNativeReport){$psi.RedirectStandardError=$true}
+ # Avoid redirected stderr in GUI runs: a child renderer can inherit the pipe.
+ # Native diagnostics use isolated event traces instead.
  foreach($kv in @{
   'FILEWORKSPACE_RUNTIME_DIR'='C:\Flowverse\runtime';
   'LOCALAPPDATA'=$fixture.local;'APPDATA'=$fixture.roaming;'TEMP'=$lab;'TMP'=$lab;
@@ -758,10 +759,7 @@ try{
     if(-not $app.WaitForExit(20000)){throw 'Owned close timeout'}
    }
    $receipt.normal_exit=($app.HasExited -and $app.ExitCode -eq 0)
-   if($VerifyNativeReport -and $app.HasExited){
-    $stderrText=$app.StandardError.ReadToEnd()
-    if($stderrText){[IO.File]::WriteAllText((Join-Path $lab 'native-report-stderr.txt'),$stderrText); Step 'native-report-process-stderr' @{length=$stderrText.Length;head=$stderrText.Substring(0,[Math]::Min(500,$stderrText.Length))}}
-   }
+
    if(($Persistent -or $DevDefault) -and $serviceChildPID -gt 0 -and $receipt.normal_exit) {
     $until=[DateTime]::UtcNow.AddSeconds(5)
     do {
