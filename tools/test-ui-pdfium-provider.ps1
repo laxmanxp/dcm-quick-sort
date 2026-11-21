@@ -8,6 +8,7 @@ param(
   [switch]$WindowsRollback,
   [switch]$VerifyRotation,
   [switch]$VerifyActualFilename,
+  [switch]$VerifyTwoPane,
   [switch]$SkipPointerWheel,
   [switch]$SkipScreenshots,
   [ValidateRange(0,160)][int]$StressSwitches=0
@@ -56,6 +57,42 @@ function List-Selected([string]$name){
  Wait ('selected '+$name) {([DcmUndoInput]::TryText($hwnd,$app.Id,1005)) -ceq $stem}
 }
 function TextControl([int]$id){return [DcmNative]::Text([DcmNative]::Control($hwnd,$app.Id,$id),$app.Id)}
+# Two-pane checks inspect only controls owned by the disposable test process.
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class DcmTwoPaneGeometry {
+ [StructLayout(LayoutKind.Sequential)] public struct RECT { public int Left,Top,Right,Bottom; }
+ [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr hwnd);
+ [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hwnd,out RECT rect);
+ [DllImport("user32.dll")] public static extern bool MoveWindow(IntPtr hwnd,int x,int y,int width,int height,bool repaint);
+}
+'@
+function Is-Visible([int]$id){
+ return [DcmTwoPaneGeometry]::IsWindowVisible([IntPtr][DcmNative]::Control($hwnd,$app.Id,$id))
+}
+function Rect([int]$id){
+ $r=New-Object DcmTwoPaneGeometry+RECT
+ if(-not [DcmTwoPaneGeometry]::GetWindowRect([IntPtr][DcmNative]::Control($hwnd,$app.Id,$id),[ref]$r)){throw ('Missing geometry for control '+$id)}
+ return $r
+}
+function Verify-TwoPaneTab([bool]$history){
+ Owned
+ if((Is-Visible 1016) -eq $history){throw 'Queue list visibility disagrees with active tab'}
+ if((Is-Visible 1017) -ne $history -or (Is-Visible 1046) -ne $history){throw 'History list/search visibility disagrees with active tab'}
+ if(-not(Is-Visible 1008) -or -not(Is-Visible 1048)){throw 'Undo controls disappeared when switching tabs'}
+ $left=Rect $(if($history){1017}else{1016})
+ $preview=Rect 0
+}
+function Verify-TwoPaneGeometry([string]$label){
+ $queue=Rect 1016
+ $preview=[DcmNative]::Snapshot($hwnd,$app.Id) | Where-Object {$_.Class -eq 'QuickSortPreview'} | Select-Object -First 1
+ if($null -eq $preview){throw 'Preview HWND missing from native snapshot'}
+ $screen=Rect 1016
+ $qWidth=$screen.Right-$screen.Left
+ if($qWidth -lt 230 -or $qWidth -gt 470){throw ('Queue pane width out of bounds: '+$qWidth)}
+ Step ('two-pane-geometry-'+$label) @{queue_width=$qWidth;preview_present=$true}
+}
 function Assert-ActualFile([string]$filename,[string]$extension) {
  # Wait's own $name parameter must not shadow the expected filename.
  $expectedName=$filename
@@ -235,6 +272,17 @@ try{
  do{$app.Refresh();if($app.HasExited){throw 'Candidate exited at startup'};$hwnd=$app.MainWindowHandle;if($hwnd -ne [IntPtr]::Zero){break};Start-Sleep -Milliseconds 120}while([DateTime]::UtcNow -lt $deadline)
  if($hwnd -eq [IntPtr]::Zero){throw 'Candidate HWND missing'}
  Wait 'fixture loaded' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 4}
+ if($VerifyTwoPane){
+  Verify-TwoPaneTab $false
+  Verify-TwoPaneGeometry 'normal'
+  [DcmNative]::ClickAsync($hwnd,$app.Id,1065)
+  Wait 'History tab visible' {(Is-Visible 1017) -and -not (Is-Visible 1016)}
+  Verify-TwoPaneTab $true
+  [DcmNative]::ClickAsync($hwnd,$app.Id,1064)
+  Wait 'Queue tab visible' {(Is-Visible 1016) -and -not (Is-Visible 1017)}
+  Verify-TwoPaneTab $false
+  Step 'two-pane-queue-history-toggle' @{queue_visible=$true;history_visible_when_selected=$true;undo_always_visible=$true}
+ }
  List-Selected '08-preview.pdf'
  if($VerifyActualFilename){
   Assert-ActualFile '08-preview.pdf' 'PDF'
@@ -418,6 +466,19 @@ try{
  Wait 'Rename journal completed' {try {$null=Journal $pdf $renamed 'completed' 1;return $true} catch {return $false}}
  $renameID=Journal $pdf $renamed 'completed' 1
  Step 'rename-pdf' @{source=$pdf;target=$renamed;bytes_preserved=$true;journal_id=$renameID}
+ if($VerifyTwoPane){
+  [DcmNative]::ClickAsync($hwnd,$app.Id,1065)
+  Wait 'History after rename' {(Is-Visible 1017) -and @([DcmNative]::ListItems($hwnd,$app.Id,1017)).Count -gt 0}
+  Verify-TwoPaneTab $true
+  [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1046,'not-a-match-123456')
+  Wait 'History filtered to none' {@([DcmNative]::ListItems($hwnd,$app.Id,1017)).Count -eq 0}
+  [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1046,'')
+  Wait 'History search cleared' {@([DcmNative]::ListItems($hwnd,$app.Id,1017)).Count -gt 0}
+  Step 'two-pane-history-search' @{history_records_restored=$true;search_filters=$true}
+  [DcmNative]::ClickAsync($hwnd,$app.Id,1064)
+  Wait 'Queue restored after history' {(Is-Visible 1016) -and -not (Is-Visible 1017)}
+ }
+
  Wait 'renamed selection' {(TextControl 1005) -eq 'undo-preview'}
  if($VerifyActualFilename){Assert-ActualFile 'undo-preview.pdf' 'PDF'}
  PageReady 'Page 1 of 2'
