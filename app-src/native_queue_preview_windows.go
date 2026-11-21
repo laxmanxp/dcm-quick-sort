@@ -45,6 +45,7 @@ func flushNativeQueuePreview() {
  path:=app.nativePreviewPendingPath
  cancelNativeQueuePreview()
  if path=="" || currentFile()!=path {return}
+ nativeQueueTrace("preview-settled "+path)
  unloadPreview()
  loadPreview(path)
 }
