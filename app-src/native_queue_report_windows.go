@@ -1,0 +1,173 @@
+//go:build windows
+
+package main
+
+import (
+ "os"
+ "strings"
+ "unsafe"
+)
+
+// Experimental opt-in native report view: the original listbox remains the
+// selection/journal adapter until shell-menu and keyboard acceptance qualify it.
+const (
+ nativeQueueReportID = 1071
+ lvmFirst = 0x1000
+ lvmInsertColumnW = lvmFirst+97
+ lvmInsertItemW = lvmFirst+77
+ lvmSetItemTextW = lvmFirst+116
+ lvmDeleteAllItems = lvmFirst+9
+ lvmSetExtendedStyle = lvmFirst+54
+ lvmSetItemState = lvmFirst+43
+ lvmGetNextItem = lvmFirst+12
+ lvmGetItemCount = lvmFirst+4
+ lvifText = 0x0001
+ lvcfFmt = 0x0001
+ lvcfWidth = 0x0002
+ lvcfText = 0x0004
+ lvcfSubitem = 0x0008
+ lvisFocused = 0x0001
+ lvisSelected = 0x0002
+ lvniSelected = 0x0002
+ lvnFirst = -100
+ lvnItemChanged = lvnFirst-1
+ lvnColumnClick = lvnFirst-8
+)
+
+type nativeLVColumn struct {
+ Mask uint32
+ Format int32
+ Width int32
+ Text *uint16
+ TextMax int32
+ SubItem int32
+ Image int32
+ Order int32
+ MinWidth int32
+ DefaultWidth int32
+ IdealWidth int32
+}
+type nativeLVItem struct {
+ Mask uint32
+ Item int32
+ SubItem int32
+ State uint32
+ StateMask uint32
+ Text *uint16
+ TextMax int32
+ Image int32
+ Param uintptr
+ Indent int32
+ GroupID int32
+ Columns uint32
+ ColumnIndices *uint32
+ ColumnFormats *int32
+ Group int32
+}
+type nativeLVNotify struct {
+ Header nativeNotifyHeader
+ Item int32
+ SubItem int32
+ NewState uint32
+ OldState uint32
+ Changed uint32
+ Action POINT
+ Param uintptr
+}
+
+func nativeQueueEnabled() bool {
+ return strings.TrimSpace(os.Getenv("DCM_NATIVE_QUEUE_LISTVIEW"))=="1"
+}
+
+func createNativeQueueReport(parent uintptr) uintptr {
+ if !nativeQueueEnabled(){return 0}
+ hwnd:=createControl("SysListView32","",WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER|0x0001|0x0008,20,148,350,362,parent,nativeQueueReportID)
+ if hwnd==0{return 0}
+ procSendMessageW.Call(hwnd,lvmSetExtendedStyle,0,0x00000020|0x00010000) // full row, double-buffer
+ for i,name:=range []string{"Name","Extension","Created","Updated"}{
+  label:=wstr(name)
+  col:=nativeLVColumn{Mask:lvcfText|lvcfWidth|lvcfSubitem,Text:label,Width:100,SubItem:int32(i)}
+  procSendMessageW.Call(hwnd,lvmInsertColumnW,uintptr(i),uintptr(unsafe.Pointer(&col)))
+ }
+ return hwnd
+}
+
+func nativeQueueResizeColumns(width int32) {
+ if app.nativeFileList==0 {return}
+ dims:=[4]int32{}
+ dims[0],dims[1],dims[2],dims[3]=queueColumnWidths(width)
+ for i,value:=range dims{
+  procSendMessageW.Call(app.nativeFileList,lvmFirst+30,uintptr(i),uintptr(value)) // LVM_SETCOLUMNWIDTH
+ }
+}
+
+func nativeQueueRefresh() {
+ if app.nativeFileList==0 {return}
+ app.nativeQueueSyncing=true
+ defer func(){app.nativeQueueSyncing=false}()
+ procSendMessageW.Call(app.nativeFileList,lvmDeleteAllItems,0,0)
+ for i,row:=range app.queueRowDetails {
+  text:=wstr(row.Name)
+  item:=nativeLVItem{Mask:lvifText,Item:int32(i),SubItem:0,Text:text}
+  procSendMessageW.Call(app.nativeFileList,lvmInsertItemW,0,uintptr(unsafe.Pointer(&item)))
+  for column,value:=range []string{row.Ext,row.Created,row.Updated} {
+   valueUTF16:=wstr(value)
+   item:=nativeLVItem{Item:int32(i),SubItem:int32(column+1),Text:valueUTF16}
+   procSendMessageW.Call(app.nativeFileList,lvmSetItemTextW,uintptr(i),uintptr(unsafe.Pointer(&item)))
+  }
+ }
+ nativeQueueSelectionFromLegacy()
+}
+
+func nativeQueueSelectionFromLegacy() {
+ if app.nativeFileList==0 || app.nativeQueueSyncing {return}
+ app.nativeQueueSyncing=true
+ defer func(){app.nativeQueueSyncing=false}()
+ // Clear and restore exact selection, including Ctrl/Shift multi-select.
+ clear:=nativeLVItem{State:0,StateMask:lvisSelected|lvisFocused}
+ procSendMessageW.Call(app.nativeFileList,lvmSetItemState,^uintptr(0),uintptr(unsafe.Pointer(&clear)))
+ for _,idx:=range selectedSourceIndexes() {
+  state:=nativeLVItem{State:lvisSelected,StateMask:lvisSelected}
+  if int(idx)==app.index {state.State|=lvisFocused;state.StateMask|=lvisFocused}
+  procSendMessageW.Call(app.nativeFileList,lvmSetItemState,uintptr(idx),uintptr(unsafe.Pointer(&state)))
+ }
+}
+
+func nativeQueueSelectionToLegacy() {
+ if app.nativeFileList==0 || app.nativeQueueSyncing || app.updatingFileList{return}
+ app.nativeQueueSyncing=true
+ defer func(){app.nativeQueueSyncing=false}()
+ app.updatingFileList=true
+ defer func(){app.updatingFileList=false}()
+ procSendMessageW.Call(app.fileList,LB_SETSEL,0,^uintptr(0))
+ selectedIndex:=-1
+ for index:=int32(-1);; {
+  next,_,_:=procSendMessageW.Call(app.nativeFileList,lvmGetNextItem,uintptr(index),lvniSelected)
+  if next==^uintptr(0) || next>=uintptr(len(app.files)){break}
+  index=int32(next)
+  procSendMessageW.Call(app.fileList,LB_SETSEL,1,uintptr(index))
+  selectedIndex=int(index)
+ }
+ if selectedIndex>=0 {
+  app.index=selectedIndex
+  procSendMessageW.Call(app.fileList,LB_SETCARETINDEX,uintptr(app.index),0)
+  showCurrentView(false,false)
+ }
+}
+
+func nativeQueueNotify(lParam uintptr) bool {
+ if app.nativeFileList==0 || lParam==0{return false}
+ hdr:=(*nativeNotifyHeader)(unsafe.Pointer(lParam))
+ if hdr.From!=app.nativeFileList{return false}
+ if hdr.Code==lvnColumnClick {
+  note:=(*nativeLVNotify)(unsafe.Pointer(lParam))
+  keys:=[]InboxSort{InboxSortName,InboxSortFileType,InboxSortDateCreated,InboxSortDateUpdated}
+  if note.SubItem>=0 && int(note.SubItem)<len(keys){activateQueueColumnSort(keys[note.SubItem])}
+  return true
+ }
+ if hdr.Code==lvnItemChanged {
+  if !app.nativeQueueSyncing {nativeQueueSelectionToLegacy()}
+  return true
+ }
+ return false
+}
