@@ -4483,6 +4483,7 @@ func reloadFiles() {
 
 func reloadFilesWithFocus(focusName bool) {
 	previous := currentFile()
+	selected := selectedSourceFiles()
 	if previous == "" && app.startupPreferredFile != "" {
 		previous = app.startupPreferredFile
 	}
@@ -4503,13 +4504,23 @@ func reloadFilesWithFocus(focusName bool) {
 	if app.queueSortReverse {
 		for i, j := 0, len(files)-1; i < j; i, j = i+1, j-1 { files[i], files[j] = files[j], files[i] }
 	}
+	restored, active := queueSelectionAfterRefresh(files, selected, previous)
 	app.files = files
-	app.index = 0
-	if idx := preferredFileIndex(files, previous); idx >= 0 {
-		app.index = idx
-	}
+	app.index = active
 	app.startupPreferredFile = ""
 	populateFileList()
+	// populateFileList initializes the new row model and its first selection.
+	// Restore the original file identities after all native rows exist.
+	app.updatingFileList = true
+	procSendMessageW.Call(app.fileList, LB_SETSEL, 0, ^uintptr(0))
+	for _, idx := range restored {
+		procSendMessageW.Call(app.fileList, LB_SETSEL, 1, uintptr(idx))
+	}
+	if active >= 0 {
+		procSendMessageW.Call(app.fileList, LB_SETCARETINDEX, uintptr(active), 0)
+	}
+	app.updatingFileList = false
+	nativeQueueSelectionFromLegacy()
 	showCurrent(focusName)
 }
 
