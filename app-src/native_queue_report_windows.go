@@ -146,26 +146,38 @@ func nativeQueueSelectionFromLegacy() {
 }
 
 func nativeQueueSelectionToLegacy() {
- nativeQueueTrace(fmt.Sprintf("sync-entry disabled=%v busy=%v updating=%v",os.Getenv("DCM_NATIVE_QUEUE_DIAG_NO_SYNC")=="1",app.nativeQueueSyncing,app.updatingFileList))
  if os.Getenv("DCM_NATIVE_QUEUE_DIAG_NO_SYNC")=="1" {return}
  if app.nativeFileList==0 || app.nativeQueueSyncing || app.updatingFileList{return}
+ // Coalesce redundant notifications before changing the legacy adapter or
+ // restarting the active PDFium preview. ListView emits multiple state
+ // notifications for a single ordinary mouse/keyboard selection.
+ nativeSelected:=make([]int32,0)
+ for cursor:=int32(-1);;{
+  next,_,_:=procSendMessageW.Call(app.nativeFileList,lvmGetNextItem,uintptr(cursor),lvniSelected)
+  if next==^uintptr(0) || next>=uintptr(len(app.files)){break}
+  cursor=int32(next)
+  nativeSelected=append(nativeSelected,cursor)
+ }
+ previous:=selectedSourceIndexes()
+ unchanged:=len(previous)==len(nativeSelected)
+ if unchanged {
+  for i,value:=range nativeSelected {if previous[i]!=value {unchanged=false;break}}
+ }
+ selectedIndex:=-1
+ if len(nativeSelected)>0 {selectedIndex=int(nativeSelected[len(nativeSelected)-1])}
+ if unchanged && (selectedIndex<0 || selectedIndex==app.index) {return}
  app.nativeQueueSyncing=true
  defer func(){app.nativeQueueSyncing=false}()
  app.updatingFileList=true
  defer func(){app.updatingFileList=false}()
  procSendMessageW.Call(app.fileList,LB_SETSEL,0,^uintptr(0))
- selectedIndex:=-1
- for index:=int32(-1);; {
-  next,_,_:=procSendMessageW.Call(app.nativeFileList,lvmGetNextItem,uintptr(index),lvniSelected)
-  if next==^uintptr(0) || next>=uintptr(len(app.files)){break}
-  index=int32(next)
-  procSendMessageW.Call(app.fileList,LB_SETSEL,1,uintptr(index))
-  selectedIndex=int(index)
+ for _,idx:=range nativeSelected {
+  procSendMessageW.Call(app.fileList,LB_SETSEL,1,uintptr(idx))
  }
  if selectedIndex>=0 {
   app.index=selectedIndex
   procSendMessageW.Call(app.fileList,LB_SETCARETINDEX,uintptr(app.index),0)
-  nativeQueueTrace(fmt.Sprintf("sync-selected index=%d",selectedIndex))
+  nativeQueueTrace(fmt.Sprintf("sync-selected index=%d count=%d",selectedIndex,len(nativeSelected)))
   showCurrentView(false,false)
  }
 }
