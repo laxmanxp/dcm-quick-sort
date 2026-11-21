@@ -177,10 +177,23 @@ func nativeQueueSelectionToLegacy() {
   procSendMessageW.Call(app.fileList,LB_SETSEL,1,uintptr(idx))
  }
  if selectedIndex>=0 {
+  oldIndex:=app.index
   app.index=selectedIndex
   procSendMessageW.Call(app.fileList,LB_SETCARETINDEX,uintptr(app.index),0)
   nativeQueueTrace(fmt.Sprintf("sync-selected index=%d count=%d",selectedIndex,len(nativeSelected)))
+  if selectedIndex==oldIndex {
+   // Ctrl/Shift changes to the selected set must not unload the same preview.
+   if len(nativeSelected)>1 {
+    setText(app.countLabel,fmt.Sprintf("FILES  ·  %d selected  ·  %s",len(nativeSelected),filePositionLabel(app.index,len(app.files))))
+   } else {
+    setText(app.countLabel,"FILES  ·  "+filePositionLabel(app.index,len(app.files)))
+   }
+   return
+  }
+  app.nativePreviewDeferred=true
   showCurrentView(false,false)
+  app.nativePreviewDeferred=false
+  scheduleNativeQueuePreview(currentFile())
  }
 }
 
