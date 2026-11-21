@@ -23,6 +23,8 @@ const (
  lvmSetItemState = lvmFirst+43
  lvmGetNextItem = lvmFirst+12
  lvmGetItemCount = lvmFirst+4
+ lvmGetItemRect = lvmFirst+14
+ lvmHitTest = lvmFirst+18
  lvifText = 0x0001
  lvcfFmt = 0x0001
  lvcfWidth = 0x0002
@@ -85,6 +87,50 @@ func nativeQueueTrace(phase string) {
  if err!=nil {return}
  defer f.Close()
  fmt.Fprintln(f,phase)
+}
+
+type nativeQueueHit struct {
+ Point POINT
+ Flags uint32
+ Item int32
+ SubItem int32
+ Group int32
+}
+
+// Native item indices remain aligned with app.files even after sorting.
+// Keyboard context menus use the current selection; pointer menus use
+// ListView's own hit testing, not listbox coordinate assumptions.
+func nativeQueueContextHit(point POINT, keyboard bool) (int, bool, POINT) {
+ if app.nativeFileList==0 {return -1,false,point}
+ index:=-1
+ if keyboard {
+  if fileListSelectionCount()==0 {return -1,false,point}
+  index=app.index
+ }else{
+  client:=point
+  ok,_,_:=qsScreenToClient.Call(app.nativeFileList,uintptr(unsafe.Pointer(&client)))
+  if ok==0 {return -1,false,point}
+  hit:=nativeQueueHit{Point:client,Item:-1}
+  result,_,_:=procSendMessageW.Call(app.nativeFileList,lvmHitTest,0,uintptr(unsafe.Pointer(&hit)))
+  if result==^uintptr(0) {return -1,false,point}
+  index=int(hit.Item)
+ }
+ if index<0 || index>=len(app.files) {return -1,false,point}
+ rect:=RECT{Left:0}
+ ok,_,_:=procSendMessageW.Call(app.nativeFileList,lvmGetItemRect,uintptr(index),uintptr(unsafe.Pointer(&rect)))
+ if ok==0 {return -1,false,point}
+ if keyboard {
+  point=POINT{X:rect.Left+8,Y:rect.Bottom}
+  ok,_,_=qsClientToScreen.Call(app.nativeFileList,uintptr(unsafe.Pointer(&point)))
+  if ok==0 {return -1,false,point}
+ }
+ return index,true,point
+}
+
+func nativeQueueContextSelected(index int) bool {
+ if os.Getenv("DCM_NATIVE_QUEUE_CONTEXT_PROBE")!="1" {return false}
+ nativeQueueTrace(fmt.Sprintf("context-selected index=%d",index))
+ return true
 }
 
 func nativeQueueEnabled() bool {
