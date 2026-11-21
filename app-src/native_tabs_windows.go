@@ -73,6 +73,6 @@ func handleQueueNativeTabNotification(lParam uintptr) bool {
  if selected>1 {return true}
  app.showHistoryTab=selected==1
  layoutUI(app.hwnd)
- if app.showHistoryTab {procSetFocus.Call(app.processedList)} else {procSetFocus.Call(app.fileList)}
+ if app.showHistoryTab {procSetFocus.Call(app.processedList)} else {procSetFocus.Call(queueInputHandle())}
  return true
 }
