@@ -220,3 +220,44 @@ An initial extended run failed a brittle acceptance helper that clicked the
 wrong native row in longer lists; the test-only row-coordinate calculation was
 corrected and the full native GUI run passed. The production installations of
 QuickSort and FileFlow Suite were not altered.
+
+## Sustained navigation endurance — 2026-11-22
+
+The existing GUI endurance suite was run for **120 cycles = 240 file
+changes**, selecting TXT and PDF files, with persistent PDFium rendering,
+final PDF file integrity and Rename/Move/Undo checks. The **complete GUI run
+PASSED**, exited normally, and produced receipt
+`dcm-pdfium-gui-20261121-195507-688bf22`.
+
+Measured as median end-window minus median initial-window after warmup:
+- QuickSort private bytes: **+1,191,936** (~1.14 MiB)
+- PDFium worker private bytes: **-6,025,216** (~-5.75 MiB)
+- QuickSort handles: **+19**; PDFium worker handles: **0**
+- One persistent worker PID; **0** unplanned one-shot fallbacks
+- Source PDF bytes unchanged; successful normal host/worker shutdown
+
+An earlier full-run attempt `dcm-pdfium-gui-20261121-195258-287a453`
+completed its 120-cycle endurance step (worker and memory also stable) but the
+**overall run failed later** on a desktop snapshot with `Window PID mismatch`
+when another foreground window was present. That run is *not* counted as an
+end-to-end pass.
+
+A new separate mixed-document keyboard scenario was added to the acceptance
+harness using disposable copies of actual TXT, DOCX, XLSX and PDF fixtures:
+**40 visible rows**, including 36 disposable additional documents. On the
+first diagnostic run `dcm-pdfium-gui-20261121-195709-0c68ee6`, the segment
+`native-keyboard-mixed-endurance` **PASSED 300 arrow-key steps**, ending on
+focused row 12 after ~1.37 seconds with immediate filename agreement,
+QuickSort private memory growth +2,977,792 bytes and +33 handles (under the
+segment's limits). However, **that full run FAILED during cleanup**, because
+a pre-existing row-click helper only handles the first 17 visible rows and
+tried to click the original source at index 29. The cleanup was revised to
+first filter to the original document.
+
+Two subsequent native mixed-document acceptance attempts stalled before the
+keyboard fixture stage and produced no acceptance receipt. Only their
+exactly-owned test process/shell instances were stopped. **Do not claim full
+40-row keyboard acceptance yet.** Qualification remains **PARTIAL** pending a
+bounded, desktop-safe automation rerun through cleanup, native selection,
+Rename/Move/Undo, and normal shutdown. The existing production QuickSort and
+FileFlow Suite installations remain unchanged.
