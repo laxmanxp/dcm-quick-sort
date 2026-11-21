@@ -14,6 +14,7 @@ import (
 const (
  nativeQueueReportID = 1071
  wmNativeQueueSelection = 0x8020
+ wmNativeQueueProbeHit = 0x8021
  lvmFirst = 0x1000
  lvmInsertColumnW = lvmFirst+97
  lvmInsertItemW = lvmFirst+77
@@ -125,6 +126,16 @@ func nativeQueueContextHit(point POINT, keyboard bool) (int, bool, POINT) {
   if ok==0 {return -1,false,point}
  }
  return index,true,point
+}
+
+// Diagnostic-only message path: validate native ListView hit testing
+// without opening Explorer's modal Shell menu or mutating file selections.
+func nativeQueueProbeHit(wParam,lParam uintptr) {
+ if !nativeQueueContextProbeEnabled() {return}
+ keyboard:=wParam==1
+ point:=POINT{X:int32(int16(uint16(lParam))),Y:int32(int16(uint16(lParam>>16)))}
+ hit,inside,_:=nativeQueueContextHit(point,keyboard)
+ nativeQueueTrace(fmt.Sprintf("probe-hit index=%d inside=%v keyboard=%v",hit,inside,keyboard))
 }
 
 func nativeQueueContextProbeEnabled() bool {
