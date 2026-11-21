@@ -595,6 +595,8 @@ type appState struct {
 	renameToolCombo, renameToolBtn                                                                                                                     uintptr
 	destAliasCombo, destSuggestionList, fileList, processedList, processedSearchEdit                                                                   uintptr
 	queueTabControl uintptr
+	nativeFileList uintptr
+	nativeQueueSyncing bool
 	queueNameHeader, queueExtHeader, queueCreatedHeader, queueUpdatedHeader uintptr
 	queueSortReverse bool
 	queueRowDetails []queueRowDetail
@@ -2745,14 +2747,18 @@ func focusSourceForTyping() {
 	moveEditCaretToEnd(app.sourceEdit)
 }
 
+func queueInputHandle() uintptr {
+ if app.nativeFileList!=0 {return app.nativeFileList}
+ return app.fileList
+}
 func focusFileList() bool {
-	if !focusableControl(app.fileList) || len(app.files) == 0 {
+	if !focusableControl(queueInputHandle()) || len(app.files) == 0 {
 		return false
 	}
 	hideSourceSuggestions()
 	hideDestinationSuggestions()
 	syncFileListSelection()
-	procSetFocus.Call(app.fileList)
+	procSetFocus.Call(queueInputHandle())
 	return true
 }
 
@@ -3276,6 +3282,7 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 		if lParam != 0 && app.queueTabControl != 0 {
 			if handleQueueNativeTabNotification(lParam) { return 0 }
 		}
+		if nativeQueueNotify(lParam) {return 0}
 	case WM_DRAWITEM:
 		dis := (*DRAWITEMSTRUCT)(unsafe.Pointer(lParam))
 		if dis != nil && int(dis.CtlID) == ID_FILE_LIST {
@@ -3579,6 +3586,7 @@ func createUI(hwnd uintptr) {
 	app.queueCreatedHeader = createControl("BUTTON", "Created", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 245, 148, 95, 24, hwnd, ID_QUEUE_SORT_CREATED)
 	app.queueUpdatedHeader = createControl("BUTTON", "Updated", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 340, 148, 95, 24, hwnd, ID_QUEUE_SORT_UPDATED)
 	app.fileList = createControl("LISTBOX", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_TABSTOP|LBS_NOTIFY|LBS_EXTENDEDSEL|0x0010|0x0040|WS_VSCROLL, 20, 148, 220, 362, hwnd, ID_FILE_LIST)
+	app.nativeFileList = createNativeQueueReport(hwnd)
 	app.previewHwnd = createControl("QuickSortPreview", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_CLIPCHILDREN, 250, 148, 720, 362, hwnd, 0)
 	createPDFPreviewControls()
 	app.processedSearchEdit = createControl("EDIT", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_TABSTOP|ES_AUTOHSCROLL, 980, 148, 260, 25, hwnd, ID_PROCESSED_SEARCH)
@@ -3678,11 +3686,12 @@ func syncQueueHistoryTabVisibility() {
   if hwnd == 0 { return }
   if visible { procShowWindow.Call(hwnd, SW_SHOW) } else { procShowWindow.Call(hwnd, 0) }
  }
- show(app.fileList, !app.showHistoryTab)
- show(app.queueNameHeader, !app.showHistoryTab)
- show(app.queueExtHeader, !app.showHistoryTab)
- show(app.queueCreatedHeader, !app.showHistoryTab)
- show(app.queueUpdatedHeader, !app.showHistoryTab)
+ show(app.fileList, !app.showHistoryTab && app.nativeFileList==0)
+ show(app.nativeFileList, !app.showHistoryTab)
+ show(app.queueNameHeader, !app.showHistoryTab && app.nativeFileList==0)
+ show(app.queueExtHeader, !app.showHistoryTab && app.nativeFileList==0)
+ show(app.queueCreatedHeader, !app.showHistoryTab && app.nativeFileList==0)
+ show(app.queueUpdatedHeader, !app.showHistoryTab && app.nativeFileList==0)
  show(app.countLabel, !app.showHistoryTab)
  show(app.processedList, app.showHistoryTab)
  show(app.processedSearchEdit, app.showHistoryTab)
@@ -3850,6 +3859,8 @@ func layoutUI(hwnd uintptr) {
 	procMoveWindow.Call(app.queueCreatedHeader, uintptr(20+queueNameW+queueExtW), uintptr(previewTop), uintptr(queueCreatedW), 25, 0)
 	procMoveWindow.Call(app.queueUpdatedHeader, uintptr(20+queueNameW+queueExtW+queueCreatedW), uintptr(previewTop), uintptr(queueUpdatedW), 25, 0)
 	procMoveWindow.Call(app.fileList, 20, uintptr(previewTop+27), uintptr(listW), uintptr(previewH-27), 0)
+	procMoveWindow.Call(app.nativeFileList, 20, uintptr(previewTop), uintptr(listW), uintptr(previewH), 0)
+	nativeQueueResizeColumns(listW)
 	recordAttachmentTrace("layout-after-fileList")
 	recordAttachmentTrace("layout-before-previewHwnd")
 	procMoveWindow.Call(app.previewHwnd, uintptr(previewX), uintptr(previewTop), uintptr(previewW), uintptr(previewH), 0)
@@ -3985,6 +3996,7 @@ func populateFileList() {
 		procSendMessageW.Call(app.fileList, LB_ADDSTRING, 0, uintptr(unsafe.Pointer(wstr(filepath.Base(path)))))
 	}
 	syncFileListSelection()
+	nativeQueueRefresh()
 }
 
 func fileListSelectionCount() int {
