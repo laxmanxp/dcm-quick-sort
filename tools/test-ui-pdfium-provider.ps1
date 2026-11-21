@@ -66,6 +66,7 @@ public static class DcmTwoPaneGeometry {
  [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr hwnd);
  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hwnd,out RECT rect);
  [DllImport("user32.dll")] public static extern bool MoveWindow(IntPtr hwnd,int x,int y,int width,int height,bool repaint);
+ [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern IntPtr FindWindowEx(IntPtr parent,IntPtr after,string className,string caption);
 }
 '@
 function Is-Visible([int]$id){
@@ -81,17 +82,18 @@ function Verify-TwoPaneTab([bool]$history){
  if((Is-Visible 1016) -eq $history){throw 'Queue list visibility disagrees with active tab'}
  if((Is-Visible 1017) -ne $history -or (Is-Visible 1046) -ne $history){throw 'History list/search visibility disagrees with active tab'}
  if(-not(Is-Visible 1008) -or -not(Is-Visible 1048)){throw 'Undo controls disappeared when switching tabs'}
- $left=Rect $(if($history){1017}else{1016})
- $preview=Rect 0
-}
+ }
 function Verify-TwoPaneGeometry([string]$label){
  $queue=Rect 1016
- $preview=[DcmNative]::Snapshot($hwnd,$app.Id) | Where-Object {$_.Class -eq 'QuickSortPreview'} | Select-Object -First 1
- if($null -eq $preview){throw 'Preview HWND missing from native snapshot'}
- $screen=Rect 1016
- $qWidth=$screen.Right-$screen.Left
+ $previewHwnd=[DcmTwoPaneGeometry]::FindWindowEx([IntPtr]$hwnd,[IntPtr]::Zero,'QuickSortPreview',$null)
+ if($previewHwnd -eq [IntPtr]::Zero){throw 'Native preview child HWND missing'}
+ $preview=New-Object DcmTwoPaneGeometry+RECT
+ if(-not [DcmTwoPaneGeometry]::GetWindowRect($previewHwnd,[ref]$preview)){throw 'Preview geometry missing'}
+ $qWidth=$queue.Right-$queue.Left
+ $pWidth=$preview.Right-$preview.Left
  if($qWidth -lt 230 -or $qWidth -gt 470){throw ('Queue pane width out of bounds: '+$qWidth)}
- Step ('two-pane-geometry-'+$label) @{queue_width=$qWidth;preview_present=$true}
+ if($pWidth -lt 420 -or $queue.Right -ge $preview.Left){throw ('Two-pane geometry overlaps or preview too narrow: '+$pWidth)}
+ Step ('two-pane-geometry-'+$label) @{queue_width=$qWidth;preview_width=$pWidth;no_overlap=$true}
 }
 function Assert-ActualFile([string]$filename,[string]$extension) {
  # Wait's own $name parameter must not shadow the expected filename.
@@ -275,6 +277,13 @@ try{
  if($VerifyTwoPane){
   Verify-TwoPaneTab $false
   Verify-TwoPaneGeometry 'normal'
+  $area=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea
+  if(-not [DcmTwoPaneGeometry]::MoveWindow([IntPtr]$hwnd,$area.Left+10,$area.Top+10,920,740,$true)){throw 'Unable to resize owned QuickSort window'}
+  Start-Sleep -Milliseconds 300
+  Verify-TwoPaneGeometry 'narrow-920'
+  if(-not [DcmTwoPaneGeometry]::MoveWindow([IntPtr]$hwnd,$area.Left+10,$area.Top+10,[Math]::Min(1350,$area.Width-20),[Math]::Min(820,$area.Height-20),$true)){throw 'Unable to restore owned QuickSort window size'}
+  Start-Sleep -Milliseconds 300
+  Verify-TwoPaneGeometry 'wide'
   [DcmNative]::ClickAsync($hwnd,$app.Id,1065)
   Wait 'History tab visible' {(Is-Visible 1017) -and -not (Is-Visible 1016)}
   Verify-TwoPaneTab $true
