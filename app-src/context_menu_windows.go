@@ -54,6 +54,13 @@ func qsContextWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintp
 		nativeContext:=app.nativeFileList!=0 && wParam==app.nativeFileList
 		if nativeContext {
 			hit,inside,point=nativeQueueContextHit(point,keyboard)
+			// In an isolated acceptance process, validate native hit testing
+			// without opening a blocking Windows Shell popup.
+			if nativeQueueContextProbeEnabled() {
+				index:=qsContextIndex(len(app.files),hit,inside)
+				if index>=0 {nativeQueueContextSelected(index)}
+				return 0
+			}
 		} else if keyboard {
 			if fileListSelectionCount() == 0 {
 				return 0
