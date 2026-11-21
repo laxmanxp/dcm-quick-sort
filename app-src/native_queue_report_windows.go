@@ -5,6 +5,7 @@ package main
 import (
  "os"
  "strings"
+ "fmt"
  "unsafe"
 )
 
@@ -76,6 +77,16 @@ type nativeLVNotify struct {
  Param uintptr
 }
 
+// Development-only trace, enabled only by an explicit test environment variable.
+func nativeQueueTrace(phase string) {
+ path:=os.Getenv("DCM_NATIVE_QUEUE_TRACE")
+ if path=="" {return}
+ f,err:=os.OpenFile(path,os.O_APPEND|os.O_CREATE|os.O_WRONLY,0600)
+ if err!=nil {return}
+ defer f.Close()
+ fmt.Fprintln(f,phase)
+}
+
 func nativeQueueEnabled() bool {
  return strings.TrimSpace(os.Getenv("DCM_NATIVE_QUEUE_LISTVIEW"))=="1"
 }
@@ -135,6 +146,7 @@ func nativeQueueSelectionFromLegacy() {
 }
 
 func nativeQueueSelectionToLegacy() {
+ nativeQueueTrace(fmt.Sprintf("sync-entry disabled=%v busy=%v updating=%v",os.Getenv("DCM_NATIVE_QUEUE_DIAG_NO_SYNC")=="1",app.nativeQueueSyncing,app.updatingFileList))
  if os.Getenv("DCM_NATIVE_QUEUE_DIAG_NO_SYNC")=="1" {return}
  if app.nativeFileList==0 || app.nativeQueueSyncing || app.updatingFileList{return}
  app.nativeQueueSyncing=true
@@ -153,6 +165,7 @@ func nativeQueueSelectionToLegacy() {
  if selectedIndex>=0 {
   app.index=selectedIndex
   procSendMessageW.Call(app.fileList,LB_SETCARETINDEX,uintptr(app.index),0)
+  nativeQueueTrace(fmt.Sprintf("sync-selected index=%d",selectedIndex))
   showCurrentView(false,false)
  }
 }
@@ -161,6 +174,7 @@ func nativeQueueNotify(lParam uintptr) bool {
  if app.nativeFileList==0 || lParam==0{return false}
  hdr:=(*nativeNotifyHeader)(unsafe.Pointer(lParam))
  if hdr.From!=app.nativeFileList{return false}
+ nativeQueueTrace(fmt.Sprintf("notify code=%d syncing=%v",hdr.Code,app.nativeQueueSyncing))
  if hdr.Code==lvnColumnClick {
   note:=(*nativeLVNotify)(unsafe.Pointer(lParam))
   keys:=[]InboxSort{InboxSortName,InboxSortFileType,InboxSortDateCreated,InboxSortDateUpdated}
