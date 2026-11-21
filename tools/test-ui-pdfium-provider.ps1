@@ -12,6 +12,7 @@ param(
   [switch]$VerifyColumns,
   [switch]$VerifyNativeReport,
   [switch]$NativeReportDiagnostic,
+  [switch]$NativeReportMouse,
   [switch]$SkipPointerWheel,
   [switch]$SkipScreenshots,
   [ValidateRange(0,160)][int]$StressSwitches=0
@@ -322,9 +323,9 @@ try{
   if($columnCount -ne 4 -or $itemCount -ne 4){throw ('Native ListView columns/items mismatch '+$columnCount+'/'+$itemCount)}
   Step 'native-report-four-columns' @{class='SysListView32';header_class='SysHeader32';columns=$columnCount;items=$itemCount;visible=$true}
   Step 'native-report-before-select' @{diagnostic=$NativeReportDiagnostic}
-  if($NativeReportDiagnostic){
+  if($NativeReportDiagnostic -or $NativeReportMouse){
    # A physical-style row click is distinct from LVM_SETITEMSTATE.
-   $point=[IntPtr]((46 -shl 16) -bor 65)
+   $point=[IntPtr]((69 -shl 16) -bor 65)
    [void][DcmTwoPaneGeometry]::SendMessage($native,0x0201,[IntPtr]1,$point)
    [void][DcmTwoPaneGeometry]::SendMessage($native,0x0202,[IntPtr]::Zero,$point)
    Step 'native-report-after-mouse-click' @{diagnostic=$true}
