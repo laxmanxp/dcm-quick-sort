@@ -33,3 +33,12 @@ func TestQueueColumnSortDirections(t *testing.T) {
   }
  }
 }
+
+func TestNativeQueueDefaultAndLegacyRollback(t *testing.T) {
+ t.Setenv("DCM_NATIVE_QUEUE_LISTVIEW","")
+ if !nativeQueueEnabled() {t.Fatal("native report queue must be the development default")}
+ t.Setenv("DCM_NATIVE_QUEUE_LISTVIEW","0")
+ if nativeQueueEnabled() {t.Fatal("explicit 0 must enable legacy listbox rollback")}
+ t.Setenv("DCM_NATIVE_QUEUE_LISTVIEW","1")
+ if !nativeQueueEnabled() {t.Fatal("explicit 1 must enable native report queue")}
+}
