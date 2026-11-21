@@ -99,3 +99,25 @@ run in `dcm-pdfium-gui-20261121-145747-7f377da` stalled without a receipt.
 The owned test shell was stopped. **Context-menu support is not accepted**.
 Actual Shell popup/keyboard activation still requires controlled independent
 qualification. Keep `DCM_NATIVE_QUEUE_LISTVIEW` opt-in only. Production untouched.
+
+## Nonmodal context diagnostic follow-up
+
+The test harness was updated to avoid a blocking synchronous cross-process
+`WM_CONTEXTMENU` call, then a separate development-only `WM_APP` diagnostic
+message was introduced to exercise ListView pointer/keyboard hit testing
+without opening the Windows Shell popup. Neither isolated diagnostic has yet
+produced a passing receipt on Lenovo. In the latest attempted run,
+`dcm-pdfium-gui-20261121-151008-cb0197c`, the test did not emit a receipt,
+and the owned test shell was stopped. **Do not mark right-click Shell menu or
+hit-test integration as qualified.** The diagnostic is gated by
+`DCM_NATIVE_QUEUE_CONTEXT_PROBE=1`, and the native ListView itself remains
+opt-in via `DCM_NATIVE_QUEUE_LISTVIEW=1`.
+
+Following those changes, the default listbox-based two-pane interface passed
+its isolated Go sorting/focus tests and GUI acceptance on Lenovo with normal
+shutdown: `dcm-pdfium-gui-20261121-151132-2d1d991`. This confirms the
+supported default workflow was not changed by the diagnostic experiment.
+
+Next: diagnose the early exit and no-receipt case with process-exit evidence
+and a narrow watchdog; qualify right-click and keyboard Shell menus through a
+separate controlled physical-input test before promoting the native ListView.
