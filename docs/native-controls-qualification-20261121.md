@@ -121,3 +121,38 @@ supported default workflow was not changed by the diagnostic experiment.
 Next: diagnose the early exit and no-receipt case with process-exit evidence
 and a narrow watchdog; qualify right-click and keyboard Shell menus through a
 separate controlled physical-input test before promoting the native ListView.
+
+## Final architecture decision — supersedes earlier experimental status
+
+QuickSort is an action-oriented filing application, not a general-purpose file
+manager. Its Windows Explorer Shell context menu was intentionally **removed**
+from the QuickSort source (both the implementation and its unit tests). The
+context-menu diagnostics were removed from the native queue. This feature
+belongs, if required, in a separate FlowSearch-specific implementation; no
+FlowSearch source was modified by this QuickSort change.
+
+**Native `SysListView32` is now the default queue on this DEVELOPMENT branch**
+for Name, Extension, Created and Updated. The native `SysTabControl32` remains
+the Queue/History selector. The existing Win32 listbox is retained as a
+reversible fallback and selection adapter, not the visible default.
+
+Rollback for development/test builds:
+`DCM_NATIVE_QUEUE_LISTVIEW=0` (explicitly forces the legacy owner-drawn
+listbox). With the environment variable unset, the native report view is used.
+
+Verified on Lenovo:
+- Native development default: full Go regression + two-pane headed GUI,
+  row selection, Ctrl/Shift multi-selection, Arrow keyboard navigation,
+  Name/Updated header sort, PDFium, Rename, Move and Undo, normal exit;
+  receipt `dcm-pdfium-gui-20261121-153920-e0e9a70`.
+- Explicit legacy rollback: two-pane tabs and legacy four-column sorting,
+  normal exit; receipt `dcm-pdfium-gui-20261121-153854-2e50f5d`.
+- Extension header clipping was spotted in manual screenshot review, and its
+  width was increased. Final native GUI after that fix passed with normal exit;
+  receipt `dcm-pdfium-gui-20261121-154204-86d5fe2`.
+  Screenshot `01-page-one.png` was inspected: all four headers are readable,
+  file selection is visible, and PDF preview and controls remain aligned.
+
+Production/release versions of QuickSort and FileFlow Suite were not changed.
+The previous context-menu blocker no longer applies to QuickSort; the historic
+failed experiments above are retained only as background evidence.
