@@ -556,9 +556,11 @@ try{
    $handleGrowth=[int]$app.HandleCount-[int]$beforeHandles
    if($hostGrowth -gt 48MB -or $handleGrowth -gt 64){throw ('Keyboard soak resource growth: '+$hostGrowth+' bytes, '+$handleGrowth+' handles')}
    Step 'native-keyboard-mixed-endurance' @{steps=$KeyboardSoakSteps;rows=40;focused_index=$expectedCursor;host_private_growth_bytes=$hostGrowth;host_handle_growth=$handleGrowth;elapsed_ms=([DateTime]::UtcNow-$keyboardStart).TotalMilliseconds;responsive=$true}
+   [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1030,'01-alpha')
+   Wait 'Keyboard soak cleanup filters to original file' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 1}
    List-Selected '01-alpha.txt'
    foreach($tempFile in $kbAdded){Remove-Item -LiteralPath $tempFile -Force}
-   [DcmNative]::ClickAsync($hwnd,$app.Id,1011)
+   [DcmNative]::ClickAsync($hwnd,$app.Id,1033)
    Wait 'Mixed keyboard fixture cleanup' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 4}
    Step 'keyboard-mixed-fixtures-cleaned' @{removed=36;original_rows=4}
   }
