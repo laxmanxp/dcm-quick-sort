@@ -104,7 +104,6 @@ func nativeQueueResizeColumns(width int32) {
 func nativeQueueRefresh() {
  if app.nativeFileList==0 {return}
  app.nativeQueueSyncing=true
- defer func(){app.nativeQueueSyncing=false}()
  procSendMessageW.Call(app.nativeFileList,lvmDeleteAllItems,0,0)
  for i,row:=range app.queueRowDetails {
   text:=wstr(row.Name)
@@ -116,6 +115,7 @@ func nativeQueueRefresh() {
    procSendMessageW.Call(app.nativeFileList,lvmSetItemTextW,uintptr(i),uintptr(unsafe.Pointer(&item)))
   }
  }
+ app.nativeQueueSyncing=false
  nativeQueueSelectionFromLegacy()
 }
 
