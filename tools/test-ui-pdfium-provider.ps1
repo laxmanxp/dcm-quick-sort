@@ -281,6 +281,16 @@ try{
   if(-not [DcmTwoPaneGeometry]::MoveWindow([IntPtr]$hwnd,$area.Left+10,$area.Top+10,920,740,$true)){throw 'Unable to resize owned QuickSort window'}
   Start-Sleep -Milliseconds 300
   Verify-TwoPaneGeometry 'narrow-920'
+  if(-not [DcmTwoPaneGeometry]::MoveWindow([IntPtr]$hwnd,$area.Left+10,$area.Top+10,800,720,$true)){throw 'Unable to resize owned QuickSort window to 800'}
+  Start-Sleep -Milliseconds 300
+  Verify-TwoPaneGeometry 'compact-800'
+  [DcmNative]::ClickAsync($hwnd,$app.Id,1065)
+  Wait 'History visible at 800' {(Is-Visible 1017) -and -not (Is-Visible 1016)}
+  Verify-TwoPaneTab $true
+  [DcmNative]::ClickAsync($hwnd,$app.Id,1064)
+  Wait 'Queue visible at 800' {(Is-Visible 1016) -and -not (Is-Visible 1017)}
+  Verify-TwoPaneTab $false
+  Step 'two-pane-compact-tab-toggle' @{width_requested=800;queue_restored=$true;history_available=$true}
   if(-not [DcmTwoPaneGeometry]::MoveWindow([IntPtr]$hwnd,$area.Left+10,$area.Top+10,[Math]::Min(1350,$area.Width-20),[Math]::Min(820,$area.Height-20),$true)){throw 'Unable to restore owned QuickSort window size'}
   Start-Sleep -Milliseconds 300
   Verify-TwoPaneGeometry 'wide'
