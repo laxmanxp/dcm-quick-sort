@@ -413,7 +413,10 @@ try{
   $nameOrder=@('01-alpha.txt','02-bravo.txt','03-charlie.txt','08-preview.pdf')
   Wait 'Native ListView Name header sorts ascending' {(@([DcmNative]::ListItems($hwnd,$app.Id,1016)) -join '|') -ceq ($nameOrder -join '|')}
   Step 'native-report-header-sort' @{name_ascending=$true;native_header_clicked=$true}
-  $updatedPoint=[IntPtr]((12 -shl 16) -bor 380)
+  $headerRect=New-Object DcmTwoPaneGeometry+RECT
+  if(-not [DcmTwoPaneGeometry]::GetWindowRect($header,[ref]$headerRect)){throw 'Native report header geometry unavailable'}
+  $updatedX=[int](($headerRect.Right-$headerRect.Left)*0.9)
+  $updatedPoint=[IntPtr]((12 -shl 16) -bor $updatedX)
   [void][DcmTwoPaneGeometry]::SendMessage($header,0x0201,[IntPtr]1,$updatedPoint)
   [void][DcmTwoPaneGeometry]::SendMessage($header,0x0202,[IntPtr]::Zero,$updatedPoint)
   Wait 'Native Updated header selected' {(TextControl 1045) -eq 'Date Updated'}
