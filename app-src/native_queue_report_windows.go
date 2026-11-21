@@ -135,6 +135,7 @@ func nativeQueueSelectionFromLegacy() {
 }
 
 func nativeQueueSelectionToLegacy() {
+ if os.Getenv("DCM_NATIVE_QUEUE_DIAG_NO_SYNC")=="1" {return}
  if app.nativeFileList==0 || app.nativeQueueSyncing || app.updatingFileList{return}
  app.nativeQueueSyncing=true
  defer func(){app.nativeQueueSyncing=false}()
