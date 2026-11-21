@@ -322,7 +322,18 @@ try{
   if($columnCount -ne 4 -or $itemCount -ne 4){throw ('Native ListView columns/items mismatch '+$columnCount+'/'+$itemCount)}
   Step 'native-report-four-columns' @{class='SysListView32';header_class='SysHeader32';columns=$columnCount;items=$itemCount;visible=$true}
   Step 'native-report-before-select' @{diagnostic=$NativeReportDiagnostic}
-  [DcmNativeReportProbe]::SelectRow($native,2)
+  if($NativeReportDiagnostic){
+   # A physical-style row click is distinct from LVM_SETITEMSTATE.
+   $point=[IntPtr]((46 -shl 16) -bor 65)
+   [void][DcmTwoPaneGeometry]::SendMessage($native,0x0201,[IntPtr]1,$point)
+   [void][DcmTwoPaneGeometry]::SendMessage($native,0x0202,[IntPtr]::Zero,$point)
+   Step 'native-report-after-mouse-click' @{diagnostic=$true}
+   Start-Sleep -Milliseconds 850
+   $app.Refresh()
+   if($app.HasExited){throw 'Native report exited after physical-style row click'}
+  }else{
+   [DcmNativeReportProbe]::SelectRow($native,2)
+  }
   Step 'native-report-after-select' @{diagnostic=$NativeReportDiagnostic}
   Wait 'Native report selection mirrored into QuickSort workflow' { (TextControl 1005) -ceq '03-charlie' }
   Step 'native-report-selection-adapter' @{selected_name=(TextControl 1005);preview_selection_updated=$true}
