@@ -89,11 +89,14 @@ function Verify-TwoPaneGeometry([string]$label){
  if($previewHwnd -eq [IntPtr]::Zero){throw 'Native preview child HWND missing'}
  $preview=New-Object DcmTwoPaneGeometry+RECT
  if(-not [DcmTwoPaneGeometry]::GetWindowRect($previewHwnd,[ref]$preview)){throw 'Preview geometry missing'}
+ $main=New-Object DcmTwoPaneGeometry+RECT
+ if(-not [DcmTwoPaneGeometry]::GetWindowRect([IntPtr]$hwnd,[ref]$main)){throw 'Main window geometry missing'}
+ $outerWidth=$main.Right-$main.Left
  $qWidth=$queue.Right-$queue.Left
  $pWidth=$preview.Right-$preview.Left
  if($qWidth -lt 230 -or $qWidth -gt 470){throw ('Queue pane width out of bounds: '+$qWidth)}
  if($pWidth -lt 420 -or $queue.Right -ge $preview.Left){throw ('Two-pane geometry overlaps or preview too narrow: '+$pWidth)}
- Step ('two-pane-geometry-'+$label) @{queue_width=$qWidth;preview_width=$pWidth;no_overlap=$true}
+ Step ('two-pane-geometry-'+$label) @{outer_width=$outerWidth;queue_width=$qWidth;preview_width=$pWidth;no_overlap=$true}
 }
 function Assert-ActualFile([string]$filename,[string]$extension) {
  # Wait's own $name parameter must not shadow the expected filename.
@@ -283,7 +286,7 @@ try{
   Verify-TwoPaneGeometry 'narrow-920'
   if(-not [DcmTwoPaneGeometry]::MoveWindow([IntPtr]$hwnd,$area.Left+10,$area.Top+10,800,720,$true)){throw 'Unable to resize owned QuickSort window to 800'}
   Start-Sleep -Milliseconds 300
-  Verify-TwoPaneGeometry 'compact-800'
+  Verify-TwoPaneGeometry 'minimum-clamped-800-request'
   [DcmNative]::ClickAsync($hwnd,$app.Id,1065)
   Wait 'History visible at 800' {(Is-Visible 1017) -and -not (Is-Visible 1016)}
   Verify-TwoPaneTab $true
