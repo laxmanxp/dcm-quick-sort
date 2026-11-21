@@ -90,9 +90,10 @@ public static class DcmNativeReportProbe {
   IntPtr payload=Marshal.AllocHGlobal(88);
   try {
    for(int i=0;i<88;i++) Marshal.WriteByte(payload,i,0);
-   Marshal.WriteInt32(payload,12,3); // LVIS_SELECTED | LVIS_FOCUSED
-   Marshal.WriteInt32(payload,16,3); // state mask
+   Marshal.WriteInt32(payload,12,0); // clear prior selection/focus
+   Marshal.WriteInt32(payload,16,3); // LVIS_SELECTED | LVIS_FOCUSED mask
    SendMessage(hwnd,0x102B,new IntPtr(-1),payload);
+   Marshal.WriteInt32(payload,12,3); // select/focus one test row
    SendMessage(hwnd,0x102B,new IntPtr(row),payload);
   } finally {Marshal.FreeHGlobal(payload);}
  }
