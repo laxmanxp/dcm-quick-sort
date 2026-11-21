@@ -15,6 +15,7 @@ param(
   [switch]$NativeReportDiagnostic,
   [switch]$NativeReportMouse,
   [switch]$VerifyNativeMulti,
+  [switch]$VerifyRefreshSelection,
   [switch]$VerifyNativeRangeKeyboard,
   [switch]$SkipPointerWheel,
   [switch]$SkipScreenshots,
@@ -384,6 +385,44 @@ try{
    $nativeSelectedCount=[DcmTwoPaneGeometry]::SendMessage($native,0x1032,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64()
    if($nativeSelectedCount -ne 2){throw ('Native Ctrl click selection count mismatch: '+$nativeSelectedCount)}
    Step 'native-report-multiselection' @{native_count=$nativeSelectedCount;legacy_indices=$legacySelected;preserved=$true}
+  }
+  if($VerifyRefreshSelection){
+   if(-not $VerifyNativeMulti){throw 'VerifyRefreshSelection requires VerifyNativeMulti'}
+   # Reload preserves the same two file identities, not merely their old
+   # row numbers. The native and backing list selections must still match.
+   $before=@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016))
+   [DcmNative]::ClickAsync($hwnd,$app.Id,1011)
+   Wait 'Reload preserved two selected files' {@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016)).Count -eq 2}
+   $after=@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016))
+   if(($before -join ',') -cne ($after -join ',')){throw 'Reload changed selected file identities'}
+   $nativeCount=[DcmTwoPaneGeometry]::SendMessage($native,0x1032,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64()
+   if($nativeCount -ne 2){throw 'Reload did not restore the native multi-selection'}
+   Step 'queue-refresh-reload-preserved' @{selected=$after;native_count=$nativeCount}
+
+   [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1030,'01-alpha')
+   Wait 'Name filter narrowed list' {(@([DcmNative]::ListItems($hwnd,$app.Id,1016)) -join '|') -ceq '01-alpha.txt'}
+   Wait 'Name filter retained visible selection' {@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016)).Count -eq 1 -and (TextControl 1005) -ceq '01-alpha'}
+   $nativeCount=[DcmTwoPaneGeometry]::SendMessage($native,0x1032,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64()
+   if($nativeCount -ne 1){throw 'Name filter did not retain native selected file'}
+   Step 'queue-refresh-filter-intersection' @{selected_file='01-alpha.txt';native_count=$nativeCount}
+
+   [DcmNative]::ClickAsync($hwnd,$app.Id,1033)
+   Wait 'Clear Filters restores four rows' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 4}
+   Wait 'Clear Filters preserves surviving selection' {(TextControl 1005) -ceq '01-alpha' -and @([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016)).Count -eq 1}
+   Step 'queue-refresh-clear-preserved' @{selected_file='01-alpha.txt'}
+
+   [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1030,'not-a-real-file')
+   Wait 'Filter hides all files' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 0 -and (TextControl 1005) -ceq ''}
+   if([DcmTwoPaneGeometry]::SendMessage($native,0x1004,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64() -ne 0){throw 'Native queue retained stale rows when filter empty'}
+   [DcmNative]::ClickAsync($hwnd,$app.Id,1033)
+   Wait 'Clear impossible filter restores queue' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 4 -and @([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016)).Count -eq 1}
+   Step 'queue-refresh-hidden-all-safe' @{empty_queue_cleared=$true;fallback_selected=$true}
+
+   SwitchSource $fixture.destination 0
+   if([DcmTwoPaneGeometry]::SendMessage($native,0x1004,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64() -ne 0){throw 'Source switch retained old-folder native rows'}
+   SwitchSource $fixture.inbox 4
+   Wait 'Source return selected only a current-folder file' {@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016)).Count -eq 1}
+   Step 'queue-refresh-source-switch-safe' @{old_folder_selection_cleared=$true;restored_folder_count=4}
   }
   if($VerifyNativeRangeKeyboard){
    # Select first row, then Shift-click third row. This tests range
