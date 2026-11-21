@@ -234,6 +234,9 @@ const (
 	ID_ACTUAL_FILE_TYPE  = 1050
 	ID_QUEUE_TAB         = 1064
 	ID_HISTORY_TAB       = 1065
+	ID_QUEUE_SORT_NAME   = 1066
+	ID_QUEUE_SORT_EXT    = 1067
+	ID_QUEUE_SORT_CREATED = 1068
 
 	ID_MENU_EXIT             = 2001
 	ID_MENU_ABOUT            = 2002
@@ -590,6 +593,9 @@ type appState struct {
 	renameToolCombo, renameToolBtn                                                                                                                     uintptr
 	destAliasCombo, destSuggestionList, fileList, processedList, processedSearchEdit                                                                   uintptr
 	queueTabBtn, historyTabBtn uintptr
+	queueNameHeader, queueExtHeader, queueCreatedHeader uintptr
+	queueSortReverse bool
+	queueRowDetails []queueRowDetail
 	showHistoryTab bool
 	currentLabel, countLabel, processedTitleLabel, statusLabel, keyboardHintLabel                                                                      uintptr
 	nameLabel, renameToolLabel, destinationLabel, pathLabel                                                                                            uintptr
@@ -3266,6 +3272,10 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 		return app.brushWindow
 	case WM_DRAWITEM:
 		dis := (*DRAWITEMSTRUCT)(unsafe.Pointer(lParam))
+		if dis != nil && int(dis.CtlID) == ID_FILE_LIST {
+			drawQueueRow(dis)
+			return 1
+		}
 		if dis != nil && int(dis.CtlID) == ID_MOVE {
 			drawPrimaryButton(dis)
 			return 1
@@ -3320,6 +3330,12 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 				app.showHistoryTab = true
 				layoutUI(hwnd)
 				procSetFocus.Call(app.processedList)
+			case ID_QUEUE_SORT_NAME:
+				activateQueueColumnSort(InboxSortName)
+			case ID_QUEUE_SORT_EXT:
+				activateQueueColumnSort(InboxSortFileType)
+			case ID_QUEUE_SORT_CREATED:
+				activateQueueColumnSort(InboxSortDateCreated)
 			case ID_OPEN:
 				openCurrent()
 			case ID_OPEN_FOLDER:
@@ -3392,6 +3408,8 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 			case ID_FILTER_AGE, ID_FILTER_SIZE:
 				reloadFilesWithFocus(false)
 			case ID_FILTER_SORT:
+				app.queueSortReverse = false
+				updateQueueHeaderCaptions()
 				reloadFilesWithFocus(false)
 			case ID_DEST_ALIAS:
 				if !app.updatingDestinationAlias {
@@ -3549,12 +3567,18 @@ func createUI(hwnd uintptr) {
 	app.zoomFitWidthBtn = createControl("BUTTON", "Width", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 974, 116, 54, 27, hwnd, ID_ZOOM_FIT_WIDTH)
 	app.queueTabBtn = createControl("BUTTON", "Queue", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 20, 116, 74, 26, hwnd, ID_QUEUE_TAB)
 	app.historyTabBtn = createControl("BUTTON", "History", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 100, 116, 74, 26, hwnd, ID_HISTORY_TAB)
-	app.fileList = createControl("LISTBOX", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_TABSTOP|LBS_NOTIFY|LBS_EXTENDEDSEL|WS_VSCROLL, 20, 148, 220, 362, hwnd, ID_FILE_LIST)
+	app.queueNameHeader = createControl("BUTTON", "Name", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 20, 148, 160, 24, hwnd, ID_QUEUE_SORT_NAME)
+	app.queueExtHeader = createControl("BUTTON", "Ext", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 180, 148, 65, 24, hwnd, ID_QUEUE_SORT_EXT)
+	app.queueCreatedHeader = createControl("BUTTON", "Created", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 245, 148, 95, 24, hwnd, ID_QUEUE_SORT_CREATED)
+	app.fileList = createControl("LISTBOX", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_TABSTOP|LBS_NOTIFY|LBS_EXTENDEDSEL|0x0010|0x0040|WS_VSCROLL, 20, 148, 220, 362, hwnd, ID_FILE_LIST)
 	app.previewHwnd = createControl("QuickSortPreview", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_CLIPCHILDREN, 250, 148, 720, 362, hwnd, 0)
 	createPDFPreviewControls()
 	app.processedSearchEdit = createControl("EDIT", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_TABSTOP|ES_AUTOHSCROLL, 980, 148, 260, 25, hwnd, ID_PROCESSED_SEARCH)
 	procSendMessageW.Call(app.processedSearchEdit, EM_SETCUEBANNER, 1, uintptr(unsafe.Pointer(wstr("Search processed..."))))
 	app.processedList = createControl("LISTBOX", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_TABSTOP|LBS_NOTIFY|WS_VSCROLL, 980, 181, 260, 329, hwnd, ID_PROCESSED_LIST)
+	setExplorerTheme(app.queueNameHeader)
+	setExplorerTheme(app.queueExtHeader)
+	setExplorerTheme(app.queueCreatedHeader)
 	setExplorerTheme(app.queueTabBtn)
 	setExplorerTheme(app.historyTabBtn)
 	setExplorerTheme(app.fileList)
@@ -3647,6 +3671,9 @@ func syncQueueHistoryTabVisibility() {
   if visible { procShowWindow.Call(hwnd, SW_SHOW) } else { procShowWindow.Call(hwnd, 0) }
  }
  show(app.fileList, !app.showHistoryTab)
+ show(app.queueNameHeader, !app.showHistoryTab)
+ show(app.queueExtHeader, !app.showHistoryTab)
+ show(app.queueCreatedHeader, !app.showHistoryTab)
  show(app.countLabel, !app.showHistoryTab)
  show(app.processedList, app.showHistoryTab)
  show(app.processedSearchEdit, app.showHistoryTab)
@@ -3765,6 +3792,7 @@ func layoutUI(hwnd uintptr) {
 	procMoveWindow.Call(app.filterClearBtn, uintptr(filters.Clear.X), uintptr(filters.Clear.Y), uintptr(filters.Clear.W), uintptr(filters.Clear.H), 0)
 	recordAttachmentTrace("layout-after-filterClearBtn")
 	recordAttachmentTrace("layout-before-countLabel")
+	updateQueueHeaderCaptions()
 	procMoveWindow.Call(app.queueTabBtn, 20, uintptr(headerY-3), 76, 26, 0)
 	procMoveWindow.Call(app.historyTabBtn, 102, uintptr(headerY-3), 76, 26, 0)
 	procMoveWindow.Call(app.countLabel, 184, uintptr(headerY), uintptr(listW-164), 24, 0)
@@ -3814,7 +3842,11 @@ func layoutUI(hwnd uintptr) {
 	procMoveWindow.Call(app.undoBtn, uintptr(processedX+103), uintptr(previewTop+previewH-34), 74, 30, 0)
 	recordAttachmentTrace("layout-after-undoBtn")
 	recordAttachmentTrace("layout-before-fileList")
-	procMoveWindow.Call(app.fileList, 20, uintptr(previewTop), uintptr(listW), uintptr(previewH), 0)
+	queueNameW, queueExtW, queueCreatedW := queueColumnWidths(listW)
+	procMoveWindow.Call(app.queueNameHeader, 20, uintptr(previewTop), uintptr(queueNameW), 25, 0)
+	procMoveWindow.Call(app.queueExtHeader, uintptr(20+queueNameW), uintptr(previewTop), uintptr(queueExtW), 25, 0)
+	procMoveWindow.Call(app.queueCreatedHeader, uintptr(20+queueNameW+queueExtW), uintptr(previewTop), uintptr(queueCreatedW), 25, 0)
+	procMoveWindow.Call(app.fileList, 20, uintptr(previewTop+27), uintptr(listW), uintptr(previewH-27), 0)
 	recordAttachmentTrace("layout-after-fileList")
 	recordAttachmentTrace("layout-before-previewHwnd")
 	procMoveWindow.Call(app.previewHwnd, uintptr(previewX), uintptr(previewTop), uintptr(previewW), uintptr(previewH), 0)
@@ -3945,6 +3977,7 @@ func populateFileList() {
 	app.updatingFileList = true
 	defer func() { app.updatingFileList = false }()
 	procSendMessageW.Call(app.fileList, LB_RESETCONTENT, 0, 0)
+	app.queueRowDetails = queueDetailsForPaths(app.files)
 	for _, path := range app.files {
 		procSendMessageW.Call(app.fileList, LB_ADDSTRING, 0, uintptr(unsafe.Pointer(wstr(filepath.Base(path)))))
 	}
@@ -4446,6 +4479,9 @@ func reloadFilesWithFocus(focusName bool) {
 		setText(app.statusLabel, "Cannot read source folder: "+err.Error())
 		procInvalidateRect.Call(app.previewHwnd, 0, 1)
 		return
+	}
+	if app.queueSortReverse {
+		for i, j := 0, len(files)-1; i < j; i, j = i+1, j-1 { files[i], files[j] = files[j], files[i] }
 	}
 	app.files = files
 	app.index = 0
