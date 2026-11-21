@@ -1,8 +1,8 @@
 # Run with: powershell -NoProfile -ExecutionPolicy Bypass -File tools/test-pdfium-worker-transition-contract.ps1
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'pdfium-worker-transition-contract.ps1')
-function Event([int]$sequence,[string]$name,[int]$pid=0,[int]$generation=0) {
- return [pscustomobject]@{sequence=$sequence;event=$name;renderer_pid=$pid;generation=$generation}
+function Event([int]$sequence,[string]$name,[int]$rendererId=0,[int]$generation=0) {
+ return [pscustomobject]@{sequence=$sequence;event=$name;renderer_pid=$rendererId;generation=$generation}
 }
 function MustPass([string]$name,[object[]]$events,[int]$expected) {
  $result=Assert-PDFiumWorkerTransitions -Events $events
