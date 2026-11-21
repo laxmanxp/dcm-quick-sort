@@ -2642,7 +2642,7 @@ func primaryFocusOrder() []uintptr {
 		app.filterSizeCombo,
 		app.filterSortCombo,
 		app.filterClearBtn,
-		app.fileList,
+		queueInputHandle(),
 		app.readTextCheck,
 		app.zoomOutBtn,
 		app.zoom100Btn,
@@ -2681,7 +2681,7 @@ func focusableControl(hwnd uintptr) bool {
 
 func movePrimaryFocus(reverse bool) bool {
 	focus, _, _ := procGetFocus.Call()
-	if focus == app.fileList && !reverse {
+	if focus == queueInputHandle() && !reverse {
 		focusNewNameForTyping()
 		return true
 	}
@@ -2771,7 +2771,7 @@ func setBackgroundMoveBusy(busy bool) {
 	app.backgroundMoveBusy = busy
 	controls := []uintptr{
 		app.sourceAliasCombo, app.sourceEdit, app.sourceBtn, app.reloadBtn, app.categoryCombo, app.extensionCombo, app.filterNameEdit, app.filterAgeCombo, app.filterSizeCombo, app.filterSortCombo, app.filterClearBtn, app.readTextCheck,
-		app.fileList, app.nameEdit, app.renameToolCombo, app.renameToolBtn,
+		app.fileList, app.nativeFileList, app.nameEdit, app.renameToolCombo, app.renameToolBtn,
 		app.destAliasCombo, app.destEdit, app.destBtn,
 		app.renameBtn, app.fileFlowBtn, app.moveBtn, app.nextBtn, app.processedSearchEdit, app.processedList, app.undoBatchBtn, app.undoBtn, app.openBtn, app.openFolderBtn,
 	}
@@ -3338,7 +3338,7 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 			case ID_QUEUE_TAB:
 				app.showHistoryTab = false
 				layoutUI(hwnd)
-				procSetFocus.Call(app.fileList)
+				procSetFocus.Call(queueInputHandle())
 			case ID_HISTORY_TAB:
 				app.showHistoryTab = true
 				layoutUI(hwnd)
@@ -4031,7 +4031,8 @@ func selectAllVisibleSourceFiles() bool {
 	procSendMessageW.Call(app.fileList, LB_SETCARETINDEX, uintptr(app.index), 0)
 	app.updatingFileList = false
 	showCurrent(false)
-	procSetFocus.Call(app.fileList)
+	nativeQueueSelectionFromLegacy()
+	procSetFocus.Call(queueInputHandle())
 	return true
 }
 
@@ -4049,6 +4050,7 @@ func syncFileListSelection() {
 		procSendMessageW.Call(app.fileList, LB_SETSEL, 1, uintptr(app.index))
 	}
 	procSendMessageW.Call(app.fileList, LB_SETCARETINDEX, uintptr(app.index), 0)
+	nativeQueueSelectionFromLegacy()
 }
 
 func selectedProcessedViewRow() *processedViewRow {
