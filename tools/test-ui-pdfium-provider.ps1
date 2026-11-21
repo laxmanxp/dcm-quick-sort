@@ -16,6 +16,7 @@ param(
   [switch]$NativeReportMouse,
   [switch]$VerifyNativeMulti,
   [switch]$VerifyRefreshSelection,
+  [switch]$VerifyPreviewCoalescing,
   [switch]$VerifyNativeRangeKeyboard,
   [switch]$SkipPointerWheel,
   [switch]$SkipScreenshots,
@@ -316,7 +317,7 @@ try{
  foreach($key in @('DCM_PDF_PROVIDER','DCM_FLOWPDF_WORKER','DCM_FLOWPDF_PERSISTENT')){$psi.EnvironmentVariables.Remove($key)}
  if($LegacyQueue){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_LISTVIEW']='0'}else{$psi.EnvironmentVariables.Remove('DCM_NATIVE_QUEUE_LISTVIEW')}
  if($VerifyNativeReport -and $LegacyQueue){throw 'Cannot verify native report with legacy rollback enabled'}
- if($NativeReportDiagnostic){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_TRACE']=(Join-Path $lab 'native-report-events.log')}
+ if($NativeReportDiagnostic -or $VerifyPreviewCoalescing){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_TRACE']=(Join-Path $lab 'native-report-events.log')}
  if($NativeReportDiagnostic){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_DIAG_NO_SYNC']='1'}
  if($DevDefault) {
   # A genuine automatic-default acceptance must not supply PDFium-specific
@@ -349,6 +350,24 @@ try{
   $itemCount=[DcmTwoPaneGeometry]::SendMessage($native,0x1004,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64()
   if($columnCount -ne 4 -or $itemCount -ne 4){throw ('Native ListView columns/items mismatch '+$columnCount+'/'+$itemCount)}
   Step 'native-report-four-columns' @{class='SysListView32';header_class='SysHeader32';columns=$columnCount;items=$itemCount;visible=$true}
+  if($VerifyPreviewCoalescing){
+   $nativeRows=@([DcmNative]::ListItems($hwnd,$app.Id,1016))
+   if($nativeRows.Count -lt 4){throw 'Rapid-navigation preview test needs four queue rows'}
+   $tracePath=(Join-Path $lab 'native-report-events.log')
+   Start-Sleep -Milliseconds 250
+   if(Test-Path $tracePath){[IO.File]::WriteAllText($tracePath,'')}
+   foreach($row in @(1,2,3)){
+    if(-not [DcmNativeReportProbe]::ClickRow($native,$row)){throw ('Cannot click native row '+$row)}
+   }
+   $expectedStem=[IO.Path]::GetFileNameWithoutExtension($nativeRows[3])
+   Wait 'Rapid native navigation updates filename' {(TextControl 1005) -ceq $expectedStem}
+   Wait 'Rapid native navigation settles preview' {(Test-Path $tracePath) -and @((Get-Content $tracePath) | Where-Object {$_ -like 'preview-settled *'}).Count -ge 1}
+   Start-Sleep -Milliseconds 350
+   $settled=@((Get-Content $tracePath) | Where-Object {$_ -like 'preview-settled *'})
+   if($settled.Count -ne 1){throw ('Expected one preview for three quick selections; observed '+$settled.Count)}
+   if(-not $settled[0].EndsWith($nativeRows[3])){throw ('Settled wrong file: '+$settled[0])}
+   Step 'native-queue-preview-coalesced' @{rapid_row_changes=3;settled_previews=1;final_file=$nativeRows[3]}
+  }
   Step 'native-report-before-select' @{diagnostic=$NativeReportDiagnostic}
   if($NativeReportDiagnostic -or $NativeReportMouse){
    # A physical-style row click is distinct from LVM_SETITEMSTATE.
