@@ -237,6 +237,7 @@ const (
 	ID_QUEUE_SORT_NAME   = 1066
 	ID_QUEUE_SORT_EXT    = 1067
 	ID_QUEUE_SORT_CREATED = 1068
+	ID_QUEUE_SORT_UPDATED = 1069
 
 	ID_MENU_EXIT             = 2001
 	ID_MENU_ABOUT            = 2002
@@ -593,7 +594,7 @@ type appState struct {
 	renameToolCombo, renameToolBtn                                                                                                                     uintptr
 	destAliasCombo, destSuggestionList, fileList, processedList, processedSearchEdit                                                                   uintptr
 	queueTabBtn, historyTabBtn uintptr
-	queueNameHeader, queueExtHeader, queueCreatedHeader uintptr
+	queueNameHeader, queueExtHeader, queueCreatedHeader, queueUpdatedHeader uintptr
 	queueSortReverse bool
 	queueRowDetails []queueRowDetail
 	showHistoryTab bool
@@ -3336,6 +3337,8 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 				activateQueueColumnSort(InboxSortFileType)
 			case ID_QUEUE_SORT_CREATED:
 				activateQueueColumnSort(InboxSortDateCreated)
+			case ID_QUEUE_SORT_UPDATED:
+				activateQueueColumnSort(InboxSortDateUpdated)
 			case ID_OPEN:
 				openCurrent()
 			case ID_OPEN_FOLDER:
@@ -3570,6 +3573,7 @@ func createUI(hwnd uintptr) {
 	app.queueNameHeader = createControl("BUTTON", "Name", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 20, 148, 160, 24, hwnd, ID_QUEUE_SORT_NAME)
 	app.queueExtHeader = createControl("BUTTON", "Ext", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 180, 148, 65, 24, hwnd, ID_QUEUE_SORT_EXT)
 	app.queueCreatedHeader = createControl("BUTTON", "Created", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 245, 148, 95, 24, hwnd, ID_QUEUE_SORT_CREATED)
+	app.queueUpdatedHeader = createControl("BUTTON", "Updated", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 340, 148, 95, 24, hwnd, ID_QUEUE_SORT_UPDATED)
 	app.fileList = createControl("LISTBOX", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_TABSTOP|LBS_NOTIFY|LBS_EXTENDEDSEL|0x0010|0x0040|WS_VSCROLL, 20, 148, 220, 362, hwnd, ID_FILE_LIST)
 	app.previewHwnd = createControl("QuickSortPreview", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_CLIPCHILDREN, 250, 148, 720, 362, hwnd, 0)
 	createPDFPreviewControls()
@@ -3579,6 +3583,7 @@ func createUI(hwnd uintptr) {
 	setExplorerTheme(app.queueNameHeader)
 	setExplorerTheme(app.queueExtHeader)
 	setExplorerTheme(app.queueCreatedHeader)
+	setExplorerTheme(app.queueUpdatedHeader)
 	setExplorerTheme(app.queueTabBtn)
 	setExplorerTheme(app.historyTabBtn)
 	setExplorerTheme(app.fileList)
@@ -3674,6 +3679,7 @@ func syncQueueHistoryTabVisibility() {
  show(app.queueNameHeader, !app.showHistoryTab)
  show(app.queueExtHeader, !app.showHistoryTab)
  show(app.queueCreatedHeader, !app.showHistoryTab)
+ show(app.queueUpdatedHeader, !app.showHistoryTab)
  show(app.countLabel, !app.showHistoryTab)
  show(app.processedList, app.showHistoryTab)
  show(app.processedSearchEdit, app.showHistoryTab)
@@ -3842,10 +3848,11 @@ func layoutUI(hwnd uintptr) {
 	procMoveWindow.Call(app.undoBtn, uintptr(processedX+103), uintptr(previewTop+previewH-34), 74, 30, 0)
 	recordAttachmentTrace("layout-after-undoBtn")
 	recordAttachmentTrace("layout-before-fileList")
-	queueNameW, queueExtW, queueCreatedW := queueColumnWidths(listW)
+	queueNameW, queueExtW, queueCreatedW, queueUpdatedW := queueColumnWidths(listW)
 	procMoveWindow.Call(app.queueNameHeader, 20, uintptr(previewTop), uintptr(queueNameW), 25, 0)
 	procMoveWindow.Call(app.queueExtHeader, uintptr(20+queueNameW), uintptr(previewTop), uintptr(queueExtW), 25, 0)
 	procMoveWindow.Call(app.queueCreatedHeader, uintptr(20+queueNameW+queueExtW), uintptr(previewTop), uintptr(queueCreatedW), 25, 0)
+	procMoveWindow.Call(app.queueUpdatedHeader, uintptr(20+queueNameW+queueExtW+queueCreatedW), uintptr(previewTop), uintptr(queueUpdatedW), 25, 0)
 	procMoveWindow.Call(app.fileList, 20, uintptr(previewTop+27), uintptr(listW), uintptr(previewH-27), 0)
 	recordAttachmentTrace("layout-after-fileList")
 	recordAttachmentTrace("layout-before-previewHwnd")
