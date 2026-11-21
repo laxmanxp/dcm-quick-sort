@@ -2,7 +2,7 @@
 
 package main
 
-import "unsafe"
+import ("unsafe"; "syscall")
 
 // SysTabControl32 is a native Windows common control. The existing Queue and
 // History child windows remain independent; the tab changes only visibility.
@@ -38,7 +38,7 @@ type nativeNotifyHeader struct {
 }
 
 func createNativeQueueHistoryTabs(parent uintptr) uintptr {
- commonControls := syscallComctl32.NewProc("InitCommonControlsEx")
+ commonControls := syscall.NewLazyDLL("comctl32.dll").NewProc("InitCommonControlsEx")
  init := nativeCommonControlsInit{Size:uint32(unsafe.Sizeof(nativeCommonControlsInit{})),Classes:iccTabClasses}
  commonControls.Call(uintptr(unsafe.Pointer(&init)))
  hwnd := createControl("SysTabControl32","",WS_CHILD|WS_VISIBLE|WS_TABSTOP,20,116,350,27,parent,nativeTabControlID)
