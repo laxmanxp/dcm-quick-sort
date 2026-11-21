@@ -98,19 +98,18 @@ public static class DcmNativeReportProbe {
  [DllImport("user32.dll", CharSet=CharSet.Unicode, EntryPoint="SendMessageW")]
  public static extern IntPtr SendMessage(IntPtr hWnd,uint msg,IntPtr wParam,IntPtr lParam);
  public static bool ClickRow(IntPtr hwnd,int row) {
-  // LVM_GETITEMRECT requires RECT.left=LVIR_BOUNDS before dispatch.
-  IntPtr rect=Marshal.AllocHGlobal(16);
-  try {
-   for(int i=0;i<16;i++) Marshal.WriteByte(rect,i,0);
-   SendMessage(hwnd,0x1013,new IntPtr(row),IntPtr.Zero); // LVM_ENSUREVISIBLE
-   if(SendMessage(hwnd,0x100E,new IntPtr(row),rect)==IntPtr.Zero) return false;
-   int x=Marshal.ReadInt32(rect,0)+Math.Min(38,Math.Max(8,(Marshal.ReadInt32(rect,8)-Marshal.ReadInt32(rect,0))/2));
-   int y=(Marshal.ReadInt32(rect,4)+Marshal.ReadInt32(rect,12))/2;
-   IntPtr point=new IntPtr(((y&0xffff)<<16)|(x&0xffff));
-   SendMessage(hwnd,0x0201,new IntPtr(1),point); // WM_LBUTTONDOWN
-   SendMessage(hwnd,0x0202,IntPtr.Zero,point); // WM_LBUTTONUP
-   return true;
-  } finally {Marshal.FreeHGlobal(rect);}
+  // Test fixture uses a native report view with four to eight visible rows.
+  // Do not pass RECT pointers across process boundaries: pointer parameters
+  // in LVM_GETITEMRECT belong to the target process, not this harness.
+  int count=SendMessage(hwnd,0x1004,IntPtr.Zero,IntPtr.Zero).ToInt32();
+  if(row<0||row>=count)return false;
+  SendMessage(hwnd,0x1013,new IntPtr(row),IntPtr.Zero); // LVM_ENSUREVISIBLE
+  int x=65;
+  int y=45+row*21;
+  IntPtr point=new IntPtr(((y&0xffff)<<16)|(x&0xffff));
+  SendMessage(hwnd,0x0201,new IntPtr(1),point);
+  SendMessage(hwnd,0x0202,IntPtr.Zero,point);
+  return true;
  }
  public static void SelectRow(IntPtr hwnd,int row) {
   IntPtr payload=Marshal.AllocHGlobal(88);
