@@ -280,7 +280,7 @@ try{
  if($hwnd -eq [IntPtr]::Zero){throw 'Candidate HWND missing'}
  Wait 'fixture loaded' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 4}
  if($VerifyColumns){
-  foreach($id in @(1066,1067,1068)){if(-not(Is-Visible $id)){throw ('Queue header missing: '+$id)}}
+  foreach($id in @(1066,1067,1068,1069)){if(-not(Is-Visible $id)){throw ('Queue header missing: '+$id)}}
   $expected=@('01-alpha.txt','02-bravo.txt','03-charlie.txt','08-preview.pdf')
   [DcmNative]::ClickAsync($hwnd,$app.Id,1066)
   Wait 'Name ascending by header' {(@([DcmNative]::ListItems($hwnd,$app.Id,1016)) -join '|') -ceq ($expected -join '|')}
@@ -308,7 +308,13 @@ try{
   [array]::Reverse($createdOrder)
   Wait 'Created reverse on second click' {(@([DcmNative]::ListItems($hwnd,$app.Id,1016)) -join '|') -ceq ($createdOrder -join '|')}
   [DcmNative]::ClickAsync($hwnd,$app.Id,1068)
-  Step 'queue-column-header-sort' @{name_ascending=$true;name_descending=$true;extension_ascending=$true;extension_descending=$true;created_toggle=$true}
+  [DcmNative]::ClickAsync($hwnd,$app.Id,1069)
+  $updatedOrder=@([DcmNative]::ListItems($hwnd,$app.Id,1016))
+  [DcmNative]::ClickAsync($hwnd,$app.Id,1069)
+  [array]::Reverse($updatedOrder)
+  Wait 'Updated reverse on second click' {(@([DcmNative]::ListItems($hwnd,$app.Id,1016)) -join '|') -ceq ($updatedOrder -join '|')}
+  [DcmNative]::ClickAsync($hwnd,$app.Id,1069)
+  Step 'queue-column-header-sort' @{name_ascending=$true;name_descending=$true;extension_ascending=$true;extension_descending=$true;created_toggle=$true;updated_toggle=$true}
  }
  if($VerifyTwoPane){
   Verify-TwoPaneTab $false
