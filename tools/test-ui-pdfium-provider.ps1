@@ -107,7 +107,7 @@ public static class DcmNativeReportProbe {
   // across processes while the Go UI thread is busy with previews.
   if(row<0||row>16)return false;
   int x=65;
-  int y=45+row*21;
+  int y=45+row*19; // center of report-view rows at tested Win32 DPI
   IntPtr point=new IntPtr(((y&0xffff)<<16)|(x&0xffff));
   return PostMessage(hwnd,0x0201,new IntPtr(1),point)
       && PostMessage(hwnd,0x0202,IntPtr.Zero,point);
