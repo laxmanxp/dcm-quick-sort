@@ -156,3 +156,20 @@ Verified on Lenovo:
 Production/release versions of QuickSort and FileFlow Suite were not changed.
 The previous context-menu blocker no longer applies to QuickSort; the historic
 failed experiments above are retained only as background evidence.
+
+## Post-promotion native sorting and focus correction
+
+Corrected the native header sorting path so it restores multi-selected files
+into the visible `SysListView32` after sorting and returns focus to
+`queueInputHandle()`, rather than the hidden legacy listbox. Added a headed
+GUI assertion that native and backing listbox selections agree after Name and
+Updated sorting, with the active rename field representing a selected file.
+
+Lenovo receipts:
+- Native default plus selection-after-sort GUI: `dcm-pdfium-gui-20261121-154945-11036cd` — PASS, normal exit.
+- Full Go regression suite and legacy rollback GUI:
+  `dcm-pdfium-gui-20261121-155055-76e824a` — PASS, normal exit.
+
+The standard QuickSort workflow remains free of Windows Shell context menus;
+FlowSearch should own Explorer-style context actions as an independent feature.
+Production binaries/installations were not changed.
