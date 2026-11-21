@@ -38,7 +38,8 @@ func queueDetailsForPaths(paths []string) []queueRowDetail {
 
 func queueColumnWidths(width int32) (int32,int32,int32,int32) {
  if width<1 {return 0,0,0,0}
- ext:=width*16/100
+ ext:=width*19/100
+ if width>=400 && ext<105 {ext=105}
  if ext<55 {ext=55}
  created:=width*23/100
  if created<62 {created=62}
