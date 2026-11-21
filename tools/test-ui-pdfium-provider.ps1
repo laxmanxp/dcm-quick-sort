@@ -484,6 +484,7 @@ try{
   [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1046,'')
   Wait 'History search cleared' {@([DcmNative]::ListItems($hwnd,$app.Id,1017)).Count -gt 0}
   Step 'two-pane-history-search' @{history_records_restored=$true;search_filters=$true}
+  Capture 'two-pane-history-after-rename' 'teal'
   [DcmNative]::ClickAsync($hwnd,$app.Id,1064)
   Wait 'Queue restored after history' {(Is-Visible 1016) -and -not (Is-Visible 1017)}
  }
