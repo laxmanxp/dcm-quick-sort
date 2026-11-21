@@ -16,6 +16,7 @@ type queueRowDetail struct {
  Name string
  Ext string
  Created string
+ Updated string
 }
 
 func queueDetailsForPaths(paths []string) []queueRowDetail {
@@ -24,31 +25,35 @@ func queueDetailsForPaths(paths []string) []queueRowDetail {
   name:=filepath.Base(path)
   extension:=strings.TrimPrefix(strings.ToUpper(filepath.Ext(path)),".")
   created:="—"
+  updated:="—"
   if info,err:=os.Stat(path);err==nil {
    t:=fileCreatedTime(path,info)
-   if !t.IsZero() {created=t.In(time.Local).Format("02 Jan 2006")}
+   if !t.IsZero() {created=t.In(time.Local).Format("02 Jan 06")}
+   if !info.ModTime().IsZero() {updated=info.ModTime().In(time.Local).Format("02 Jan 06")}
   }
-  out[i]=queueRowDetail{Name:name,Ext:extension,Created:created}
+  out[i]=queueRowDetail{Name:name,Ext:extension,Created:created,Updated:updated}
  }
  return out
 }
 
-func queueColumnWidths(width int32) (int32,int32,int32) {
- if width<1 {return 0,0,0}
- ext:=width*18/100
+func queueColumnWidths(width int32) (int32,int32,int32,int32) {
+ if width<1 {return 0,0,0,0}
+ ext:=width*16/100
  if ext<55 {ext=55}
- created:=width*30/100
- if created<105 {created=105}
- name:=width-ext-created
+ created:=width*23/100
+ if created<79 {created=79}
+ updated:=width*23/100
+ if updated<79 {updated=79}
+ name:=width-ext-created-updated
  if name<80 {
   name=80
-  created=width-name-ext
+  updated=width-name-ext-created
  }
- return name,ext,created
+ return name,ext,created,updated
 }
 
 func queueSortIsDescending(sortKey InboxSort,reverse bool) bool {
- return (sortKey==InboxSortDateCreated || sortKey==InboxSortDateCreatedTypeName)!=reverse
+ return (sortKey==InboxSortDateCreated || sortKey==InboxSortDateUpdated || sortKey==InboxSortDateCreatedTypeName)!=reverse
 }
 
 func updateQueueHeaderCaptions() {
@@ -57,6 +62,7 @@ func updateQueueHeaderCaptions() {
   {app.queueNameHeader,"Name",InboxSortName},
   {app.queueExtHeader,"Extension",InboxSortFileType},
   {app.queueCreatedHeader,"Created",InboxSortDateCreated},
+  {app.queueUpdatedHeader,"Updated",InboxSortDateUpdated},
  }
  for _,item:=range captions {
   if item.hwnd==0 {continue}
@@ -116,11 +122,12 @@ func drawQueueRow(dis *DRAWITEMSTRUCT) {
  oldFont:=uintptr(0)
  if app.uiFont!=0 {oldFont,_,_=procSelectObject.Call(dis.HDC,app.uiFont)}
  width:=dis.RcItem.Right-dis.RcItem.Left
- nameW,extW,_:=queueColumnWidths(width)
+ nameW,extW,createdW,_:=queueColumnWidths(width)
  fields:=[]struct{txt string;left,right int32}{
   {row.Name,dis.RcItem.Left+5,dis.RcItem.Left+nameW-4},
   {row.Ext,dis.RcItem.Left+nameW+4,dis.RcItem.Left+nameW+extW-4},
-  {row.Created,dis.RcItem.Left+nameW+extW+4,dis.RcItem.Right-5},
+  {row.Created,dis.RcItem.Left+nameW+extW+4,dis.RcItem.Left+nameW+extW+createdW-4},
+  {row.Updated,dis.RcItem.Left+nameW+extW+createdW+4,dis.RcItem.Right-5},
  }
  for _,field:=range fields {
   if field.right<=field.left {continue}
