@@ -232,6 +232,8 @@ const (
 	ID_UNDO_BATCH        = 1048
 	ID_ACTUAL_FILENAME   = 1049
 	ID_ACTUAL_FILE_TYPE  = 1050
+	ID_QUEUE_TAB         = 1064
+	ID_HISTORY_TAB       = 1065
 
 	ID_MENU_EXIT             = 2001
 	ID_MENU_ABOUT            = 2002
@@ -587,6 +589,8 @@ type appState struct {
 	filterNameEdit, filterAgeCombo, filterSizeCombo, filterSortLabel, filterSortCombo, filterClearBtn                                                  uintptr
 	renameToolCombo, renameToolBtn                                                                                                                     uintptr
 	destAliasCombo, destSuggestionList, fileList, processedList, processedSearchEdit                                                                   uintptr
+	queueTabBtn, historyTabBtn uintptr
+	showHistoryTab bool
 	currentLabel, countLabel, processedTitleLabel, statusLabel, keyboardHintLabel                                                                      uintptr
 	nameLabel, renameToolLabel, destinationLabel, pathLabel                                                                                            uintptr
 	actualNameLabel, actualNameEdit, actualTypeLabel                                                                                                  uintptr
@@ -3308,6 +3312,14 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 				undoSelectedProcessed()
 			case ID_UNDO_BATCH:
 				undoLatestBatch()
+			case ID_QUEUE_TAB:
+				app.showHistoryTab = false
+				layoutUI(hwnd)
+				procSetFocus.Call(app.fileList)
+			case ID_HISTORY_TAB:
+				app.showHistoryTab = true
+				layoutUI(hwnd)
+				procSetFocus.Call(app.processedList)
 			case ID_OPEN:
 				openCurrent()
 			case ID_OPEN_FOLDER:
@@ -3535,12 +3547,16 @@ func createUI(hwnd uintptr) {
 	app.zoomInBtn = createControl("BUTTON", "+", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 888, 116, 34, 27, hwnd, ID_ZOOM_IN)
 	app.zoomFitBtn = createControl("BUTTON", "Fit", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 926, 116, 44, 27, hwnd, ID_ZOOM_FIT)
 	app.zoomFitWidthBtn = createControl("BUTTON", "Width", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 974, 116, 54, 27, hwnd, ID_ZOOM_FIT_WIDTH)
+	app.queueTabBtn = createControl("BUTTON", "Queue", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 20, 116, 74, 26, hwnd, ID_QUEUE_TAB)
+	app.historyTabBtn = createControl("BUTTON", "History", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 100, 116, 74, 26, hwnd, ID_HISTORY_TAB)
 	app.fileList = createControl("LISTBOX", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_TABSTOP|LBS_NOTIFY|LBS_EXTENDEDSEL|WS_VSCROLL, 20, 148, 220, 362, hwnd, ID_FILE_LIST)
 	app.previewHwnd = createControl("QuickSortPreview", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_CLIPCHILDREN, 250, 148, 720, 362, hwnd, 0)
 	createPDFPreviewControls()
 	app.processedSearchEdit = createControl("EDIT", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_TABSTOP|ES_AUTOHSCROLL, 980, 148, 260, 25, hwnd, ID_PROCESSED_SEARCH)
 	procSendMessageW.Call(app.processedSearchEdit, EM_SETCUEBANNER, 1, uintptr(unsafe.Pointer(wstr("Search processed..."))))
 	app.processedList = createControl("LISTBOX", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_TABSTOP|LBS_NOTIFY|WS_VSCROLL, 980, 181, 260, 329, hwnd, ID_PROCESSED_LIST)
+	setExplorerTheme(app.queueTabBtn)
+	setExplorerTheme(app.historyTabBtn)
 	setExplorerTheme(app.fileList)
 	setExplorerTheme(app.actualNameEdit)
 	setExplorerTheme(app.processedSearchEdit)
@@ -3623,6 +3639,29 @@ func createUI(hwnd uintptr) {
 	setExplorerTheme(app.destSuggestionList)
 }
 
+// The history journal and Undo handlers stay live; tab changes only alter
+// the visibility of the two existing list controls.
+func syncQueueHistoryTabVisibility() {
+ show := func(hwnd uintptr, visible bool) {
+  if hwnd == 0 { return }
+  if visible { procShowWindow.Call(hwnd, SW_SHOW) } else { procShowWindow.Call(hwnd, 0) }
+ }
+ show(app.fileList, !app.showHistoryTab)
+ show(app.countLabel, !app.showHistoryTab)
+ show(app.processedList, app.showHistoryTab)
+ show(app.processedSearchEdit, app.showHistoryTab)
+ show(app.processedTitleLabel, app.showHistoryTab)
+ show(app.undoBatchBtn, app.showHistoryTab)
+ show(app.undoBtn, app.showHistoryTab)
+ if app.showHistoryTab {
+  setText(app.queueTabBtn, "Queue")
+  setText(app.historyTabBtn, "[History]")
+ } else {
+  setText(app.queueTabBtn, "[Queue]")
+  setText(app.historyTabBtn, "History")
+ }
+}
+
 func layoutUI(hwnd uintptr) {
 	beginLayoutTrace(hwnd)
 	defer endLayoutTrace(hwnd)
@@ -3647,18 +3686,17 @@ func layoutUI(hwnd uintptr) {
 	if previewH < 245 {
 		previewH = 245
 	}
-	listW := int32(220)
-	processedW := int32(260)
-	if sumatraView != nil && sumatraView.child != 0 {
-		listW, processedW = sumatraSidebarWidths(w)
-	}
+	// Two working panes: queue/history share the left, preview fills the right.
+	// Keep at least 420 px for preview, including on the minimum-size window.
+	listW := w * 35 / 100
+	if listW < 260 { listW = 260 }
+	if listW > 460 { listW = 460 }
+	if w-listW-50 < 420 { listW = w-470 }
+	processedW := listW
 	gap := int32(10)
 	previewX := int32(20) + listW + gap
-	processedX := w - 20 - processedW
-	previewW := processedX - gap - previewX
-	if previewW < 420 {
-		previewW = 420
-	}
+	processedX := int32(20)
+	previewW := w - 20 - previewX
 	aliasWTop := int32(150)
 	topGap := int32(8)
 	reloadW, recoveryW := int32(80), int32(100)
@@ -3725,7 +3763,9 @@ func layoutUI(hwnd uintptr) {
 	procMoveWindow.Call(app.filterClearBtn, uintptr(filters.Clear.X), uintptr(filters.Clear.Y), uintptr(filters.Clear.W), uintptr(filters.Clear.H), 0)
 	recordAttachmentTrace("layout-after-filterClearBtn")
 	recordAttachmentTrace("layout-before-countLabel")
-	procMoveWindow.Call(app.countLabel, 20, uintptr(headerY), uintptr(listW), 24, 0)
+	procMoveWindow.Call(app.queueTabBtn, 20, uintptr(headerY-3), 76, 26, 0)
+	procMoveWindow.Call(app.historyTabBtn, 102, uintptr(headerY-3), 76, 26, 0)
+	procMoveWindow.Call(app.countLabel, 184, uintptr(headerY), uintptr(listW-164), 24, 0)
 	recordAttachmentTrace("layout-after-countLabel")
 	zoomGap := int32(4)
 	zoomOutW, zoom100W, zoomInW, zoomFitW, zoomFitWidthW := int32(34), int32(56), int32(34), int32(44), int32(54)
@@ -3764,13 +3804,13 @@ func layoutUI(hwnd uintptr) {
 	recordAttachmentTrace("layout-after-zoomFitWidthBtn")
 	processed := compactProcessedLayout(processedX, processedW, headerY, previewH)
 	recordAttachmentTrace("layout-before-processedTitleLabel")
-	procMoveWindow.Call(app.processedTitleLabel, uintptr(processed.Title.X), uintptr(processed.Title.Y), uintptr(processed.Title.W), uintptr(processed.Title.H), 0)
+	procMoveWindow.Call(app.processedTitleLabel, 184, uintptr(headerY), uintptr(listW-164), 24, 0)
 	recordAttachmentTrace("layout-after-processedTitleLabel")
 	recordAttachmentTrace("layout-before-undoBatchBtn")
-	procMoveWindow.Call(app.undoBatchBtn, uintptr(processed.UndoBatch.X), uintptr(processed.UndoBatch.Y), uintptr(processed.UndoBatch.W), uintptr(processed.UndoBatch.H), 0)
+	procMoveWindow.Call(app.undoBatchBtn, uintptr(processedX), uintptr(previewTop+previewH-34), 95, 30, 0)
 	recordAttachmentTrace("layout-after-undoBatchBtn")
 	recordAttachmentTrace("layout-before-undoBtn")
-	procMoveWindow.Call(app.undoBtn, uintptr(processed.Undo.X), uintptr(processed.Undo.Y), uintptr(processed.Undo.W), uintptr(processed.Undo.H), 0)
+	procMoveWindow.Call(app.undoBtn, uintptr(processedX+103), uintptr(previewTop+previewH-34), 74, 30, 0)
 	recordAttachmentTrace("layout-after-undoBtn")
 	recordAttachmentTrace("layout-before-fileList")
 	procMoveWindow.Call(app.fileList, 20, uintptr(previewTop), uintptr(listW), uintptr(previewH), 0)
@@ -3779,10 +3819,12 @@ func layoutUI(hwnd uintptr) {
 	procMoveWindow.Call(app.previewHwnd, uintptr(previewX), uintptr(previewTop), uintptr(previewW), uintptr(previewH), 0)
 	recordAttachmentTrace("layout-after-previewHwnd")
 	recordAttachmentTrace("layout-before-processedSearchEdit")
-	procMoveWindow.Call(app.processedSearchEdit, uintptr(processed.Search.X), uintptr(processed.Search.Y), uintptr(processed.Search.W), uintptr(processed.Search.H), 0)
+	procMoveWindow.Call(app.processedSearchEdit, uintptr(processedX), uintptr(previewTop), uintptr(processedW), 27, 0)
 	recordAttachmentTrace("layout-after-processedSearchEdit")
 	recordAttachmentTrace("layout-before-processedList")
-	procMoveWindow.Call(app.processedList, uintptr(processed.List.X), uintptr(processed.List.Y), uintptr(processed.List.W), uintptr(processed.List.H), 0)
+	procMoveWindow.Call(app.processedList, uintptr(processedX), uintptr(previewTop+33), uintptr(processedW), uintptr(previewH-73), 0)
+	// Preserve each list and its current selection when switching tabs.
+	syncQueueHistoryTabVisibility()
 	recordAttachmentTrace("layout-after-processedList")
 	actualY := previewTop + 10 + previewH
 	// Keep the lower form on a single alignment grid. Labels and controls move
