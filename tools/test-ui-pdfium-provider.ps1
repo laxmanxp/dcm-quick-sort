@@ -365,6 +365,9 @@ try{
   Wait 'Native Updated header reverses order' {(@([DcmNative]::ListItems($hwnd,$app.Id,1016)) -join '|') -ceq ($updatedFirst -join '|')}
   Step 'native-report-updated-header-sort' @{updated_ascending_and_descending=$true}
   if($VerifyNativeContext){
+   [void][DcmTwoPaneGeometry]::SendMessage([IntPtr]$hwnd,0x007B,$native,[IntPtr](-1))
+   Wait 'Native keyboard context record captured' {(Test-Path (Join-Path $lab 'native-report-events.log')) -and ((Get-Content (Join-Path $lab 'native-report-events.log') -Tail 10) -match 'context-selected').Count -gt 0}
+   Step 'native-report-keyboard-context-hit' @{event=((Get-Content (Join-Path $lab 'native-report-events.log') | Where-Object {$_ -like 'context-selected*'} | Select-Object -Last 1));native_control=$true}
    $rc=New-Object DcmTwoPaneGeometry+RECT
    if(-not [DcmTwoPaneGeometry]::GetWindowRect($native,[ref]$rc)){throw 'Cannot locate native table for context test'}
    $cx=$rc.Left+65; $cy=$rc.Top+69
