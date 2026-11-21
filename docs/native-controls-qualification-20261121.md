@@ -68,3 +68,19 @@ Until native Ctrl/Shift multi-selection, actual Shell context menus, keyboard
 navigation, Updated-column sorting and full mixed-document acceptance pass,
 `DCM_NATIVE_QUEUE_LISTVIEW=1` remains a development-only opt-in, not a
 production default. The regular two-pane listbox and native tabs are retained.
+
+## Final regression checkpoint
+
+GitHub branch source commit `9461a17` passed the full Go regression suite
+(`go test -p 1 -vet=off -tags pdfium_dev ./... -count=1`) on Lenovo.
+The standard two-pane Queue/History + owner-drawn four-column queue GUI
+also passed with normal exit in receipt
+`dcm-pdfium-gui-20261121-144446-87faaa6`.
+The native ListView enabled by `DCM_NATIVE_QUEUE_LISTVIEW=1`, tested with
+mouse-style row selection and native Name header sorting, passed with normal
+exit in receipt `dcm-pdfium-gui-20261121-144512-5f62f5a`.
+
+These passing runs **do not qualify** native Shell context menus or
+Ctrl/Shift multi-selection. An experimental context-menu probe stalled and
+was not counted as a pass. Keep the report ListView opt-in and retain the
+proven owner-drawn listbox as the default.
