@@ -3651,8 +3651,10 @@ func syncQueueHistoryTabVisibility() {
  show(app.processedList, app.showHistoryTab)
  show(app.processedSearchEdit, app.showHistoryTab)
  show(app.processedTitleLabel, app.showHistoryTab)
- show(app.undoBatchBtn, app.showHistoryTab)
- show(app.undoBtn, app.showHistoryTab)
+ // Undo must remain available during Queue processing; it is not a
+ // History-only action. Both buttons live beside the lower action row.
+ show(app.undoBatchBtn, true)
+ show(app.undoBtn, true)
  if app.showHistoryTab {
   setText(app.queueTabBtn, "Queue")
   setText(app.historyTabBtn, "[History]")
@@ -3900,6 +3902,10 @@ func layoutUI(hwnd uintptr) {
 	procMoveWindow.Call(app.destOpenBtn, uintptr(openDestX), uintptr(destY-1), uintptr(openDestW), 29, 0)
 	recordAttachmentTrace("layout-after-destOpenBtn")
 	by := y + 85
+	// Keep transactional Undo available from either Queue or History.
+	// Position it in the main action row rather than inside the left tab.
+	procMoveWindow.Call(app.undoBatchBtn, uintptr(w-215), uintptr(by), 105, 34, 0)
+	procMoveWindow.Call(app.undoBtn, uintptr(w-100), uintptr(by), 80, 34, 0)
 	recordAttachmentTrace("layout-before-renameBtn")
 	procMoveWindow.Call(app.renameBtn, 20, uintptr(by), 90, 34, 0)
 	recordAttachmentTrace("layout-after-renameBtn")
