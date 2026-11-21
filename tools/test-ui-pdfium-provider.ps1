@@ -14,6 +14,7 @@ param(
   [switch]$NativeReportDiagnostic,
   [switch]$NativeReportMouse,
   [switch]$VerifyNativeContext,
+  [switch]$VerifyNativeMulti,
   [switch]$SkipPointerWheel,
   [switch]$SkipScreenshots,
   [ValidateRange(0,160)][int]$StressSwitches=0
@@ -347,6 +348,22 @@ try{
   $expectedStem=[IO.Path]::GetFileNameWithoutExtension($actualRows[$actualIndex])
   Wait 'Native report selection mirrored into QuickSort workflow' { (TextControl 1005) -ceq $expectedStem }
   Step 'native-report-selection-adapter' @{selected_name=(TextControl 1005);selected_index=$actualIndex;preview_selection_updated=$true}
+  if($VerifyNativeMulti){
+   # Use real ListView mouse messages, keeping the standard app/adapter path.
+   # The original row is selected. Ctrl-click the adjacent row and verify
+   # BOTH native selections are visible through the legacy queue adapter.
+   $nextRowPoint=[IntPtr]((88 -shl 16) -bor 65)
+   [void][DcmTwoPaneGeometry]::SendMessage($native,0x0201,[IntPtr]9,$nextRowPoint)
+   [void][DcmTwoPaneGeometry]::SendMessage($native,0x0202,[IntPtr]8,$nextRowPoint)
+   $legacySelected=@()
+   Wait 'Native Ctrl selection propagated into queue' {
+    $script:legacySelected=@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016))
+    return $script:legacySelected.Count -eq 2
+   }
+   $nativeSelectedCount=[DcmTwoPaneGeometry]::SendMessage($native,0x1032,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64()
+   if($nativeSelectedCount -ne 2){throw ('Native Ctrl click selection count mismatch: '+$nativeSelectedCount)}
+   Step 'native-report-multiselection' @{native_count=$nativeSelectedCount;legacy_indices=$legacySelected;preserved=$true}
+  }
   # Clicking the native SysHeader32 (not a surrogate button) should sort the
   # same underlying file array used by Rename/Move and all other operations.
   [void][DcmTwoPaneGeometry]::SendMessage($header,0x0201,[IntPtr]1,[IntPtr]0x000C000A)
