@@ -127,8 +127,11 @@ func nativeQueueContextHit(point POINT, keyboard bool) (int, bool, POINT) {
  return index,true,point
 }
 
+func nativeQueueContextProbeEnabled() bool {
+ return os.Getenv("DCM_NATIVE_QUEUE_CONTEXT_PROBE")=="1"
+}
 func nativeQueueContextSelected(index int) bool {
- if os.Getenv("DCM_NATIVE_QUEUE_CONTEXT_PROBE")!="1" {return false}
+ if !nativeQueueContextProbeEnabled() {return false}
  nativeQueueTrace(fmt.Sprintf("context-selected index=%d",index))
  return true
 }
