@@ -483,7 +483,7 @@ func TestKeyboardFocusShortcutsAreWired(t *testing.T) {
 
 func TestTabFromFileListGoesDirectlyToNewName(t *testing.T) {
 	src := windowsMainSource(t)
-	if !strings.Contains(src, `if focus == app.fileList && !reverse {`) || !strings.Contains(src, `focusNewNameForTyping()`) {
+	if !strings.Contains(src, `if focus == queueInputHandle() && !reverse {`) || !strings.Contains(src, `focusNewNameForTyping()`) || !strings.Contains(src, `func queueInputHandle() uintptr {`) {
 		t.Fatal("Tab from file list does not jump directly to New Name")
 	}
 }
