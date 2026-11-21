@@ -335,7 +335,8 @@ try{
   }else{
    [DcmNativeReportProbe]::SelectRow($native,2)
   }
-  Step 'native-report-after-select' @{diagnostic=$NativeReportDiagnostic}
+  $selectedNative=[DcmTwoPaneGeometry]::SendMessage($native,0x100C,[IntPtr](-1),[IntPtr]2).ToInt64()
+  Step 'native-report-after-select' @{diagnostic=$NativeReportDiagnostic;selected_index=$selectedNative;current_name=(TextControl 1005)}
   Wait 'Native report selection mirrored into QuickSort workflow' { (TextControl 1005) -ceq '03-charlie' }
   Step 'native-report-selection-adapter' @{selected_name=(TextControl 1005);preview_selection_updated=$true}
   # Clicking the native SysHeader32 (not a surrogate button) should sort the
