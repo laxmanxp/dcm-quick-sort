@@ -79,6 +79,15 @@ function Rect([int]$id){
  if(-not [DcmTwoPaneGeometry]::GetWindowRect([IntPtr][DcmNative]::Control($hwnd,$app.Id,$id),[ref]$r)){throw ('Missing geometry for control '+$id)}
  return $r
 }
+function Select-NativeQueueTab([bool]$history) {
+ $tab=[DcmTwoPaneGeometry]::FindWindowEx([IntPtr]$hwnd,[IntPtr]::Zero,'SysTabControl32',$null)
+ if($tab -eq [IntPtr]::Zero){throw 'Native Win32 SysTabControl32 not found'}
+ $x=$(if($history){125}else{35})
+ $lparam=[IntPtr](($x -band 0xffff) -bor (12 -shl 16))
+ # Send actual tab mouse messages, exercising TCN_SELCHANGE and focus.
+ [void][DcmTwoPaneGeometry]::SendMessage($tab,0x0201,[IntPtr]1,$lparam)
+ [void][DcmTwoPaneGeometry]::SendMessage($tab,0x0202,[IntPtr]::Zero,$lparam)
+}
 function Verify-TwoPaneTab([bool]$history){
  Owned
  if((Is-Visible 1016) -eq $history){throw 'Queue list visibility disagrees with active tab'}
@@ -326,20 +335,20 @@ try{
   if(-not [DcmTwoPaneGeometry]::MoveWindow([IntPtr]$hwnd,$area.Left+10,$area.Top+10,800,720,$true)){throw 'Unable to resize owned QuickSort window to 800'}
   Start-Sleep -Milliseconds 300
   Verify-TwoPaneGeometry 'minimum-clamped-800-request'
-  [DcmNative]::ClickAsync($hwnd,$app.Id,1065)
+  Select-NativeQueueTab $true
   Wait 'History visible at 800' {(Is-Visible 1017) -and -not (Is-Visible 1016)}
   Verify-TwoPaneTab $true
-  [DcmNative]::ClickAsync($hwnd,$app.Id,1064)
+  Select-NativeQueueTab $false
   Wait 'Queue visible at 800' {(Is-Visible 1016) -and -not (Is-Visible 1017)}
   Verify-TwoPaneTab $false
   Step 'two-pane-compact-tab-toggle' @{width_requested=800;queue_restored=$true;history_available=$true}
   if(-not [DcmTwoPaneGeometry]::MoveWindow([IntPtr]$hwnd,$area.Left+10,$area.Top+10,[Math]::Min(1350,$area.Width-20),[Math]::Min(820,$area.Height-20),$true)){throw 'Unable to restore owned QuickSort window size'}
   Start-Sleep -Milliseconds 300
   Verify-TwoPaneGeometry 'wide'
-  [DcmNative]::ClickAsync($hwnd,$app.Id,1065)
+  Select-NativeQueueTab $true
   Wait 'History tab visible' {(Is-Visible 1017) -and -not (Is-Visible 1016)}
   Verify-TwoPaneTab $true
-  [DcmNative]::ClickAsync($hwnd,$app.Id,1064)
+  Select-NativeQueueTab $false
   Wait 'Queue tab visible' {(Is-Visible 1016) -and -not (Is-Visible 1017)}
   Verify-TwoPaneTab $false
   Step 'two-pane-queue-history-toggle' @{queue_visible=$true;history_visible_when_selected=$true;undo_always_visible=$true}
@@ -529,7 +538,7 @@ try{
  $renameID=Journal $pdf $renamed 'completed' 1
  Step 'rename-pdf' @{source=$pdf;target=$renamed;bytes_preserved=$true;journal_id=$renameID}
  if($VerifyTwoPane){
-  [DcmNative]::ClickAsync($hwnd,$app.Id,1065)
+  Select-NativeQueueTab $true
   Wait 'History after rename' {(Is-Visible 1017) -and @([DcmNative]::ListItems($hwnd,$app.Id,1017)).Count -gt 0}
   Verify-TwoPaneTab $true
   [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1046,'not-a-match-123456')
@@ -538,7 +547,7 @@ try{
   Wait 'History search cleared' {@([DcmNative]::ListItems($hwnd,$app.Id,1017)).Count -gt 0}
   Step 'two-pane-history-search' @{history_records_restored=$true;search_filters=$true}
   Capture 'two-pane-history-after-rename' 'teal'
-  [DcmNative]::ClickAsync($hwnd,$app.Id,1064)
+  Select-NativeQueueTab $false
   Wait 'Queue restored after history' {(Is-Visible 1016) -and -not (Is-Visible 1017)}
  }
 
