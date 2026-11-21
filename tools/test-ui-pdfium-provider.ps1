@@ -13,6 +13,7 @@ param(
   [switch]$VerifyNativeReport,
   [switch]$NativeReportDiagnostic,
   [switch]$NativeReportMouse,
+  [switch]$VerifyNativeContext,
   [switch]$SkipPointerWheel,
   [switch]$SkipScreenshots,
   [ValidateRange(0,160)][int]$StressSwitches=0
@@ -290,7 +291,8 @@ try{
  }.GetEnumerator()){$psi.EnvironmentVariables[$kv.Key]=$kv.Value}
  foreach($key in @('DCM_PDF_PROVIDER','DCM_FLOWPDF_WORKER','DCM_FLOWPDF_PERSISTENT')){$psi.EnvironmentVariables.Remove($key)}
  if($VerifyNativeReport){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_LISTVIEW']='1'}
- if($NativeReportDiagnostic){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_TRACE']=(Join-Path $lab 'native-report-events.log')}
+ if($NativeReportDiagnostic -or $VerifyNativeContext){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_TRACE']=(Join-Path $lab 'native-report-events.log')}
+ if($VerifyNativeContext){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_CONTEXT_PROBE']='1'}
  if($NativeReportDiagnostic){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_DIAG_NO_SYNC']='1'}
  if($DevDefault) {
   # A genuine automatic-default acceptance must not supply PDFium-specific
@@ -351,6 +353,26 @@ try{
   $nameOrder=@('01-alpha.txt','02-bravo.txt','03-charlie.txt','08-preview.pdf')
   Wait 'Native ListView Name header sorts ascending' {(@([DcmNative]::ListItems($hwnd,$app.Id,1016)) -join '|') -ceq ($nameOrder -join '|')}
   Step 'native-report-header-sort' @{name_ascending=$true;native_header_clicked=$true}
+  $updatedPoint=[IntPtr]((12 -shl 16) -bor 380)
+  [void][DcmTwoPaneGeometry]::SendMessage($header,0x0201,[IntPtr]1,$updatedPoint)
+  [void][DcmTwoPaneGeometry]::SendMessage($header,0x0202,[IntPtr]::Zero,$updatedPoint)
+  Wait 'Native Updated header selected' {(TextControl 1045) -eq 'Date Updated'}
+  $updatedFirst=@([DcmNative]::ListItems($hwnd,$app.Id,1016))
+  [void][DcmTwoPaneGeometry]::SendMessage($header,0x0201,[IntPtr]1,$updatedPoint)
+  [void][DcmTwoPaneGeometry]::SendMessage($header,0x0202,[IntPtr]::Zero,$updatedPoint)
+  [array]::Reverse($updatedFirst)
+  Wait 'Native Updated header reverses order' {(@([DcmNative]::ListItems($hwnd,$app.Id,1016)) -join '|') -ceq ($updatedFirst -join '|')}
+  Step 'native-report-updated-header-sort' @{updated_ascending_and_descending=$true}
+  if($VerifyNativeContext){
+   $rc=New-Object DcmTwoPaneGeometry+RECT
+   if(-not [DcmTwoPaneGeometry]::GetWindowRect($native,[ref]$rc)){throw 'Cannot locate native table for context test'}
+   $cx=$rc.Left+65; $cy=$rc.Top+69
+   $packed=[IntPtr]((($cy -band 0xffff) -shl 16) -bor ($cx -band 0xffff))
+   [void][DcmTwoPaneGeometry]::SendMessage([IntPtr]$hwnd,0x007B,$native,$packed)
+   Wait 'Native context record captured' {(Test-Path (Join-Path $lab 'native-report-events.log')) -and ((Get-Content (Join-Path $lab 'native-report-events.log') -Tail 3) -match 'context-selected').Count -gt 0}
+   $contextLine=(Get-Content (Join-Path $lab 'native-report-events.log') | Where-Object {$_ -like 'context-selected*'} | Select-Object -Last 1)
+   Step 'native-report-context-hit' @{event=$contextLine;native_control=$true}
+  }
  }
  if($VerifyColumns){
   foreach($id in @(1066,1067,1068,1069)){if(-not(Is-Visible $id)){throw ('Queue header missing: '+$id)}}
