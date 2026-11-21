@@ -3172,6 +3172,9 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 			info.MinTrackSize.X, info.MinTrackSize.Y = minimumMainWindowTrackSize()
 		}
 		return 0
+	case wmNativeQueueSelection:
+		nativeQueueSelectionToLegacy()
+		return 0
 	case WM_CREATE:
 		app.hwnd = hwnd
 		app.processedCollapsed = make(map[string]bool)
