@@ -196,3 +196,27 @@ Lenovo verification:
   `dcm-pdfium-gui-20261121-160105-dfb09d3`.
 
 No production or packaged FileFlow Suite installation changed.
+
+## Native Queue preview burst coalescing
+
+Native ListView row selection now refreshes filename, selection count and
+metadata immediately while deferring the expensive preview startup by 90 ms.
+Each further native row selection replaces that pending preview. The final
+selection is loaded using a Win32 UI-thread timer, with timer cancellation in
+ordinary `unloadPreview()` so Reload, file operations and shutdown retain
+existing cleanup guarantees. Changing the multi-selection without changing
+the active row updates the selection count but does not restart the preview.
+The legacy listbox uses its existing immediate preview behavior.
+
+Lenovo verification:
+- Full Go regression suite and new candidate build: PASS.
+- Rapid native navigation (3 row changes, 1 settled preview), native header
+  sorting, Rename/Move/Undo with byte/journal checks, PDFium, normal exit:
+  `dcm-pdfium-gui-20261121-173954-4e22d39` — PASS.
+- Legacy listbox rollback and two-pane GUI:
+  `dcm-pdfium-gui-20261121-174032-bd7a17d` — PASS, normal exit.
+
+An initial extended run failed a brittle acceptance helper that clicked the
+wrong native row in longer lists; the test-only row-coordinate calculation was
+corrected and the full native GUI run passed. The production installations of
+QuickSort and FileFlow Suite were not altered.
