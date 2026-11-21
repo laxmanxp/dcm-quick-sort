@@ -10,6 +10,7 @@ param(
   [switch]$VerifyActualFilename,
   [switch]$VerifyTwoPane,
   [switch]$VerifyColumns,
+  [switch]$VerifyNativeReport,
   [switch]$SkipPointerWheel,
   [switch]$SkipScreenshots,
   [ValidateRange(0,160)][int]$StressSwitches=0
@@ -266,6 +267,7 @@ try{
   'DCM_PDF_TRACE'=$trace;'DCM_QUICKSORT_BACKUP_DIR'=(Join-Path $lab 'backups')
  }.GetEnumerator()){$psi.EnvironmentVariables[$kv.Key]=$kv.Value}
  foreach($key in @('DCM_PDF_PROVIDER','DCM_FLOWPDF_WORKER','DCM_FLOWPDF_PERSISTENT')){$psi.EnvironmentVariables.Remove($key)}
+ if($VerifyNativeReport){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_LISTVIEW']='1'}
  if($DevDefault) {
   # A genuine automatic-default acceptance must not supply PDFium-specific
   # configuration or the managed runtime location to the child.
@@ -288,6 +290,16 @@ try{
  do{$app.Refresh();if($app.HasExited){throw 'Candidate exited at startup'};$hwnd=$app.MainWindowHandle;if($hwnd -ne [IntPtr]::Zero){break};Start-Sleep -Milliseconds 120}while([DateTime]::UtcNow -lt $deadline)
  if($hwnd -eq [IntPtr]::Zero){throw 'Candidate HWND missing'}
  Wait 'fixture loaded' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 4}
+ if($VerifyNativeReport){
+  $native=[DcmTwoPaneGeometry]::FindWindowEx([IntPtr]$hwnd,[IntPtr]::Zero,'SysListView32',$null)
+  if($native -eq [IntPtr]::Zero -or -not [DcmTwoPaneGeometry]::IsWindowVisible($native)){throw 'Native ListView report is not visible'}
+  $header=[DcmTwoPaneGeometry]::FindWindowEx($native,[IntPtr]::Zero,'SysHeader32',$null)
+  if($header -eq [IntPtr]::Zero){throw 'Native ListView header is missing'}
+  $columnCount=[DcmTwoPaneGeometry]::SendMessage($header,0x1200,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64()
+  $itemCount=[DcmTwoPaneGeometry]::SendMessage($native,0x1004,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64()
+  if($columnCount -ne 4 -or $itemCount -ne 4){throw ('Native ListView columns/items mismatch '+$columnCount+'/'+$itemCount)}
+  Step 'native-report-four-columns' @{class='SysListView32';header_class='SysHeader32';columns=$columnCount;items=$itemCount;visible=$true}
+ }
  if($VerifyColumns){
   foreach($id in @(1066,1067,1068,1069)){if(-not(Is-Visible $id)){throw ('Queue header missing: '+$id)}}
   $expected=@('01-alpha.txt','02-bravo.txt','03-charlie.txt','08-preview.pdf')
