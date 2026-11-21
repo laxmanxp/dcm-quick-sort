@@ -99,10 +99,12 @@ func activateQueueColumnSort(key InboxSort) {
   }
   procSendMessageW.Call(app.fileList,LB_SETCARETINDEX,uintptr(app.index),0)
   app.updatingFileList=false
+  // Reflect the restored multi-selection in the visible native report view.
+  nativeQueueSelectionFromLegacy()
   // Count and selected-file preview reflect the restored selection.
   showCurrentView(false,false)
  }
- procSetFocus.Call(app.fileList)
+ procSetFocus.Call(queueInputHandle())
 }
 
 func drawQueueRow(dis *DRAWITEMSTRUCT) {
