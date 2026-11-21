@@ -11,6 +11,7 @@ param(
   [switch]$VerifyTwoPane,
   [switch]$VerifyColumns,
   [switch]$VerifyNativeReport,
+  [switch]$LegacyQueue,
   [switch]$NativeReportDiagnostic,
   [switch]$NativeReportMouse,
   [switch]$VerifyNativeMulti,
@@ -131,14 +132,15 @@ function Select-NativeQueueTab([bool]$history) {
  [void][DcmTwoPaneGeometry]::SendMessage($tab,0x0201,[IntPtr]1,$lparam)
  [void][DcmTwoPaneGeometry]::SendMessage($tab,0x0202,[IntPtr]::Zero,$lparam)
 }
+function QueueIsVisible {return (Is-Visible $(if($LegacyQueue){1016}else{1071}))}
 function Verify-TwoPaneTab([bool]$history){
  Owned
- if((Is-Visible 1016) -eq $history){throw 'Queue list visibility disagrees with active tab'}
+ if((QueueIsVisible) -eq $history){throw 'Queue list visibility disagrees with active tab'}
  if((Is-Visible 1017) -ne $history -or (Is-Visible 1046) -ne $history){throw 'History list/search visibility disagrees with active tab'}
  if(-not(Is-Visible 1008) -or -not(Is-Visible 1048)){throw 'Undo controls disappeared when switching tabs'}
  }
 function Verify-TwoPaneGeometry([string]$label){
- $queue=Rect 1016
+ $queue=Rect $(if($LegacyQueue){1016}else{1071})
  $previewHwnd=[DcmTwoPaneGeometry]::FindWindowEx([IntPtr]$hwnd,[IntPtr]::Zero,'QuickSortPreview',$null)
  if($previewHwnd -eq [IntPtr]::Zero){throw 'Native preview child HWND missing'}
  $preview=New-Object DcmTwoPaneGeometry+RECT
@@ -311,7 +313,8 @@ try{
   'DCM_PDF_TRACE'=$trace;'DCM_QUICKSORT_BACKUP_DIR'=(Join-Path $lab 'backups')
  }.GetEnumerator()){$psi.EnvironmentVariables[$kv.Key]=$kv.Value}
  foreach($key in @('DCM_PDF_PROVIDER','DCM_FLOWPDF_WORKER','DCM_FLOWPDF_PERSISTENT')){$psi.EnvironmentVariables.Remove($key)}
- if($VerifyNativeReport){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_LISTVIEW']='1'}
+ if($LegacyQueue){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_LISTVIEW']='0'}else{$psi.EnvironmentVariables.Remove('DCM_NATIVE_QUEUE_LISTVIEW')}
+ if($VerifyNativeReport -and $LegacyQueue){throw 'Cannot verify native report with legacy rollback enabled'}
  if($NativeReportDiagnostic){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_TRACE']=(Join-Path $lab 'native-report-events.log')}
  if($NativeReportDiagnostic){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_DIAG_NO_SYNC']='1'}
  if($DevDefault) {
@@ -470,20 +473,20 @@ try{
   Start-Sleep -Milliseconds 300
   Verify-TwoPaneGeometry 'minimum-clamped-800-request'
   Select-NativeQueueTab $true
-  Wait 'History visible at 800' {(Is-Visible 1017) -and -not (Is-Visible 1016)}
+  Wait 'History visible at 800' {(Is-Visible 1017) -and -not (QueueIsVisible)}
   Verify-TwoPaneTab $true
   Select-NativeQueueTab $false
-  Wait 'Queue visible at 800' {(Is-Visible 1016) -and -not (Is-Visible 1017)}
+  Wait 'Queue visible at 800' {(QueueIsVisible) -and -not (Is-Visible 1017)}
   Verify-TwoPaneTab $false
   Step 'two-pane-compact-tab-toggle' @{width_requested=800;queue_restored=$true;history_available=$true}
   if(-not [DcmTwoPaneGeometry]::MoveWindow([IntPtr]$hwnd,$area.Left+10,$area.Top+10,[Math]::Min(1350,$area.Width-20),[Math]::Min(820,$area.Height-20),$true)){throw 'Unable to restore owned QuickSort window size'}
   Start-Sleep -Milliseconds 300
   Verify-TwoPaneGeometry 'wide'
   Select-NativeQueueTab $true
-  Wait 'History tab visible' {(Is-Visible 1017) -and -not (Is-Visible 1016)}
+  Wait 'History tab visible' {(Is-Visible 1017) -and -not (QueueIsVisible)}
   Verify-TwoPaneTab $true
   Select-NativeQueueTab $false
-  Wait 'Queue tab visible' {(Is-Visible 1016) -and -not (Is-Visible 1017)}
+  Wait 'Queue tab visible' {(QueueIsVisible) -and -not (Is-Visible 1017)}
   Verify-TwoPaneTab $false
   Step 'two-pane-queue-history-toggle' @{queue_visible=$true;history_visible_when_selected=$true;undo_always_visible=$true}
  }
@@ -682,7 +685,7 @@ try{
   Step 'two-pane-history-search' @{history_records_restored=$true;search_filters=$true}
   Capture 'two-pane-history-after-rename' 'teal'
   Select-NativeQueueTab $false
-  Wait 'Queue restored after history' {(Is-Visible 1016) -and -not (Is-Visible 1017)}
+  Wait 'Queue restored after history' {(QueueIsVisible) -and -not (Is-Visible 1017)}
  }
 
  Wait 'renamed selection' {(TextControl 1005) -eq 'undo-preview'}
