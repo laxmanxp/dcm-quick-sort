@@ -338,8 +338,12 @@ try{
   }
   $selectedNative=[DcmTwoPaneGeometry]::SendMessage($native,0x100C,[IntPtr](-1),[IntPtr]2).ToInt64()
   Step 'native-report-after-select' @{diagnostic=$NativeReportDiagnostic;selected_index=$selectedNative;current_name=(TextControl 1005)}
-  Wait 'Native report selection mirrored into QuickSort workflow' { (TextControl 1005) -ceq '03-charlie' }
-  Step 'native-report-selection-adapter' @{selected_name=(TextControl 1005);preview_selection_updated=$true}
+  $actualIndex=[int]$selectedNative
+  $actualRows=@([DcmNative]::ListItems($hwnd,$app.Id,1016))
+  if($actualIndex -lt 0 -or $actualIndex -ge $actualRows.Count){throw ('Native report selection invalid index: '+$actualIndex)}
+  $expectedStem=[IO.Path]::GetFileNameWithoutExtension($actualRows[$actualIndex])
+  Wait 'Native report selection mirrored into QuickSort workflow' { (TextControl 1005) -ceq $expectedStem }
+  Step 'native-report-selection-adapter' @{selected_name=(TextControl 1005);selected_index=$actualIndex;preview_selection_updated=$true}
   # Clicking the native SysHeader32 (not a surrogate button) should sort the
   # same underlying file array used by Rename/Move and all other operations.
   [void][DcmTwoPaneGeometry]::SendMessage($header,0x0201,[IntPtr]1,[IntPtr]0x000C000A)
