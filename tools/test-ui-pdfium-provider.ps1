@@ -426,6 +426,20 @@ try{
   [array]::Reverse($updatedFirst)
   Wait 'Native Updated header reverses order' {(@([DcmNative]::ListItems($hwnd,$app.Id,1016)) -join '|') -ceq ($updatedFirst -join '|')}
   Step 'native-report-updated-header-sort' @{updated_ascending_and_descending=$true}
+  $legacyNow=@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016))
+  $nativeNow=@()
+  $scan=[IntPtr](-1)
+  while($true){
+   $next=[DcmTwoPaneGeometry]::SendMessage($native,0x100C,$scan,[IntPtr]2).ToInt64()
+   if($next -lt 0){break}
+   $nativeNow+=([int]$next)
+   $scan=[IntPtr]$next
+  }
+  if(($legacyNow -join ',') -cne ($nativeNow -join ',')){throw ('Native/legacy selected rows diverged after header sort: '+($nativeNow -join ',')+' / '+($legacyNow -join ','))}
+  if($nativeNow.Count -lt 1){throw 'Native selection lost after header sorting'}
+  $currentSelectedName=@([DcmNative]::ListItems($hwnd,$app.Id,1016))[$nativeNow[0]]
+  if((TextControl 1005) -cne [IO.Path]::GetFileNameWithoutExtension($currentSelectedName)){throw 'QuickSort rename field disagrees with native sorted selection'}
+  Step 'native-report-selection-after-sort' @{selected_indices=$nativeNow;selected_filename=$currentSelectedName;preserved=$true}
 
  }
  if($VerifyColumns){
