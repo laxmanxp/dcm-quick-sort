@@ -200,6 +200,23 @@ func TestInboxSortModes(t *testing.T) {
 	}
 }
 
+func TestInboxSortUpdatedUsesModificationNotCreation(t *testing.T) {
+ dir := t.TempDir()
+ now := time.Date(2026, 11, 21, 14, 0, 0, 0, time.Local)
+ // The older-created file was recently modified. Updated sorting must
+ // use ModTime rather than the original creation timestamp.
+ older := writeInboxFixture(t, dir, "older-created.pdf", 1, now.Add(-96*time.Hour))
+ newer := writeInboxFixture(t, dir, "newer-created.pdf", 1, now.Add(-24*time.Hour))
+ if err := os.Chtimes(older, now.Add(-time.Hour), now.Add(-time.Hour)); err != nil {t.Fatal(err)}
+ if err := os.Chtimes(newer, now.Add(-20*time.Hour), now.Add(-20*time.Hour)); err != nil {t.Fatal(err)}
+ got, err := listFilesInbox(dir, InboxFilter{Sort:InboxSortDateUpdated}, now)
+ if err != nil {t.Fatal(err)}
+ names:=baseNames(got)
+ if len(names)!=2 || names[0]!="older-created.pdf" || names[1]!="newer-created.pdf" {
+  t.Fatalf("Updated sort did not use last-modified timestamp: %v",names)
+ }
+}
+
 func TestInboxSortDefaultsToDateCreated(t *testing.T) {
 	if got := normalizedInboxFilter(InboxFilter{}).Sort; got != InboxSortDateCreated {
 		t.Fatalf("default sort=%q want %q", got, InboxSortDateCreated)
