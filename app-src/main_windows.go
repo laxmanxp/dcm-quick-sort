@@ -3802,7 +3802,6 @@ func layoutUI(hwnd uintptr) {
 	recordAttachmentTrace("layout-before-zoomFitWidthBtn")
 	procMoveWindow.Call(app.zoomFitWidthBtn, uintptr(zoomX), uintptr(headerY-4), uintptr(zoomFitWidthW), 27, 0)
 	recordAttachmentTrace("layout-after-zoomFitWidthBtn")
-	processed := compactProcessedLayout(processedX, processedW, headerY, previewH)
 	recordAttachmentTrace("layout-before-processedTitleLabel")
 	procMoveWindow.Call(app.processedTitleLabel, 184, uintptr(headerY), uintptr(listW-164), 24, 0)
 	recordAttachmentTrace("layout-after-processedTitleLabel")
