@@ -289,7 +289,8 @@ try{
   'DCM_PDF_TRACE'=$trace;'DCM_QUICKSORT_BACKUP_DIR'=(Join-Path $lab 'backups')
  }.GetEnumerator()){$psi.EnvironmentVariables[$kv.Key]=$kv.Value}
  foreach($key in @('DCM_PDF_PROVIDER','DCM_FLOWPDF_WORKER','DCM_FLOWPDF_PERSISTENT')){$psi.EnvironmentVariables.Remove($key)}
- if($VerifyNativeReport){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_LISTVIEW']='1';$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_TRACE']=(Join-Path $lab 'native-report-events.log')}
+ if($VerifyNativeReport){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_LISTVIEW']='1'}
+ if($NativeReportDiagnostic){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_TRACE']=(Join-Path $lab 'native-report-events.log')}
  if($NativeReportDiagnostic){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_DIAG_NO_SYNC']='1'}
  if($DevDefault) {
   # A genuine automatic-default acceptance must not supply PDFium-specific
