@@ -58,7 +58,12 @@ function List-Selected([string]$name){
  $items=@([DcmNative]::ListItems($hwnd,$app.Id,1016))
  $index=[Array]::IndexOf($items,$name)
  if($index -lt 0){throw ('Fixture absent: '+$name)}
- [DcmUndoInput]::Select($hwnd,$app.Id,$index)
+ if($VerifyNativeReport){
+  $nativeList=[DcmTwoPaneGeometry]::FindWindowEx([IntPtr]$hwnd,[IntPtr]::Zero,'SysListView32',$null)
+  if($nativeList -eq [IntPtr]::Zero -or -not [DcmNativeReportProbe]::ClickRow($nativeList,$index)){throw ('Native ListView cannot select '+$name)}
+ }else{
+  [DcmUndoInput]::Select($hwnd,$app.Id,$index)
+ }
  $stem=[IO.Path]::GetFileNameWithoutExtension($name)
  Wait ('selected '+$name) {([DcmUndoInput]::TryText($hwnd,$app.Id,1005)) -ceq $stem}
 }
@@ -92,6 +97,21 @@ using System.Runtime.InteropServices;
 public static class DcmNativeReportProbe {
  [DllImport("user32.dll", CharSet=CharSet.Unicode, EntryPoint="SendMessageW")]
  public static extern IntPtr SendMessage(IntPtr hWnd,uint msg,IntPtr wParam,IntPtr lParam);
+ public static bool ClickRow(IntPtr hwnd,int row) {
+  // LVM_GETITEMRECT requires RECT.left=LVIR_BOUNDS before dispatch.
+  IntPtr rect=Marshal.AllocHGlobal(16);
+  try {
+   for(int i=0;i<16;i++) Marshal.WriteByte(rect,i,0);
+   SendMessage(hwnd,0x1013,new IntPtr(row),IntPtr.Zero); // LVM_ENSUREVISIBLE
+   if(SendMessage(hwnd,0x100E,new IntPtr(row),rect)==IntPtr.Zero) return false;
+   int x=Marshal.ReadInt32(rect,0)+Math.Min(38,Math.Max(8,(Marshal.ReadInt32(rect,8)-Marshal.ReadInt32(rect,0))/2));
+   int y=(Marshal.ReadInt32(rect,4)+Marshal.ReadInt32(rect,12))/2;
+   IntPtr point=new IntPtr(((y&0xffff)<<16)|(x&0xffff));
+   SendMessage(hwnd,0x0201,new IntPtr(1),point); // WM_LBUTTONDOWN
+   SendMessage(hwnd,0x0202,IntPtr.Zero,point); // WM_LBUTTONUP
+   return true;
+  } finally {Marshal.FreeHGlobal(rect);}
+ }
  public static void SelectRow(IntPtr hwnd,int row) {
   IntPtr payload=Marshal.AllocHGlobal(88);
   try {
