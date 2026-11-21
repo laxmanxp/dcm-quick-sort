@@ -74,6 +74,7 @@ public static class DcmTwoPaneGeometry {
  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hwnd,out RECT rect);
  [DllImport("user32.dll")] public static extern bool MoveWindow(IntPtr hwnd,int x,int y,int width,int height,bool repaint);
  [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern IntPtr SendMessage(IntPtr hwnd,uint message,IntPtr wparam,IntPtr lparam);
+ [DllImport("user32.dll", CharSet=CharSet.Unicode, SetLastError=true)] public static extern IntPtr SendMessageTimeout(IntPtr hwnd,uint message,IntPtr wparam,IntPtr lparam,uint flags,uint timeout,out IntPtr result);
  [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern IntPtr FindWindowEx(IntPtr parent,IntPtr after,string className,string caption);
 }
 '@
@@ -404,14 +405,18 @@ try{
   Wait 'Native Updated header reverses order' {(@([DcmNative]::ListItems($hwnd,$app.Id,1016)) -join '|') -ceq ($updatedFirst -join '|')}
   Step 'native-report-updated-header-sort' @{updated_ascending_and_descending=$true}
   if($VerifyNativeContext){
-   [void][DcmTwoPaneGeometry]::SendMessage([IntPtr]$hwnd,0x007B,$native,[IntPtr](-1))
+   $sendResult=[IntPtr]::Zero
+   $sent=[DcmTwoPaneGeometry]::SendMessageTimeout([IntPtr]$hwnd,0x007B,$native,[IntPtr](-1),2,2500,[ref]$sendResult)
+   if($sent -eq [IntPtr]::Zero){throw ('Native keyboard context message timed out or failed; win32='+[Runtime.InteropServices.Marshal]::GetLastWin32Error())}
    Wait 'Native keyboard context record captured' {(Test-Path (Join-Path $lab 'native-report-events.log')) -and ((Get-Content (Join-Path $lab 'native-report-events.log') -Tail 10) -match 'context-selected').Count -gt 0}
    Step 'native-report-keyboard-context-hit' @{event=((Get-Content (Join-Path $lab 'native-report-events.log') | Where-Object {$_ -like 'context-selected*'} | Select-Object -Last 1));native_control=$true}
    $rc=New-Object DcmTwoPaneGeometry+RECT
    if(-not [DcmTwoPaneGeometry]::GetWindowRect($native,[ref]$rc)){throw 'Cannot locate native table for context test'}
    $cx=$rc.Left+65; $cy=$rc.Top+69
    $packed=[IntPtr]((($cy -band 0xffff) -shl 16) -bor ($cx -band 0xffff))
-   [void][DcmTwoPaneGeometry]::SendMessage([IntPtr]$hwnd,0x007B,$native,$packed)
+   $sendResult=[IntPtr]::Zero
+   $sent=[DcmTwoPaneGeometry]::SendMessageTimeout([IntPtr]$hwnd,0x007B,$native,$packed,2,2500,[ref]$sendResult)
+   if($sent -eq [IntPtr]::Zero){throw ('Native pointer context message timed out or failed; win32='+[Runtime.InteropServices.Marshal]::GetLastWin32Error())}
    Wait 'Native context record captured' {(Test-Path (Join-Path $lab 'native-report-events.log')) -and ((Get-Content (Join-Path $lab 'native-report-events.log') -Tail 3) -match 'context-selected').Count -gt 0}
    $contextLine=(Get-Content (Join-Path $lab 'native-report-events.log') | Where-Object {$_ -like 'context-selected*'} | Select-Object -Last 1)
    Step 'native-report-context-hit' @{event=$contextLine;native_control=$true}
