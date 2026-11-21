@@ -59,6 +59,7 @@ function List-Selected([string]$name){
  $index=[Array]::IndexOf($items,$name)
  if($index -lt 0){throw ('Fixture absent: '+$name)}
  if($VerifyNativeReport){
+  Step 'native-operation-select-request' @{name=$name;index=$index}
   $nativeList=[DcmTwoPaneGeometry]::FindWindowEx([IntPtr]$hwnd,[IntPtr]::Zero,'SysListView32',$null)
   if($nativeList -eq [IntPtr]::Zero -or -not [DcmNativeReportProbe]::ClickRow($nativeList,$index)){throw ('Native ListView cannot select '+$name)}
  }else{
@@ -97,19 +98,16 @@ using System.Runtime.InteropServices;
 public static class DcmNativeReportProbe {
  [DllImport("user32.dll", CharSet=CharSet.Unicode, EntryPoint="SendMessageW")]
  public static extern IntPtr SendMessage(IntPtr hWnd,uint msg,IntPtr wParam,IntPtr lParam);
+ [DllImport("user32.dll", SetLastError=true)] public static extern bool PostMessage(IntPtr hwnd,uint msg,IntPtr wParam,IntPtr lParam);
  public static bool ClickRow(IntPtr hwnd,int row) {
-  // Test fixture uses a native report view with four to eight visible rows.
-  // Do not pass RECT pointers across process boundaries: pointer parameters
-  // in LVM_GETITEMRECT belong to the target process, not this harness.
-  int count=SendMessage(hwnd,0x1004,IntPtr.Zero,IntPtr.Zero).ToInt32();
-  if(row<0||row>=count)return false;
-  SendMessage(hwnd,0x1013,new IntPtr(row),IntPtr.Zero); // LVM_ENSUREVISIBLE
+  // Fixture rows are visible; do not send synchronous mouse/scroll messages
+  // across processes while the Go UI thread is busy with previews.
+  if(row<0||row>16)return false;
   int x=65;
   int y=45+row*21;
   IntPtr point=new IntPtr(((y&0xffff)<<16)|(x&0xffff));
-  SendMessage(hwnd,0x0201,new IntPtr(1),point);
-  SendMessage(hwnd,0x0202,IntPtr.Zero,point);
-  return true;
+  return PostMessage(hwnd,0x0201,new IntPtr(1),point)
+      && PostMessage(hwnd,0x0202,IntPtr.Zero,point);
  }
  public static void SelectRow(IntPtr hwnd,int row) {
   IntPtr payload=Marshal.AllocHGlobal(88);
