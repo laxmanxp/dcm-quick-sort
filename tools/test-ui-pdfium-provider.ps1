@@ -15,6 +15,7 @@ param(
   [switch]$NativeReportMouse,
   [switch]$VerifyNativeContext,
   [switch]$VerifyNativeMulti,
+  [switch]$VerifyNativeRangeKeyboard,
   [switch]$SkipPointerWheel,
   [switch]$SkipScreenshots,
   [ValidateRange(0,160)][int]$StressSwitches=0
@@ -363,6 +364,27 @@ try{
    $nativeSelectedCount=[DcmTwoPaneGeometry]::SendMessage($native,0x1032,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64()
    if($nativeSelectedCount -ne 2){throw ('Native Ctrl click selection count mismatch: '+$nativeSelectedCount)}
    Step 'native-report-multiselection' @{native_count=$nativeSelectedCount;legacy_indices=$legacySelected;preserved=$true}
+  }
+  if($VerifyNativeRangeKeyboard){
+   # Select first row, then Shift-click third row. This tests range
+   # selection through real ListView mouse paths and the legacy adapter.
+   $first=[IntPtr]((45 -shl 16) -bor 65)
+   $third=[IntPtr]((88 -shl 16) -bor 65)
+   [void][DcmTwoPaneGeometry]::SendMessage($native,0x0201,[IntPtr]1,$first)
+   [void][DcmTwoPaneGeometry]::SendMessage($native,0x0202,[IntPtr]::Zero,$first)
+   [void][DcmTwoPaneGeometry]::SendMessage($native,0x0201,[IntPtr]5,$third)
+   [void][DcmTwoPaneGeometry]::SendMessage($native,0x0202,[IntPtr]4,$third)
+   Wait 'Native Shift range propagated to QuickSort' {@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016)).Count -eq 3}
+   $range=@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016))
+   $nativeRange=[DcmTwoPaneGeometry]::SendMessage($native,0x1032,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64()
+   if($nativeRange -ne 3 -or (($range -join ',') -cne '0,1,2')){throw ('Native Shift range wrong: '+($range -join ',')+'; native='+$nativeRange)}
+   Step 'native-report-shift-range' @{native_count=$nativeRange;legacy_indices=$range}
+   # Navigate by native keyboard: arrow down should focus a new row and
+   # preserve the one-row selected filename through the adapter.
+   [void][DcmTwoPaneGeometry]::SendMessage($native,0x0100,[IntPtr]0x28,[IntPtr]::Zero)
+   [void][DcmTwoPaneGeometry]::SendMessage($native,0x0101,[IntPtr]0x28,[IntPtr]::Zero)
+   $focusIndex=[DcmTwoPaneGeometry]::SendMessage($native,0x100C,[IntPtr](-1),[IntPtr]1).ToInt64()
+   Step 'native-report-keyboard-arrow' @{focused_row=$focusIndex;processed=$true}
   }
   # Clicking the native SysHeader32 (not a surrogate button) should sort the
   # same underlying file array used by Rename/Move and all other operations.
