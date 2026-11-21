@@ -41,3 +41,30 @@ right-click Shell context menu, Rename/Move/Undo and normal shutdown.
 
 The default native-tab + existing listbox implementation is the
 established fallback. Release and Suite installations must remain unchanged.
+
+## Follow-up qualification, same day
+
+The original synthetic `LVM_SETITEMSTATE` test was found to be an unreliable
+proxy for ordinary mouse selection: it made the process exit unexpectedly,
+even when legacy synchronization was disabled. A mouse-style ListView row
+selection **did** reach the existing filename/preview adapter and passed a
+complete isolated PDFium GUI run. The test also incorrectly assumed a fixed
+filename at row index 1 despite the default date sort; correcting the expected
+filename to the actual row value yielded two consecutive native GUI passes
+without tracing:
+
+- `dcm-pdfium-gui-20261121-143649-757d33b` — PASS, normal exit
+- `dcm-pdfium-gui-20261121-143655-9ec6a99` — PASS, normal exit
+
+Native `SysHeader32` Name-header sorting also passed in those runs.
+
+Native context-menu routing and hit testing have been implemented but **are
+not qualified**: the opt-in `-VerifyNativeContext` GUI test stalled, and the
+owned test harness was stopped without modifying unrelated applications. Its
+last test evidence folder was
+`dcm-pdfium-gui-20261121-144055-4a25243`.
+
+Until native Ctrl/Shift multi-selection, actual Shell context menus, keyboard
+navigation, Updated-column sorting and full mixed-document acceptance pass,
+`DCM_NATIVE_QUEUE_LISTVIEW=1` remains a development-only opt-in, not a
+production default. The regular two-pane listbox and native tabs are retained.
