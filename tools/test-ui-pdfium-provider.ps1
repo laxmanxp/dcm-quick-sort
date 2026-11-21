@@ -437,9 +437,11 @@ try{
   }
   if(($legacyNow -join ',') -cne ($nativeNow -join ',')){throw ('Native/legacy selected rows diverged after header sort: '+($nativeNow -join ',')+' / '+($legacyNow -join ','))}
   if($nativeNow.Count -lt 1){throw 'Native selection lost after header sorting'}
-  $currentSelectedName=@([DcmNative]::ListItems($hwnd,$app.Id,1016))[$nativeNow[0]]
-  if((TextControl 1005) -cne [IO.Path]::GetFileNameWithoutExtension($currentSelectedName)){throw 'QuickSort rename field disagrees with native sorted selection'}
-  Step 'native-report-selection-after-sort' @{selected_indices=$nativeNow;selected_filename=$currentSelectedName;preserved=$true}
+  $visibleNames=@([DcmNative]::ListItems($hwnd,$app.Id,1016))
+  $selectedStems=@($nativeNow | ForEach-Object {[IO.Path]::GetFileNameWithoutExtension($visibleNames[$_])})
+  $activeStem=(TextControl 1005)
+  if($selectedStems -cnotcontains $activeStem){throw ('QuickSort active name is absent from sorted selection: '+$activeStem+'; selected='+($selectedStems -join ','))}
+  Step 'native-report-selection-after-sort' @{selected_indices=$nativeNow;selected_names=$selectedStems;active_name=$activeStem;preserved=$true}
 
  }
  if($VerifyColumns){
