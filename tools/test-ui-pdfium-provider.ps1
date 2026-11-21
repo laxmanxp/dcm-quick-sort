@@ -67,6 +67,7 @@ public static class DcmTwoPaneGeometry {
  [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr hwnd);
  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hwnd,out RECT rect);
  [DllImport("user32.dll")] public static extern bool MoveWindow(IntPtr hwnd,int x,int y,int width,int height,bool repaint);
+ [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern IntPtr SendMessage(IntPtr hwnd,uint message,IntPtr wparam,IntPtr lparam);
  [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern IntPtr FindWindowEx(IntPtr parent,IntPtr after,string className,string caption);
 }
 '@
@@ -283,9 +284,18 @@ try{
   $expected=@('01-alpha.txt','02-bravo.txt','03-charlie.txt','08-preview.pdf')
   [DcmNative]::ClickAsync($hwnd,$app.Id,1066)
   Wait 'Name ascending by header' {(@([DcmNative]::ListItems($hwnd,$app.Id,1016)) -join '|') -ceq ($expected -join '|')}
+  $queueControl=[IntPtr][DcmNative]::Control($hwnd,$app.Id,1016)
+  [void][DcmTwoPaneGeometry]::SendMessage($queueControl,0x185,[IntPtr]::Zero,[IntPtr](-1))
+  [void][DcmTwoPaneGeometry]::SendMessage($queueControl,0x185,[IntPtr]1,[IntPtr]0)
+  [void][DcmTwoPaneGeometry]::SendMessage($queueControl,0x185,[IntPtr]1,[IntPtr]3)
+  $selectedBefore=@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016)|ForEach-Object {$expected[$_] }|Sort-Object)
+  if($selectedBefore.Count -ne 2){throw 'Multi-select fixture setup failed'}
   [DcmNative]::ClickAsync($hwnd,$app.Id,1066)
   [array]::Reverse($expected)
   Wait 'Name descending by second click' {(@([DcmNative]::ListItems($hwnd,$app.Id,1016)) -join '|') -ceq ($expected -join '|')}
+  $selectedAfter=@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016)|ForEach-Object {$expected[$_]}|Sort-Object)
+  if(($selectedBefore -join '|') -cne ($selectedAfter -join '|')){throw ('Multi-selection not preserved by header sort: before='+($selectedBefore -join ',')+' after='+($selectedAfter -join ','))}
+  Step 'queue-column-multiselection-preserved' @{selected_files=$selectedAfter;count=$selectedAfter.Count}
   [DcmNative]::ClickAsync($hwnd,$app.Id,1067)
   $extOrder=@('08-preview.pdf','01-alpha.txt','02-bravo.txt','03-charlie.txt')
   Wait 'Extension ascending by header' {(@([DcmNative]::ListItems($hwnd,$app.Id,1016)) -join '|') -ceq ($extOrder -join '|')}
