@@ -41,9 +41,9 @@ func queueColumnWidths(width int32) (int32,int32,int32,int32) {
  ext:=width*16/100
  if ext<55 {ext=55}
  created:=width*23/100
- if created<79 {created=79}
+ if created<62 {created=62}
  updated:=width*23/100
- if updated<79 {updated=79}
+ if updated<62 {updated=62}
  name:=width-ext-created-updated
  if name<80 {
   name=80
