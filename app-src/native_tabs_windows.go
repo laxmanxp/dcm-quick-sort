@@ -45,7 +45,7 @@ func createNativeQueueHistoryTabs(parent uintptr) uintptr {
  if hwnd==0 {return 0}
  for _,title := range []string{"Queue","History"} {
   label:=wstr(title)
-  item:=nativeTabItem{Mask:tcifText,Text:&label[0]}
+  item:=nativeTabItem{Mask:tcifText,Text:label}
   procSendMessageW.Call(hwnd,tcmInsertItemW,uintptr(lenTitleIndex(title)),uintptr(unsafe.Pointer(&item)))
  }
  procSendMessageW.Call(hwnd,tcmSetCurSel,0,0)
