@@ -12,6 +12,7 @@ import (
 // selection/journal adapter until shell-menu and keyboard acceptance qualify it.
 const (
  nativeQueueReportID = 1071
+ wmNativeQueueSelection = 0x8020
  lvmFirst = 0x1000
  lvmInsertColumnW = lvmFirst+97
  lvmInsertItemW = lvmFirst+77
@@ -166,7 +167,9 @@ func nativeQueueNotify(lParam uintptr) bool {
   return true
  }
  if hdr.Code==lvnItemChanged {
-  if !app.nativeQueueSyncing {nativeQueueSelectionToLegacy()}
+  // Never mutate a ListView (or start its preview) inside its own synchronous
+  // LVN_ITEMCHANGED dispatch: defer until control notification unwinds.
+  if !app.nativeQueueSyncing {procPostMessageW.Call(app.hwnd,wmNativeQueueSelection,0,0)}
   return true
  }
  return false
