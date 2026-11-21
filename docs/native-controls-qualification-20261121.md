@@ -173,3 +173,26 @@ Lenovo receipts:
 The standard QuickSort workflow remains free of Windows Shell context menus;
 FlowSearch should own Explorer-style context actions as an independent feature.
 Production binaries/installations were not changed.
+
+## Queue selection continuity — Reload, filters, source changes
+
+QuickSort now identifies selected files by cleaned case-insensitive **full file
+path**, not by row index. Reload and filter updates retain only those selected
+files still present in the current visible queue. When the active file has
+become hidden but another selected file survives, that surviving file becomes
+the active preview. If none survive, QuickSort selects the first visible file;
+if the queue is empty, it clears the selection and filename fields. Changing
+source folders never carries a stale selection from the previous folder.
+Both the native report view and the hidden legacy selection adapter are
+updated after the refreshed rows are populated.
+
+Lenovo verification:
+- Full Go regression suite (`go test -p 1 -vet=off -tags pdfium_dev ./... -count=1`): PASS.
+- Native headed acceptance: Ctrl-selected pair retained by Reload, name-filter
+  intersection, Clear Filters, no-match empty queue, source-folder switch and
+  return: PASS, normal exit, receipt
+  `dcm-pdfium-gui-20261121-155949-3bd4e68`.
+- Legacy listbox rollback + two-pane GUI: PASS, normal exit, receipt
+  `dcm-pdfium-gui-20261121-160105-dfb09d3`.
+
+No production or packaged FileFlow Suite installation changed.
