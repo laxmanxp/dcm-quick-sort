@@ -84,3 +84,18 @@ These passing runs **do not qualify** native Shell context menus or
 Ctrl/Shift multi-selection. An experimental context-menu probe stalled and
 was not counted as a pass. Keep the report ListView opt-in and retain the
 proven owner-drawn listbox as the default.
+
+## Native selection follow-up — 2026-11-21
+
+The native ListView selection adapter now has successful physical-style GUI
+acceptance receipts for both Ctrl-click multi-selection and Shift range
+selection, without enabling it as the default:
+
+- `dcm-pdfium-gui-20261121-145513-a1daeb7`: PASS, normal exit. Two Ctrl-selected rows propagate to the legacy selection model (`[1,2]`). Native Name/Updated column sort and PDFium also pass.
+- `dcm-pdfium-gui-20261121-145620-8ee884f`: PASS, normal exit. Shift-selected rows `[0,1,2]` propagate to the legacy model and Down Arrow advances native focus to row 3.
+
+An isolated nonmodal native context hit probe was added, but its GUI acceptance
+run in `dcm-pdfium-gui-20261121-145747-7f377da` stalled without a receipt.
+The owned test shell was stopped. **Context-menu support is not accepted**.
+Actual Shell popup/keyboard activation still requires controlled independent
+qualification. Keep `DCM_NATIVE_QUEUE_LISTVIEW` opt-in only. Production untouched.
