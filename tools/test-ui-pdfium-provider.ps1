@@ -80,6 +80,24 @@ function Rect([int]$id){
  if(-not [DcmTwoPaneGeometry]::GetWindowRect([IntPtr][DcmNative]::Control($hwnd,$app.Id,$id),[ref]$r)){throw ('Missing geometry for control '+$id)}
  return $r
 }
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class DcmNativeReportProbe {
+ [DllImport("user32.dll", CharSet=CharSet.Unicode, EntryPoint="SendMessageW")]
+ public static extern IntPtr SendMessage(IntPtr hWnd,uint msg,IntPtr wParam,IntPtr lParam);
+ public static void SelectRow(IntPtr hwnd,int row) {
+  IntPtr payload=Marshal.AllocHGlobal(88);
+  try {
+   for(int i=0;i<88;i++) Marshal.WriteByte(payload,i,0);
+   Marshal.WriteInt32(payload,12,3); // LVIS_SELECTED | LVIS_FOCUSED
+   Marshal.WriteInt32(payload,16,3); // state mask
+   SendMessage(hwnd,0x102B,new IntPtr(-1),payload);
+   SendMessage(hwnd,0x102B,new IntPtr(row),payload);
+  } finally {Marshal.FreeHGlobal(payload);}
+ }
+}
+'@
 function Select-NativeQueueTab([bool]$history) {
  $tab=[DcmTwoPaneGeometry]::FindWindowEx([IntPtr]$hwnd,[IntPtr]::Zero,'SysTabControl32',$null)
  if($tab -eq [IntPtr]::Zero){throw 'Native Win32 SysTabControl32 not found'}
@@ -299,6 +317,16 @@ try{
   $itemCount=[DcmTwoPaneGeometry]::SendMessage($native,0x1004,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64()
   if($columnCount -ne 4 -or $itemCount -ne 4){throw ('Native ListView columns/items mismatch '+$columnCount+'/'+$itemCount)}
   Step 'native-report-four-columns' @{class='SysListView32';header_class='SysHeader32';columns=$columnCount;items=$itemCount;visible=$true}
+  [DcmNativeReportProbe]::SelectRow($native,2)
+  Wait 'Native report selection mirrored into QuickSort workflow' { (TextControl 1005) -ceq '03-charlie' }
+  Step 'native-report-selection-adapter' @{selected_name=(TextControl 1005);preview_selection_updated=$true}
+  # Clicking the native SysHeader32 (not a surrogate button) should sort the
+  # same underlying file array used by Rename/Move and all other operations.
+  [void][DcmTwoPaneGeometry]::SendMessage($header,0x0201,[IntPtr]1,[IntPtr]0x000C000A)
+  [void][DcmTwoPaneGeometry]::SendMessage($header,0x0202,[IntPtr]::Zero,[IntPtr]0x000C000A)
+  $nameOrder=@('01-alpha.txt','02-bravo.txt','03-charlie.txt','08-preview.pdf')
+  Wait 'Native ListView Name header sorts ascending' {(@([DcmNative]::ListItems($hwnd,$app.Id,1016)) -join '|') -ceq ($nameOrder -join '|')}
+  Step 'native-report-header-sort' @{name_ascending=$true;native_header_clicked=$true}
  }
  if($VerifyColumns){
   foreach($id in @(1066,1067,1068,1069)){if(-not(Is-Visible $id)){throw ('Queue header missing: '+$id)}}
