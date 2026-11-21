@@ -11,6 +11,7 @@ param(
   [switch]$VerifyTwoPane,
   [switch]$VerifyColumns,
   [switch]$VerifyNativeReport,
+  [switch]$NativeReportDiagnostic,
   [switch]$SkipPointerWheel,
   [switch]$SkipScreenshots,
   [ValidateRange(0,160)][int]$StressSwitches=0
@@ -288,6 +289,7 @@ try{
  }.GetEnumerator()){$psi.EnvironmentVariables[$kv.Key]=$kv.Value}
  foreach($key in @('DCM_PDF_PROVIDER','DCM_FLOWPDF_WORKER','DCM_FLOWPDF_PERSISTENT')){$psi.EnvironmentVariables.Remove($key)}
  if($VerifyNativeReport){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_LISTVIEW']='1'}
+ if($NativeReportDiagnostic){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_DIAG_NO_SYNC']='1'}
  if($DevDefault) {
   # A genuine automatic-default acceptance must not supply PDFium-specific
   # configuration or the managed runtime location to the child.
@@ -319,7 +321,9 @@ try{
   $itemCount=[DcmTwoPaneGeometry]::SendMessage($native,0x1004,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64()
   if($columnCount -ne 4 -or $itemCount -ne 4){throw ('Native ListView columns/items mismatch '+$columnCount+'/'+$itemCount)}
   Step 'native-report-four-columns' @{class='SysListView32';header_class='SysHeader32';columns=$columnCount;items=$itemCount;visible=$true}
+  Step 'native-report-before-select' @{diagnostic=$NativeReportDiagnostic}
   [DcmNativeReportProbe]::SelectRow($native,2)
+  Step 'native-report-after-select' @{diagnostic=$NativeReportDiagnostic}
   Wait 'Native report selection mirrored into QuickSort workflow' { (TextControl 1005) -ceq '03-charlie' }
   Step 'native-report-selection-adapter' @{selected_name=(TextControl 1005);preview_selection_updated=$true}
   # Clicking the native SysHeader32 (not a surrogate button) should sort the
