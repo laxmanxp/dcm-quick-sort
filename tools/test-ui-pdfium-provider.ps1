@@ -732,6 +732,21 @@ try{
   Assert-ActualFilenameLayout
  }
  PageReady 'Page 1 of 2'
+ if($VerifyPDFPicker -and $LegacyQueue){
+  # Isolate the backend menu from the native report selection adapter.
+  $mainMenu=[DcmPDFPickerProbe]::GetMenu([IntPtr]$hwnd)
+  if($mainMenu -eq [IntPtr]::Zero){throw 'PDF previewer menu missing'}
+  foreach($choice in @(2012,2011,2010)){
+   if(-not [DcmPDFPickerProbe]::PostMessage([IntPtr]$hwnd,0x0111,[IntPtr]$choice,[IntPtr]::Zero)){
+    throw ('Could not select PDF backend '+$choice)
+   }
+   $expected=$choice
+   Wait ('PDF menu choice '+$choice) {[DcmPDFPickerProbe]::IsChecked($mainMenu,[uint32]$expected)} 12
+   PageReady 'Page 1 of 2'
+   Step 'pdf-preview-selector-switch' @{command=$choice;checked=$true;page_rendered=$true;queue='legacy'}
+  }
+  Step 'pdf-preview-selector' @{windows=$true;pdfium=$true;auto=$true;sumatra=$false;active_file='08-preview.pdf';queue='legacy'}
+ }
  if($VerifyNarrowToolbar){
   $area=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea
   foreach($requestedWidth in @(1350,920,800)){
