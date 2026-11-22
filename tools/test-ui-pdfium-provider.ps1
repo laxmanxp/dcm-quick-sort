@@ -10,6 +10,7 @@ param(
   [switch]$VerifyNarrowToolbar,
   [switch]$VerifyCodeText,
   [switch]$VerifyMoveGating,
+  [switch]$VerifyMoveGatingOnly,
   [switch]$VerifyActualFilename,
   [switch]$VerifyTwoPane,
   [switch]$VerifySplitter,
@@ -794,14 +795,34 @@ try{
  }
  PageReady 'Page 1 of 2'
  if($VerifyMoveGating){
+  # Fixture Vault exists, but no destination is chosen yet. Check every
+  # transition on disposable source files, without performing any move.
   $move=[DcmNative]::Control($hwnd,$app.Id,1041)
-  if([DcmNative]::IsWindowEnabled($move)){throw 'Move to Vault enabled without configured Vault'}
-  Step 'move-gating-unconfigured-vault' @{selected_file='08-preview.pdf';button_enabled=$false}
-  # Fixture config is isolated from the user's actual Vault settings.
-  # Recheck disabled state after moving between two selected files.
-  List-Selected '03-charlie.txt'
-  if([DcmNative]::IsWindowEnabled($move)){throw 'Move to Vault enabled after file selection without Vault'}
-  Step 'move-gating-selected-without-vault' @{selected_file='03-charlie.txt';button_enabled=$false}
+  $pathEdit=[DcmNative]::Control($hwnd,$app.Id,1003)
+  if([DcmNative]::IsWindowEnabled($move)){throw 'Move enabled without destination'}
+  Step 'move-gating-no-destination' @{selected_file='08-preview.pdf';button_enabled=$false}
+  [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1003,'does-not-exist')
+  Wait 'Move rejects missing logical location' {-not [DcmNative]::IsWindowEnabled($move)}
+  Step 'move-gating-invalid-destination' @{button_enabled=$false}
+  [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1003,'Accepted')
+  Wait 'Move enables valid location' {[DcmNative]::IsWindowEnabled($move)}
+  Step 'move-gating-valid-destination' @{button_enabled=$true;logical_location='Accepted'}
+  [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1030,'no-such-acceptance-file')
+  Wait 'Move disabled with empty filtered selection' {
+   @([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 0 -and
+   -not [DcmNative]::IsWindowEnabled($move)
+  }
+  Step 'move-gating-no-file-selected' @{button_enabled=$false;visible_rows=0}
+  [DcmNative]::ClickAsync($hwnd,$app.Id,1033)
+  Wait 'Move restored after filter cleared' {
+   @([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 4 -and
+   [DcmNative]::IsWindowEnabled($move)
+  }
+  Step 'move-gating-selection-restored' @{button_enabled=$true;visible_rows=4}
+  if($VerifyMoveGatingOnly) {
+   $receipt.passed=$true
+   return
+  }
   List-Selected '08-preview.pdf'
   PageReady 'Page 1 of 2'
  }
