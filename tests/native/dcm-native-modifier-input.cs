@@ -19,6 +19,12 @@ public static class DcmNativeModifierInput {
  const uint KEYUP=2, LEFTDOWN=2, LEFTUP=4;
  const byte VK_CONTROL=0x11, VK_SHIFT=0x10;
  public static void ModifierClick(IntPtr root,IntPtr list,int pid,int row,bool shift){
+  Click(root,list,pid,row,shift?VK_SHIFT:VK_CONTROL);
+ }
+ public static void PlainClick(IntPtr root,IntPtr list,int pid,int row){
+  Click(root,list,pid,row,0);
+ }
+ static void Click(IntPtr root,IntPtr list,int pid,int row,byte key){
   uint id;
   if(root==IntPtr.Zero||list==IntPtr.Zero||GetWindowThreadProcessId(root,out id)==0||id!=(uint)pid)
    throw new Exception("QuickSort owner invalid");
@@ -34,13 +40,14 @@ public static class DcmNativeModifierInput {
   POINT cursor;
   bool haveCursor=GetCursorPos(out cursor);
   bool held=false;
-  byte key=shift?VK_SHIFT:VK_CONTROL;
   try {
    if(!SetForegroundWindow(root)||GetForegroundWindow()!=root)
     throw new Exception("Cannot guarantee foreground belongs to disposable QuickSort test");
    if(!SetCursorPos(x,y))throw new Exception("Cannot position pointer inside native ListView");
-   keybd_event(key,0,0,UIntPtr.Zero);
-   held=true;
+   if(key!=0){
+    keybd_event(key,0,0,UIntPtr.Zero);
+    held=true;
+   }
    Thread.Sleep(90);
    if(GetForegroundWindow()!=root)throw new Exception("Foreground changed during modifier test");
    mouse_event(LEFTDOWN,0,0,0,UIntPtr.Zero);
