@@ -588,7 +588,7 @@ const (
 type appState struct {
 	filterTypeLabel, filterExtensionLabel, filterAgeLabel, filterSizeLabel uintptr
 	hwnd                                                                                                                                               uintptr
-	mainMenu, pdfDefaultViewMenu                                                                                                                       uintptr
+	mainMenu, pdfDefaultViewMenu, pdfProviderMenu                                                                                                      uintptr
 	sourceEdit, destEdit, nameEdit, categoryCombo, extensionCombo, readTextCheck                                                                       uintptr
 	sourceAliasCombo, sourceSuggestionList, sourceConfigBtn                                                                                            uintptr
 	filterNameEdit, filterAgeCombo, filterSizeCombo, filterSortLabel, filterSortCombo, filterClearBtn                                                  uintptr
@@ -844,9 +844,10 @@ func createMainMenu(hwnd uintptr) uintptr {
 	fileMenu, _, _ := procCreatePopupMenu.Call()
 	toolsMenu, _, _ := procCreatePopupMenu.Call()
 	pdfViewMenu, _, _ := procCreatePopupMenu.Call()
+	pdfProviderMenu, _, _ := procCreatePopupMenu.Call()
 	helpMenu, _, _ := procCreatePopupMenu.Call()
-	if menu == 0 || fileMenu == 0 || toolsMenu == 0 || pdfViewMenu == 0 || helpMenu == 0 {
-		for _, handle := range []uintptr{fileMenu, toolsMenu, pdfViewMenu, helpMenu, menu} {
+	if menu == 0 || fileMenu == 0 || toolsMenu == 0 || pdfViewMenu == 0 || pdfProviderMenu == 0 || helpMenu == 0 {
+		for _, handle := range []uintptr{fileMenu, toolsMenu, pdfViewMenu, pdfProviderMenu, helpMenu, menu} {
 			if handle != 0 {
 				procDestroyMenu.Call(handle)
 			}
@@ -874,6 +875,13 @@ func createMainMenu(hwnd uintptr) uintptr {
 	procAppendMenuW.Call(pdfViewMenu, widthFlags, ID_PDF_DEFAULT_FIT_WIDTH, uintptr(unsafe.Pointer(wstr("Fit &Width (recommended)"))))
 	procAppendMenuW.Call(pdfViewMenu, pageFlags, ID_PDF_DEFAULT_FIT_PAGE, uintptr(unsafe.Pointer(wstr("Fit &Page"))))
 	appendPopupMenu(toolsMenu, pdfViewMenu, "PDF Default &View")
+	if defaultPersistentPDFiumDevelopment {
+		appendMenuString(pdfProviderMenu,ID_PDF_PROVIDER_AUTO,"&Auto (development default)")
+		appendMenuString(pdfProviderMenu,ID_PDF_PROVIDER_PDFIUM,"&PDFium (FlowPDF)")
+		appendMenuString(pdfProviderMenu,ID_PDF_PROVIDER_WINDOWS,"&Windows.Data.Pdf")
+		appendMenuString(pdfProviderMenu,ID_PDF_PROVIDER_SUMATRA,"&SumatraPDF (restricted)")
+		appendPopupMenu(toolsMenu,pdfProviderMenu,"PDF &Previewer")
+	}
 	procAppendMenuW.Call(toolsMenu, MF_SEPARATOR, 0, 0)
 	appendMenuString(toolsMenu, ID_RECOVERY_CENTER, "&Recovery Center…")
 	appendMenuString(toolsMenu, ID_LEARNING_CENTER, "&Learning Center…")
@@ -891,6 +899,7 @@ func createMainMenu(hwnd uintptr) uintptr {
 		return 0
 	}
 	app.pdfDefaultViewMenu = pdfViewMenu
+	if defaultPersistentPDFiumDevelopment {app.pdfProviderMenu=pdfProviderMenu;updatePDFProviderMenuChecks()}
 	procDrawMenuBar.Call(hwnd)
 	return menu
 }
@@ -3398,6 +3407,14 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 				setPDFDefaultViewPreference(pdfDefaultViewFitWidth)
 			case ID_PDF_DEFAULT_FIT_PAGE:
 				setPDFDefaultViewPreference(pdfDefaultViewFitPage)
+			case ID_PDF_PROVIDER_AUTO:
+				choosePDFPreviewer("auto")
+			case ID_PDF_PROVIDER_PDFIUM:
+				choosePDFPreviewer("pdfium")
+			case ID_PDF_PROVIDER_WINDOWS:
+				choosePDFPreviewer("windows")
+			case ID_PDF_PROVIDER_SUMATRA:
+				choosePDFPreviewer("sumatra")
 			case ID_MENU_ABOUT:
 				showAboutDialog()
 			case ID_MENU_EXIT:
@@ -3539,6 +3556,7 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 			procDestroyMenu.Call(app.mainMenu)
 			app.mainMenu = 0
 			app.pdfDefaultViewMenu = 0
+			app.pdfProviderMenu = 0
 		}
 		if app.gpToken != 0 {
 			procGdiplusShutdown.Call(app.gpToken)
