@@ -6539,7 +6539,7 @@ func main() {
 			// untouched so AltGr keyboard input keeps working. Main-window
 			// mnemonics stay inactive while Manage Destinations has focus.
 			focus, _, _ := procGetFocus.Call()
-			if !focusWithinDestinationManager(focus) && !focusWithinSourceManager(focus) && !focusWithinNamingTemplateManager(focus) && activateAltShortcut(rune(msg.WParam)) {
+			if !focusWithinDestinationManager(focus) && !focusWithinFolderDestinationManager(focus) && !focusWithinSourceManager(focus) && !focusWithinNamingTemplateManager(focus) && activateAltShortcut(rune(msg.WParam)) {
 				continue
 			}
 		}
@@ -6566,6 +6566,28 @@ func main() {
 				if handled {
 					continue
 				}
+				procTranslateMessage.Call(uintptr(unsafe.Pointer(&msg)))
+				procDispatchMessageW.Call(uintptr(unsafe.Pointer(&msg)))
+				continue
+			}
+			if focusWithinFolderDestinationManager(focus) {
+				switch msg.WParam {
+				case VK_TAB:
+					handled = moveFolderDestinationManagerFocus(keyDown(VK_SHIFT))
+				case VK_ESCAPE:
+					procPostMessageW.Call(folderDestinationManager.hwnd, WM_CLOSE, 0, 0)
+					handled = true
+				case VK_RETURN:
+					switch focus {
+					case folderDestinationManager.nameEdit, folderDestinationManager.folderEdit:
+						saveFolderDestinationManagerAlias()
+						handled = true
+					case folderDestinationManager.browseBtn, folderDestinationManager.saveBtn, folderDestinationManager.deleteBtn, folderDestinationManager.newBtn, folderDestinationManager.useBtn, folderDestinationManager.closeBtn:
+						procSendMessageW.Call(focus, BM_CLICK, 0, 0)
+						handled = true
+					}
+				}
+				if handled {continue}
 				procTranslateMessage.Call(uintptr(unsafe.Pointer(&msg)))
 				procDispatchMessageW.Call(uintptr(unsafe.Pointer(&msg)))
 				continue
