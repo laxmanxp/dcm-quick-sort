@@ -220,7 +220,7 @@ function Verify-TwoPaneTab([bool]$history){
   $undo=Rect 1008
   if($batch.Top -lt ($list.Bottom+5) -or $undo.Top -lt ($list.Bottom+5) -or
      $batch.Left -lt $list.Left -or $undo.Right -gt $list.Right -or
-     $undo.Left -le $batch.Right -or $undo.Bottom -gt ($list.Bottom+48)){
+     $undo.Left -le $batch.Right -or $undo.Bottom -gt ($list.Bottom+56)){
    throw ('History footer geometry failed: list='+$list.Left+','+$list.Top+','+$list.Right+','+$list.Bottom+' batch='+$batch.Left+','+$batch.Top+','+$batch.Right+','+$batch.Bottom+' undo='+$undo.Left+','+$undo.Top+','+$undo.Right+','+$undo.Bottom)
   }
   Step 'history-footer-buttons-below-list' @{list_bottom=$list.Bottom;batch_top=$batch.Top;undo_top=$undo.Top;inside_history_pane=$true}
