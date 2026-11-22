@@ -35,6 +35,17 @@ $exe=[IO.Path]::GetFullPath($CandidateExe)
 $worker=[IO.Path]::GetFullPath($WorkerExe)
 if(-not (Test-Path $exe -PathType Leaf) -or -not (Test-Path $worker -PathType Leaf)){throw 'Candidate/worker binaries missing'}
 if(-not (Test-Path 'C:\Flowverse\runtime\pdfium\bin\pdfium.dll')){throw 'Managed PDFium runtime missing'}
+if($DevDefault){
+ # DevDefault intentionally clears explicit worker configuration. Require
+ # the exact sidecar layout that production's automatic discovery expects.
+ $sidecar=Join-Path ([IO.Path]::GetDirectoryName($exe)) 'flowpdf-preview-worker-persistent.exe'
+ if(-not (Test-Path -LiteralPath $sidecar -PathType Leaf)){
+  throw 'DevDefault requires a sidecar PDFium worker beside the candidate EXE'
+ }
+ if((Get-FileHash -LiteralPath $sidecar -Algorithm SHA256).Hash -ne (Get-FileHash -LiteralPath $worker -Algorithm SHA256).Hash){
+  throw 'DevDefault worker sidecar does not match the qualified worker'
+ }
+}
 $lab=Join-Path $LabRoot ('dcm-pdfium-gui-'+[DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss')+'-'+[Guid]::NewGuid().ToString('N').Substring(0,7))
 $null=New-Item -ItemType Directory -Path $lab
 $receipt=[ordered]@{schema=1;feature='DCM-SHARED-PDFIUM-GUI';started_utc=[DateTime]::UtcNow.ToString('o');lab=$lab;commit=(& git -C $repo rev-parse HEAD).Trim();candidate=$exe;worker=$worker;passed=$false;steps=@();captures=@();error=$null;normal_exit=$false;visual_reviewed=$false}
