@@ -858,6 +858,25 @@ try{
   if(-not [DcmPDFPickerProbe]::PostMessage([IntPtr]$hwnd,0x0111,[IntPtr](65536+1018),[IntPtr]$combo)){throw 'Saved destination notification failed'}
   Wait 'Saved destination combo updates path' {(TextControl 1003) -eq $destination}
   Step 'destination-manager-saved-dropdown-selection' @{name='Office Records';folder=$destination;no_vault=$true}
+  if(-not [DcmPDFPickerProbe]::PostMessage([IntPtr]$hwnd,0x0111,[IntPtr]1019,[IntPtr]::Zero)){throw 'Cannot reopen destination manager'}
+  Wait 'Destination Manager reopens' {[DcmDestinationManagerProbe]::FindOwned([IntPtr]$hwnd,$app.Id) -ne [IntPtr]::Zero}
+  $manager=[DcmDestinationManagerProbe]::FindOwned([IntPtr]$hwnd,$app.Id)
+  $savedList=[DcmNative]::Control($manager,$app.Id,1606)
+  [void][DcmTwoPaneGeometry]::SendMessage($savedList,0x0186,[IntPtr]0,[IntPtr]::Zero) # LB_SETCURSEL
+  if(-not [DcmPDFPickerProbe]::PostMessage([IntPtr]$manager,0x0111,[IntPtr](65536+1606),[IntPtr]$savedList)){throw 'Cannot select saved destination'}
+  Wait 'Saved destination selected for deletion' {[DcmNative]::IsWindowEnabled([DcmNative]::Control($manager,$app.Id,1605))}
+  [DcmNative]::ClickAsync($manager,$app.Id,1605)
+  Start-Sleep -Milliseconds 200
+  $dialogs=@([DcmNative]::Dialogs($hwnd,$app.Id))
+  if($dialogs.Count -ne 1){throw 'Delete shortcut confirmation missing'}
+  $confirm=[IntPtr]$dialogs[0].Handle
+  [DcmNative]::ClickAsync($confirm,$app.Id,6) # IDYES
+  Wait 'Saved destination shortcut removed' {
+   (Get-Content -LiteralPath $savedPath -Raw) -notmatch 'Office Records='
+  }
+  if(-not(Test-Path -LiteralPath $destination -PathType Container)){throw 'Delete shortcut also deleted physical folder'}
+  Step 'destination-manager-delete-shortcut' @{saved_alias_removed=$true;physical_folder_preserved=$true}
+  [DcmNative]::ClickAsync($manager,$app.Id,1609)
   $receipt.passed=$true
   return
  }
