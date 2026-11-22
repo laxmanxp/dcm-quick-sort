@@ -1156,7 +1156,7 @@ func populateDestinationAliases() {
 	}
 	app.updatingDestinationAlias = true
 	procSendMessageW.Call(app.destAliasCombo, CB_RESETCONTENT, 0, 0)
-	comboAddItem(app.destAliasCombo, "Vault location")
+	comboAddItem(app.destAliasCombo, "Destination folder")
 	for _, alias := range app.destAliases {
 		comboAddItem(app.destAliasCombo, alias.Name)
 	}
@@ -1196,10 +1196,10 @@ func selectedDestinationAlias() (DestinationAlias, bool) {
 func reloadDestinationAliases() {
 	raw, err := loadDestinationAliases("")
 	if err != nil {
-		setText(app.statusLabel, "Could not load Vault destination favorites: "+err.Error())
+		setText(app.statusLabel, "Could not load destination favorites: "+err.Error())
 		return
 	}
-	app.destAliases = normalizeVaultDestinationFavorites(loadVaultRootSetting(), raw)
+	app.destAliases = existingDestinationFolderFavorites(raw)
 	populateDestinationAliases()
 	// Keep an external latest snapshot current without creating duplicate history entries.
 	_, _ = backupCurrentConfiguration("configuration-loaded")
@@ -2500,36 +2500,27 @@ func hideDestinationSuggestions() {
 }
 
 func updateDestinationSuggestions() {
-	// Destination is a Vault logical location. Type-ahead comes only from the
-	// configured Vault address index; arbitrary filesystem paths are never offered.
-	typed := strings.TrimSpace(getText(app.destEdit))
-	app.destDir = typed
-	syncDestinationAliasSelection(typed)
+	// No Vault index: users may enter an absolute Windows path or browse to a
+	// directory. Existing favorites remain available in the destination combo.
+	app.destDir = strings.TrimSpace(getText(app.destEdit))
+	syncDestinationAliasSelection(app.destDir)
 	updateOpenDestinationAvailability()
-	app.destSuggestions = nil
-	procSendMessageW.Call(app.destSuggestionList, LB_RESETCONTENT, 0, 0)
-	root := loadVaultRootSetting()
-	if root == "" || typed == "" {
-		hideDestinationSuggestions()
-		return
+	hideDestinationSuggestions()
+}
+
+func chooseDestinationFolder() {
+	initial := strings.TrimSpace(getText(app.destEdit))
+	if _, err := resolveExistingDestinationFolder(initial); err != nil {
+		initial = app.sourceDir
 	}
-	idx, err := loadVaultAddressIndex(root)
-	if err != nil {
-		hideDestinationSuggestions()
-		return
+	folder := browseFolder(app.hwnd, "Choose destination folder", initial)
+	if folder == "" { return }
+	if physical, err := resolveExistingDestinationFolder(folder); err == nil {
+		setDestinationText(physical)
+		setText(app.statusLabel, "Destination folder: "+physical)
+	} else {
+		showError("Selected destination folder is unavailable.\\n\\n"+err.Error())
 	}
-	entries := vaultDestinationFolderSuggestions(idx, typed, 12)
-	for _, entry := range entries {
-		app.destSuggestions = append(app.destSuggestions, entry.Address)
-		procSendMessageW.Call(app.destSuggestionList, LB_ADDSTRING, 0, uintptr(unsafe.Pointer(wstr(entry.Address))))
-	}
-	if len(app.destSuggestions) == 0 {
-		hideDestinationSuggestions()
-		return
-	}
-	procSendMessageW.Call(app.destSuggestionList, LB_SETCURSEL, ^uintptr(0), 0)
-	procShowWindow.Call(app.destSuggestionList, SW_SHOW)
-	app.destSuggestionsVisible = true
 }
 
 func focusWithinDestination() bool {
@@ -2601,7 +2592,7 @@ func activateAltShortcut(key rune) bool {
 	case ShortcutBrowseDestination:
 		return clickMnemonicControl(app.destBtn)
 	case ShortcutManageDestinations:
-		openDestinationManager()
+		chooseDestinationFolder()
 		return true
 	case ShortcutRename:
 		return clickMnemonicControl(app.renameBtn)
@@ -3438,11 +3429,11 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 			case ID_SOURCE_CONFIG:
 				openSourceManager()
 			case ID_DEST_BTN:
-				openDestinationManager()
+				chooseDestinationFolder()
 			case ID_OPEN_DEST:
 				openDestinationFolder()
 			case ID_DEST_CONFIG:
-				openDestinationManager()
+				chooseDestinationFolder()
 			case ID_APPLY_RENAME:
 				applySelectedRenameTool()
 			case ID_FILTER_CLEAR:
@@ -3793,13 +3784,13 @@ func createUI(hwnd uintptr) {
 	setExplorerTheme(app.renameToolBtn)
 	app.destinationLabel = createControl("STATIC", "Favorite:", WS_CHILD|WS_VISIBLE|SS_LEFT, 20, 568, 70, 20, hwnd, 0)
 	app.destAliasCombo = createControl("COMBOBOX", "", WS_CHILD|WS_VISIBLE|WS_TABSTOP|CBS_DROPDOWNLIST|WS_VSCROLL, 95, 563, 205, 260, hwnd, ID_DEST_ALIAS)
-	app.pathLabel = createControl("STATIC", "Vault Location:", WS_CHILD|WS_VISIBLE|SS_LEFT, 295, 568, 90, 20, hwnd, 0)
+	app.pathLabel = createControl("STATIC", "Destination:", WS_CHILD|WS_VISIBLE|SS_LEFT, 295, 568, 90, 20, hwnd, 0)
 	app.destEdit = createControl("EDIT", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_TABSTOP|ES_AUTOHSCROLL, 390, 563, 645, 28, hwnd, ID_DEST_EDIT)
-	app.destBtn = createControl("BUTTON", "&Manage…", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 1045, 562, 100, 29, hwnd, ID_DEST_BTN)
+	app.destBtn = createControl("BUTTON", "&Browse…", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 1045, 562, 100, 29, hwnd, ID_DEST_BTN)
 	app.destOpenBtn = createControl("BUTTON", "Open Locatio&n", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 1155, 562, 135, 29, hwnd, ID_OPEN_DEST)
 
 	app.renameBtn = createControl("BUTTON", "&Rename", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 20, 610, 90, 34, hwnd, ID_RENAME)
-	app.moveBtn = createControl("BUTTON", "Move to &Vault", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_OWNERDRAW, 120, 610, 145, 34, hwnd, ID_MOVE)
+	app.moveBtn = createControl("BUTTON", "Move to &Folder", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_OWNERDRAW, 120, 610, 145, 34, hwnd, ID_MOVE)
 	app.nextBtn = createControl("BUTTON", "Ne&xt", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 275, 610, 80, 34, hwnd, ID_NEXT)
 	app.openBtn = createControl("BUTTON", "&Open", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 365, 610, 80, 34, hwnd, ID_OPEN)
 	app.fileFlowBtn = createControl("BUTTON", "Handoff to &FileFlow", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 455, 610, 170, 34, hwnd, ID_FILEFLOW_HANDOFF)
@@ -4583,8 +4574,8 @@ func initDefaultFolders() {
 	}
 	app.sourceDir = source
 	setSourceText(source)
-	// v1.0.69+ destinations are Vault logical locations only. Never seed the
-	// destination field with Documents/Home or another arbitrary disk folder.
+	// Require an explicit destination-folder choice; do not seed a folder
+	// that could accidentally receive files.
 	setDestinationText("")
 }
 
@@ -4840,8 +4831,8 @@ func promptBatchMove(plan []batchMovePlanItem, logicalDestination string) bool {
 		return true
 	}
 	physical := filepath.Dir(plan[0].Target)
-	msg := fmt.Sprintf("Move %d selected files into the Vault?\n\nLogical location:\n%s\n\nPhysical location:\n%s\n\nEach file keeps its current filename. Conflicts are handled one file at a time and every successful move remains individually undoable.", len(plan), logicalDestination, physical)
-	result, _, _ := procMessageBoxW.Call(app.hwnd, uintptr(unsafe.Pointer(wstr(msg))), uintptr(unsafe.Pointer(wstr("Move Selected Files to Vault — DCM - Quick Sort"))), 0x04|0x20)
+	msg := fmt.Sprintf("Move %d selected files to this folder?\n\n%s\n\nEach file keeps its current filename. Conflicts are handled one file at a time and every successful move remains individually undoable.", len(plan), physical)
+	result, _, _ := procMessageBoxW.Call(app.hwnd, uintptr(unsafe.Pointer(wstr(msg))), uintptr(unsafe.Pointer(wstr("Move Selected Files — DCM - Quick Sort"))), 0x04|0x20)
 	return int(result) == 6 // IDYES
 }
 
@@ -4867,7 +4858,7 @@ func startBatchMove(selected []string, dest, logicalDestination string) {
 	app.batchMoveCompleted = 0
 	app.batchMoveIssues = 0
 	app.batchProcessedStart = len(app.history)
-	setText(app.statusLabel, fmt.Sprintf("Batch move ready: %d selected files → Vault/%s", len(plan), logicalDestination))
+	setText(app.statusLabel, fmt.Sprintf("Batch move ready: %d selected files → %s", len(plan), logicalDestination))
 	procPostMessageW.Call(app.hwnd, WM_BATCH_MOVE_NEXT, 0, 0)
 }
 
@@ -4930,82 +4921,63 @@ func finishBatchMove() {
 }
 
 func moveCurrent() {
-	if app.batchMoveActive {
-		setText(app.statusLabel, "A batch move is already running.")
+	if app.batchMoveActive || app.backgroundMoveBusy {return}
+	physicalDest,err:=resolveExistingDestinationFolder(getText(app.destEdit))
+	if err!=nil {
+		showError("Choose an existing destination folder.\n\n"+err.Error())
 		return
 	}
-	if app.backgroundMoveBusy {
-		setText(app.statusLabel, "A background move is already running.")
+	selected:=selectedSourceFiles()
+	if len(selected)==0 {return}
+	if len(selected)>1 {
+		startBatchMove(selected,physicalDest,physicalDest)
 		return
 	}
-	root := loadVaultRootSetting()
-	physicalDest, logicalDest, err := resolveExistingVaultDestination(root, strings.TrimSpace(getText(app.destEdit)))
-	if err != nil {
-		showError("Choose an existing logical location inside the configured Vault.\n\n" + err.Error())
+	src:=selected[0]
+	app.destDir=physicalDest
+	setDestinationText(physicalDest)
+	currentName:=strings.TrimSuffix(filepath.Base(src),filepath.Ext(src))
+	target,err:=targetFor(src,physicalDest,currentName)
+	if err!=nil {showError(err.Error());return}
+	if filepath.Clean(target)==filepath.Clean(src){
+		showError("This file is already in the selected destination folder. Choose another folder or use Rename.")
 		return
 	}
-	selected := selectedSourceFiles()
-	if len(selected) == 0 {
-		return
-	}
-	if len(selected) > 1 {
-		startBatchMove(selected, physicalDest, logicalDest)
-		return
-	}
-	// Move consumes the actual selected set, never an unselected caret row.
-	src := selected[0]
-	app.destDir = logicalDest
-	setDestinationText(logicalDest)
-	currentName := strings.TrimSuffix(filepath.Base(src), filepath.Ext(src))
-	target, err := targetFor(src, physicalDest, currentName)
-	if err != nil {
-		showError(err.Error())
-		return
-	}
-	if filepath.Clean(target) == filepath.Clean(src) {
-		showError("This file is already in the selected Vault location. Choose another Vault location or use Rename.")
-		return
-	}
-	beginFileOperation(fileOperationMove, src, target)
+	beginFileOperation(fileOperationMove,src,target)
 }
 
 func updateMoveAvailability() {
-	if app.moveBtn == 0 {
-		return
-	}
-	enabled := !app.backgroundMoveBusy && !app.batchMoveActive && len(selectedSourceFiles()) > 0
+	if app.moveBtn==0 {return}
+	enabled:=!app.backgroundMoveBusy && !app.batchMoveActive && len(selectedSourceFiles())>0
 	if enabled {
-		_, _, err := resolveExistingVaultDestination(loadVaultRootSetting(), strings.TrimSpace(getText(app.destEdit)))
-		enabled = err == nil
+		_,err:=resolveExistingDestinationFolder(getText(app.destEdit))
+		enabled=err==nil
 	}
-	if enabled {
-		procEnableWindow.Call(app.moveBtn, 1)
-	} else {
-		procEnableWindow.Call(app.moveBtn, 0)
-	}
-	// Move uses an owner-drawn button; repaint its disabled styling.
-	procInvalidateRect.Call(app.moveBtn, 0, 1)
+	flag:=uintptr(0)
+	if enabled {flag=1}
+	procEnableWindow.Call(app.moveBtn,flag)
+	procInvalidateRect.Call(app.moveBtn,0,1)
 }
 
 func updateOpenDestinationAvailability() {
-	if app.destOpenBtn != 0 {
-		_, _, err := resolveExistingVaultDestination(loadVaultRootSetting(), getText(app.destEdit))
-		enabled := uintptr(0)
-		if err == nil && !app.backgroundMoveBusy { enabled = 1 }
-		procEnableWindow.Call(app.destOpenBtn, enabled)
+	if app.destOpenBtn!=0 {
+		_,err:=resolveExistingDestinationFolder(getText(app.destEdit))
+		flag:=uintptr(0)
+		if err==nil && !app.backgroundMoveBusy {flag=1}
+		procEnableWindow.Call(app.destOpenBtn,flag)
 	}
 	updateMoveAvailability()
 }
 
 func openDestinationFolder() {
-	path, logical, err := resolveExistingVaultDestination(loadVaultRootSetting(), getText(app.destEdit))
-	if err != nil {
+	path,err:=resolveExistingDestinationFolder(getText(app.destEdit))
+	if err!=nil {
 		updateOpenDestinationAvailability()
-		showError("Vault location is unavailable.\n\n" + err.Error())
+		showError("Destination folder unavailable.\n\n"+err.Error())
 		return
 	}
 	shellOpen(path)
-	setText(app.statusLabel, "Opened Vault location: "+logical)
+	setText(app.statusLabel,"Opened destination folder: "+path)
 }
 
 func chooseVaultRoot() {
