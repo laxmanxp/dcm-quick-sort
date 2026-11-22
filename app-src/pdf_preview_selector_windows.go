@@ -12,12 +12,11 @@ const (
  ID_PDF_PROVIDER_AUTO = 2010
  ID_PDF_PROVIDER_PDFIUM = 2011
  ID_PDF_PROVIDER_WINDOWS = 2012
- ID_PDF_PROVIDER_SUMATRA = 2013
 )
 
 func pdfPreviewChoice() string {
  switch strings.ToLower(strings.TrimSpace(os.Getenv("DCM_PDF_PROVIDER"))) {
- case "pdfium","windows","sumatra": return strings.ToLower(strings.TrimSpace(os.Getenv("DCM_PDF_PROVIDER")))
+ case "pdfium","windows": return strings.ToLower(strings.TrimSpace(os.Getenv("DCM_PDF_PROVIDER")))
  default: return "auto"
  }
 }
@@ -26,7 +25,6 @@ func pdfPreviewChoiceName(choice string) string {
  switch choice {
  case "pdfium": return "PDFium (FlowPDF)"
  case "windows": return "Windows.Data.Pdf"
- case "sumatra": return "SumatraPDF (restricted)"
  default: return "Auto (development default)"
  }
 }
@@ -38,7 +36,6 @@ func updatePDFProviderMenuChecks() {
   {ID_PDF_PROVIDER_AUTO,"auto"},
   {ID_PDF_PROVIDER_PDFIUM,"pdfium"},
   {ID_PDF_PROVIDER_WINDOWS,"windows"},
-  {ID_PDF_PROVIDER_SUMATRA,"sumatra"},
  } {
   flags:=uintptr(0)
   if choice==item.value {flags=MF_CHECKED}
@@ -55,9 +52,6 @@ func validatePDFPreviewChoice(choice string) error {
   if _,err:=flowPDFiumWorkerPath();err!=nil{return fmt.Errorf("FlowPDF worker is unavailable: %w",err)}
   if !developmentPDFiumRuntimeAvailable(){return fmt.Errorf("PDFium DLL runtime is unavailable")}
   return nil
- case "sumatra":
-  _,err:=validateSumatraRuntime(os.Getenv("DCM_SUMATRA_EXE"))
-  return err
  default:
   return fmt.Errorf("unknown PDF previewer: %s",choice)
  }
@@ -72,8 +66,7 @@ func choosePDFPreviewer(choice string) {
   showError("Cannot switch to "+pdfPreviewChoiceName(choice)+":\n"+err.Error())
   return
  }
- if !releaseSumatraForOperation() {return}
- if pdfShutdown.closing || sumatraPreparationBusy() {return}
+ if pdfShutdown.closing {return}
  current:=currentFile()
  if current!="" && isPDFPath(current) {unloadPreview()}
  if err:=os.Setenv("DCM_PDF_PROVIDER",choice);err!=nil {
