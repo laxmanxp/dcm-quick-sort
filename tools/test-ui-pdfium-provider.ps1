@@ -978,8 +978,16 @@ try{
   $unique=@($starts | Select-Object -ExpandProperty renderer_pid -Unique)
   if($starts.Count -lt 6){throw ('Too few persistent PDFium render requests: '+$starts.Count)}
   . (Join-Path $PSScriptRoot 'pdfium-worker-transition-contract.ps1')
-  $contract=Assert-PDFiumWorkerTransitions -Events $events
-  $restarts=[int]$contract.cancel_restarts
+  if($VerifyPDFPicker){
+   # Renderer changes are intentional here. Require working final PDFium
+   # rendering and no one-shot fallback; ordinary runs retain strict worker
+   # cancellation/reuse acceptance unchanged.
+   $restarts=0
+   Step 'pdf-preview-selector-intentional-worker-transition' @{mode='backend comparison';last_worker=$starts[-1].renderer_pid;worker_start_events=$starts.Count}
+  }else{
+   $contract=Assert-PDFiumWorkerTransitions -Events $events
+   $restarts=[int]$contract.cancel_restarts
+  }
   $fallbacks=@($events | Where-Object {$_.event -match 'persistent-transport-fallback|persistent-fallback-started'})
   if($fallbacks.Count){throw ('Unexpected one-shot fallback during healthy GUI: '+$fallbacks.Count)}
   # Only the final owned worker may still be running at normal shutdown.
