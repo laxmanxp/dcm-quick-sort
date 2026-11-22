@@ -855,7 +855,9 @@ try{
   [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1003,'')
   Wait 'Destination edit clears' {(TextControl 1003) -eq ''}
   [void][DcmTwoPaneGeometry]::SendMessage($combo,0x014E,[IntPtr]1,[IntPtr]::Zero) # CB_SETCURSEL
-  if(-not [DcmPDFPickerProbe]::PostMessage([IntPtr]$hwnd,0x0111,[IntPtr](65536+1018),[IntPtr]$combo)){throw 'Saved destination notification failed'}
+  $selected=[DcmTwoPaneGeometry]::SendMessage($combo,0x0147,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64()
+  if($selected -ne 1){throw ('Saved destination combo failed to select index 1; got '+$selected)}
+  [void][DcmTwoPaneGeometry]::SendMessage([IntPtr]$hwnd,0x0111,[IntPtr](65536+1018),[IntPtr]$combo)
   Wait 'Saved destination combo updates path' {(TextControl 1003) -eq $destination}
   Step 'destination-manager-saved-dropdown-selection' @{name='Office Records';folder=$destination;no_vault=$true}
   if(-not [DcmPDFPickerProbe]::PostMessage([IntPtr]$hwnd,0x0111,[IntPtr]1019,[IntPtr]::Zero)){throw 'Cannot reopen destination manager'}
