@@ -12,6 +12,7 @@ param(
   [switch]$VerifyActualFilename,
   [switch]$VerifyTwoPane,
   [switch]$VerifySplitter,
+  [switch]$VerifyNativeSplitterOnly,
   [switch]$VerifyColumns,
   [switch]$VerifyNativeReport,
   [switch]$VerifyPDFPicker,
@@ -419,6 +420,46 @@ try{
   $itemCount=[DcmTwoPaneGeometry]::SendMessage($native,0x1004,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64()
   if($columnCount -ne 4 -or $itemCount -ne 4){throw ('Native ListView columns/items mismatch '+$columnCount+'/'+$itemCount)}
   Step 'native-report-four-columns' @{class='SysListView32';header_class='SysHeader32';columns=$columnCount;items=$itemCount;visible=$true}
+  if($VerifyNativeSplitterOnly){
+   # Isolated native-table + splitter qualification before any queue
+   # selection actions (which are separately investigated).
+   $queueRect=[DcmTwoPaneGeometry+RECT]::new()
+   $preview=[DcmNative]::ChildByClass($hwnd,$app.Id,'QuickSortPreview')
+   $previewRect=[DcmTwoPaneGeometry+RECT]::new()
+   if(-not [DcmTwoPaneGeometry]::GetWindowRect($native,[ref]$queueRect) -or
+      -not [DcmTwoPaneGeometry]::GetWindowRect($preview,[ref]$previewRect)){throw 'Native splitter geometry missing'}
+   $widthBefore=$queueRect.Right-$queueRect.Left
+   $previewBefore=$previewRect.Right-$previewRect.Left
+   $start=[DcmSplitterPoint]::new()
+   $start.X=[int](($queueRect.Right+$previewRect.Left)/2)
+   $start.Y=[int](($queueRect.Top+$queueRect.Bottom)/2)
+   if(-not [DcmSplitterPoint]::ScreenToClient([IntPtr]$hwnd,[ref]$start)){throw 'Native splitter coordinate conversion failed'}
+   $pack={param([int]$x,[int]$y);return [IntPtr]((($y -band 0xffff) -shl 16) -bor ($x -band 0xffff))}
+   [void][DcmTwoPaneGeometry]::SendMessage([IntPtr]$hwnd,0x0201,[IntPtr]1,(& $pack $start.X $start.Y))
+   foreach($offset in @(25,50,75,110)){
+    [void][DcmTwoPaneGeometry]::SendMessage([IntPtr]$hwnd,0x0200,[IntPtr]1,(& $pack ($start.X+$offset) $start.Y))
+   }
+   # No resize during guide-only drag: the native ListView must remain stable.
+   $during=[DcmTwoPaneGeometry+RECT]::new()
+   [void][DcmTwoPaneGeometry]::GetWindowRect($native,[ref]$during)
+   if($during.Right-$during.Left -ne $widthBefore){throw 'Native ListView resized during guide movement'}
+   [void][DcmTwoPaneGeometry]::SendMessage([IntPtr]$hwnd,0x0202,[IntPtr]::Zero,(& $pack ($start.X+110) $start.Y))
+   Start-Sleep -Milliseconds 400
+   $after=[DcmTwoPaneGeometry+RECT]::new()
+   $afterPreview=[DcmTwoPaneGeometry+RECT]::new()
+   [void][DcmTwoPaneGeometry]::GetWindowRect($native,[ref]$after)
+   [void][DcmTwoPaneGeometry]::GetWindowRect($preview,[ref]$afterPreview)
+   $widthAfter=$after.Right-$after.Left
+   $previewAfter=$afterPreview.Right-$afterPreview.Left
+   if($widthAfter-$widthBefore -lt 70 -or $previewBefore-$previewAfter -lt 70){throw 'Native splitter release failed to resize both panes'}
+   $afterHeader=[DcmTwoPaneGeometry]::FindWindowEx($native,[IntPtr]::Zero,'SysHeader32',$null)
+   $cols=[DcmTwoPaneGeometry]::SendMessage($afterHeader,0x1200,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64()
+   if($cols -ne 4){throw 'Native header lost columns after splitter drag'}
+   Step 'native-splitter-guide-and-release' @{list_before=$widthBefore;list_after=$widthAfter;preview_before=$previewBefore;preview_after=$previewAfter;native_columns=$cols;stable_while_dragging=$true}
+   if(-not $SkipScreenshots){Capture 'native-splitter-after-drag' 'teal'}
+   $receipt.passed=$true
+   return
+  }
   if($VerifyPDFPicker){
    List-Selected '08-preview.pdf'
    PageReady 'Page 1 of 2'
