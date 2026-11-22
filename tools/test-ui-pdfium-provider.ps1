@@ -11,6 +11,7 @@ param(
   [switch]$VerifyCodeText,
   [switch]$VerifyMoveGating,
   [switch]$VerifyMoveGatingOnly,
+  [switch]$VerifyDestinationFolderOnly,
   [switch]$VerifyActualFilename,
   [switch]$VerifyTwoPane,
   [switch]$VerifySplitter,
@@ -814,6 +815,29 @@ try{
   Assert-ActualFilenameLayout
  }
  PageReady 'Page 1 of 2'
+ if($VerifyDestinationFolderOnly){
+  $move=[DcmNative]::Control($hwnd,$app.Id,1041)
+  if([DcmNative]::IsWindowEnabled($move)){throw 'Move enabled with no destination folder'}
+  Step 'folder-move-empty-disabled' @{enabled=$false}
+  [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1003,(Join-Path $lab 'not-an-existing-folder'))
+  Wait 'nonexistent folder rejected' {-not [DcmNative]::IsWindowEnabled($move)}
+  Step 'folder-move-nonexistent-disabled' @{enabled=$false}
+  [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1003,$fixture.destination)
+  Wait 'existing physical folder accepted' {[DcmNative]::IsWindowEnabled($move)}
+  Step 'folder-move-real-folder-enabled' @{enabled=$true;folder=$fixture.destination}
+  [DcmNative]::ClickAsync($hwnd,$app.Id,1041)
+  $moved=Join-Path $fixture.destination '08-preview.pdf'
+  Wait 'folder move completed' {(Test-Path -LiteralPath $moved) -and -not(Test-Path -LiteralPath $pdf)}
+  if((Hash $moved) -ne $sha.ToLowerInvariant()){throw 'Folder move altered file bytes'}
+  Step 'folder-move-complete' @{bytes_preserved=$true;destination=$moved}
+  SelectUndoRecord '08-preview.pdf'
+  [DcmNative]::ClickAsync($hwnd,$app.Id,1008)
+  Wait 'folder move undo completed' {(Test-Path -LiteralPath $pdf) -and -not(Test-Path -LiteralPath $moved)}
+  if((Hash $pdf) -ne $sha.ToLowerInvariant()){throw 'Folder move undo altered file bytes'}
+  Step 'folder-move-undo-complete' @{bytes_preserved=$true;source_restored=$true}
+  $receipt.passed=$true
+  return
+ }
  if($VerifyMoveGating){
   # Fixture Vault exists, but no destination is chosen yet. Check every
   # transition on disposable source files, without performing any move.
