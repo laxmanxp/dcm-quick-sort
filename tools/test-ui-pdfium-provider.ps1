@@ -16,6 +16,7 @@ param(
   [switch]$VerifyNativeSplitterOnly,
   [switch]$VerifyColumns,
   [switch]$VerifyNativeReport,
+  [switch]$VerifyNativeSelectionOnly,
   [switch]$VerifyPDFPicker,
   [string]$SumatraRuntime='',
   [switch]$LegacyQueue,
@@ -706,6 +707,11 @@ try{
   $activeStem=(TextControl 1005)
   if($selectedStems -cnotcontains $activeStem){throw ('QuickSort active name is absent from sorted selection: '+$activeStem+'; selected='+($selectedStems -join ','))}
   Step 'native-report-selection-after-sort' @{selected_indices=$nativeNow;selected_names=$selectedStems;active_name=$activeStem;preserved=$true}
+  if($VerifyNativeSelectionOnly){
+   Step 'native-selection-isolated-acceptance' @{native_report=$true;keyboard_selection=$true;header_sort=$true;selected_rows_preserved=$true}
+   $receipt.passed=$true
+   return
+  }
 
  }
  if($VerifyColumns){
