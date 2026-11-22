@@ -352,3 +352,35 @@ arguments for the sample `tests\fixtures\sumatra-scroll.pdf`. The window
 was brought to the foreground and intentionally left open for manual testing.
 The older development session was not disturbed. Production QuickSort and
 FileFlow Suite remain untouched.
+
+## QuickSort-owned PDF toolbar replaces Sumatra — 2026-11-22
+
+Per product decision, the SumatraPDF choice was **removed from Tools > PDF
+Previewer** and the Sumatra startup call was **removed from active PDF loading**.
+The development selector now provides only Auto, PDFium (FlowPDF) and
+Windows.Data.Pdf. The standalone legacy Sumatra integration source remains
+inactive temporarily for historical compatibility, but no Sumatra executable
+is bundled or started by the current dev build. The isolated Sumatra test
+runtime was removed from Lenovo after confirming no owned viewer was in use.
+
+A QuickSort-owned compact 34px PDF toolbar now contains: previous page,
+**editable current page + Go**, total pages, next page, **Fit Width**,
+**Fit Page**, **rotate counterclockwise/clockwise**, and zoom out/in.
+It uses native Win32 controls and existing PDFium/Windows.Data.Pdf operations,
+not copied Sumatra code or assets. On narrow panes, controls past the width
+limit are hidden rather than overlapping. PDF text find is **not implemented**
+in this iteration; no nonfunctional search field is exposed.
+
+Lenovo full Go suite and development build: PASS. The GUI acceptance harness
+was updated to check page number + total separately and exercise Go 1/2,
+clockwise/counterclockwise rotation, fit width/page and zoom in/out.
+- PDF-specific rotation and new-page-entry GUI with legacy queue fallback:
+  `dcm-pdfium-gui-20261122-023520-499d33e` — PASS, normal exit.
+- Native report queue full GUI with custom toolbar:
+  `dcm-pdfium-gui-20261122-023654-caf75dd` — PASS, normal exit.
+
+The updated dev app was launched interactively on Lenovo, PID **12208**, from
+`D:\FlowverseTesting\Builds\DCM-QuickSort\two-pane-ui-20261121\two-pane-custom-toolbar-dev.exe`
+with `DCM_PDF_PROVIDER=auto` and no Sumatra configuration. Its window was
+brought to the foreground for manual inspection. Production QuickSort and
+FileFlow Suite installations remain unchanged.
