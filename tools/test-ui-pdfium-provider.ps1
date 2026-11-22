@@ -8,6 +8,7 @@ param(
   [switch]$WindowsRollback,
   [switch]$VerifyRotation,
   [switch]$VerifyNarrowToolbar,
+  [switch]$VerifyCodeText,
   [switch]$VerifyActualFilename,
   [switch]$VerifyTwoPane,
   [switch]$VerifyColumns,
@@ -1085,6 +1086,34 @@ try{
   List-Selected '08-preview.pdf'
   Assert-ActualFile '08-preview.pdf' 'PDF'
   Step 'actual-filename-office-switching' @{docx=$true;xlsx=$true;pdf=$true;read_only_field=$true}
+ }
+ if($VerifyCodeText){
+  $samples=@(
+   @{name='15-sample_test.go';body="package example`nfunc TestSourceFile() {}`n";marker='TestSourceFile'},
+   @{name='16-test-config.json';body='{"fixture":"read-as-text-check"}';marker='read-as-text-check'}
+  )
+  foreach($sample in $samples){
+   [IO.File]::WriteAllText((Join-Path $fixture.inbox $sample.name),$sample.body,[Text.UTF8Encoding]::new($false))
+  }
+  [DcmNative]::ClickAsync($hwnd,$app.Id,1011)
+  Wait 'code samples listed' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 6}
+  foreach($sample in $samples){
+   List-Selected $sample.name
+   $check=[DcmNative]::Control($hwnd,$app.Id,1014)
+   if(-not [DcmNative]::IsWindowEnabled($check)){throw ('Read as Text disabled for '+$sample.name)}
+   $state=[DcmTwoPaneGeometry]::SendMessage([IntPtr]$check,0x00F0,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64()
+   if($state -ne 1){[DcmNative]::ClickAsync($hwnd,$app.Id,1014)}
+   $pane=[DcmNative]::ChildByClass($hwnd,$app.Id,'QuickSortPreview')
+   $edit=[DcmTwoPaneGeometry]::FindWindowEx([IntPtr]$pane,[IntPtr]::Zero,'Edit',$null)
+   if($edit -eq [IntPtr]::Zero){throw 'Read as Text preview edit missing'}
+   $marker=$sample.marker
+   Wait ('text preview '+$sample.name) {([DcmNative]::Text($edit,$app.Id)).Contains($marker)}
+   Step 'read-as-text-code-file' @{file=$sample.name;marker=$marker;enabled=$true;content_visible=$true}
+  }
+  List-Selected '08-preview.pdf'
+  if([DcmNative]::IsWindowEnabled([DcmNative]::Control($hwnd,$app.Id,1014))){throw 'Read as Text enabled for PDF'}
+  PageReady 'Page 1 of 2'
+  Step 'read-as-text-pdf-rejection' @{enabled=$false;pdf_preview_restored=$true}
  }
  if($Persistent -or $DevDefault) {
   $events=@(Get-Content -LiteralPath $trace | ForEach-Object {$_|ConvertFrom-Json})
