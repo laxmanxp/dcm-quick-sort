@@ -11,6 +11,7 @@ param(
   [switch]$VerifyCodeText,
   [switch]$VerifyActualFilename,
   [switch]$VerifyTwoPane,
+  [switch]$VerifySplitter,
   [switch]$VerifyColumns,
   [switch]$VerifyNativeReport,
   [switch]$VerifyPDFPicker,
@@ -102,6 +103,14 @@ public static class DcmTwoPaneGeometry {
  [DllImport("user32.dll", CharSet=CharSet.Unicode, SetLastError=true)] public static extern IntPtr SendMessageTimeout(IntPtr hwnd,uint message,IntPtr wparam,IntPtr lparam,uint flags,uint timeout,out IntPtr result);
  [DllImport("user32.dll", SetLastError=true)] public static extern bool PostMessage(IntPtr hwnd,uint message,IntPtr wparam,IntPtr lparam);
  [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern IntPtr FindWindowEx(IntPtr parent,IntPtr after,string className,string caption);
+}
+'@
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public struct DcmSplitterPoint {
+ public int X,Y;
+ [DllImport("user32.dll")] public static extern bool ScreenToClient(IntPtr hwnd,ref DcmSplitterPoint point);
 }
 '@
 function Is-Visible([int]$id){
@@ -733,6 +742,47 @@ try{
   Assert-ActualFilenameLayout
  }
  PageReady 'Page 1 of 2'
+ if($VerifySplitter){
+  # Exercise the exact app-owned splitter through native Win32 mouse messages.
+  # No desktop-wide input and no changes to the user's current files/windows.
+  $queueHwnd=[DcmNative]::Control($hwnd,$app.Id,1016)
+  $pane=[DcmNative]::ChildByClass($hwnd,$app.Id,'QuickSortPreview')
+  $beforeQueue=[DcmTwoPaneGeometry+RECT]::new()
+  $beforePane=[DcmTwoPaneGeometry+RECT]::new()
+  $windowRect=[DcmTwoPaneGeometry+RECT]::new()
+  if(-not [DcmTwoPaneGeometry]::GetWindowRect([IntPtr]$queueHwnd,[ref]$beforeQueue) -or
+     -not [DcmTwoPaneGeometry]::GetWindowRect([IntPtr]$pane,[ref]$beforePane) -or
+     -not [DcmTwoPaneGeometry]::GetWindowRect([IntPtr]$hwnd,[ref]$windowRect)){
+   throw 'Splitter baseline rectangles unavailable'
+  }
+  $screenStartX=[int](($beforeQueue.Right+$beforePane.Left)/2)
+  # Convert screen to client using the actual window borders through ScreenToClient.
+  $start=[DcmSplitterPoint]::new()
+  $start.X=$screenStartX;$start.Y=[int](($beforeQueue.Top+$beforeQueue.Bottom)/2)
+  if(-not [DcmSplitterPoint]::ScreenToClient([IntPtr]$hwnd,[ref]$start)){throw 'Splitter ScreenToClient failed'}
+  $startX=$start.X;$y=$start.Y
+  $pack={param([int]$x,[int]$vertical);return [IntPtr]((($vertical -band 0xffff) -shl 16) -bor ($x -band 0xffff))}
+  [void][DcmTwoPaneGeometry]::SendMessage([IntPtr]$hwnd,0x0201,[IntPtr]1,(& $pack $startX $y))
+  [void][DcmTwoPaneGeometry]::SendMessage([IntPtr]$hwnd,0x0200,[IntPtr]1,(& $pack ($startX+110) $y))
+  [void][DcmTwoPaneGeometry]::SendMessage([IntPtr]$hwnd,0x0202,[IntPtr]::Zero,(& $pack ($startX+110) $y))
+  Start-Sleep -Milliseconds 400
+  $afterQueue=[DcmTwoPaneGeometry+RECT]::new()
+  $afterPane=[DcmTwoPaneGeometry+RECT]::new()
+  if(-not [DcmTwoPaneGeometry]::GetWindowRect([IntPtr]$queueHwnd,[ref]$afterQueue) -or
+     -not [DcmTwoPaneGeometry]::GetWindowRect([IntPtr]$pane,[ref]$afterPane)){
+   throw 'Splitter drag rectangles unavailable'
+  }
+  $queueBefore=$beforeQueue.Right-$beforeQueue.Left
+  $queueAfter=$afterQueue.Right-$afterQueue.Left
+  $previewBefore=$beforePane.Right-$beforePane.Left
+  $previewAfter=$afterPane.Right-$afterPane.Left
+  if($queueAfter-$queueBefore -lt 70 -or $previewBefore-$previewAfter -lt 70) {
+   throw ('Splitter drag failed to resize both panes: queue '+$queueBefore+' -> '+$queueAfter+' preview '+$previewBefore+' -> '+$previewAfter)
+  }
+  if((PageLabel) -cne 'Page 1 of 2'){throw 'PDF page state changed during splitter drag'}
+  Step 'queue-preview-splitter-drag' @{queue_before=$queueBefore;queue_after=$queueAfter;preview_before=$previewBefore;preview_after=$previewAfter;page_preserved=$true}
+  if(-not $SkipScreenshots){Capture 'splitter-after-drag' 'teal'}
+ }
  if($VerifyPDFPicker -and $LegacyQueue){
   # Isolate the backend menu from the native report selection adapter.
   $mainMenu=[DcmPDFPickerProbe]::GetMenu([IntPtr]$hwnd)
