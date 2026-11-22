@@ -879,7 +879,6 @@ func createMainMenu(hwnd uintptr) uintptr {
 		appendMenuString(pdfProviderMenu,ID_PDF_PROVIDER_AUTO,"&Auto (development default)")
 		appendMenuString(pdfProviderMenu,ID_PDF_PROVIDER_PDFIUM,"&PDFium (FlowPDF)")
 		appendMenuString(pdfProviderMenu,ID_PDF_PROVIDER_WINDOWS,"&Windows.Data.Pdf")
-		appendMenuString(pdfProviderMenu,ID_PDF_PROVIDER_SUMATRA,"&SumatraPDF (restricted)")
 		appendPopupMenu(toolsMenu,pdfProviderMenu,"PDF &Previewer")
 	}
 	procAppendMenuW.Call(toolsMenu, MF_SEPARATOR, 0, 0)
@@ -3413,8 +3412,6 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 				choosePDFPreviewer("pdfium")
 			case ID_PDF_PROVIDER_WINDOWS:
 				choosePDFPreviewer("windows")
-			case ID_PDF_PROVIDER_SUMATRA:
-				choosePDFPreviewer("sumatra")
 			case ID_MENU_ABOUT:
 				showAboutDialog()
 			case ID_MENU_EXIT:
@@ -5133,9 +5130,6 @@ func loadPreview(path string) {
 		if showTextPreview(path) {
 			setText(app.statusLabel, "Read as text: "+strings.ToUpper(strings.TrimPrefix(filepath.Ext(path), ".")))
 		}
-		return
-	}
-	if isPDFPath(path) && startSumatraPreview(path) {
 		return
 	}
 	if isPDFPath(path) && startPDFPreview(path) {
