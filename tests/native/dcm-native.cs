@@ -71,8 +71,30 @@ public static class DcmNative {
         RequireOwned(found[0],pid); return found[0];
     }
     public static WindowInfo[] Snapshot(IntPtr root,int pid) {
-        RequireOwned(root,pid); var result=new List<WindowInfo>();
-        EnumChildWindows(root,delegate(IntPtr h,IntPtr p){RequireOwned(h,pid);result.Add(new WindowInfo{Handle=h.ToInt64(),Class=ClassName(h),Text=Text(h,pid),ID=GetDlgCtrlID(h),Visible=IsWindowVisible(h),Enabled=IsWindowEnabled(h)});return true;},IntPtr.Zero);
+        RequireOwned(root,pid);
+        var result=new List<WindowInfo>();
+        // EnumChildWindows also traverses embedded out-of-process previews.
+        // Those HWNDs are not QuickSort controls and must not be inspected.
+        // Interactive APIs (Control, ClickAsync, etc.) still enforce strict
+        // process ownership; only the read-only enumeration skips foreigners.
+        EnumChildWindows(root,delegate(IntPtr h,IntPtr p){
+            uint actual;
+            if(!IsWindow(h))return true; // transient preview child destroyed
+            GetWindowThreadProcessId(h,out actual);
+            if(actual!=(uint)pid)return true; // foreign Office/PDF host
+            try {
+                result.Add(new WindowInfo{Handle=h.ToInt64(),Class=ClassName(h),Text=Text(h,pid),ID=GetDlgCtrlID(h),Visible=IsWindowVisible(h),Enabled=IsWindowEnabled(h)});
+            } catch(Exception) {
+                // A preview child can be destroyed or reparented between
+                // enumeration and text retrieval. Fail for stable owned
+                // controls; tolerate only the verified transient race.
+                uint now;
+                GetWindowThreadProcessId(h,out now);
+                if(IsWindow(h) && now==(uint)pid)throw;
+            }
+            return true;
+        },IntPtr.Zero);
+        RequireOwned(root,pid);
         return result.ToArray();
     }
     public static WindowInfo[] Dialogs(IntPtr root,int pid) {
