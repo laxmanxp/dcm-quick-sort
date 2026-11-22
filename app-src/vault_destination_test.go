@@ -169,7 +169,7 @@ func TestVaultDestinationUIWiringMarkers(t *testing.T) {
 	}
 	s := string(data)
 	markers := []string{
-		`"Choose &Destination Folder…"`,
+		`"&Destinations…"`,
 		`"Vault Location:"`,
 		`"Find location:"`,
 		`"&Use Location"`,
