@@ -280,12 +280,19 @@ function Journal([string]$from,[string]$to,[string]$state,[int]$count) {
  return [string]$matches[0].id
 }
 function SelectUndoRecord([string]$name) {
+ Select-NativeQueueTab $true
+ Wait 'History Undo visible' {(Is-Visible 1008) -and (Is-Visible 1048) -and (Is-Visible 1017)}
  Wait 'Undo button ready' {[DcmNative]::IsWindowEnabled([DcmNative]::Control($hwnd,$app.Id,1008))}
  $items=@([DcmNative]::ListItems($hwnd,$app.Id,1017))
  $matches=@()
  for($i=0;$i -lt $items.Count;$i++){if($items[$i].Contains($name)){$matches+=,$i}}
  if($matches.Count -ne 1){throw ('Undo history row not unique for '+$name)}
  $null=[DcmNative]::SelectSingleItem($hwnd,$app.Id,1017,$matches[0])
+}
+function InvokeHistoryUndo {
+ [DcmNative]::ClickAsync($hwnd,$app.Id,1008)
+ Select-NativeQueueTab $false
+ Wait 'Queue returns after Undo' {(QueueIsVisible) -and -not(Is-Visible 1008) -and -not(Is-Visible 1048)}
 }
 function SwitchSource([string]$path,[int]$count){
  [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1001,$path)
@@ -884,7 +891,7 @@ try{
   if((Hash $moved) -ne $sha.ToLowerInvariant()){throw 'Folder move altered file bytes'}
   Step 'folder-move-complete' @{bytes_preserved=$true;destination=$moved}
   SelectUndoRecord '08-preview.pdf'
-  [DcmNative]::ClickAsync($hwnd,$app.Id,1008)
+  InvokeHistoryUndo
   Wait 'folder move undo completed' {(Test-Path -LiteralPath $pdf) -and -not(Test-Path -LiteralPath $moved)}
   if((Hash $pdf) -ne $sha.ToLowerInvariant()){throw 'Folder move undo altered file bytes'}
   Step 'folder-move-undo-complete' @{bytes_preserved=$true;source_restored=$true}
@@ -1245,7 +1252,7 @@ try{
  PageReady 'Page 1 of 2'
  Capture '07-renamed-pdf-visible' 'teal'
  SelectUndoRecord 'undo-preview.pdf'
- [DcmNative]::ClickAsync($hwnd,$app.Id,1008)
+ InvokeHistoryUndo
  Wait 'Undo Rename completed' {(Test-Path -LiteralPath $pdf) -and -not(Test-Path -LiteralPath $renamed)}
  Wait 'Undo Rename journal' {try {$null=Journal $pdf $renamed 'undone' 1;return $true} catch {return $false}}
  if((Hash $pdf) -ne $sha.ToLowerInvariant() -or (Journal $pdf $renamed 'undone' 1) -ne $renameID){throw 'Undo Rename content/journal mismatch'}
@@ -1263,7 +1270,7 @@ try{
  VerifyPDF '08-preview.pdf' $moved ($sha.ToLowerInvariant())
  Capture '09-moved-pdf-visible' 'teal'
  SelectUndoRecord '08-preview.pdf'
- [DcmNative]::ClickAsync($hwnd,$app.Id,1008)
+ InvokeHistoryUndo
  Wait 'Undo Move completed' {(Test-Path -LiteralPath $pdf) -and -not(Test-Path -LiteralPath $moved)}
  Wait 'Undo Move journal' {try {$null=Journal $pdf $moved 'undone' 2;return $true} catch {return $false}}
  if((Hash $pdf) -ne $sha.ToLowerInvariant() -or (Journal $pdf $moved 'undone' 2) -ne $moveID){throw 'Undo Move content/journal mismatch'}
