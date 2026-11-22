@@ -124,6 +124,7 @@ func updatePDFPreviewControls() {
  if !pdfPreview.active {hidePDFPreviewControls();return}
  pageText:="/ --"
  if pdfPreview.pageCount>0 {pageText=fmt.Sprintf("/ %d",pdfPreview.pageCount)}
+ if pdfPreview.rotation!=0 {pageText+=fmt.Sprintf("  %d°",pdfPreview.rotation)}
  setText(pdfPreview.pageLabel,pageText)
  // Never overwrite an in-progress page-number edit.
  if focused,_,_:=procGetFocus.Call();focused!=pdfPreview.pageEdit {
