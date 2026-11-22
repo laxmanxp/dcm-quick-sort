@@ -261,3 +261,31 @@ exactly-owned test process/shell instances were stopped. **Do not claim full
 bounded, desktop-safe automation rerun through cleanup, native selection,
 Rename/Move/Undo, and normal shutdown. The existing production QuickSort and
 FileFlow Suite installations remain unchanged.
+
+## Mixed-document keyboard acceptance resolved — 2026-11-22
+
+The intermittent 40-row keyboard qualification issue was traced to brittle
+test-harness ordering and fixed mouse coordinates, not a confirmed QuickSort
+file-operation defect. The 40-row mixed TXT/DOCX/XLSX/PDF soak now runs
+immediately after native queue initialization; ordinary file selection in
+the test uses native Home/Down keyboard navigation rather than click positions.
+
+**End-to-end Lenovo PASS**, receipt
+`dcm-pdfium-gui-20261122-013229-3740530`:
+- 40 visible files, including 36 temporary authentic-format mixed fixtures
+- 300 Up/Down key steps; focused row 12 verified, active filename matched
+- Keyboard segment elapsed ~1,497 ms, host private memory +1,875,968 bytes,
+  host handles +33, within acceptance limits
+- All 36 temporary fixtures removed, original four files restored
+- PDFium Rename/Undo, Move/Undo, file integrity and damaged/protected PDF
+  refusal/recovery acceptance passed after the keyboard soak
+- Single persistent PDFium worker, 14 render requests, 0 unexpected fallbacks,
+  worker owned shutdown, normal application exit
+
+**Full Go regression suite PASS** and explicit legacy-listbox rollback GUI
+PASS, receipt `dcm-pdfium-gui-20261122-013451-f1317a1`, normal exit.
+
+The earlier failed/incomplete attempts remain documented as investigation
+history, but the mixed-document keyboard acceptance is now **qualified**.
+This work changes only the GitHub development branch and test fixtures; the
+production QuickSort and FileFlow Suite installations remain unchanged.
