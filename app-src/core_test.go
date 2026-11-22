@@ -257,7 +257,7 @@ func TestTXTMarkdownAndCSVAlwaysUsePlainTextPreview(t *testing.T) {
 	}
 }
 
-func TestReadAsTextOnlyForUnknownTypes(t *testing.T) {
+func TestReadAsTextForUnknownAndSourceTypes(t *testing.T) {
 	cases := []struct {
 		name string
 		want bool
@@ -270,7 +270,15 @@ func TestReadAsTextOnlyForUnknownTypes(t *testing.T) {
 		{"song.mp3", false},
 		{"archive.zip", false},
 		{"program.exe", false},
-		{"settings.json", false},
+		{"settings.json", true},
+		{"main.go", true},
+		{"handler_test.go", true},
+		{"script.ps1", true},
+		{"config.yaml", true},
+		{"suite.spec", true},
+		{"app.tsx", true},
+		{"debug.log", true},
+		{"archive.zip", false},
 		{"database.sqlite", false},
 	}
 	for _, tc := range cases {
