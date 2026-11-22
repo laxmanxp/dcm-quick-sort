@@ -757,3 +757,46 @@ build **PASS**. GUI receipt
 native file/preview geometry 442 -> 557 and 772 -> 657 pixels, and
 PDF current page preserved. Physical subjective hand feel remains
 for the user to confirm. Production remains unchanged.
+
+
+## Destination folder workflow replaces Vault — 2026-11-22
+
+User clarified that Vault is an obsolete concept; QuickSort must select an
+ordinary physical destination folder. Development commits `98a2ce9`,
+`2299565`, `444e26b`, `7b3baca`, and `5abd8c3` implement:
+
+- Main **Destination** field, native **Browse…** (Windows existing-folder
+  picker), and **Move to Folder** action; Tools menu now offers **Choose
+  Destination Folder…** rather than Vault Destinations/Library.
+- `resolveExistingDestinationFolder` accepts existing absolute
+  filesystem folder paths, rejects empty, relative, nonexistent and
+  file paths. Move is enabled only for a valid destination and an
+  actual file selection, and blocked during ongoing operations.
+- The application no longer depends on a configured Vault root or
+  `.flowverse/addresses.json` for destination selection or Move/Undo.
+  Old indexed Vault/folder-manager implementation remains in the
+  repository for compatibility but has no main UI entry point.
+- Existing saved destination aliases are shown only when they point to
+  a currently existing absolute folder. No implicit folder creation.
+- Existing Rename, Move, Undo, journal, conflicts and batch
+  confirmation workflows remain.
+
+Go `pdfium_dev` suite PASS and Windows build PASS on Lenovo. Focused
+acceptance receipt `dcm-pdfium-gui-20261122-113347-3f69a00`: PASS,
+normal exit; test deliberately cleared Vault settings and selected
+`OrdinaryDestination` outside the old Vault; Move enabled for it,
+disabled for no/missing path; moved PDF bytes preserved; Undo restored
+original file and bytes. Repeated after removing legacy Vault indexing
+side effects: `dcm-pdfium-gui-20261122-113544-2676215` PASS.
+
+Full integrated acceptance receipt
+`dcm-pdfium-gui-20261122-113633-8a84365` **PASS**, normal exit,
+96 steps (native table, multi-select, PDF previewer switching,
+splitter, code previews, rotation, destination gating, Move/Undo, and
+worker cleanup) after migrating the disposable destination fixture to
+physical paths. All test file operations were contained in isolated
+Lenovo disposable fixtures; production installation unchanged.
+
+Outstanding: human interaction with Windows Browse dialog; consider
+retiring unreachable legacy Vault management implementation in a
+separate cleanup, not during production stabilization.
