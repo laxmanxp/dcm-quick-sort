@@ -548,3 +548,45 @@ Text checkbox; `16-test-config.json` displayed `read-as-text-check`;
 selecting `08-preview.pdf` disabled the checkbox and restored PDF
 preview. The test used the isolated Lenovo checkout and disposable files.
 No release checkout, installed QuickSort or FileFlow Suite was changed.
+
+
+## Native report splitter drag regression and smooth guide — 2026-11-22
+
+The prior splitter tests used `-LegacyQueue`, so their successful
+geometry checks did **not** qualify the native Win32 report-view table.
+The Lenovo user reported lag on the file-list side and loss of the
+previously implemented table/header. Source inspection confirmed that
+the interim live-drag handler ran many `MoveWindow` calls (including
+the native report, inactive list and preview controls) on each mouse
+event, while its acceptance fixture exercised only the legacy fallback.
+
+Commits `641c051`, `ada172a` and `65673fc` change dragging to a
+lightweight reversible XOR guide inside the 10px divider. Both child
+panes stay at their original widths during mouse movement; on mouse
+release the final splitter position is applied once through the
+existing full layout, preserving native ListView column sizing. This
+is a deliberate **guide-then-commit** splitter, not live pane resize.
+
+At candidate `65673fc`, Lenovo `go test -p 1 -vet=off -tags
+pdfium_dev ./... -count=1` PASS and Windows build PASS.
+Commit `ef5cdd2` adds isolated `-VerifyNativeReport
+-VerifyNativeSplitterOnly` acceptance, which does not select native
+rows and therefore cannot be confused with the separate native
+selection defect. Receipt
+`dcm-pdfium-gui-20261122-062847-a4c56ec` PASS, normal exit:
+real `SysListView32` with `SysHeader32`, four columns and four
+fixture items; during multiple guide mouse moves the list remained
+442px wide; after release it became 557px, while preview shrank
+772px to 657px; the four native columns remained intact. The
+saved screenshot `native-splitter-after-drag.png` was inspected and
+shows native column headers Name, Extension, Created, Updated with
+correct alignment and a visible narrow separator. The file text
+preview was also visible.
+
+A separate full native report run
+`dcm-pdfium-gui-20261122-062715-891a79b` FAILED early with
+`Owned window no longer exists` after native report initialization.
+It did verify the native header/columns before failing, but did not
+reach splitter qualification. Do not treat isolated splitter PASS as
+native row-selection acceptance. No production or release checkout
+changes.
