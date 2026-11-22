@@ -730,6 +730,14 @@ try{
  [DcmNative]::ClickAsync($hwnd,$app.Id,1060)
  PageReady 'Page 1 of 2'
  Capture '03-page-one-return' 'teal'
+ [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1073,'2')
+ [DcmNative]::ClickAsync($hwnd,$app.Id,1074)
+ PageReady 'Page 2 of 2'
+ Step 'custom-pdf-page-jump' @{entered=2;rendered=2}
+ [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1073,'1')
+ [DcmNative]::ClickAsync($hwnd,$app.Id,1074)
+ PageReady 'Page 1 of 2'
+ Step 'custom-pdf-page-return' @{entered=1;rendered=1}
  if($VerifyRotation) {
   $originalHash=Hash $pdf
   foreach($angle in @(90,180,270)) {
@@ -737,8 +745,7 @@ try{
    [DcmNative]::ClickAsync($hwnd,$app.Id,1062)
    $expected=RotatedLabel 1 $angle
    Wait ('PDF clockwise rotation '+$angle) {
-    $label=@(PreviewSnapshot|Where-Object {$_.Text -eq $expected})
-    if($label.Count -ne 1){return $false}
+    if((PageLabel) -cne $expected){return $false}
     $applied=@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}|ForEach-Object {$_|ConvertFrom-Json})
     if($applied.Count -le $previous){return $false}
     $last=$applied[-1]
@@ -781,8 +788,7 @@ try{
    [DcmNative]::ClickAsync($hwnd,$app.Id,1063)
    $expected=if($angle -eq 0){'Page 1 of 2'}else{RotatedLabel 1 $angle}
    Wait ('PDF counterclockwise rotation '+$angle) {
-    $label=@(PreviewSnapshot|Where-Object {$_.Text -eq $expected})
-    if($label.Count -ne 1){return $false}
+    if((PageLabel) -cne $expected){return $false}
     $applied=@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}|ForEach-Object {$_|ConvertFrom-Json})
     if($applied.Count -le $previous){return $false}
     $last=$applied[-1]
