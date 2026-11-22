@@ -12,6 +12,7 @@ param(
   [switch]$VerifyMoveGating,
   [switch]$VerifyMoveGatingOnly,
   [switch]$VerifyDestinationFolderOnly,
+  [switch]$VerifyUndoBatchOnly,
   [switch]$VerifyDestinationManagerOnly,
   [switch]$VerifyActualFilename,
   [switch]$VerifyTwoPane,
@@ -863,6 +864,80 @@ try{
   Assert-ActualFilenameLayout
  }
  PageReady 'Page 1 of 2'
+ if($VerifyUndoBatchOnly){
+  # Disposable two-file batch, no real user directories or settings.
+  $batchNames=@('01-alpha.txt','02-bravo.txt')
+  $batchHashes=@{}
+  foreach($fileName in $batchNames){$batchHashes[$fileName]=Hash (Join-Path $fixture.inbox $fileName)}
+  $queue=[DcmNative]::Control($hwnd,$app.Id,1016)
+  $items=@([DcmNative]::ListItems($hwnd,$app.Id,1016))
+  [void][DcmTwoPaneGeometry]::SendMessage($queue,0x0185,[IntPtr]0,[IntPtr](-1)) # LB_SETSEL clear
+  foreach($fileName in $batchNames){
+   $index=[Array]::IndexOf($items,$fileName)
+   if($index -lt 0){throw ('Missing fixture '+$fileName)}
+   [void][DcmTwoPaneGeometry]::SendMessage($queue,0x0185,[IntPtr]1,[IntPtr]$index)
+  }
+  if(@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016)).Count -ne 2){throw 'Could not select exactly two disposable files for batch'}
+  Step 'undo-batch-two-files-selected' @{names=$batchNames;selected_count=2}
+  [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1003,$fixture.destination)
+  Wait 'Batch Move enabled' {[DcmNative]::IsWindowEnabled([DcmNative]::Control($hwnd,$app.Id,1041))}
+  [DcmNative]::ClickAsync($hwnd,$app.Id,1041)
+  Start-Sleep -Milliseconds 220
+  $dialogs=@([DcmNative]::Dialogs($hwnd,$app.Id))
+  if($dialogs.Count -ne 1){throw ('Batch Move confirmation missing: '+$dialogs.Count)}
+  $confirm=[IntPtr]$dialogs[0].Handle
+  [DcmNative]::ClickAsync($confirm,$app.Id,6) # IDYES
+  Start-Sleep -Milliseconds 350
+  Wait 'Two batch files moved' {
+   (Test-Path -LiteralPath (Join-Path $fixture.destination '01-alpha.txt')) -and
+   (Test-Path -LiteralPath (Join-Path $fixture.destination '02-bravo.txt')) -and
+   -not(Test-Path -LiteralPath (Join-Path $fixture.inbox '01-alpha.txt')) -and
+   -not(Test-Path -LiteralPath (Join-Path $fixture.inbox '02-bravo.txt'))
+  } 45
+  foreach($fileName in $batchNames){
+   if((Hash (Join-Path $fixture.destination $fileName)) -ne $batchHashes[$fileName]){throw ('Batch move corrupted '+$fileName)}
+  }
+  Step 'undo-batch-move-complete' @{file_count=2;hashes_preserved=$true}
+  Select-NativeQueueTab $true
+  Wait 'History Undo Batch enabled' {[DcmNative]::IsWindowEnabled([DcmNative]::Control($hwnd,$app.Id,1048))}
+  $narration=TextControl 1801
+  if($narration -notmatch 'UNDO BATCH' -or $narration -notmatch '2 transaction'){throw 'History does not describe the pending batch undo'}
+  Step 'undo-batch-narration' @{batch_count=2;explained=$true}
+  # First reject the Undo Batch confirmation and verify no files change.
+  [DcmNative]::ClickAsync($hwnd,$app.Id,1048)
+  Start-Sleep -Milliseconds 220
+  $dialogs=@([DcmNative]::Dialogs($hwnd,$app.Id))
+  if($dialogs.Count -ne 1){throw 'Undo Batch cancel confirmation missing'}
+  [DcmNative]::ClickAsync([IntPtr]$dialogs[0].Handle,$app.Id,7) # IDNO
+  Start-Sleep -Milliseconds 350
+  foreach($fileName in $batchNames){
+   if((Test-Path -LiteralPath (Join-Path $fixture.inbox $fileName)) -or
+      -not(Test-Path -LiteralPath (Join-Path $fixture.destination $fileName))){throw 'Undo Batch cancellation changed a file'}
+  }
+  Step 'undo-batch-cancel-preserves-files' @{unchanged=$true}
+  # Confirm real Undo Batch; preflight and restored contents must both pass.
+  [DcmNative]::ClickAsync($hwnd,$app.Id,1048)
+  Start-Sleep -Milliseconds 220
+  $dialogs=@([DcmNative]::Dialogs($hwnd,$app.Id))
+  if($dialogs.Count -ne 1){throw 'Undo Batch acceptance confirmation missing'}
+  [DcmNative]::ClickAsync([IntPtr]$dialogs[0].Handle,$app.Id,6) # IDYES
+  Start-Sleep -Milliseconds 350
+  Wait 'Two batch files restored' {
+   (Test-Path -LiteralPath (Join-Path $fixture.inbox '01-alpha.txt')) -and
+   (Test-Path -LiteralPath (Join-Path $fixture.inbox '02-bravo.txt')) -and
+   -not(Test-Path -LiteralPath (Join-Path $fixture.destination '01-alpha.txt')) -and
+   -not(Test-Path -LiteralPath (Join-Path $fixture.destination '02-bravo.txt'))
+  } 45
+  foreach($fileName in $batchNames){
+   if((Hash (Join-Path $fixture.inbox $fileName)) -ne $batchHashes[$fileName]){throw ('Undo Batch corrupted '+$fileName)}
+  }
+  Wait 'Undo Batch disabled after restoration' {-not [DcmNative]::IsWindowEnabled([DcmNative]::Control($hwnd,$app.Id,1048))}
+  $after=TextControl 1801
+  if($after -match 'latest eligible batch contains 2'){throw 'Stale Undo Batch narration after restoration'}
+  Step 'undo-batch-restored' @{count=2;hashes_preserved=$true;button_disabled=$true;history_updated=$true}
+  $receipt.passed=$true
+  return
+ }
  if($VerifyDestinationManagerOnly){
   $savedPath=Join-Path $fixture.config 'destinations.conf'
   $destination=$outsideFolder
