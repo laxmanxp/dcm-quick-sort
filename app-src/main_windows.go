@@ -3744,7 +3744,7 @@ func createUI(hwnd uintptr) {
 	app.readTextCheck = createControl("BUTTON", "Read as &text", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_AUTOCHECKBOX, 650, 116, 105, 27, hwnd, ID_READ_TEXT)
 	app.processedTitleLabel = createControl("STATIC", "PROCESSED · 0", WS_CHILD|WS_VISIBLE|SS_LEFT, 980, 120, 92, 24, hwnd, 0)
 	app.historyNarrationTitle = createControl("STATIC", "TRANSACTION DETAILS", WS_CHILD|SS_LEFT, 570, 120, 310, 24, hwnd, 0)
-	app.historyNarrationEdit = createControl("EDIT", "", WS_CHILD|WS_BORDER|WS_VSCROLL|ES_MULTILINE|ES_READONLY|ES_AUTOVSCROLL, 570, 155, 610, 340, hwnd, 0)
+	app.historyNarrationEdit = createControl("EDIT", "", WS_CHILD|WS_BORDER|WS_VSCROLL|ES_MULTILINE|ES_READONLY|ES_AUTOVSCROLL, 570, 155, 610, 340, hwnd, 1801)
 	setText(app.historyNarrationEdit, historyEmptyNarration())
 	app.undoBatchBtn = createControl("BUTTON", "Undo &Batch", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 1076, 116, 88, 27, hwnd, ID_UNDO_BATCH)
 	app.undoBtn = createControl("BUTTON", "&Undo", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 1168, 116, 72, 27, hwnd, ID_UNDO)
