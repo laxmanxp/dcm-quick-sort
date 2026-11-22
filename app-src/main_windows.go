@@ -3215,6 +3215,7 @@ func showError(msg string) {
 
 // queueSplitterHit only matches the free gap between queue and preview.
 func queueSplitterHit(hwnd uintptr, x,y int32) bool {
+ if app.showHistoryTab {return false}
  var rc RECT
  procGetClientRect.Call(hwnd,uintptr(unsafe.Pointer(&rc)))
  w,h:=rc.Right-rc.Left,rc.Bottom-rc.Top
@@ -3867,6 +3868,13 @@ func syncQueueHistoryTabVisibility() {
  show(app.processedList, app.showHistoryTab)
  show(app.processedSearchEdit, app.showHistoryTab)
  show(app.processedTitleLabel, app.showHistoryTab)
+ // History occupies the entire content region; preview belongs to Queue.
+ show(app.previewHwnd, !app.showHistoryTab)
+ show(app.currentLabel, !app.showHistoryTab)
+ show(app.readTextCheck, !app.showHistoryTab)
+ for _, hwnd := range []uintptr{app.zoomOutBtn,app.zoom100Btn,app.zoomInBtn,app.zoomFitBtn,app.zoomFitWidthBtn} {
+ 	show(hwnd, !app.showHistoryTab && sumatraView == nil)
+ }
  // Undo actions belong to the History tab. Their handlers and journal
  // remain available, but Queue does not display the reversal controls.
  show(app.undoBatchBtn, app.showHistoryTab)
@@ -3902,10 +3910,11 @@ func layoutUI(hwnd uintptr) {
 	if previewH < 245 {
 		previewH = 245
 	}
-	// Two working panes: queue/history share the left, preview fills the right.
-	// Keep at least 420 px for preview, including on the minimum-size window.
+	// Queue retains the resizable list/preview split. History is a
+	// full-width journal: no stale Queue preview beside processed records.
 	listW := queueSplitterPosition(w)
 	processedW := listW
+	if app.showHistoryTab { processedW = w-40 }
 	gap := int32(10)
 	previewX := int32(20) + listW + gap
 	processedX := int32(20)
@@ -3977,7 +3986,7 @@ func layoutUI(hwnd uintptr) {
 	recordAttachmentTrace("layout-after-filterClearBtn")
 	recordAttachmentTrace("layout-before-countLabel")
 	updateQueueHeaderCaptions()
-	procMoveWindow.Call(app.queueTabControl, 20, uintptr(headerY-3), uintptr(listW), 27, 0)
+	procMoveWindow.Call(app.queueTabControl, 20, uintptr(headerY-3), uintptr(processedW), 27, 0)
 	procMoveWindow.Call(app.countLabel, 184, uintptr(headerY), uintptr(listW-164), 24, 0)
 	recordAttachmentTrace("layout-after-countLabel")
 	zoomGap := int32(4)
@@ -4016,7 +4025,7 @@ func layoutUI(hwnd uintptr) {
 	procMoveWindow.Call(app.zoomFitWidthBtn, uintptr(zoomX), uintptr(headerY-4), uintptr(zoomFitWidthW), 27, 0)
 	recordAttachmentTrace("layout-after-zoomFitWidthBtn")
 	recordAttachmentTrace("layout-before-processedTitleLabel")
-	procMoveWindow.Call(app.processedTitleLabel, 184, uintptr(headerY), uintptr(listW-164), 24, 0)
+	procMoveWindow.Call(app.processedTitleLabel, 184, uintptr(headerY), uintptr(processedW-164), 24, 0)
 	recordAttachmentTrace("layout-after-processedTitleLabel")
 	// History has its own action footer immediately below the processed list.
 	// Reserve 38px for two buttons and 8px between list and footer.
@@ -5651,7 +5660,7 @@ func updatePreviewZoomControls() {
 	}
 	for _, hwnd := range []uintptr{app.zoomOutBtn, app.zoom100Btn, app.zoomInBtn, app.zoomFitBtn, app.zoomFitWidthBtn} {
 		if hwnd != 0 {
-			setPreviewControlVisible(hwnd, show != 0)
+			setPreviewControlVisible(hwnd, show != 0 && !app.showHistoryTab)
 		}
 	}
 	zoomEnabled := uintptr(0)
