@@ -303,6 +303,7 @@ var (
 	procBeginPaint           = user32.NewProc("BeginPaint")
 	procEndPaint             = user32.NewProc("EndPaint")
 	procFillRect             = user32.NewProc("FillRect")
+	procGetSysColorBrush     = user32.NewProc("GetSysColorBrush")
 	procDrawTextW            = user32.NewProc("DrawTextW")
 	procInvalidateRect       = user32.NewProc("InvalidateRect")
 	procSetFocus             = user32.NewProc("SetFocus")
@@ -5283,6 +5284,14 @@ func unloadPreview() {
 
 func previewWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 	switch msg {
+	case WM_CTLCOLORSTATIC:
+		if lParam == pdfPreview.pageLabel && pdfPreview.active {
+			// System button-face fill, not transparent document content.
+			procSetBkMode.Call(wParam, OPAQUE)
+			procSetBkColor.Call(wParam, 0x00F0F0F0)
+			brush, _, _ := procGetSysColorBrush.Call(15) // COLOR_BTNFACE
+			return brush
+		}
 	case WM_DRAWITEM:
 		dis := (*DRAWITEMSTRUCT)(unsafe.Pointer(lParam))
 		if dis != nil {
@@ -5393,6 +5402,13 @@ func previewWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr
 		procGetClientRect.Call(hwnd, uintptr(unsafe.Pointer(&rc)))
 		brush, _, _ := procGetStockObject.Call(WHITE_BRUSH)
 		procFillRect.Call(hdc, uintptr(unsafe.Pointer(&rc)), brush)
+		if pdfPreview.active {
+			// Paint an opaque, full-width native toolbar strip. PDF content
+			// starts below pdfToolbarHeight, so the strip never covers pages.
+			bar := RECT{Left: 0, Top: 0, Right: rc.Right, Bottom: pdfToolbarHeight}
+			barBrush, _, _ := procGetSysColorBrush.Call(15) // COLOR_BTNFACE
+			procFillRect.Call(hdc, uintptr(unsafe.Pointer(&bar)), barBrush)
+		}
 		if app.image != 0 {
 			drawImagePreview(hdc, rc)
 		} else if app.pptxPreviewActive {
