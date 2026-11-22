@@ -896,3 +896,36 @@ Implementation `36d474d` and `a15fc62`:
   History, selection-driven action/Undo narration, rename/undo and
   move/undo.
 - User still needs subjective visual acceptance; production remains unchanged.
+
+
+## History Undo and Undo Batch GUI acceptance — 2026-11-22
+
+The latest QuickSort development executable `quicksort-history-narration-dev.exe`
+was exercised on Lenovo against isolated, newly generated fixture directories.
+Test-only commits `1e831db` and `1d9832c` add
+`-VerifyUndoBatchOnly` to the existing GUI harness. The test moves two
+independent text files as a confirmed batch, verifies both destination
+SHA-256 hashes, enters History and checks the two-transaction Undo Batch
+narration, rejects the Undo Batch confirmation and checks that both
+files remain moved, then accepts Undo Batch and confirms that both
+files return to their original paths with exactly the original hashes.
+The Undo Batch button becomes disabled after restoration, and narration
+no longer announces that eligible batch.
+
+- Native SysListView32 Ctrl multi-selection, batch, cancellation and
+  confirmation: **PASS**, `normal_exit=true`;
+  `dcm-pdfium-gui-20261122-143539-547c5d4`.
+- Legacy queue selection, batch, cancellation and confirmation:
+  **PASS**, `normal_exit=true`;
+  `dcm-pdfium-gui-20261122-143448-2a87910`.
+- Single-record Undo from the History tab, using a moved PDF in an
+  existing ordinary destination outside the old Vault:
+  **PASS**, `normal_exit=true`;
+  `dcm-pdfium-gui-20261122-143601-b543c8e`.
+  The original file path and hash were restored; the file disappeared
+  from its destination. No real user files or production settings
+  were modified.
+
+These runs qualify the tested normal and cancellation paths, not every
+possible external filesystem conflict or partial-I/O failure. Existing
+core preflight/rollback safeguards remain in effect.
