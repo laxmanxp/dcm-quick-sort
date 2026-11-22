@@ -867,3 +867,32 @@ Lenovo. GUI tab/geometry/Undo acceptance receipt
 Tests assert full History list width, preview visibility only in Queue,
 History footer placement, narrow/wide tab switching and Undo from
 History. No release or production installation changed.
+
+
+## History transaction narration replaces file preview — 2026-11-22
+
+User clarified that removing the right pane entirely was not desirable:
+History should retain its **two-pane layout** but the right pane should
+describe the selected processed transaction and its potential Undo.
+Implementation `36d474d` and `a15fc62`:
+
+- History left pane retains search, date groups, selectable journal
+  records, Undo and Undo Batch buttons below the list.
+- History right pane uses a native read-only multiline Win32 Edit
+  control (ID 1801), labeled by operation, with **Action Taken**,
+  **Original File**, **Resulting Location**, **What Undo Will Do** and
+  eligible batch context. Queue alone displays actual file preview
+  and zoom toolbar. Queue splitter width is preserved across tabs.
+- The narration is based on actual `MoveRecord` types. It correctly
+  distinguishes same-folder rename, move, replacement backup recovery,
+  and exact duplicate removal. It is a preview of intended Undo,
+  not a guarantee; Undo retains existing preflight and confirmation.
+- Selecting a date-group heading shows a selection prompt, not a
+  misleading file transaction. Selecting a record refreshes narration.
+- Unit tests cover all four record types. Lenovo Go `pdfium_dev`
+  suite and Windows build PASS. GUI receipt
+  `dcm-pdfium-gui-20261122-142809-cc28418` **PASS**, normal exit,
+  67 steps. Verified narrow/wide two-pane layout, no file preview in
+  History, selection-driven action/Undo narration, rename/undo and
+  move/undo.
+- User still needs subjective visual acceptance; production remains unchanged.
