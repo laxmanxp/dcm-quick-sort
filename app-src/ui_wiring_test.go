@@ -287,7 +287,7 @@ func TestRenameMoveNextAreIndependentMainActions(t *testing.T) {
 		`ID_MOVE`,
 		`ID_NEXT`,
 		`app.renameBtn = createControl("BUTTON", "&Rename"`,
-		`app.moveBtn = createControl("BUTTON", "Move to &Vault"`,
+		`app.moveBtn = createControl("BUTTON", "Move to &Folder"`,
 		`app.nextBtn = createControl("BUTTON", "Ne&xt"`,
 		`case ID_RENAME:`,
 		`renameCurrent()`,
