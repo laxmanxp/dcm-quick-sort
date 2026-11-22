@@ -213,7 +213,7 @@ function Verify-TwoPaneTab([bool]$history){
  Owned
  if((QueueIsVisible) -eq $history){throw 'Queue list visibility disagrees with active tab'}
  if((Is-Visible 1017) -ne $history -or (Is-Visible 1046) -ne $history){throw 'History list/search visibility disagrees with active tab'}
- if(-not(Is-Visible 1008) -or -not(Is-Visible 1048)){throw 'Undo controls disappeared when switching tabs'}
+ if((Is-Visible 1008) -ne $history -or (Is-Visible 1048) -ne $history){throw 'Undo and Undo Batch must be visible only in History'}
  }
 function Verify-TwoPaneGeometry([string]$label){
  $queue=Rect $(if($LegacyQueue){1016}else{1071})
@@ -818,7 +818,7 @@ try{
   Select-NativeQueueTab $false
   Wait 'Queue tab visible' {(QueueIsVisible) -and -not (Is-Visible 1017)}
   Verify-TwoPaneTab $false
-  Step 'two-pane-queue-history-toggle' @{queue_visible=$true;history_visible_when_selected=$true;undo_always_visible=$true}
+  Step 'two-pane-queue-history-toggle' @{queue_visible=$true;history_visible_when_selected=$true;undo_history_only=$true}
  }
  List-Selected '08-preview.pdf'
  if($VerifyActualFilename){
