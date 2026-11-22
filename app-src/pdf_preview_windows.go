@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"strconv"
 	"syscall"
 	"unsafe"
 )
@@ -21,6 +22,12 @@ const (
 	ID_PDF_NEXT        = 1061
 	ID_PDF_ROTATE      = 1062 // clockwise, retains the original button ID
 	ID_PDF_ROTATE_LEFT = 1063 // counterclockwise
+	ID_PDF_PAGE_EDIT = 1073
+	ID_PDF_PAGE_GO = 1074
+	ID_PDF_FIT_WIDTH = 1075
+	ID_PDF_FIT_PAGE = 1076
+	ID_PDF_ZOOM_OUT = 1077
+	ID_PDF_ZOOM_IN = 1078
 	pdfToolbarHeight   = int32(34)
 	createNoWindow     = 0x08000000
 )
@@ -43,6 +50,7 @@ type pdfPreviewState struct {
 	rotateBtn        uintptr // clockwise icon
 	rotateLeftBtn    uintptr // counterclockwise icon
 	pageLabel        uintptr
+	pageEdit, pageGo, fitWidthBtn, fitPageBtn, zoomOutBtn, zoomInBtn uintptr
 	lastWidth        int
 	lastHeight       int
 	lastScalePercent int
@@ -56,98 +64,98 @@ var pdfRenderResults = make(chan PDFRenderResult, 8)
 // GUI-thread-only lifecycle state: a stopped selection can still own live workers.
 var pdfShutdown pdfShutdownCoordinator
 
+func pdfToolbarHandles() []uintptr {
+ return []uintptr{pdfPreview.prevBtn,pdfPreview.pageEdit,pdfPreview.pageGo,pdfPreview.pageLabel,pdfPreview.nextBtn,
+ pdfPreview.fitWidthBtn,pdfPreview.fitPageBtn,pdfPreview.rotateLeftBtn,pdfPreview.rotateBtn,pdfPreview.zoomOutBtn,pdfPreview.zoomInBtn}
+}
+
 func createPDFPreviewControls() {
-	if app.previewHwnd == 0 {
-		return
-	}
-	pdfPreview.prevBtn = createControl("BUTTON", "‹", WS_CHILD|WS_TABSTOP|BS_PUSHBUTTON, 6, 4, 34, 26, app.previewHwnd, ID_PDF_PREV)
-	pdfPreview.pageLabel = createControl("STATIC", "Page", WS_CHILD|SS_LEFT, 46, 9, 130, 20, app.previewHwnd, 0)
-	pdfPreview.nextBtn = createControl("BUTTON", "›", WS_CHILD|WS_TABSTOP|BS_PUSHBUTTON, 182, 4, 34, 26, app.previewHwnd, ID_PDF_NEXT)
-	// Owner-drawn directional icons avoid the missing-glyph '?' problem on
-	// native Windows fonts. Button titles remain descriptive for accessibility.
-	pdfPreview.rotateLeftBtn = createControl("BUTTON", "Rotate left 90 degrees", WS_CHILD|WS_TABSTOP|BS_OWNERDRAW, 226, 4, 34, 26, app.previewHwnd, ID_PDF_ROTATE_LEFT)
-	pdfPreview.rotateBtn = createControl("BUTTON", "Rotate right 90 degrees", WS_CHILD|WS_TABSTOP|BS_OWNERDRAW, 266, 4, 34, 26, app.previewHwnd, ID_PDF_ROTATE)
-	setExplorerTheme(pdfPreview.prevBtn)
-	setExplorerTheme(pdfPreview.nextBtn)
-	hidePDFPreviewControls()
+ if app.previewHwnd==0{return}
+ parent:=app.previewHwnd
+ pdfPreview.prevBtn=createControl("BUTTON","<",WS_CHILD|WS_TABSTOP|BS_PUSHBUTTON,4,4,30,26,parent,ID_PDF_PREV)
+ pdfPreview.pageEdit=createControl("EDIT","1",WS_CHILD|WS_BORDER|WS_TABSTOP|ES_AUTOHSCROLL,38,4,42,26,parent,ID_PDF_PAGE_EDIT)
+ pdfPreview.pageGo=createControl("BUTTON","Go",WS_CHILD|WS_TABSTOP|BS_PUSHBUTTON,84,4,32,26,parent,ID_PDF_PAGE_GO)
+ pdfPreview.pageLabel=createControl("STATIC","/ --",WS_CHILD|SS_LEFT,120,9,48,20,parent,0)
+ pdfPreview.nextBtn=createControl("BUTTON",">",WS_CHILD|WS_TABSTOP|BS_PUSHBUTTON,172,4,30,26,parent,ID_PDF_NEXT)
+ pdfPreview.fitWidthBtn=createControl("BUTTON","Fit W",WS_CHILD|WS_TABSTOP|BS_PUSHBUTTON,206,4,48,26,parent,ID_PDF_FIT_WIDTH)
+ pdfPreview.fitPageBtn=createControl("BUTTON","Fit P",WS_CHILD|WS_TABSTOP|BS_PUSHBUTTON,258,4,48,26,parent,ID_PDF_FIT_PAGE)
+ pdfPreview.rotateLeftBtn=createControl("BUTTON","Rotate left 90 degrees",WS_CHILD|WS_TABSTOP|BS_OWNERDRAW,310,4,32,26,parent,ID_PDF_ROTATE_LEFT)
+ pdfPreview.rotateBtn=createControl("BUTTON","Rotate right 90 degrees",WS_CHILD|WS_TABSTOP|BS_OWNERDRAW,346,4,32,26,parent,ID_PDF_ROTATE)
+ pdfPreview.zoomOutBtn=createControl("BUTTON","-",WS_CHILD|WS_TABSTOP|BS_PUSHBUTTON,382,4,30,26,parent,ID_PDF_ZOOM_OUT)
+ pdfPreview.zoomInBtn=createControl("BUTTON","+",WS_CHILD|WS_TABSTOP|BS_PUSHBUTTON,416,4,30,26,parent,ID_PDF_ZOOM_IN)
+ for _,h:=range pdfToolbarHandles(){setExplorerTheme(h)}
+ hidePDFPreviewControls()
 }
 
 func hidePDFPreviewControls() {
-	for _, hwnd := range []uintptr{pdfPreview.prevBtn, pdfPreview.pageLabel, pdfPreview.nextBtn, pdfPreview.rotateLeftBtn, pdfPreview.rotateBtn} {
-		if hwnd != 0 {
-			procShowWindow.Call(hwnd, 0)
-		}
-	}
+ for _,h:=range pdfToolbarHandles(){if h!=0 {procShowWindow.Call(h,0)}}
 }
 
 func showPDFPreviewControls() {
-	for _, hwnd := range []uintptr{pdfPreview.prevBtn, pdfPreview.pageLabel, pdfPreview.nextBtn, pdfPreview.rotateLeftBtn, pdfPreview.rotateBtn} {
-		if hwnd != 0 {
-			procShowWindow.Call(hwnd, SW_SHOW)
-		}
-	}
-	layoutPDFPreviewControls()
-	updatePDFPreviewControls()
+ layoutPDFPreviewControls()
+ updatePDFPreviewControls()
 }
 
 func layoutPDFPreviewControls() {
-	if app.previewHwnd == 0 || pdfPreview.pageLabel == 0 {
-		return
-	}
-	var rc RECT
-	procGetClientRect.Call(app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
-	// Center navigation and both icon-only rotation controls together.
-	// Compact 34x26 buttons keep the toolbar height unchanged.
-	available := rc.Right - rc.Left
-	const navW, iconW, gap = int32(34), int32(34), int32(6)
-	labelW := int32(132)
-	groupW := 2*navW + 2*iconW + 4*gap + labelW
-	if available < groupW+8 {
-		labelW = available - (2*navW + 2*iconW + 4*gap + 8)
-		if labelW < 44 { labelW = 44 }
-		groupW = 2*navW + 2*iconW + 4*gap + labelW
-	}
-	x := (available-groupW)/2
-	if x < 4 { x = 4 }
-	procMoveWindow.Call(pdfPreview.prevBtn, uintptr(x), 4, uintptr(navW), 26, 1)
-	x += navW+gap
-	procMoveWindow.Call(pdfPreview.pageLabel, uintptr(x), 9, uintptr(labelW), 20, 1)
-	x += labelW+gap
-	procMoveWindow.Call(pdfPreview.nextBtn, uintptr(x), 4, uintptr(navW), 26, 1)
-	x += navW+gap
-	procMoveWindow.Call(pdfPreview.rotateLeftBtn, uintptr(x), 4, uintptr(iconW), 26, 1)
-	x += iconW+gap
-	procMoveWindow.Call(pdfPreview.rotateBtn, uintptr(x), 4, uintptr(iconW), 26, 1)
+ if app.previewHwnd==0 || pdfPreview.pageLabel==0{return}
+ var rc RECT
+ procGetClientRect.Call(app.previewHwnd,uintptr(unsafe.Pointer(&rc)))
+ width:=rc.Right-rc.Left
+ // Compact horizontal row. Overflow controls hide rather than overlap.
+ items:=[]struct{hwnd uintptr;w int32}{
+  {pdfPreview.prevBtn,30},{pdfPreview.pageEdit,42},{pdfPreview.pageGo,32},{pdfPreview.pageLabel,48},
+  {pdfPreview.nextBtn,30},{pdfPreview.fitWidthBtn,48},{pdfPreview.fitPageBtn,48},
+  {pdfPreview.rotateLeftBtn,32},{pdfPreview.rotateBtn,32},{pdfPreview.zoomOutBtn,30},{pdfPreview.zoomInBtn,30},
+ }
+ x:=int32(5)
+ for _,item:=range items{
+  if item.hwnd==0 {continue}
+  if x+item.w+4>width {procShowWindow.Call(item.hwnd,0);continue}
+  top:=int32(4)
+  height:=int32(26)
+  if item.hwnd==pdfPreview.pageLabel {top=9;height=20}
+  procMoveWindow.Call(item.hwnd,uintptr(x),uintptr(top),uintptr(item.w),uintptr(height),1)
+  if pdfPreview.active{procShowWindow.Call(item.hwnd,SW_SHOW)}
+  x+=item.w+4
+ }
 }
 
 func updatePDFPreviewControls() {
-	if !pdfPreview.active {
-		hidePDFPreviewControls()
-		return
-	}
-	label := "Rendering PDF…"
-	if pdfPreview.pageCount > 0 {
-		label = fmt.Sprintf("Page %d of %d", pdfPreview.page+1, pdfPreview.pageCount)
-		if pdfPreview.rotation != 0 {
-			label += fmt.Sprintf(" · %d°", pdfPreview.rotation)
-		}
-	}
-	setText(pdfPreview.pageLabel, label)
-	prevEnabled := uintptr(0)
-	nextEnabled := uintptr(0)
-	if pdfPreview.page > 0 {
-		prevEnabled = 1
-	}
-	if pdfPreview.pageCount > 0 && pdfPreview.page+1 < pdfPreview.pageCount {
-		nextEnabled = 1
-	}
-	procEnableWindow.Call(pdfPreview.prevBtn, prevEnabled)
-	procEnableWindow.Call(pdfPreview.nextBtn, nextEnabled)
-	for _, button := range []uintptr{pdfPreview.rotateLeftBtn, pdfPreview.rotateBtn} {
-		if button != 0 {
-			procEnableWindow.Call(button, 1)
-		}
-	}
+ if !pdfPreview.active {hidePDFPreviewControls();return}
+ pageText:="/ --"
+ if pdfPreview.pageCount>0 {pageText=fmt.Sprintf("/ %d",pdfPreview.pageCount)}
+ setText(pdfPreview.pageLabel,pageText)
+ // Never overwrite an in-progress page-number edit.
+ if focused,_,_:=procGetFocus.Call();focused!=pdfPreview.pageEdit {
+  setText(pdfPreview.pageEdit,strconv.Itoa(pdfPreview.page+1))
+ }
+ ready:=pdfPreview.pageCount>0
+ on:=func(ok bool)uintptr{if ok{return 1};return 0}
+ procEnableWindow.Call(pdfPreview.prevBtn,on(ready&&pdfPreview.page>0))
+ procEnableWindow.Call(pdfPreview.nextBtn,on(ready&&pdfPreview.page+1<pdfPreview.pageCount))
+ procEnableWindow.Call(pdfPreview.pageEdit,on(ready))
+ procEnableWindow.Call(pdfPreview.pageGo,on(ready))
+ for _,h:=range []uintptr{pdfPreview.fitWidthBtn,pdfPreview.fitPageBtn,pdfPreview.rotateLeftBtn,pdfPreview.rotateBtn,pdfPreview.zoomOutBtn,pdfPreview.zoomInBtn}{
+  procEnableWindow.Call(h,1)
+ }
+ layoutPDFPreviewControls()
+}
+
+func goToPDFPageNumber() {
+ if !pdfPreview.active || pdfPreview.pageCount<1{return}
+ number,err:=strconv.Atoi(strings.TrimSpace(getText(pdfPreview.pageEdit)))
+ if err!=nil||number<1||number>pdfPreview.pageCount{
+  setText(pdfPreview.pageEdit,strconv.Itoa(pdfPreview.page+1))
+  setText(app.statusLabel,fmt.Sprintf("Enter a page between 1 and %d",pdfPreview.pageCount))
+  return
+ }
+ if pdfPreview.page==number-1{return}
+ pdfPreview.page=number-1
+ app.previewPanX,app.previewPanY=0,0
+ pdfPreview.cursorAnchor=PDFCursorAnchor{}
+ pdfPreview.panAnchored=false
+ updatePDFPreviewControls()
+ requestPDFPreviewRender()
 }
 
 func pdfContentRect(rc RECT) RECT {
