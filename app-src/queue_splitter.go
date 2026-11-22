@@ -4,6 +4,8 @@ package main
 // production settings, file metadata, queue selections or preview state.
 var queueSplitterWidth int32
 var queueSplitterDragging bool
+// The live drag marker is cheap; actual child-window resizing happens once on release.
+var queueSplitterPendingWidth int32
 
 func queueSplitterClamp(width, requested int32) int32 {
  if width < 760 {width=760}
