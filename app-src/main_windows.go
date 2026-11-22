@@ -2819,9 +2819,6 @@ func finishSuccessfulFileOperation(source, target string, rec MoveRecord, source
 		commitStagedFileFlowMetadata(source, target, rec)
 	}
 	recordProcessed(rec)
-	if err := syncConfiguredVaultMove(source, target); err != nil {
-		setText(app.statusLabel, "File operation completed, but the Vault address index could not be updated: "+err.Error())
-	}
 	if source != currentFile() {
 		reloadFiles()
 		return
@@ -4310,7 +4307,6 @@ func undoSelectedProcessed() {
 		showError(err.Error())
 		return
 	}
-	vaultErr := syncConfiguredVaultMove(rec.To, rec.From)
 	if err := unobserveCompletedMoveLearning(learningFilePath(), rec, time.Now()); err != nil {
 		// Undo is authoritative for files even if optional learning data cannot be updated.
 		setText(app.statusLabel, "Undo completed; local learning correction could not be recorded: "+err.Error())
@@ -4335,10 +4331,6 @@ func undoSelectedProcessed() {
 	if journalErr != nil {
 		setText(app.statusLabel, "Undo completed, but durable journal reconciliation is pending.")
 		showError("The Undo completed successfully, but DCM could not record the journal update:\n" + journalErr.Error() + "\n\nOn the next launch DCM will reconcile the journal against the filesystem.")
-		return
-	}
-	if vaultErr != nil {
-		setText(app.statusLabel, "Undo completed, but the Vault address index could not be updated: "+vaultErr.Error())
 		return
 	}
 	setText(app.statusLabel, "Undid processed transaction: "+processedRecordLabel(rec))
@@ -4376,9 +4368,6 @@ func undoLatestBatch() {
 	for _, rec := range undone {
 		if filepath.Clean(filepath.Dir(rec.From)) == filepath.Clean(app.sourceDir) {
 			reloadSource = true
-		}
-		if err := syncConfiguredVaultMove(rec.To, rec.From); err != nil {
-			reconciliationIssues = append(reconciliationIssues, "Vault index: "+err.Error())
 		}
 		if err := unobserveCompletedMoveLearning(learningFilePath(), rec, time.Now()); err != nil {
 			reconciliationIssues = append(reconciliationIssues, "learning correction: "+err.Error())
