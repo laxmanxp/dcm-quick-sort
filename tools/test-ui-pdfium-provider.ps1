@@ -738,6 +738,18 @@ try{
  [DcmNative]::ClickAsync($hwnd,$app.Id,1074)
  PageReady 'Page 1 of 2'
  Step 'custom-pdf-page-return' @{entered=1;rendered=1}
+ foreach($control in @(
+  @{id=1075;name='fit-width'},
+  @{id=1076;name='fit-page'},
+  @{id=1078;name='zoom-in'},
+  @{id=1077;name='zoom-out'}
+ )){
+  $handle=[DcmNative]::Control($hwnd,$app.Id,$control.id)
+  if($handle -eq [IntPtr]::Zero -or -not [DcmNative]::IsWindowEnabled($handle)){throw ('Custom PDF toolbar control unavailable: '+$control.name)}
+  [DcmNative]::ClickAsync($hwnd,$app.Id,$control.id)
+  PageReady 'Page 1 of 2'
+  Step ('custom-pdf-toolbar-'+$control.name) @{control_id=$control.id;rendered=$true}
+ }
  if($VerifyRotation) {
   $originalHash=Hash $pdf
   foreach($angle in @(90,180,270)) {
