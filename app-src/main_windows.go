@@ -3871,6 +3871,10 @@ func syncQueueHistoryTabVisibility() {
  // remain available, but Queue does not display the reversal controls.
  show(app.undoBatchBtn, app.showHistoryTab)
  show(app.undoBtn, app.showHistoryTab)
+ if app.showHistoryTab {
+ 	procInvalidateRect.Call(app.undoBatchBtn, 0, 1)
+ 	procInvalidateRect.Call(app.undoBtn, 0, 1)
+ }
  syncNativeTabSelection()
 }
 
@@ -4014,11 +4018,14 @@ func layoutUI(hwnd uintptr) {
 	recordAttachmentTrace("layout-before-processedTitleLabel")
 	procMoveWindow.Call(app.processedTitleLabel, 184, uintptr(headerY), uintptr(listW-164), 24, 0)
 	recordAttachmentTrace("layout-after-processedTitleLabel")
+	// History has its own action footer immediately below the processed list.
+	// Reserve 38px for two buttons and 8px between list and footer.
+	historyFooterY := previewTop + previewH - 32
 	recordAttachmentTrace("layout-before-undoBatchBtn")
-	procMoveWindow.Call(app.undoBatchBtn, uintptr(processedX), uintptr(previewTop+previewH-34), 95, 30, 0)
+	procMoveWindow.Call(app.undoBatchBtn, uintptr(processedX+8), uintptr(historyFooterY), 110, 28, 1)
 	recordAttachmentTrace("layout-after-undoBatchBtn")
 	recordAttachmentTrace("layout-before-undoBtn")
-	procMoveWindow.Call(app.undoBtn, uintptr(processedX+103), uintptr(previewTop+previewH-34), 74, 30, 0)
+	procMoveWindow.Call(app.undoBtn, uintptr(processedX+126), uintptr(historyFooterY), 78, 28, 1)
 	recordAttachmentTrace("layout-after-undoBtn")
 	recordAttachmentTrace("layout-before-fileList")
 	queueNameW, queueExtW, queueCreatedW, queueUpdatedW := queueColumnWidths(listW)
@@ -4037,7 +4044,7 @@ func layoutUI(hwnd uintptr) {
 	procMoveWindow.Call(app.processedSearchEdit, uintptr(processedX), uintptr(previewTop), uintptr(processedW), 27, 0)
 	recordAttachmentTrace("layout-after-processedSearchEdit")
 	recordAttachmentTrace("layout-before-processedList")
-	procMoveWindow.Call(app.processedList, uintptr(processedX), uintptr(previewTop+33), uintptr(processedW), uintptr(previewH-73), 0)
+	procMoveWindow.Call(app.processedList, uintptr(processedX), uintptr(previewTop+33), uintptr(processedW), uintptr(previewH-73), 1)
 	// Preserve each list and its current selection when switching tabs.
 	syncQueueHistoryTabVisibility()
 	recordAttachmentTrace("layout-after-processedList")
