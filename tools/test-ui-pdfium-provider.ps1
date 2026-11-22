@@ -856,6 +856,9 @@ try{
   if($dialogs.Count -ne 1){throw 'Delete shortcut confirmation missing'}
   $confirm=[IntPtr]$dialogs[0].Handle
   [DcmNative]::ClickAsync($confirm,$app.Id,6) # IDYES
+  # BM_CLICK is asynchronous; let the modal dialog process the confirmation
+  # before the generic Wait helper asserts that no owned dialog exists.
+  Start-Sleep -Milliseconds 500
   Wait 'Saved destination shortcut removed' {
    (Get-Content -LiteralPath $savedPath -Raw) -notmatch 'Office Records='
   }
