@@ -12,6 +12,7 @@ param(
   [switch]$VerifyMoveGating,
   [switch]$VerifyMoveGatingOnly,
   [switch]$VerifyDestinationFolderOnly,
+  [switch]$VerifyDestinationManagerOnly,
   [switch]$VerifyActualFilename,
   [switch]$VerifyTwoPane,
   [switch]$VerifySplitter,
@@ -379,6 +380,7 @@ try{
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-sumatra-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','Accessibility.dll','System.Drawing.dll')
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-pdfium-wheel-input.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-native-modifier-input.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')
+ Add-Type -Path (Join-Path $repo 'tests/native/dcm-destination-manager-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')
  . (Join-Path $repo 'tests/native/new-fixtures.ps1')
  $fixture=New-DcmFixtures $lab
  if($VerifyDestinationFolderOnly){
@@ -824,6 +826,35 @@ try{
   Assert-ActualFilenameLayout
  }
  PageReady 'Page 1 of 2'
+ if($VerifyDestinationManagerOnly){
+  $savedPath=Join-Path $fixture.config 'destinations.conf'
+  $destination=$fixture.destination
+  $manager=[IntPtr]::Zero
+  if(-not [DcmPDFPickerProbe]::PostMessage([IntPtr]$hwnd,0x0111,[IntPtr]1019,[IntPtr]::Zero)){throw 'Cannot open Destination Manager'}
+  Wait 'Destination Manager opens' {
+   $manager=[DcmDestinationManagerProbe]::FindOwned([IntPtr]$hwnd,$app.Id)
+   $manager -ne [IntPtr]::Zero
+  }
+  [DcmSumatraProbe]::SetEdit($manager,$app.Id,1601,'Office Records')
+  [DcmSumatraProbe]::SetEdit($manager,$app.Id,1602,$destination)
+  [DcmNative]::ClickAsync($manager,$app.Id,1604)
+  Wait 'Destination saved in isolated config' {
+   (Test-Path -LiteralPath $savedPath) -and
+   ((Get-Content -LiteralPath $savedPath -Raw) -match 'Office Records=') -and
+   (@([DcmNative]::ListItems($manager,$app.Id,1606)).Count -ge 1)
+  }
+  Step 'destination-manager-save' @{name='Office Records';folder=$destination;persisted=$true}
+  [DcmNative]::ClickAsync($manager,$app.Id,1608)
+  Wait 'Destination manager Use updates main window' {(TextControl 1003) -eq $destination}
+  $combo=[DcmNative]::Control($hwnd,$app.Id,1018)
+  $options=[DcmTwoPaneGeometry]::SendMessage($combo,0x0146,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64()
+  if($options -lt 2){throw 'Saved destination dropdown not populated'}
+  Step 'destination-manager-use' @{folder=$destination;dropdown_items=$options;no_files_moved=(Test-Path -LiteralPath $pdf)}
+  [DcmNative]::ClickAsync($manager,$app.Id,1609)
+  Wait 'Destination Manager closes' {[DcmDestinationManagerProbe]::FindOwned([IntPtr]$hwnd,$app.Id) -eq [IntPtr]::Zero}
+  $receipt.passed=$true
+  return
+ }
  if($VerifyDestinationFolderOnly){
   $move=[DcmNative]::Control($hwnd,$app.Id,1041)
   if([DcmNative]::IsWindowEnabled($move)){throw 'Move enabled with no destination folder'}
