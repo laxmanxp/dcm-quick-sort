@@ -633,3 +633,56 @@ and end-to-end native regression remain open.
 Keep application behavior and production unchanged until multiselection
 can be qualified with valid input and the intermittent snapshot failure
 is investigated.
+
+
+## Native Ctrl/Shift and full native regression closure — 2026-11-22
+
+The old Ctrl/Shift GUI harness used `SendMessage(WM_LBUTTONDOWN)` with a
+modifier bit but without setting the OS key state that Win32
+`SysListView32` reads. This was a false test assumption, not proof of a
+broken multi-selection implementation.
+
+Commits `334acac`, `58e89ad`, `779b12c`, and `95c03bd` add
+`tests/native/dcm-native-modifier-input.cs` and wire the GUI tests to
+guarded, real Ctrl and Shift input on the disposable, PID-verified app
+window. Modifier key release, pointer restoration and previous
+foreground restoration are in `finally`. The Shift test establishes
+its selection anchor with an actual click rather than posted keyboard
+navigation.
+
+- Ctrl fixture receipt `dcm-pdfium-gui-20261122-082917-bd9e843`:
+  **PASS**, normal exit, two native selections matched backing legacy
+  indices [1,2].
+- Shift fixture receipt `dcm-pdfium-gui-20261122-083109-70bfd68`:
+  **PASS**, normal exit, three selected indices [0,1,2] matched native
+  `LVM_GETSELECTEDCOUNT=3`; subsequent arrow navigation and selection
+  after sorting passed.
+- Full Go suite with `pdfium_dev` on Lenovo: **PASS**.
+
+The earlier intermittent `Snapshot: Window PID mismatch` came from
+read-only `DcmNative.Snapshot` treating **every descendant HWND** as
+QuickSort-owned, including out-of-process embedded preview controls.
+Commit `66fba70` changes only snapshot enumeration to ignore foreign
+descendants and demonstrably transient/destroyed controls while
+retaining strict PID ownership on direct control interaction and on
+the root HWND. Lenovo native full regression
+`dcm-pdfium-gui-20261122-083208-0475807`: **PASS**,
+normal exit, 51 recorded steps. Verified native four-column table,
+single selection, Name and Updated header sorting, selection retention,
+PDF page jumps and toolbar, Rename/Undo, Move/Undo, PDF file integrity,
+damaged and protected PDF refusal/recovery, 20 persistent render
+requests on one worker PID, zero fallbacks, and worker exit after host.
+
+Move button availability was independently qualified with disposable
+Vault folders, without moving user content. Commit `974f10b` adds
+`-VerifyMoveGating -VerifyMoveGatingOnly`, covering empty/invalid
+destinations (disabled), existing `Accepted` logical destination
+(enabled), no visible/selected file (disabled), and selection restored
+(enabled). Both legacy and native modes PASS, normal exit:
+`dcm-pdfium-gui-20261122-083323-360f2ca` and
+`dcm-pdfium-gui-20261122-083346-73f3f70`.
+
+These are scoped development acceptance results. User-facing
+production/release checkout and FileFlow Suite remain unchanged.
+Physical subjective drag feel and the complete integrated suite
+release gate still require separate user acceptance.
