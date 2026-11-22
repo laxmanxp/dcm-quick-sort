@@ -312,6 +312,8 @@ function SelectUndoRecord([string]$name) {
  for($i=0;$i -lt $items.Count;$i++){if($items[$i].Contains($name)){$matches+=,$i}}
  if($matches.Count -ne 1){throw ('Undo history row not unique for '+$name)}
  $null=[DcmNative]::SelectSingleItem($hwnd,$app.Id,1017,$matches[0])
+ $currentNarration=[DcmNative]::Text([DcmNative]::Control($hwnd,$app.Id,1801),$app.Id)
+ Step 'history-narration-observed' @{selected=$name;panel_text=$currentNarration}
  Wait 'History selected-record narration' {
   $n=[DcmNative]::Text([DcmNative]::Control($hwnd,$app.Id,1801),$app.Id)
   $n.Contains('ACTION TAKEN') -and $n.Contains('WHAT UNDO WILL DO') -and $n.Contains($name)
