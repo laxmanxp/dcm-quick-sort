@@ -14,6 +14,7 @@ param(
   [switch]$VerifyActualFilename,
   [switch]$VerifyTwoPane,
   [switch]$VerifySplitter,
+  [switch]$VerifySplitterCursor,
   [switch]$VerifyNativeSplitterOnly,
   [switch]$VerifyColumns,
   [switch]$VerifyNativeReport,
@@ -116,6 +117,24 @@ using System.Runtime.InteropServices;
 public struct DcmSplitterPoint {
  public int X,Y;
  [DllImport("user32.dll")] public static extern bool ScreenToClient(IntPtr hwnd,ref DcmSplitterPoint point);
+}
+'@
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class DcmSplitterCursorProbe {
+ [StructLayout(LayoutKind.Sequential)] struct POINT { public int X,Y; }
+ [StructLayout(LayoutKind.Sequential)] struct CURSORINFO { public int Size,Flags; public IntPtr Cursor; public POINT Screen; }
+ [DllImport("user32.dll")] static extern bool GetCursorInfo(ref CURSORINFO info);
+ [DllImport("user32.dll", EntryPoint="LoadCursorW")] static extern IntPtr LoadCursor(IntPtr instance,IntPtr cursorName);
+ public static bool IsResizeCursor(){
+  CURSORINFO info=new CURSORINFO();
+  info.Size=Marshal.SizeOf(typeof(CURSORINFO));
+  if(!GetCursorInfo(ref info))throw new Exception("GetCursorInfo failed");
+  IntPtr resize=LoadCursor(IntPtr.Zero,new IntPtr(32644)); // IDC_SIZEWE
+  if(resize==IntPtr.Zero)throw new Exception("IDC_SIZEWE missing");
+  return info.Cursor==resize;
+ }
 }
 '@
 function Is-Visible([int]$id){
@@ -848,7 +867,22 @@ try{
   $startX=$start.X;$y=$start.Y
   $pack={param([int]$x,[int]$vertical);return [IntPtr]((($vertical -band 0xffff) -shl 16) -bor ($x -band 0xffff))}
   [void][DcmTwoPaneGeometry]::SendMessage([IntPtr]$hwnd,0x0201,[IntPtr]1,(& $pack $startX $y))
+  if($VerifySplitterCursor){
+   # Simulate the OS re-query that occurs as the mouse button is pressed.
+   $handled=[DcmTwoPaneGeometry]::SendMessage([IntPtr]$hwnd,0x0020,[IntPtr]$hwnd,[IntPtr]1).ToInt64()
+   if($handled -ne 1 -or -not [DcmSplitterCursorProbe]::IsResizeCursor()){
+    throw 'Splitter cursor reverted to arrow on mouse-down'
+   }
+   Step 'splitter-cursor-after-mousedown' @{handled=$true;cursor='IDC_SIZEWE'}
+  }
   [void][DcmTwoPaneGeometry]::SendMessage([IntPtr]$hwnd,0x0200,[IntPtr]1,(& $pack ($startX+110) $y))
+  if($VerifySplitterCursor){
+   $handled=[DcmTwoPaneGeometry]::SendMessage([IntPtr]$hwnd,0x0020,[IntPtr]$hwnd,[IntPtr]1).ToInt64()
+   if($handled -ne 1 -or -not [DcmSplitterCursorProbe]::IsResizeCursor()){
+    throw 'Splitter cursor reverted during captured drag'
+   }
+   Step 'splitter-cursor-during-drag' @{handled=$true;cursor='IDC_SIZEWE'}
+  }
   [void][DcmTwoPaneGeometry]::SendMessage([IntPtr]$hwnd,0x0202,[IntPtr]::Zero,(& $pack ($startX+110) $y))
   Start-Sleep -Milliseconds 400
   $afterQueue=[DcmTwoPaneGeometry+RECT]::new()
