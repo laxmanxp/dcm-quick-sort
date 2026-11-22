@@ -471,3 +471,41 @@ unrelated desktop foreground occlusion had prevented trustworthy capture.
 The actual <454px preview appearance has deterministic placement tests, not
 physical GUI visual acceptance. No release, production app, Suite, or
 registered release checkout was changed.
+
+
+## Unobstructed toolbar capture and isolated provider-selector qualification — 2026-11-22
+
+On isolated Lenovo candidate `dabea236`, the actual screenshot-enabled
+legacy-queue GUI run `dcm-pdfium-gui-20261122-040546-c710479` **PASSED**
+with normal exit. Its saved width-specific captures and 11+ additional
+render captures were not occluded. The 920-requested-window screenshot
+was separately inspected: both native rotation icons, page and fit/zoom
+controls, queue columns, rendered PDF and lower filename/operations were
+readable, aligned and non-overlapping. At the clamped GUI sizes, the
+smaller <454 preview-client branch is still not visually accepted; it
+remains covered by deterministic unit tests only. Receipt's generic
+`visual_reviewed=false` is intentionally unchanged; this paragraph records
+the narrow 920 image inspection, not a review of every captured image.
+
+The native-report + `-VerifyPDFPicker` run
+`dcm-pdfium-gui-20261122-040646-c59fe3f` recorded successful checked
+Windows.Data.Pdf/PDFium/Auto selection and PDF rendering but **FAILED**
+later on `Owned window no longer exists` during native report selection.
+Do not count it as end-to-end native queue acceptance or infer that the
+selector itself caused that exit.
+
+Commit `47125b6` adds an independent legacy-queue selector path in the GUI
+harness. Full Go suite PASS. Its Lenovo acceptance receipt
+`dcm-pdfium-gui-20261122-040755-5d06892` **PASSED**, normal exit:
+Windows.Data.Pdf (2012), PDFium (2011) and Auto (2010) each displayed the
+same active two-page PDF; 26 worker-start trace events, two distinct
+owned PIDs across intentional backend switches, zero one-shot fallback
+events, final worker exited after host shutdown. Additional underlying
+PDF operations/regressions passed. Screenshots were produced but are not
+all separately reviewed (`visual_reviewed=false`).
+
+Remaining: independent native-report selection early-exit investigation;
+physical GUI capture of the <454 preview-width compact branch under
+a bounded isolated geometry fixture. Neither blocks the above scoped
+legacy-queue provider-switch acceptance. No production or release checkout
+changes.
