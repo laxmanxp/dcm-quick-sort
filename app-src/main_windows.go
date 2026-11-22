@@ -989,7 +989,7 @@ func drawPrimaryButton(dis *DRAWITEMSTRUCT) {
 	}
 	labelText := strings.TrimSpace(getText(dis.HwndItem))
 	if labelText == "" {
-		labelText = "Move to &Vault"
+		labelText = "Move to &Folder"
 	}
 	label := wstr(labelText)
 	const flags = 0x00000001 | 0x00000004 | 0x00000020 // DT_CENTER|DT_VCENTER|DT_SINGLELINE
