@@ -6401,6 +6401,14 @@ func loadWindowsPreviewHandler(path string) bool {
 	if pptxPhysical {
 		resizePreviewHandler()
 	}
+	// Word/DOCX and other registered preview handlers can create their inner
+	// content surface only during DoPreview. Give those handlers one final
+	// full-pane SetRect after DoPreview, rather than relying solely on the
+	// earlier SetWindow rectangle. Leave Excel's separately qualified initial
+	// logical/physical sizing path and PowerPoint's sizing path unchanged.
+	if !excelOuterRepair && !pptxPhysical {
+		resizePreviewHandler()
+	}
 	autoFitPreviewIfSupported(path, clsidText)
 	updatePreviewZoomControls()
 	return true
