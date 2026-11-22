@@ -751,18 +751,21 @@ func TestPDFDefaultViewPreferenceMenuAndStartupAreWired(t *testing.T) {
 	}
 }
 
-func TestVaultLibraryMenuAndMoveUndoIndexWiring(t *testing.T) {
+func TestDestinationFolderMenuAndMoveUndoWiring(t *testing.T) {
 	src := windowsMainSource(t)
 	for _, needle := range []string{
-		"ID_VAULT_LIBRARY",
-		"Vault &Library…",
-		"chooseVaultRoot()",
-		"syncConfiguredVaultMove(source, target)",
-		"syncConfiguredVaultMove(rec.To, rec.From)",
+		"Choose &Destination Folder…",
+		"chooseDestinationFolder()",
+		"resolveExistingDestinationFolder(getText(app.destEdit))",
+		"moveCurrent()",
+		"undoSelectedProcessed()",
 	} {
 		if !strings.Contains(src, needle) {
-			t.Fatalf("Windows vault wiring missing %q", needle)
+			t.Fatalf("Windows destination-folder wiring missing %q", needle)
 		}
+	}
+	if strings.Contains(src, `appendMenuString(toolsMenu, ID_VAULT_LIBRARY`) {
+		t.Fatal("obsolete Vault Library remains in Tools menu")
 	}
 }
 
