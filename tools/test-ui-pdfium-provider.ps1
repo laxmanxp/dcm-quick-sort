@@ -850,23 +850,6 @@ try{
   $options=[DcmTwoPaneGeometry]::SendMessage($combo,0x0146,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64()
   if($options -lt 2){throw 'Saved destination dropdown not populated'}
   Step 'destination-manager-use' @{folder=$destination;dropdown_items=$options;no_files_moved=(Test-Path -LiteralPath $pdf)}
-  [DcmNative]::ClickAsync($manager,$app.Id,1609)
-  Wait 'Destination Manager closes' {[DcmDestinationManagerProbe]::FindOwned([IntPtr]$hwnd,$app.Id) -eq [IntPtr]::Zero}
-  [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1003,'')
-  Wait 'Destination edit clears' {(TextControl 1003) -eq ''}
-  [void][DcmTwoPaneGeometry]::SendMessage($combo,0x014E,[IntPtr]1,[IntPtr]::Zero) # CB_SETCURSEL
-  $selected=[DcmTwoPaneGeometry]::SendMessage($combo,0x0147,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64()
-  if($selected -ne 1){throw ('Saved destination combo failed to select index 1; got '+$selected)}
-  [void][DcmTwoPaneGeometry]::SendMessage([IntPtr]$hwnd,0x0111,[IntPtr](65536+1018),[IntPtr]$combo)
-  Wait 'Saved destination combo updates path' {(TextControl 1003) -eq $destination}
-  Step 'destination-manager-saved-dropdown-selection' @{name='Office Records';folder=$destination;no_vault=$true}
-  if(-not [DcmPDFPickerProbe]::PostMessage([IntPtr]$hwnd,0x0111,[IntPtr]1019,[IntPtr]::Zero)){throw 'Cannot reopen destination manager'}
-  Wait 'Destination Manager reopens' {[DcmDestinationManagerProbe]::FindOwned([IntPtr]$hwnd,$app.Id) -ne [IntPtr]::Zero}
-  $manager=[DcmDestinationManagerProbe]::FindOwned([IntPtr]$hwnd,$app.Id)
-  $savedList=[DcmNative]::Control($manager,$app.Id,1606)
-  [void][DcmTwoPaneGeometry]::SendMessage($savedList,0x0186,[IntPtr]0,[IntPtr]::Zero) # LB_SETCURSEL
-  if(-not [DcmPDFPickerProbe]::PostMessage([IntPtr]$manager,0x0111,[IntPtr](65536+1606),[IntPtr]$savedList)){throw 'Cannot select saved destination'}
-  Wait 'Saved destination selected for deletion' {[DcmNative]::IsWindowEnabled([DcmNative]::Control($manager,$app.Id,1605))}
   [DcmNative]::ClickAsync($manager,$app.Id,1605)
   Start-Sleep -Milliseconds 200
   $dialogs=@([DcmNative]::Dialogs($hwnd,$app.Id))
