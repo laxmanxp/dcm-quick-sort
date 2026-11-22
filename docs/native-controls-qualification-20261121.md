@@ -686,3 +686,49 @@ These are scoped development acceptance results. User-facing
 production/release checkout and FileFlow Suite remain unchanged.
 Physical subjective drag feel and the complete integrated suite
 release gate still require separate user acceptance.
+
+
+## Integrated native GUI qualification — 2026-11-22
+
+At exact source commit `b3c23e0`, Lenovo's isolated development candidate
+`quicksort-final-integrated-dev.exe` was rebuilt with `pdfium_dev`.
+Full Go suite `go test -p 1 -vet=off -tags pdfium_dev ./... -count=1`
+**PASS** and Windows build **PASS**.
+
+The first all-in-one native test receipt
+`dcm-pdfium-gui-20261122-093225-adc3ebe` **FAILED** at native
+selection after PDF backend switching. The GUI harness was still
+using posted Home/Down navigation on a ListView that no longer owned
+keyboard focus. It did not establish the required selected row.
+The executable exited normally. Test-only commit `66f78e0` changes the
+initial native selection to a verified plain click within the
+owned disposable ListView, fixing this test-order dependency.
+
+The exact same application executable then passed the combined
+native qualification receipt `dcm-pdfium-gui-20261122-093346-df7ad65`:
+**PASS**, `normal_exit=true`, 96 steps, no error. Coverage included:
+- Native `SysListView32` / `SysHeader32` with four columns, row selection,
+  real Ctrl multi-selection, Name and Updated header sorting, and selected
+  identities retained across sorting.
+- PDF backend picker Windows.Data.Pdf/PDFium/Auto, native custom toolbar
+  navigation/zoom and both rotation directions, bounded splitter drag
+  (queue width 442->557, preview 772->657, page preserved), and narrow
+  toolbar button visibility/non-overlap at the available window widths.
+- Move button disabled for empty/invalid Vault destinations and no file,
+  enabled for a valid disposable `Accepted` logical location and when
+  selection is restored.
+- Rename/Undo, Move/Undo, original PDF integrity, text-source contents
+  for Go, JSON and Python fixtures, protected/damaged PDF recovery.
+- 37 render requests during backend comparison, two intentional backend
+  worker process identities, zero one-shot fallback, normal host shutdown.
+
+Screenshots were deliberately skipped in this combined run to avoid
+unrelated foreground-window occlusion, so this PASS establishes GUI
+control/behavioral acceptance, not a new visual screenshot review.
+The <454px compact preview still lacks physical appearance capture.
+Smoothness during continuous dragging remains subjective hands-on user
+acceptance; the splitter intentionally uses a responsive guide, with
+the pane resize committed on mouse release.
+
+This is development-candidate acceptance only. No production/release
+checkout or FileFlow Suite integration was performed by the test.
