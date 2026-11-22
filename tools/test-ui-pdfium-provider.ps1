@@ -357,6 +357,7 @@ try{
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-undo-input.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-sumatra-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll','Accessibility.dll','System.Drawing.dll')
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-pdfium-wheel-input.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')
+ Add-Type -Path (Join-Path $repo 'tests/native/dcm-native-modifier-input.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')
  . (Join-Path $repo 'tests/native/new-fixtures.ps1')
  $fixture=New-DcmFixtures $lab
  $pdf=Join-Path $fixture.inbox '08-preview.pdf'
@@ -601,9 +602,11 @@ try{
    # Use real ListView mouse messages, keeping the standard app/adapter path.
    # The original row is selected. Ctrl-click the adjacent row and verify
    # BOTH native selections are visible through the legacy queue adapter.
-   $nextRowPoint=[IntPtr]((88 -shl 16) -bor 65)
-   [void][DcmTwoPaneGeometry]::SendMessage($native,0x0201,[IntPtr]9,$nextRowPoint)
-   [void][DcmTwoPaneGeometry]::SendMessage($native,0x0202,[IntPtr]8,$nextRowPoint)
+   $original=[DcmTwoPaneGeometry]::SendMessage($native,0x100C,[IntPtr](-1),[IntPtr]2).ToInt64()
+   if($original -lt 0 -or $original -gt 3){throw 'Native selection absent before Ctrl-click'}
+   $nextRow=$(if($original -eq 1){2}else{1})
+   [DcmNativeModifierInput]::ModifierClick($hwnd,$native,$app.Id,$nextRow,$false)
+   Step 'native-control-input' @{original_row=$original;ctrl_click_row=$nextRow;real_modifier_state=$true;owned_window=$true}
    $legacySelected=@()
    Wait 'Native Ctrl selection propagated into queue' {
     $script:legacySelected=@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016))
@@ -659,12 +662,9 @@ try{
   if($VerifyNativeRangeKeyboard){
    # Select first row, then Shift-click third row. This tests range
    # selection through real ListView mouse paths and the legacy adapter.
-   $first=[IntPtr]((45 -shl 16) -bor 65)
-   $third=[IntPtr]((88 -shl 16) -bor 65)
-   [void][DcmTwoPaneGeometry]::SendMessage($native,0x0201,[IntPtr]1,$first)
-   [void][DcmTwoPaneGeometry]::SendMessage($native,0x0202,[IntPtr]::Zero,$first)
-   [void][DcmTwoPaneGeometry]::SendMessage($native,0x0201,[IntPtr]5,$third)
-   [void][DcmTwoPaneGeometry]::SendMessage($native,0x0202,[IntPtr]4,$third)
+   if(-not [DcmNativeReportProbe]::ClickRow($native,0)){throw 'Cannot establish range anchor'}
+   Wait 'Native range anchor' {[DcmTwoPaneGeometry]::SendMessage($native,0x100C,[IntPtr](-1),[IntPtr]2).ToInt64() -eq 0}
+   [DcmNativeModifierInput]::ModifierClick($hwnd,$native,$app.Id,2,$true)
    Wait 'Native Shift range propagated to QuickSort' {@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016)).Count -eq 3}
    $range=@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016))
    $nativeRange=[DcmTwoPaneGeometry]::SendMessage($native,0x1032,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64()
