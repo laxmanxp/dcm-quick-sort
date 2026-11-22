@@ -745,7 +745,7 @@ try{
    [DcmNative]::ClickAsync($hwnd,$app.Id,1062)
    $expected=RotatedLabel 1 $angle
    Wait ('PDF clockwise rotation '+$angle) {
-    if((PageLabel) -cne $expected){return $false}
+    if((TextControl 1073) -cne '1'){return $false}
     $applied=@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}|ForEach-Object {$_|ConvertFrom-Json})
     if($applied.Count -le $previous){return $false}
     $last=$applied[-1]
@@ -757,17 +757,17 @@ try{
     $nextFromGeneration=(@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}|ForEach-Object {$_|ConvertFrom-Json})[-1]).generation
     [DcmNative]::ClickAsync($hwnd,$app.Id,1061)
     Wait 'rotated page-two navigation' {
-     $labels=@(PreviewSnapshot|Where-Object {$_.Text -eq (RotatedLabel 2 90)})
+     $pageOK=(TextControl 1073) -ceq '2'
      $applied=@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}|ForEach-Object {$_|ConvertFrom-Json})
-     return ($labels.Count -eq 1 -and $applied[-1].rotation -eq 90 -and $applied[-1].generation -gt $nextFromGeneration)
+     return ($pageOK -and $applied[-1].rotation -eq 90 -and $applied[-1].generation -gt $nextFromGeneration)
     } 50
     Capture 'rotate-90-next-page' 'orange'
     $returnFromGeneration=(@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}|ForEach-Object {$_|ConvertFrom-Json})[-1]).generation
     [DcmNative]::ClickAsync($hwnd,$app.Id,1060)
     Wait 'rotated previous-page navigation' {
-     $labels=@(PreviewSnapshot|Where-Object {$_.Text -eq (RotatedLabel 1 90)})
+     $pageOK=(TextControl 1073) -ceq '1'
      $applied=@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}|ForEach-Object {$_|ConvertFrom-Json})
-     return ($labels.Count -eq 1 -and $applied[-1].rotation -eq 90 -and $applied[-1].generation -gt $returnFromGeneration)
+     return ($pageOK -and $applied[-1].rotation -eq 90 -and $applied[-1].generation -gt $returnFromGeneration)
     } 50
     Capture 'rotate-90-previous-page' 'teal'
    }
@@ -788,7 +788,7 @@ try{
    [DcmNative]::ClickAsync($hwnd,$app.Id,1063)
    $expected=if($angle -eq 0){'Page 1 of 2'}else{RotatedLabel 1 $angle}
    Wait ('PDF counterclockwise rotation '+$angle) {
-    if((PageLabel) -cne $expected){return $false}
+    if((TextControl 1073) -cne '1'){return $false}
     $applied=@(Get-Content -LiteralPath $trace|Where-Object {$_ -match '"event":"result-applied"'}|ForEach-Object {$_|ConvertFrom-Json})
     if($applied.Count -le $previous){return $false}
     $last=$applied[-1]
