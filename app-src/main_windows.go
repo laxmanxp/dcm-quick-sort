@@ -869,8 +869,7 @@ func createMainMenu(hwnd uintptr) uintptr {
 	appendMenuString(fileMenu, ID_MENU_EXIT, "E&xit")
 
 	appendMenuString(toolsMenu, ID_SOURCE_CONFIG, "&Sources…")
-	appendMenuString(toolsMenu, ID_DEST_CONFIG, "Vault &Destinations…")
-	appendMenuString(toolsMenu, ID_VAULT_LIBRARY, "Vault &Library…")
+	appendMenuString(toolsMenu, ID_DEST_CONFIG, "Choose &Destination Folder…")
 	appendMenuString(toolsMenu, ID_NAMING_TEMPLATES, "&Naming Templates…")
 	widthFlags := uintptr(MF_STRING)
 	pageFlags := uintptr(MF_STRING)
