@@ -1096,7 +1096,7 @@ try{
    [IO.File]::WriteAllText((Join-Path $fixture.inbox $sample.name),$sample.body,[Text.UTF8Encoding]::new($false))
   }
   [DcmNative]::ClickAsync($hwnd,$app.Id,1011)
-  Wait 'code samples listed' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 6}
+  Wait 'code samples listed' { $items=@([DcmNative]::ListItems($hwnd,$app.Id,1016));($items -contains '15-sample_test.go') -and ($items -contains '16-test-config.json') }
   foreach($sample in $samples){
    List-Selected $sample.name
    $check=[DcmNative]::Control($hwnd,$app.Id,1014)
