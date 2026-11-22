@@ -342,6 +342,7 @@ try{
  do{$app.Refresh();if($app.HasExited){throw 'Candidate exited at startup'};$hwnd=$app.MainWindowHandle;if($hwnd -ne [IntPtr]::Zero){break};Start-Sleep -Milliseconds 120}while([DateTime]::UtcNow -lt $deadline)
  if($hwnd -eq [IntPtr]::Zero){throw 'Candidate HWND missing'}
  Wait 'fixture loaded' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 4}
+ if($KeyboardSoakSteps -gt 0){Write-Output 'KBD_STAGE=fixture-loaded'}
  if($VerifyNativeReport){
   $native=[DcmTwoPaneGeometry]::FindWindowEx([IntPtr]$hwnd,[IntPtr]::Zero,'SysListView32',$null)
   if($native -eq [IntPtr]::Zero -or -not [DcmTwoPaneGeometry]::IsWindowVisible($native)){throw 'Native ListView report is not visible'}
@@ -351,6 +352,75 @@ try{
   $itemCount=[DcmTwoPaneGeometry]::SendMessage($native,0x1004,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64()
   if($columnCount -ne 4 -or $itemCount -ne 4){throw ('Native ListView columns/items mismatch '+$columnCount+'/'+$itemCount)}
   Step 'native-report-four-columns' @{class='SysListView32';header_class='SysHeader32';columns=$columnCount;items=$itemCount;visible=$true}
+  if($KeyboardSoakSteps -gt 0){
+   Write-Output 'KBD_STAGE=starting-mixed-queue'
+   if(-not $NativeReportMouse){throw 'Keyboard soak requires native mouse-driven selection'}
+   # Add 36 authentic disposable mixed-document fixtures after the basic
+   # four-row checks and remove them before ordinary rename/move tests.
+   $kbAdded=New-Object 'System.Collections.Generic.List[string]'
+   $kbSources=@(
+    @{src=(Join-Path $fixture.inbox '01-alpha.txt');ext='txt'},
+    @{src=(Join-Path $repo 'tests/fixtures/dcm33-legacy.source.docx');ext='docx'},
+    @{src=(Join-Path $repo 'tests/fixtures/dcm33-legacy-xls.source.xlsx');ext='xlsx'},
+    @{src=$pdf;ext='pdf'}
+   )
+   foreach($kind in $kbSources){
+    if(-not(Test-Path -LiteralPath $kind.src)){throw ('Mixed keyboard fixture missing: '+$kind.src)}
+    for($i=0;$i -lt 9;$i++){
+     $target=Join-Path $fixture.inbox ('kbdstress-'+$kind.ext+'-'+$i.ToString('D2')+'.'+$kind.ext)
+     Copy-Item -LiteralPath $kind.src -Destination $target
+     $kbAdded.Add($target)
+    }
+   }
+   [DcmNative]::ClickAsync($hwnd,$app.Id,1011)
+   Wait 'Mixed keyboard queue loaded' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 40}
+   if([DcmTwoPaneGeometry]::SendMessage($native,0x1004,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64() -ne 40){throw 'Native mixed queue did not load forty rows'}
+   Step 'keyboard-mixed-queue-created' @{rows=40;extra_documents=36;types=@('TXT','DOCX','XLSX','PDF')}
+   Write-Output 'KBD_STAGE=mixed-queue-ready'
+   $beforeHost=$app.PrivateMemorySize64
+   $beforeHandles=$app.HandleCount
+   # Home then traverse the 40-row queue down and back, repeatedly.
+   [void][DcmTwoPaneGeometry]::PostMessage($native,0x0100,[IntPtr]0x24,[IntPtr]::Zero)
+   [void][DcmTwoPaneGeometry]::PostMessage($native,0x0101,[IntPtr]0x24,[IntPtr]::Zero)
+   Wait 'Keyboard Home reaches first row' {[DcmTwoPaneGeometry]::SendMessage($native,0x100C,[IntPtr](-1),[IntPtr]1).ToInt64() -eq 0}
+   $cursor=0
+   $direction=1
+   $keyboardStart=[DateTime]::UtcNow
+   for($k=0;$k -lt $KeyboardSoakSteps;$k++){
+    if($cursor -ge 39){$direction=-1}
+    if($cursor -le 0){$direction=1}
+    $key=if($direction -gt 0){0x28}else{0x26}
+    if(-not [DcmTwoPaneGeometry]::PostMessage($native,0x0100,[IntPtr]$key,[IntPtr]::Zero)){throw 'Keyboard press not posted'}
+    if(-not [DcmTwoPaneGeometry]::PostMessage($native,0x0101,[IntPtr]$key,[IntPtr]::Zero)){throw 'Keyboard release not posted'}
+    $cursor+=$direction
+    if(($k+1)%30 -eq 0){
+     # Keep this responsive without holding the dispatcher synchronously.
+     Start-Sleep -Milliseconds 75
+     Owned
+    }
+   }
+   $expectedCursor=$cursor
+   Wait 'Keyboard soak ends at expected focused row' {[DcmTwoPaneGeometry]::SendMessage($native,0x100C,[IntPtr](-1),[IntPtr]1).ToInt64() -eq $expectedCursor} 30
+   $finalFile=@([DcmNative]::ListItems($hwnd,$app.Id,1016))[$expectedCursor]
+   Wait 'Keyboard soak filename and preview selection match' {(TextControl 1005) -ceq [IO.Path]::GetFileNameWithoutExtension($finalFile)}
+   Start-Sleep -Milliseconds 350
+   $app.Refresh()
+   $hostGrowth=[long]$app.PrivateMemorySize64-[long]$beforeHost
+   $handleGrowth=[int]$app.HandleCount-[int]$beforeHandles
+   if($hostGrowth -gt 48MB -or $handleGrowth -gt 64){throw ('Keyboard soak resource growth: '+$hostGrowth+' bytes, '+$handleGrowth+' handles')}
+   Step 'native-keyboard-mixed-endurance' @{steps=$KeyboardSoakSteps;rows=40;focused_index=$expectedCursor;host_private_growth_bytes=$hostGrowth;host_handle_growth=$handleGrowth;elapsed_ms=([DateTime]::UtcNow-$keyboardStart).TotalMilliseconds;responsive=$true}
+   Write-Output 'KBD_STAGE=keys-verified'
+   [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1030,'01-alpha')
+   Wait 'Keyboard soak cleanup filters to original file' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 1}
+   Write-Output 'KBD_STAGE=cleanup-filter-ready'
+   List-Selected '01-alpha.txt'
+   foreach($tempFile in $kbAdded){Remove-Item -LiteralPath $tempFile -Force}
+   [DcmNative]::ClickAsync($hwnd,$app.Id,1033)
+   Wait 'Mixed keyboard fixture cleanup' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 4}
+   Step 'keyboard-mixed-fixtures-cleaned' @{removed=36;original_rows=4}
+   Write-Output 'KBD_STAGE=cleanup-complete'
+  }
+
   if($VerifyPreviewCoalescing){
    $nativeRows=@([DcmNative]::ListItems($hwnd,$app.Id,1016))
    if($nativeRows.Count -lt 4){throw 'Rapid-navigation preview test needs four queue rows'}
@@ -501,74 +571,6 @@ try{
   $activeStem=(TextControl 1005)
   if($selectedStems -cnotcontains $activeStem){throw ('QuickSort active name is absent from sorted selection: '+$activeStem+'; selected='+($selectedStems -join ','))}
   Step 'native-report-selection-after-sort' @{selected_indices=$nativeNow;selected_names=$selectedStems;active_name=$activeStem;preserved=$true}
-  if($KeyboardSoakSteps -gt 0){
-   Write-Output 'KBD_STAGE=starting-mixed-queue'
-   if(-not $NativeReportMouse){throw 'Keyboard soak requires native mouse-driven selection'}
-   # Add 36 authentic disposable mixed-document fixtures after the basic
-   # four-row checks and remove them before ordinary rename/move tests.
-   $kbAdded=New-Object 'System.Collections.Generic.List[string]'
-   $kbSources=@(
-    @{src=(Join-Path $fixture.inbox '01-alpha.txt');ext='txt'},
-    @{src=(Join-Path $repo 'tests/fixtures/dcm33-legacy.source.docx');ext='docx'},
-    @{src=(Join-Path $repo 'tests/fixtures/dcm33-legacy-xls.source.xlsx');ext='xlsx'},
-    @{src=$pdf;ext='pdf'}
-   )
-   foreach($kind in $kbSources){
-    if(-not(Test-Path -LiteralPath $kind.src)){throw ('Mixed keyboard fixture missing: '+$kind.src)}
-    for($i=0;$i -lt 9;$i++){
-     $target=Join-Path $fixture.inbox ('kbdstress-'+$kind.ext+'-'+$i.ToString('D2')+'.'+$kind.ext)
-     Copy-Item -LiteralPath $kind.src -Destination $target
-     $kbAdded.Add($target)
-    }
-   }
-   [DcmNative]::ClickAsync($hwnd,$app.Id,1011)
-   Wait 'Mixed keyboard queue loaded' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 40}
-   if([DcmTwoPaneGeometry]::SendMessage($native,0x1004,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64() -ne 40){throw 'Native mixed queue did not load forty rows'}
-   Step 'keyboard-mixed-queue-created' @{rows=40;extra_documents=36;types=@('TXT','DOCX','XLSX','PDF')}
-   Write-Output 'KBD_STAGE=mixed-queue-ready'
-   $beforeHost=$app.PrivateMemorySize64
-   $beforeHandles=$app.HandleCount
-   # Home then traverse the 40-row queue down and back, repeatedly.
-   [void][DcmTwoPaneGeometry]::PostMessage($native,0x0100,[IntPtr]0x24,[IntPtr]::Zero)
-   [void][DcmTwoPaneGeometry]::PostMessage($native,0x0101,[IntPtr]0x24,[IntPtr]::Zero)
-   Wait 'Keyboard Home reaches first row' {[DcmTwoPaneGeometry]::SendMessage($native,0x100C,[IntPtr](-1),[IntPtr]1).ToInt64() -eq 0}
-   $cursor=0
-   $direction=1
-   $keyboardStart=[DateTime]::UtcNow
-   for($k=0;$k -lt $KeyboardSoakSteps;$k++){
-    if($cursor -ge 39){$direction=-1}
-    if($cursor -le 0){$direction=1}
-    $key=if($direction -gt 0){0x28}else{0x26}
-    if(-not [DcmTwoPaneGeometry]::PostMessage($native,0x0100,[IntPtr]$key,[IntPtr]::Zero)){throw 'Keyboard press not posted'}
-    if(-not [DcmTwoPaneGeometry]::PostMessage($native,0x0101,[IntPtr]$key,[IntPtr]::Zero)){throw 'Keyboard release not posted'}
-    $cursor+=$direction
-    if(($k+1)%30 -eq 0){
-     # Keep this responsive without holding the dispatcher synchronously.
-     Start-Sleep -Milliseconds 75
-     Owned
-    }
-   }
-   $expectedCursor=$cursor
-   Wait 'Keyboard soak ends at expected focused row' {[DcmTwoPaneGeometry]::SendMessage($native,0x100C,[IntPtr](-1),[IntPtr]1).ToInt64() -eq $expectedCursor} 30
-   $finalFile=@([DcmNative]::ListItems($hwnd,$app.Id,1016))[$expectedCursor]
-   Wait 'Keyboard soak filename and preview selection match' {(TextControl 1005) -ceq [IO.Path]::GetFileNameWithoutExtension($finalFile)}
-   Start-Sleep -Milliseconds 350
-   $app.Refresh()
-   $hostGrowth=[long]$app.PrivateMemorySize64-[long]$beforeHost
-   $handleGrowth=[int]$app.HandleCount-[int]$beforeHandles
-   if($hostGrowth -gt 48MB -or $handleGrowth -gt 64){throw ('Keyboard soak resource growth: '+$hostGrowth+' bytes, '+$handleGrowth+' handles')}
-   Step 'native-keyboard-mixed-endurance' @{steps=$KeyboardSoakSteps;rows=40;focused_index=$expectedCursor;host_private_growth_bytes=$hostGrowth;host_handle_growth=$handleGrowth;elapsed_ms=([DateTime]::UtcNow-$keyboardStart).TotalMilliseconds;responsive=$true}
-   Write-Output 'KBD_STAGE=keys-verified'
-   [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1030,'01-alpha')
-   Wait 'Keyboard soak cleanup filters to original file' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 1}
-   Write-Output 'KBD_STAGE=cleanup-filter-ready'
-   List-Selected '01-alpha.txt'
-   foreach($tempFile in $kbAdded){Remove-Item -LiteralPath $tempFile -Force}
-   [DcmNative]::ClickAsync($hwnd,$app.Id,1033)
-   Wait 'Mixed keyboard fixture cleanup' {@([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 4}
-   Step 'keyboard-mixed-fixtures-cleaned' @{removed=36;original_rows=4}
-   Write-Output 'KBD_STAGE=cleanup-complete'
-  }
 
  }
  if($VerifyColumns){
