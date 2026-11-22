@@ -869,7 +869,7 @@ func createMainMenu(hwnd uintptr) uintptr {
 	appendMenuString(fileMenu, ID_MENU_EXIT, "E&xit")
 
 	appendMenuString(toolsMenu, ID_SOURCE_CONFIG, "&Sources…")
-	appendMenuString(toolsMenu, ID_DEST_CONFIG, "Choose &Destination Folder…")
+	appendMenuString(toolsMenu, ID_DEST_CONFIG, "&Destinations…")
 	appendMenuString(toolsMenu, ID_NAMING_TEMPLATES, "&Naming Templates…")
 	widthFlags := uintptr(MF_STRING)
 	pageFlags := uintptr(MF_STRING)
@@ -2499,12 +2499,55 @@ func hideDestinationSuggestions() {
 }
 
 func updateDestinationSuggestions() {
-	// No Vault index: users may enter an absolute Windows path or browse to a
-	// directory. Existing favorites remain available in the destination combo.
-	app.destDir = strings.TrimSpace(getText(app.destEdit))
-	syncDestinationAliasSelection(app.destDir)
+	typed := strings.TrimSpace(getText(app.destEdit))
+	app.destDir = typed
+	syncDestinationAliasSelection(typed)
 	updateOpenDestinationAvailability()
-	hideDestinationSuggestions()
+	app.destSuggestions = nil
+	procSendMessageW.Call(app.destSuggestionList, LB_RESETCONTENT, 0, 0)
+	if typed == "" {
+		hideDestinationSuggestions()
+		return
+	}
+	seen := map[string]bool{}
+	low := strings.ToLower(typed)
+	for _, alias := range app.destAliases {
+		if strings.HasPrefix(strings.ToLower(alias.Name), low) || strings.HasPrefix(strings.ToLower(alias.Path), low) {
+			key := strings.ToLower(filepath.Clean(alias.Path))
+			if !seen[key] {
+				seen[key] = true
+				app.destSuggestions = append(app.destSuggestions, alias.Path)
+				procSendMessageW.Call(app.destSuggestionList, LB_ADDSTRING, 0, uintptr(unsafe.Pointer(wstr(alias.Name+"    →    "+alias.Path))))
+			}
+		}
+	}
+	if len(app.destSuggestions) < 12 {
+		for _, suggestion := range folderSuggestions(typed, 12-len(app.destSuggestions)) {
+			key := strings.ToLower(filepath.Clean(suggestion))
+			if seen[key] {continue}
+			seen[key] = true
+			app.destSuggestions = append(app.destSuggestions, suggestion)
+			procSendMessageW.Call(app.destSuggestionList, LB_ADDSTRING, 0, uintptr(unsafe.Pointer(wstr(suggestion))))
+		}
+	}
+	if len(app.destSuggestions) == 0 {
+		hideDestinationSuggestions()
+		return
+	}
+	procSendMessageW.Call(app.destSuggestionList, LB_SETCURSEL, ^uintptr(0), 0)
+	procShowWindow.Call(app.destSuggestionList, SW_SHOW)
+	app.destSuggestionsVisible = true
+}
+
+func activateDestinationFolder(path string) bool {
+	physical,err:=resolveExistingDestinationFolder(path)
+	if err!=nil {
+		setText(app.statusLabel, "Destination folder unavailable: "+err.Error())
+		return false
+	}
+	setDestinationText(physical)
+	setText(app.statusLabel, "Destination: "+physical)
+	return true
 }
 
 func chooseDestinationFolder() {
@@ -2591,7 +2634,7 @@ func activateAltShortcut(key rune) bool {
 	case ShortcutBrowseDestination:
 		return clickMnemonicControl(app.destBtn)
 	case ShortcutManageDestinations:
-		chooseDestinationFolder()
+		openFolderDestinationManager()
 		return true
 	case ShortcutRename:
 		return clickMnemonicControl(app.renameBtn)
@@ -3429,7 +3472,7 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 			case ID_OPEN_DEST:
 				openDestinationFolder()
 			case ID_DEST_CONFIG:
-				chooseDestinationFolder()
+				openFolderDestinationManager()
 			case ID_APPLY_RENAME:
 				applySelectedRenameTool()
 			case ID_FILTER_CLEAR:
@@ -6424,6 +6467,9 @@ func registerClasses(hInst uintptr) bool {
 		return false
 	}
 	if !registerSourceManagerClass(hInst, cursor) {
+		return false
+	}
+	if !registerFolderDestinationManagerClass(hInst, cursor) {
 		return false
 	}
 	if !registerRecoveryCenterClass(hInst, cursor) {
