@@ -3304,9 +3304,27 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 		return 0
 	case WM_PAINT:
 		recordLayoutTrace(hwnd, "paint-enter", 0)
-		r, _, _ := procDefWindowProcW.Call(hwnd, uintptr(msg), wParam, lParam)
+		var ps PAINTSTRUCT
+		hdc, _, _ := procBeginPaint.Call(hwnd, uintptr(unsafe.Pointer(&ps)))
+		var bounds RECT
+		procGetClientRect.Call(hwnd, uintptr(unsafe.Pointer(&bounds)))
+		w, h := bounds.Right-bounds.Left, bounds.Bottom-bounds.Top
+		if w < 760 { w=760 }
+		if h < 650 { h=650 }
+		headerY := compactFilterLayout(w).HeaderY
+		top := headerY + 28
+		height := h - 369 - (headerY - 120)
+		if height < 245 { height=245 }
+		left := int32(20) + queueSplitterPosition(w)
+		strip := RECT{Left:left,Top:top,Right:left+10,Bottom:top+height}
+		face,_,_ := procGetSysColorBrush.Call(15) // COLOR_BTNFACE
+		procFillRect.Call(hdc,uintptr(unsafe.Pointer(&strip)),face)
+		grip := RECT{Left:left+4,Top:top+12,Right:left+6,Bottom:top+height-12}
+		shadow,_,_ := procGetSysColorBrush.Call(16) // COLOR_BTNSHADOW
+		procFillRect.Call(hdc,uintptr(unsafe.Pointer(&grip)),shadow)
+		procEndPaint.Call(hwnd,uintptr(unsafe.Pointer(&ps)))
 		recordLayoutTrace(hwnd, "paint-exit", 0)
-		return r
+		return 0
 	case WM_SIZE:
 		recordLayoutTrace(hwnd, "size-enter", 0)
 		layoutUI(hwnd)
