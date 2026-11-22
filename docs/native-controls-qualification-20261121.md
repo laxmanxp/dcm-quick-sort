@@ -847,3 +847,23 @@ qualify actual dropdown selection because it did not update the path
 under the test harness; this is not yet confirmed as an application
 defect. Manual, genuine dropdown mouse use remains to be verified
 on Lenovo. Production installation was not changed.
+
+
+## Full-width History instead of Queue preview — 2026-11-22
+
+User reviewed the live History screenshot and reported that the unrelated
+file preview does not make sense beside the processed transaction list.
+Development implementation `f9400c4` now uses the existing splitter
+layout **only in Queue**. History expands its search field and processed
+list across the entire content width, hides the preview child/window,
+PREVIEW label, Read as Text checkbox and zoom controls, and disables
+splitter hit-testing while History is active. Undo Batch and Undo remain
+in a footer under the History list. Returning to Queue restores the
+previous splitter width and file preview.
+
+Go `pdfium_dev` suite and Windows development build **PASS** on
+Lenovo. GUI tab/geometry/Undo acceptance receipt
+`dcm-pdfium-gui-20261122-141059-625327d` **PASS**, normal exit.
+Tests assert full History list width, preview visibility only in Queue,
+History footer placement, narrow/wide tab switching and Undo from
+History. No release or production installation changed.
