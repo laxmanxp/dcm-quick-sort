@@ -669,6 +669,7 @@ type appState struct {
 	pendingFileOperation                                                                                                                               fileOperationMode
 	activeMoveJournal                                                                                                                                  MoveRecord
 	batchMoveActive                                                                                                                                    bool
+	batchMoveAborted                                                                                                                                   bool
 	batchMovePlan                                                                                                                                      []batchMovePlanItem
 	batchMoveTotal, batchMoveCompleted, batchMoveIssues                                                                                                int
 	batchProcessedStart                                                                                                                                int
@@ -3105,6 +3106,24 @@ func finishBackgroundConflictInspection() {
 		return
 	}
 
+	// A batch conflict offers only non-destructive choices. In particular,
+	// a duplicate is not deleted and an occupied destination is not replaced.
+	if app.batchMoveActive && result.Info.Kind != ConflictNone {
+		switch batchCollisionChoice(promptBatchFileConflict(result.Info)) {
+		case batchCollisionRename:
+			continueMoveAfterConflict(result.Source, keepBothTarget(result.Target))
+		case batchCollisionSkip:
+			cancelPendingFileOperation()
+			loadPreview(result.Source)
+			setText(app.statusLabel, "Batch collision skipped; both files remain unchanged.")
+		default:
+			cancelRemainingBatchAfterConflict()
+			loadPreview(result.Source)
+			setText(app.statusLabel, "Batch cancellation requested; completed moves remain undoable.")
+		}
+		return
+	}
+
 	switch result.Info.Kind {
 	case ConflictExactDuplicate:
 		switch promptExactDuplicate(result.Info) {
@@ -3183,6 +3202,23 @@ func removeCurrentFromWorkingList() {
 	populateFileList()
 	showCurrent(false)
 	focusFileList()
+}
+
+func promptBatchFileConflict(info DestinationConflictInfo) int {
+	message := "The destination already contains a file with this name.\\n\\n" + info.Target + "\\n\\n"
+	if info.Kind == ConflictExactDuplicate {
+		message += "The two files have identical SHA-256 hashes. Neither will be deleted automatically.\\n\\n"
+	} else {
+		message += "The existing destination contains different bytes. It will not be replaced.\\n\\n"
+	}
+	message += "Yes = Rename incoming file with a numbered name and continue\\n" +
+		"No = Skip this file and continue the batch\\n" +
+		"Cancel = Stop the remaining batch (completed moves stay undoable)"
+	result, _, _ := procMessageBoxW.Call(app.hwnd,
+		uintptr(unsafe.Pointer(wstr(message))),
+		uintptr(unsafe.Pointer(wstr("Batch Filename Conflict — DCM - Quick Sort"))),
+		0x03|0x30)
+	return int(result)
 }
 
 func promptExactDuplicate(info DestinationConflictInfo) int {
@@ -4920,6 +4956,7 @@ func startBatchMove(selected []string, dest, logicalDestination string) {
 	app.destDir = logicalDestination
 	setDestinationText(logicalDestination)
 	app.batchMoveActive = true
+	app.batchMoveAborted = false
 	app.batchMoveID = fmt.Sprintf("batch-%d", time.Now().UTC().UnixNano())
 	app.batchMovePlan = append(app.batchMovePlan[:0], plan...)
 	app.batchMoveTotal = len(plan)
@@ -4960,18 +4997,32 @@ func batchMoveStepFinished(success bool) {
 	procPostMessageW.Call(app.hwnd, WM_BATCH_MOVE_NEXT, 0, 0)
 }
 
+// Cancelling a conflict stops all unstarted batch items. Completed moves
+// remain recorded as normal transactions for History and Undo Batch.
+func cancelRemainingBatchAfterConflict() {
+	if app.batchMoveActive {
+		app.batchMoveAborted = true
+		app.batchMoveCompleted, app.batchMoveIssues = batchCancelledRemainder(
+			app.batchMoveCompleted, app.batchMoveIssues, len(app.batchMovePlan))
+		app.batchMovePlan = nil
+	}
+	cancelPendingFileOperation()
+}
+
 func finishBatchMove() {
 	if !app.batchMoveActive {
 		return
 	}
 	total := app.batchMoveTotal
 	issues := app.batchMoveIssues
+	aborted := app.batchMoveAborted
 	moved := app.batchMoveCompleted - issues
 	preferredProcessed := -1
 	if len(app.history) > app.batchProcessedStart {
 		preferredProcessed = len(app.history) - 1
 	}
 	app.batchMoveActive = false
+	app.batchMoveAborted = false
 	app.batchMovePlan = nil
 	app.batchMoveTotal = 0
 	app.batchMoveCompleted = 0
@@ -4981,7 +5032,9 @@ func finishBatchMove() {
 	reloadFilesWithFocus(false)
 	populateProcessedList(preferredProcessed)
 	focusFileList()
-	if issues == 0 {
+	if aborted {
+		setText(app.statusLabel, fmt.Sprintf("Batch move cancelled: %d moved; %d skipped or cancelled out of %d. Completed moves remain individually undoable.", moved, issues, total))
+	} else if issues == 0 {
 		setText(app.statusLabel, fmt.Sprintf("Batch move complete: %d of %d files moved. Use Undo Batch to restore the whole batch, or Undo for one transaction.", moved, total))
 	} else {
 		setText(app.statusLabel, fmt.Sprintf("Batch move finished: %d moved; %d skipped or failed out of %d. Review Processed and Recovery for details.", moved, issues, total))
