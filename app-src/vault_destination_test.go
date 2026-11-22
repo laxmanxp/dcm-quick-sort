@@ -187,32 +187,19 @@ func TestVaultDestinationUIWiringMarkers(t *testing.T) {
 	}
 }
 
-func TestMainDestinationWorkflowIsVaultOnly(t *testing.T) {
-	data, err := os.ReadFile("main_windows.go")
-	if err != nil {
-		t.Fatal(err)
-	}
-	src := string(data)
-	required := []string{
-		`app.destBtn = createControl("BUTTON", "&Manage…"`,
-		`app.pathLabel = createControl("STATIC", "Vault Location:"`,
-		`resolveExistingVaultDestination(root, strings.TrimSpace(getText(app.destEdit)))`,
-		`startBatchMove(selected, physicalDest, logicalDest)`,
-		`"Move to &Vault"`,
-	}
-	for _, marker := range required {
-		if !strings.Contains(src, marker) {
-			t.Fatalf("missing Vault-only destination wiring %q", marker)
-		}
-	}
-	forbidden := []string{
-		`browseFolder(hwnd, "Choose destination folder"`,
-		`folderSuggestions(typed, 12)`,
-		`setDestinationText(dest)`,
-	}
-	for _, marker := range forbidden {
-		if strings.Contains(src, marker) {
-			t.Fatalf("legacy arbitrary-destination wiring remains: %q", marker)
-		}
-	}
+func TestMainDestinationWorkflowUsesExistingFolders(t *testing.T) {
+ data,err:=os.ReadFile("main_windows.go")
+ if err!=nil {t.Fatal(err)}
+ src:=string(data)
+ required:=[]string{
+  `app.destBtn = createControl("BUTTON", "&Browse…"`,
+  `app.pathLabel = createControl("STATIC", "Destination:"`,
+  `resolveExistingDestinationFolder(getText(app.destEdit))`,
+  `startBatchMove(selected,physicalDest,physicalDest)`,
+  `"Move to &Folder"`,
+  `chooseDestinationFolder()`,
+ }
+ for _,marker:=range required {
+  if !strings.Contains(src,marker){t.Fatalf("missing folder destination wiring %q",marker)}
+ }
 }
