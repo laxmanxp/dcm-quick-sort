@@ -65,7 +65,8 @@ function List-Selected([string]$name){
  if($VerifyNativeReport){
   Step 'native-operation-select-request' @{name=$name;index=$index}
   $nativeList=[DcmTwoPaneGeometry]::FindWindowEx([IntPtr]$hwnd,[IntPtr]::Zero,'SysListView32',$null)
-  if($nativeList -eq [IntPtr]::Zero -or -not [DcmNativeReportProbe]::ClickRow($nativeList,$index)){throw ('Native ListView cannot select '+$name)}
+  if($nativeList -eq [IntPtr]::Zero -or -not [DcmNativeReportProbe]::NavigateToRow($nativeList,$index)){throw ('Native ListView cannot navigate to '+$name)}
+  Wait ('native focused row '+$index) {[DcmTwoPaneGeometry]::SendMessage($nativeList,0x100C,[IntPtr](-1),[IntPtr]1).ToInt64() -eq $index}
  }else{
   [DcmUndoInput]::Select($hwnd,$app.Id,$index)
  }
@@ -103,6 +104,18 @@ public static class DcmNativeReportProbe {
  [DllImport("user32.dll", CharSet=CharSet.Unicode, EntryPoint="SendMessageW")]
  public static extern IntPtr SendMessage(IntPtr hWnd,uint msg,IntPtr wParam,IntPtr lParam);
  [DllImport("user32.dll", SetLastError=true)] public static extern bool PostMessage(IntPtr hwnd,uint msg,IntPtr wParam,IntPtr lParam);
+ public static bool NavigateToRow(IntPtr hwnd,int row) {
+  if(row<0||row>600)return false;
+  // Keyboard interaction uses native ListView selection and scrolling,
+  // independent of test display DPI, header height and old scroll offsets.
+  if(!PostMessage(hwnd,0x0100,new IntPtr(0x24),IntPtr.Zero))return false;
+  if(!PostMessage(hwnd,0x0101,new IntPtr(0x24),IntPtr.Zero))return false;
+  for(int i=0;i<row;i++){
+   if(!PostMessage(hwnd,0x0100,new IntPtr(0x28),IntPtr.Zero))return false;
+   if(!PostMessage(hwnd,0x0101,new IntPtr(0x28),IntPtr.Zero))return false;
+  }
+  return true;
+ }
  public static bool ClickRow(IntPtr hwnd,int row) {
   // Fixture rows are visible; do not send synchronous mouse/scroll messages
   // across processes while the Go UI thread is busy with previews.
