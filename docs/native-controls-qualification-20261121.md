@@ -800,3 +800,50 @@ Lenovo disposable fixtures; production installation unchanged.
 Outstanding: human interaction with Windows Browse dialog; consider
 retiring unreachable legacy Vault management implementation in a
 separate cleanup, not during production stabilization.
+
+
+## Source-parity Destination Manager — 2026-11-22
+
+Per user direction, the working **Sources** workflow is now mirrored for
+ordinary destination folders. Implementation at commits `876fe6c`,
+`101f90b`, `c77f6a4`, `611904b`, and `a95ceec`:
+
+- New `folder_destination_manager_windows.go` mirrors the native
+  Sources manager layout and flow: Name, read-only Folder, Browse,
+  Save Destination, New, Delete Selected, Use Destination, Close,
+  and a named saved-location ListBox.
+- **Tools → Destinations…** opens that manager; the main Destination
+  Browse button remains a direct Windows folder chooser.
+- Physical destination shortcuts are stored in the existing
+  `destinations.conf` format. Saved entries remain visible for
+  editing even if their drive is temporarily unavailable. Save requires
+  an existing absolute folder. Use updates the selected target but
+  does not move a file. Delete asks for confirmation and removes only
+  the saved shortcut, never the physical folder.
+- The main destination combo is repopulated after Save/Delete and
+  prefix suggestions match both saved names/paths and filesystem
+  folders, like the Source field.
+- Destination Manager keyboard support mirrors Source Manager:
+  Tab/Shift+Tab, Enter and Escape.
+- Legacy Vault configuration and manager code remain dormant but are
+  not part of the normal UI.
+
+Lenovo development build `quicksort-destination-manager-dev.exe`
+(full Go `pdfium_dev` suite and Windows build **PASS**).
+Full 96-step native regression **PASS**, normal exit, receipt
+`dcm-pdfium-gui-20261122-123006-a871334`.
+
+Focused GUI manager qualification with the Vault root cleared and
+an ordinary destination folder outside the old Vault:
+`dcm-pdfium-gui-20261122-123650-f2f9161` **PASS**, normal exit.
+Recorded Save persisted the named physical path, Use updated the
+main destination field and did not move a file, and Delete Selected
+removed only the saved alias while the real folder remained intact.
+Native-table focused Save/Use also passed in receipt
+`dcm-pdfium-gui-20261122-122817-ffafda0`.
+
+Automated synthetic CB_SETCURSEL/CBN_SELCHANGE injection did not
+qualify actual dropdown selection because it did not update the path
+under the test harness; this is not yet confirmed as an application
+defect. Manual, genuine dropdown mouse use remains to be verified
+on Lenovo. Production installation was not changed.
