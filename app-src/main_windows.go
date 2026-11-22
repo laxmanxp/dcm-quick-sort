@@ -5321,6 +5321,21 @@ func previewWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr
 			case ID_PDF_ROTATE_LEFT:
 				rotatePDFPreviewCounterclockwise()
 				return 0
+			case ID_PDF_PAGE_GO:
+				goToPDFPageNumber()
+				return 0
+			case ID_PDF_FIT_WIDTH:
+				fitPreviewWidth()
+				return 0
+			case ID_PDF_FIT_PAGE:
+				fitPreview()
+				return 0
+			case ID_PDF_ZOOM_OUT:
+				adjustPreviewZoom(-1)
+				return 0
+			case ID_PDF_ZOOM_IN:
+				adjustPreviewZoom(1)
+				return 0
 			}
 		}
 		if id == ID_XLSX_SHEET && notify == CBN_SELCHANGE && app.xlsxPreviewActive {
