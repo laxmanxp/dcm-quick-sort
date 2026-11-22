@@ -9,6 +9,7 @@ param(
   [switch]$VerifyRotation,
   [switch]$VerifyNarrowToolbar,
   [switch]$VerifyCodeText,
+  [switch]$VerifyMoveGating,
   [switch]$VerifyActualFilename,
   [switch]$VerifyTwoPane,
   [switch]$VerifySplitter,
@@ -783,6 +784,18 @@ try{
   Assert-ActualFilenameLayout
  }
  PageReady 'Page 1 of 2'
+ if($VerifyMoveGating){
+  $move=[DcmNative]::Control($hwnd,$app.Id,1010)
+  if([DcmNative]::IsWindowEnabled($move)){throw 'Move to Vault enabled without configured Vault'}
+  Step 'move-gating-unconfigured-vault' @{selected_file='08-preview.pdf';button_enabled=$false}
+  # Fixture config is isolated from the user's actual Vault settings.
+  # Recheck disabled state after moving between two selected files.
+  List-Selected '03-charlie.txt'
+  if([DcmNative]::IsWindowEnabled($move)){throw 'Move to Vault enabled after file selection without Vault'}
+  Step 'move-gating-selected-without-vault' @{selected_file='03-charlie.txt';button_enabled=$false}
+  List-Selected '08-preview.pdf'
+  PageReady 'Page 1 of 2'
+ }
  if($VerifySplitter){
   # Exercise the exact app-owned splitter through native Win32 mouse messages.
   # No desktop-wide input and no changes to the user's current files/windows.
