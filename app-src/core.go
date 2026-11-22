@@ -652,7 +652,20 @@ func isKnownFileType(path string) bool {
 }
 
 func canReadAsText(path string) bool {
-	return path != "" && !isKnownFileType(path)
+	if strings.TrimSpace(path) == "" {return false}
+	ext := strings.ToLower(filepath.Ext(path))
+	// Source, scripts, configuration, logs and test fixtures are intentional
+	// text candidates even when QuickSort recognizes their extension.
+	switch ext {
+	case ".db", ".sqlite", ".sqlite3":
+		return false // binary databases share the code/text filter category
+	case ".test", ".spec", ".toml", ".properties", ".env", ".gradle",
+		".cs", ".fs", ".jsx", ".tsx", ".vue", ".svelte", ".scss", ".less",
+		".lock", ".gitignore", ".dockerignore", ".editorconfig":
+		return true
+	}
+	if categoryForPath(path) == CategoryCodeText {return true}
+	return !isKnownFileType(path)
 }
 
 func shouldUsePlainTextPreview(path string) bool {
