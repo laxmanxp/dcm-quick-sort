@@ -101,11 +101,22 @@ func layoutPDFPreviewControls() {
  var rc RECT
  procGetClientRect.Call(app.previewHwnd,uintptr(unsafe.Pointer(&rc)))
  width:=rc.Right-rc.Left
- // Compact horizontal row. Overflow controls hide rather than overlap.
- items:=[]struct{hwnd uintptr;w int32}{
+ // Preserve the familiar full-width arrangement. At narrower widths,
+ // prioritize page navigation and BOTH rotation controls before optional fit,
+ // zoom and page-count decoration. A hidden control must never consume space.
+ type toolbarItem struct{hwnd uintptr;w int32}
+ items:=[]toolbarItem{
   {pdfPreview.prevBtn,30},{pdfPreview.pageEdit,42},{pdfPreview.pageGo,32},{pdfPreview.pageLabel,48},
   {pdfPreview.nextBtn,30},{pdfPreview.fitWidthBtn,48},{pdfPreview.fitPageBtn,48},
   {pdfPreview.rotateLeftBtn,32},{pdfPreview.rotateBtn,32},{pdfPreview.zoomOutBtn,30},{pdfPreview.zoomInBtn,30},
+ }
+ if width<454 {
+  items=[]toolbarItem{
+   {pdfPreview.prevBtn,30},{pdfPreview.pageEdit,42},{pdfPreview.pageGo,32},{pdfPreview.nextBtn,30},
+   {pdfPreview.rotateLeftBtn,32},{pdfPreview.rotateBtn,32},
+   {pdfPreview.fitWidthBtn,48},{pdfPreview.fitPageBtn,48},
+   {pdfPreview.zoomOutBtn,30},{pdfPreview.zoomInBtn,30},{pdfPreview.pageLabel,48},
+  }
  }
  x:=int32(5)
  for _,item:=range items{
