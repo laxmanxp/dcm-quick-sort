@@ -226,9 +226,9 @@ func ensureDestinationConfig(defaultPath string) error {
 	}
 	defaultPath = strings.TrimSpace(defaultPath)
 	var b strings.Builder
-	b.WriteString("# DCM - Quick Sort Vault destination favorites\n")
-	b.WriteString("# Managed by DCM. Use Vault Destinations in the app.\n")
-	b.WriteString("# Format: Name=Vault/logical/location\n")
+	b.WriteString("# DCM - Quick Sort saved destination folders\n")
+	b.WriteString("# Managed by DCM. Use Tools > Destinations in the app.\n")
+	b.WriteString("# Format: Name=absolute/existing/folder/path\n")
 	if defaultPath != "" {
 		b.WriteString(defaultDestinationAliasName(defaultPath))
 		b.WriteString("=")
@@ -349,9 +349,9 @@ func writeDestinationAliases(aliases []DestinationAlias) error {
 		return err
 	}
 	var b strings.Builder
-	b.WriteString("# DCM - Quick Sort Vault destination favorites\n")
-	b.WriteString("# Managed by DCM. Use Vault Destinations in the app.\n")
-	b.WriteString("# Format: Name=Vault/logical/location\n")
+	b.WriteString("# DCM - Quick Sort saved destination folders\n")
+	b.WriteString("# Managed by DCM. Use Tools > Destinations in the app.\n")
+	b.WriteString("# Format: Name=absolute/existing/folder/path\n")
 	for _, alias := range aliases {
 		alias.Name = strings.TrimSpace(alias.Name)
 		alias.Path = strings.TrimSpace(alias.Path)
