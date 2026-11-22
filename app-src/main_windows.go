@@ -2810,6 +2810,7 @@ func setBackgroundMoveBusy(busy bool) {
 			procEnableWindow.Call(app.fileList, 0)
 		}
 	}
+	updateMoveAvailability()
 }
 
 func finishSuccessfulFileOperation(source, target string, rec MoveRecord, sourceRemoved bool) {
@@ -4641,6 +4642,7 @@ func showCurrent(focusName bool) {
 // Native selection notifications must not move the caret/anchor or reselect
 // a row the user just Ctrl-deselected. Programmatic navigation still syncs.
 func showCurrentView(focusName, syncSelection bool) {
+	defer updateMoveAvailability()
 	if !app.nativePreviewDeferred {
 		unloadPreview()
 	}
@@ -4943,16 +4945,32 @@ func moveCurrent() {
 	beginFileOperation(fileOperationMove, src, target)
 }
 
-func updateOpenDestinationAvailability() {
-	if app.destOpenBtn == 0 {
+func updateMoveAvailability() {
+	if app.moveBtn == 0 {
 		return
 	}
-	_, _, err := resolveExistingVaultDestination(loadVaultRootSetting(), getText(app.destEdit))
-	if err == nil {
-		procEnableWindow.Call(app.destOpenBtn, 1)
-	} else {
-		procEnableWindow.Call(app.destOpenBtn, 0)
+	enabled := !app.backgroundMoveBusy && !app.batchMoveActive && len(selectedSourceFiles()) > 0
+	if enabled {
+		_, _, err := resolveExistingVaultDestination(loadVaultRootSetting(), strings.TrimSpace(getText(app.destEdit)))
+		enabled = err == nil
 	}
+	if enabled {
+		procEnableWindow.Call(app.moveBtn, 1)
+	} else {
+		procEnableWindow.Call(app.moveBtn, 0)
+	}
+	// Move uses an owner-drawn button; repaint its disabled styling.
+	procInvalidateRect.Call(app.moveBtn, 0, 1)
+}
+
+func updateOpenDestinationAvailability() {
+	if app.destOpenBtn != 0 {
+		_, _, err := resolveExistingVaultDestination(loadVaultRootSetting(), getText(app.destEdit))
+		enabled := uintptr(0)
+		if err == nil && !app.backgroundMoveBusy { enabled = 1 }
+		procEnableWindow.Call(app.destOpenBtn, enabled)
+	}
+	updateMoveAvailability()
 }
 
 func openDestinationFolder() {
