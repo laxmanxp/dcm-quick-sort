@@ -178,7 +178,7 @@ func TestSourceDestinationLearningAndSuggestionManagementAreMenuOnly(t *testing.
 			t.Fatalf("management control still clutters main workflow: %s", forbidden)
 		}
 	}
-	for _, want := range []string{`"&Sources…"`, `"Vault &Destinations…"`, `"&Learning Center…"`, `"S&uggestion Center…"`} {
+	for _, want := range []string{`"&Sources…"`, `"Choose &Destination Folder…"`, `"&Learning Center…"`, `"S&uggestion Center…"`} {
 		if !strings.Contains(src, want) {
 			t.Fatalf("management command missing from Tools menu: %s", want)
 		}
