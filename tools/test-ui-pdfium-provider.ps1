@@ -785,7 +785,7 @@ try{
  }
  PageReady 'Page 1 of 2'
  if($VerifyMoveGating){
-  $move=[DcmNative]::Control($hwnd,$app.Id,1010)
+  $move=[DcmNative]::Control($hwnd,$app.Id,1041)
   if([DcmNative]::IsWindowEnabled($move)){throw 'Move to Vault enabled without configured Vault'}
   Step 'move-gating-unconfigured-vault' @{selected_file='08-preview.pdf';button_enabled=$false}
   # Fixture config is isolated from the user's actual Vault settings.
