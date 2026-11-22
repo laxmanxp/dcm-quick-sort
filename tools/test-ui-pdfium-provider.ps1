@@ -221,12 +221,12 @@ function Verify-TwoPaneTab([bool]$history){
  if($previewTitles.Count -ne 1){throw 'Expected one PREVIEW title'}
  if([bool]$previewTitles[0].Visible -eq $history){throw 'Preview title should appear only in Queue'}
  if($history){
-  $main=New-Object DcmTwoPaneGeometry+RECT
-  $listBounds=New-Object DcmTwoPaneGeometry+RECT
-  if(-not [DcmTwoPaneGeometry]::GetWindowRect([IntPtr]$hwnd,[ref]$main) -or
-     -not [DcmTwoPaneGeometry]::GetWindowRect([DcmNative]::Control($hwnd,$app.Id,1017),[ref]$listBounds)){throw 'Cannot measure History width'}
-  if(($listBounds.Right-$listBounds.Left) -lt (($main.Right-$main.Left)-100)){throw 'History did not expand across the former preview area'}
-  Step 'history-full-width-no-preview' @{history_width=$listBounds.Right-$listBounds.Left;preview_visible=$false}
+  $listBounds=Rect 1017
+  $details=Rect 1801
+  if(-not (Is-Visible 1801) -or $details.Left -le $listBounds.Right -or $details.Right -le $details.Left){throw 'History narration pane missing or overlapping transaction list'}
+  $description=[DcmNative]::Text([DcmNative]::Control($hwnd,$app.Id,1801),$app.Id)
+  if($description -notmatch 'Select a processed file|ACTION TAKEN'){throw 'History narration has no transaction guidance'}
+  Step 'history-two-pane-narration' @{list_width=$listBounds.Right-$listBounds.Left;details_width=$details.Right-$details.Left;file_preview_visible=$false}
 
   $list=Rect 1017
   $batch=Rect 1048
