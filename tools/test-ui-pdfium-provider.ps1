@@ -871,13 +871,28 @@ try{
   foreach($fileName in $batchNames){$batchHashes[$fileName]=Hash (Join-Path $fixture.inbox $fileName)}
   $queue=[DcmNative]::Control($hwnd,$app.Id,1016)
   $items=@([DcmNative]::ListItems($hwnd,$app.Id,1016))
-  [void][DcmTwoPaneGeometry]::SendMessage($queue,0x0185,[IntPtr]0,[IntPtr](-1)) # LB_SETSEL clear
+  $batchIndexes=@()
   foreach($fileName in $batchNames){
    $index=[Array]::IndexOf($items,$fileName)
    if($index -lt 0){throw ('Missing fixture '+$fileName)}
-   [void][DcmTwoPaneGeometry]::SendMessage($queue,0x0185,[IntPtr]1,[IntPtr]$index)
+   $batchIndexes+=,$index
   }
-  if(@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016)).Count -ne 2){throw 'Could not select exactly two disposable files for batch'}
+  if($VerifyNativeReport){
+   $native=[DcmTwoPaneGeometry]::FindWindowEx([IntPtr]$hwnd,[IntPtr]::Zero,'SysListView32',$null)
+   if($native -eq [IntPtr]::Zero){throw 'Native batch selection requires SysListView32'}
+   [DcmNativeModifierInput]::PlainClick($hwnd,$native,$app.Id,$batchIndexes[0])
+   [DcmNativeModifierInput]::ModifierClick($hwnd,$native,$app.Id,$batchIndexes[1],$false)
+  }else{
+   [void][DcmTwoPaneGeometry]::SendMessage($queue,0x0185,[IntPtr]0,[IntPtr](-1)) # LB_SETSEL clear
+   foreach($index in $batchIndexes){
+    [void][DcmTwoPaneGeometry]::SendMessage($queue,0x0185,[IntPtr]1,[IntPtr]$index)
+   }
+  }
+  Wait 'Exactly two disposable files selected for batch' {@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016)).Count -eq 2}
+  if($VerifyNativeReport){
+   $nativeCount=[DcmTwoPaneGeometry]::SendMessage($native,0x1032,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64()
+   if($nativeCount -ne 2){throw ('Native selected count mismatch: '+$nativeCount)}
+  }
   Step 'undo-batch-two-files-selected' @{names=$batchNames;selected_count=2}
   [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1003,$fixture.destination)
   Wait 'Batch Move enabled' {[DcmNative]::IsWindowEnabled([DcmNative]::Control($hwnd,$app.Id,1041))}
