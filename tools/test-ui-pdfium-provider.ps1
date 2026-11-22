@@ -255,7 +255,18 @@ function VerifyPDF([string]$name,[string]$expectedPath,[string]$expectedHash) {
  if((Hash $expectedPath) -ne $expectedHash){throw 'PDF bytes changed'}
 }
 function Label {return [DcmNative]::Text([DcmNative]::Control($hwnd,$app.Id,1061),$app.Id)}
-function PageLabel {return [DcmNative]::Text([DcmNative]::Control($hwnd,$app.Id,1060),$app.Id)}
+function PageLabel {
+ $page=TextControl 1073
+ $snapshot=@([DcmNative]::Snapshot($hwnd,$app.Id))
+ $label=@($snapshot | Where-Object {$_.Visible -and $_.Text -match '^/ [0-9]+'} | Select-Object -First 1)
+ if(-not $label.Count){return ''}
+ $details=$label[0].Text
+ $parts=[regex]::Match($details,'^/\s*(\d+)(?:\s+(\d+)°)?')
+ if(-not $parts.Success){return ''}
+ $v='Page '+$page+' of '+$parts.Groups[1].Value
+ if($parts.Groups[2].Success){$v+=' '+[char]0x00B7+' '+$parts.Groups[2].Value+[char]0x00B0}
+ return $v
+}
 function RotatedLabel([int]$page,[int]$angle){
  return ('Page '+$page+' of 2 '+[char]0x00B7+' '+$angle+[char]0x00B0)
 }
@@ -265,8 +276,7 @@ function PreviewSnapshot {
 $lastPDFReadyGeneration=0
 function PageReady([string]$want){
  Wait ('rendered '+$want) {
-  $snap=PreviewSnapshot
-  if(@($snap | Where-Object {$_.Text -eq $want}).Count -eq 0){return $false}
+  if((PageLabel) -cne $want){return $false}
   if(-not(Test-Path -LiteralPath $trace)){return $false}
   $applied=@(Get-Content -LiteralPath $trace | ForEach-Object {$_|ConvertFrom-Json} |
     Where-Object {$_.event -eq 'result-applied' -and $_.state.active})
