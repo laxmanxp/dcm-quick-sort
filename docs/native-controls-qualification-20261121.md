@@ -732,3 +732,28 @@ the pane resize committed on mouse release.
 
 This is development-candidate acceptance only. No production/release
 checkout or FileFlow Suite integration was performed by the test.
+
+
+## Splitter resize cursor on click and drag — 2026-11-22
+
+User reported that the mouse cursor reverted from the left/right resize
+cursor to the standard pointer when clicking the splitter. Root cause:
+the earlier splitter handler only called `SetCursor(IDC_SIZEWE)` during
+`WM_MOUSEMOVE`. Windows re-issues `WM_SETCURSOR` on button presses
+and can restore the class/default arrow cursor.
+
+Commit `209ef248` explicitly handles `WM_SETCURSOR` whenever splitter
+mouse capture is active or the pointer is above the splitter gap,
+and applies `IDC_SIZEWE` on splitter mouse-down. Commit `444af82`
+reuses the existing ScreenToClient Win32 procedure without redeclaring
+it. Commit `d7a18f4` adds an optional GUI test switch
+`-VerifySplitterCursor` which checks the OS cursor handle on mouse-down
+and during capture.
+
+On Lenovo, Go `pdfium_dev` unit/regression suite **PASS**, Windows
+build **PASS**. GUI receipt
+`dcm-pdfium-gui-20261122-103433-666cfc6` **PASS**,
+`normal_exit=true`: `IDC_SIZEWE` after mouse-down and during drag,
+native file/preview geometry 442 -> 557 and 772 -> 657 pixels, and
+PDF current page preserved. Physical subjective hand feel remains
+for the user to confirm. Production remains unchanged.
