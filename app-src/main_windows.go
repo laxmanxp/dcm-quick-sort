@@ -320,6 +320,8 @@ var (
 	procIsWindowVisible      = user32.NewProc("IsWindowVisible")
 	procSetCapture           = user32.NewProc("SetCapture")
 	procSetCursor            = user32.NewProc("SetCursor")
+	procGetDC                = user32.NewProc("GetDC")
+	procReleaseDC            = user32.NewProc("ReleaseDC")
 	procReleaseCapture       = user32.NewProc("ReleaseCapture")
 	procCreateMenu           = user32.NewProc("CreateMenu")
 	procCreatePopupMenu      = user32.NewProc("CreatePopupMenu")
@@ -3197,23 +3199,31 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 	switch msg {
 	case WM_LBUTTONDOWN:
 		if queueSplitterHit(hwnd,signedLoword(lParam),signedHiword(lParam)) {
+			var bounds RECT
+			procGetClientRect.Call(hwnd,uintptr(unsafe.Pointer(&bounds)))
+			queueSplitterPendingWidth=queueSplitterPosition(bounds.Right-bounds.Left)
 			queueSplitterDragging=true
 			procSetCapture.Call(hwnd)
+			toggleSplitterGuide(hwnd,queueSplitterPendingWidth)
 			return 0
 		}
 	case WM_MOUSEMOVE:
 		if queueSplitterDragging {
 			if wParam&MK_LBUTTON == 0 {
+				toggleSplitterGuide(hwnd,queueSplitterPendingWidth)
 				queueSplitterDragging=false
+				queueSplitterWidth=queueSplitterPendingWidth
 				procReleaseCapture.Call()
+				layoutUI(hwnd)
 				return 0
 			}
 			var bounds RECT
 			procGetClientRect.Call(hwnd,uintptr(unsafe.Pointer(&bounds)))
 			next:=queueSplitterClamp(bounds.Right-bounds.Left,signedLoword(lParam)-20)
-			if next!=queueSplitterPosition(bounds.Right-bounds.Left) {
-				queueSplitterWidth=next
-				layoutSplitterDrag(hwnd)
+			if next!=queueSplitterPendingWidth {
+				toggleSplitterGuide(hwnd,queueSplitterPendingWidth)
+				queueSplitterPendingWidth=next
+				toggleSplitterGuide(hwnd,queueSplitterPendingWidth)
 			}
 			return 0
 		}
@@ -3224,19 +3234,20 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 		}
 	case WM_LBUTTONUP:
 		if queueSplitterDragging {
+			toggleSplitterGuide(hwnd,queueSplitterPendingWidth)
+			queueSplitterWidth=queueSplitterPendingWidth
 			queueSplitterDragging=false
 			procReleaseCapture.Call()
-			// Reconcile all controls and deferred native preview providers once
-			// at the final width, not for every mouse pixel.
+			// Native ListView columns and embedded preview resize only once,
+			// after the drag ends; never recompute them per mouse movement.
 			layoutUI(hwnd)
-			resizePreviewHandler()
 			return 0
 		}
 	case WM_CAPTURECHANGED:
 		if queueSplitterDragging {
+			toggleSplitterGuide(hwnd,queueSplitterPendingWidth)
 			queueSplitterDragging=false
-			layoutUI(hwnd)
-			resizePreviewHandler()
+			queueSplitterPendingWidth=0
 		}
 
 	case WM_GETMINMAXINFO:
