@@ -36,6 +36,7 @@ const (
 	WM_KEYDOWN                  = 0x0100
 	WM_KEYUP                    = 0x0101
 	WM_SYSKEYDOWN               = 0x0104
+	WM_SETCURSOR                = 0x0020
 	WM_MOUSEMOVE                = 0x0200
 	WM_CAPTURECHANGED          = 0x0215
 	WM_LBUTTONDOWN              = 0x0201
@@ -320,6 +321,8 @@ var (
 	procIsWindowVisible      = user32.NewProc("IsWindowVisible")
 	procSetCapture           = user32.NewProc("SetCapture")
 	procSetCursor            = user32.NewProc("SetCursor")
+	procGetCursorPos         = user32.NewProc("GetCursorPos")
+	procScreenToClient       = user32.NewProc("ScreenToClient")
 	procGetDC                = user32.NewProc("GetDC")
 	procReleaseDC            = user32.NewProc("ReleaseDC")
 	procReleaseCapture       = user32.NewProc("ReleaseCapture")
@@ -3198,6 +3201,26 @@ func queueSplitterHit(hwnd uintptr, x,y int32) bool {
 
 func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 	switch msg {
+	case WM_SETCURSOR:
+		// Win32 sends WM_SETCURSOR at pointer movement AND button press.
+		// Setting IDC_SIZEWE only from WM_MOUSEMOVE is overwritten by
+		// DefWindowProc as soon as the mouse button is pressed.
+		if queueSplitterDragging {
+			cursor, _, _ := procLoadCursorW.Call(0, 32644) // IDC_SIZEWE
+			procSetCursor.Call(cursor)
+			return 1
+		}
+		if signedLoword(lParam) == 1 && wParam == hwnd { // HTCLIENT
+			var point POINT
+			if ok, _, _ := procGetCursorPos.Call(uintptr(unsafe.Pointer(&point))); ok != 0 {
+				if ok, _, _ = procScreenToClient.Call(hwnd, uintptr(unsafe.Pointer(&point))); ok != 0 &&
+					queueSplitterHit(hwnd, point.X, point.Y) {
+					cursor, _, _ := procLoadCursorW.Call(0, 32644)
+					procSetCursor.Call(cursor)
+					return 1
+				}
+			}
+		}
 	case WM_LBUTTONDOWN:
 		if queueSplitterHit(hwnd,signedLoword(lParam),signedHiword(lParam)) {
 			var bounds RECT
@@ -3205,6 +3228,8 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 			queueSplitterPendingWidth=queueSplitterPosition(bounds.Right-bounds.Left)
 			queueSplitterDragging=true
 			procSetCapture.Call(hwnd)
+			cursor,_,_:=procLoadCursorW.Call(0,32644)
+			procSetCursor.Call(cursor)
 			toggleSplitterGuide(hwnd,queueSplitterPendingWidth)
 			return 0
 		}
