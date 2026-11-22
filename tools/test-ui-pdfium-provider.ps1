@@ -744,13 +744,18 @@ try{
    }
    if($buttons[0].Right -gt $buttons[1].Left){throw ('Rotation buttons overlap at window width '+$targetWidth)}
    Step 'narrow-toolbar-rotation-visible' @{window_width=$targetWidth;preview_width=($bounds.Right-$bounds.Left);left_id=1063;right_id=1062;both_visible=$true;no_overlap=$true}
-   Capture ('narrow-toolbar-'+$targetWidth) 'teal'
+   # Capture the actual resized geometry. Generic Capture restores the window
+   # first and would silently invalidate this width-specific evidence.
+   if(-not $SkipScreenshots){
+    $shot=[DcmNative]::Capture($hwnd,$app.Id,(Join-Path $lab ('narrow-toolbar-'+$targetWidth+'.png')),$false)
+    $receipt.captures+=@([ordered]@{name=('narrow-toolbar-'+$targetWidth);path=$shot.Path;width=$shot.Width;height=$shot.Height;visual_reviewed=$false})
+   }
   }
   if(-not [DcmTwoPaneGeometry]::MoveWindow([IntPtr]$hwnd,$area.Left+10,$area.Top+10,[Math]::Min(1350,$area.Width-20),[Math]::Min(820,$area.Height-20),$true)){
    throw 'Unable to restore QuickSort window after narrow-toolbar verification'
   }
   Start-Sleep -Milliseconds 350
-  PageReady 'Page 1 of 2'
+  if((PageLabel) -cne 'Page 1 of 2'){throw 'PDF page state changed after resizing'}
  }
  if($VerifyColumns){Capture 'queue-three-columns' 'teal'}
  Step 'page-one-controls' (PreviewSnapshot)
