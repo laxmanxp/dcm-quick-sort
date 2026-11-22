@@ -12,6 +12,8 @@ param(
   [switch]$VerifyColumns,
   [switch]$VerifyNativeReport,
   [switch]$VerifyPDFPicker,
+  [string]$SumatraRuntime=''
+  ,
   [switch]$LegacyQueue,
   [switch]$NativeReportDiagnostic,
   [switch]$NativeReportMouse,
@@ -345,6 +347,11 @@ try{
   'DCM_PDF_TRACE'=$trace;'DCM_QUICKSORT_BACKUP_DIR'=(Join-Path $lab 'backups')
  }.GetEnumerator()){$psi.EnvironmentVariables[$kv.Key]=$kv.Value}
  foreach($key in @('DCM_PDF_PROVIDER','DCM_FLOWPDF_WORKER','DCM_FLOWPDF_PERSISTENT')){$psi.EnvironmentVariables.Remove($key)}
+ if($SumatraRuntime){
+  if(-not(Test-Path -LiteralPath $SumatraRuntime -PathType Leaf)){throw 'Approved Sumatra runtime missing'}
+  if((Get-FileHash -LiteralPath $SumatraRuntime -Algorithm SHA256).Hash.ToLowerInvariant() -ne '719f689b34f47be8ca105ce8484948474dafde0e106bab599e4a89326070c3d0'){throw 'Sumatra runtime failed approved pin'}
+  $psi.EnvironmentVariables['DCM_SUMATRA_EXE']=[IO.Path]::GetFullPath($SumatraRuntime)
+ }
  if($LegacyQueue){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_LISTVIEW']='0'}else{$psi.EnvironmentVariables.Remove('DCM_NATIVE_QUEUE_LISTVIEW')}
  if($VerifyNativeReport -and $LegacyQueue){throw 'Cannot verify native report with legacy rollback enabled'}
  if($NativeReportDiagnostic -or $VerifyPreviewCoalescing){$psi.EnvironmentVariables['DCM_NATIVE_QUEUE_TRACE']=(Join-Path $lab 'native-report-events.log')}
@@ -393,7 +400,21 @@ try{
     PageReady 'Page 1 of 2'
     Step 'pdf-preview-selector-switch' @{command=$choice;checked=$true;page_rendered=$true}
    }
-   Step 'pdf-preview-selector' @{windows=$true;pdfium=$true;auto=$true;active_file='08-preview.pdf'}
+   if($SumatraRuntime){
+    if(-not [DcmPDFPickerProbe]::PostMessage([IntPtr]$hwnd,0x0111,[IntPtr]2013,[IntPtr]::Zero)){throw 'Cannot select Sumatra provider'}
+    Wait 'Sumatra option checked' {[DcmPDFPickerProbe]::IsChecked($mainMenu,[uint32]2013)} 12
+    Wait 'Sumatra embedded child attached' {$null -ne [DcmSumatraProbe]::Find($hwnd,$app.Id)} 30
+    $viewer=[DcmSumatraProbe]::Find($hwnd,$app.Id)
+    if(-not $viewer -or $viewer.PID -le 0){throw 'Sumatra owned child unavailable'}
+    [DcmSumatraProbe]::CheckGeometry($hwnd,$app.Id,$viewer.PID)
+    Step 'pdf-preview-selector-sumatra-embedded' @{viewer_pid=$viewer.PID;class=$viewer.Class;width=$viewer.Width;height=$viewer.Height;checked=$true}
+    if(-not [DcmPDFPickerProbe]::PostMessage([IntPtr]$hwnd,0x0111,[IntPtr]2010,[IntPtr]::Zero)){throw 'Cannot restore Auto provider after Sumatra'}
+    Wait 'Auto restored after Sumatra' {[DcmPDFPickerProbe]::IsChecked($mainMenu,[uint32]2010) -and $null -eq [DcmSumatraProbe]::Find($hwnd,$app.Id)} 25
+    PageReady 'Page 1 of 2'
+    if(Get-Process -Id $viewer.PID -ErrorAction SilentlyContinue){throw 'Sumatra child survived viewer switch'}
+    Step 'pdf-preview-selector-sumatra-released' @{viewer_pid=$viewer.PID;owned_child_exited=$true;pdfium_auto_restored=$true}
+   }
+   Step 'pdf-preview-selector' @{windows=$true;pdfium=$true;auto=$true;sumatra=([bool]$SumatraRuntime);active_file='08-preview.pdf'}
   }
   if($KeyboardSoakSteps -gt 0){
    Write-Output 'KBD_STAGE=starting-mixed-queue'
