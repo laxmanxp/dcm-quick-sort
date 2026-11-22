@@ -405,7 +405,10 @@ try{
     Wait 'Sumatra embedded child attached' {$null -ne [DcmSumatraProbe]::Find($hwnd,$app.Id)} 30
     $viewer=[DcmSumatraProbe]::Find($hwnd,$app.Id)
     if(-not $viewer -or $viewer.PID -le 0){throw 'Sumatra owned child unavailable'}
-    [DcmSumatraProbe]::CheckGeometry($hwnd,$app.Id,$viewer.PID)
+    Wait 'Sumatra viewer settled inside preview pane' {
+     try {[DcmSumatraProbe]::CheckGeometry($hwnd,$app.Id,$viewer.PID);return $true}
+     catch{return $false}
+    } 20
     Step 'pdf-preview-selector-sumatra-embedded' @{viewer_pid=$viewer.PID;class=$viewer.Class;width=$viewer.Width;height=$viewer.Height;checked=$true}
     if(-not [DcmPDFPickerProbe]::PostMessage([IntPtr]$hwnd,0x0111,[IntPtr]2010,[IntPtr]::Zero)){throw 'Cannot restore Auto provider after Sumatra'}
     Wait 'Auto restored after Sumatra' {[DcmPDFPickerProbe]::IsChecked($mainMenu,[uint32]2010) -and $null -eq [DcmSumatraProbe]::Find($hwnd,$app.Id)} 25
