@@ -217,7 +217,9 @@ function Verify-TwoPaneTab([bool]$history){
  $preview=[DcmTwoPaneGeometry]::FindWindowEx([IntPtr]$hwnd,[IntPtr]::Zero,'QuickSortPreview',$null)
  if($preview -eq [IntPtr]::Zero){throw 'Preview HWND missing'}
  if([DcmTwoPaneGeometry]::IsWindowVisible($preview) -eq $history){throw 'Preview should appear only in Queue'}
- if((Is-Visible 1061) -eq $history){throw 'Preview title should appear only in Queue'}
+ $previewTitles=@([DcmNative]::Snapshot($hwnd,$app.Id) | Where-Object {$_.Text -eq 'PREVIEW' -and $_.Class -eq 'Static'})
+ if($previewTitles.Count -ne 1){throw 'Expected one PREVIEW title'}
+ if([bool]$previewTitles[0].Visible -eq $history){throw 'Preview title should appear only in Queue'}
  if($history){
   $main=New-Object DcmTwoPaneGeometry+RECT
   $listBounds=New-Object DcmTwoPaneGeometry+RECT
