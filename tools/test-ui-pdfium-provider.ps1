@@ -587,6 +587,8 @@ try{
    Start-Sleep -Milliseconds 850
    $app.Refresh()
    if($app.HasExited){throw 'Native report exited after physical-style row click'}
+  }elseif($VerifyNativeRangeKeyboard){
+   [DcmNativeModifierInput]::PlainClick($hwnd,$native,$app.Id,2)
   }else{
    [DcmNativeReportProbe]::SelectRow($native,2)
   }
@@ -662,7 +664,7 @@ try{
   if($VerifyNativeRangeKeyboard){
    # Select first row, then Shift-click third row. This tests range
    # selection through real ListView mouse paths and the legacy adapter.
-   if(-not [DcmNativeReportProbe]::ClickRow($native,0)){throw 'Cannot establish range anchor'}
+   [DcmNativeModifierInput]::PlainClick($hwnd,$native,$app.Id,0)
    Wait 'Native range anchor' {[DcmTwoPaneGeometry]::SendMessage($native,0x100C,[IntPtr](-1),[IntPtr]2).ToInt64() -eq 0}
    [DcmNativeModifierInput]::ModifierClick($hwnd,$native,$app.Id,2,$true)
    Wait 'Native Shift range propagated to QuickSort' {@([DcmNative]::SelectedIndexes($hwnd,$app.Id,1016)).Count -eq 3}
