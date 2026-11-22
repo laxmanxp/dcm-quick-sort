@@ -509,3 +509,42 @@ physical GUI capture of the <454 preview-width compact branch under
 a bounded isolated geometry fixture. Neither blocks the above scoped
 legacy-queue provider-switch acceptance. No production or release checkout
 changes.
+
+
+## Responsive opaque PDF toolbar and code/test Read as Text — 2026-11-22
+
+User-requested development changes (no production update):
+- `ff3789c`: the QuickSort-owned toolbar distributes available client width
+  among page controls, Fit, both rotation buttons, Zoom and page-count label,
+  with minimum sizes and essential navigation/rotation priority at very
+  small widths. The single-row full-height bar does not overlap controls.
+- `ac1d22d`: preview painting now fills the entire 34-pixel toolbar strip
+  using the opaque Windows button-face system brush. The page-count static
+  control also draws an opaque matching background; document content still
+  begins below the toolbar.
+- `a68d3c4` and `64a336a`: `canReadAsText` now enables text preview
+  for known code, scripts, configuration, JSON, logs and test files, as well
+  as previously supported unknown extensions. Known binary formats including
+  PDF, ZIP, EXE and SQLite databases remain ineligible. The existing
+  checkbox reload path is reused; there is no code execution or editing.
+
+At `64a336a`, Lenovo full Go tests with `pdfium_dev` tag **PASS** and
+the Windows development executable builds successfully. GUI receipt
+`dcm-pdfium-gui-20261122-042000-6532250` **PASS**, normal shutdown,
+including the custom toolbar, narrow reachable window geometry, rotation,
+PDFium and file-operation recovery. Its 920-window screenshot was separately
+inspected: both rotation icons and page/fit/zoom controls are contained and
+unobstructed on one row, with a distinct solid toolbar strip. The extremely
+narrow <454 preview-width appearance remains unit-tested rather than
+physically captured due to main-window minimum geometry.
+
+`89c3b14` added a targeted GUI text fixture test. First attempt
+`dcm-pdfium-gui-20261122-042129-eaf2f19` failed a brittle fixed queue
+row-count assertion and exited normally. `dfcede8` corrected that test to
+check actual filenames, not incidental row count. Final receipt
+`dcm-pdfium-gui-20261122-042230-39d5083` **PASS**, normal exit:
+`15-sample_test.go` displayed `TestSourceFile` via the enabled Read as
+Text checkbox; `16-test-config.json` displayed `read-as-text-check`;
+selecting `08-preview.pdf` disabled the checkbox and restored PDF
+preview. The test used the isolated Lenovo checkout and disposable files.
+No release checkout, installed QuickSort or FileFlow Suite was changed.
