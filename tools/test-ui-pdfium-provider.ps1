@@ -383,8 +383,8 @@ try{
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-destination-manager-probe.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')
  . (Join-Path $repo 'tests/native/new-fixtures.ps1')
  $fixture=New-DcmFixtures $lab
- if($VerifyDestinationFolderOnly){
-  # Explicitly remove the Vault dependency from the isolated test profile.
+ if($VerifyDestinationFolderOnly -or $VerifyDestinationManagerOnly){
+  # Explicitly remove the obsolete Vault dependency from the isolated test profile.
   $settingsPath=Join-Path $fixture.config 'settings.json'
   $settings=Get-Content -LiteralPath $settingsPath -Raw | ConvertFrom-Json
   $settings.vault_root=''
@@ -828,7 +828,7 @@ try{
  PageReady 'Page 1 of 2'
  if($VerifyDestinationManagerOnly){
   $savedPath=Join-Path $fixture.config 'destinations.conf'
-  $destination=$fixture.destination
+  $destination=$outsideFolder
   $manager=[IntPtr]::Zero
   if(-not [DcmPDFPickerProbe]::PostMessage([IntPtr]$hwnd,0x0111,[IntPtr]1019,[IntPtr]::Zero)){throw 'Cannot open Destination Manager'}
   Wait 'Destination Manager opens' {
@@ -852,6 +852,12 @@ try{
   Step 'destination-manager-use' @{folder=$destination;dropdown_items=$options;no_files_moved=(Test-Path -LiteralPath $pdf)}
   [DcmNative]::ClickAsync($manager,$app.Id,1609)
   Wait 'Destination Manager closes' {[DcmDestinationManagerProbe]::FindOwned([IntPtr]$hwnd,$app.Id) -eq [IntPtr]::Zero}
+  [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1003,'')
+  Wait 'Destination edit clears' {(TextControl 1003) -eq ''}
+  [void][DcmTwoPaneGeometry]::SendMessage($combo,0x014E,[IntPtr]1,[IntPtr]::Zero) # CB_SETCURSEL
+  if(-not [DcmPDFPickerProbe]::PostMessage([IntPtr]$hwnd,0x0111,[IntPtr](65536+1018),[IntPtr]$combo)){throw 'Saved destination notification failed'}
+  Wait 'Saved destination combo updates path' {(TextControl 1003) -eq $destination}
+  Step 'destination-manager-saved-dropdown-selection' @{name='Office Records';folder=$destination;no_vault=$true}
   $receipt.passed=$true
   return
  }
