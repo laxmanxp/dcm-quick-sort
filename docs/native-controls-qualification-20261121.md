@@ -317,3 +317,38 @@ The development executable
 was started interactively on Lenovo, PID 31068, with
 `tests\\fixtures\\sumatra-scroll.pdf` selected. The main window was brought
 to the foreground. This is an interactive dev run, not a production install.
+
+## SumatraPDF restored to Lenovo isolated test runtime — 2026-11-22
+
+Downloaded the official SumatraPDF 3.6.1 x64 portable archive into a
+test-only staging area and verified its archive SHA-256
+`98b33a518d42986856d225064b0cd2d3643ecf78cbf84ab873d26cc51877a544`.
+The contained executable matched the repository's pinned SHA-256
+`719f689b34f47be8ca105ce8484948474dafde0e106bab599e4a89326070c3d0`.
+The verified private executable is at
+`D:\FlowverseTesting\Runtime\SumatraPDF-3.6.1\SumatraPDF.exe`
+with the exact 173-byte `sumatrapdfrestrict.ini` no-write/no-print
+policy alongside it. The download staging area was deleted. No systemwide
+installer, shell registration, or machine environment changes were made.
+
+The first Sumatra GUI comparison test exposed a **125% viewer DPI** mismatch:
+viewer dimensions were 1203x556 versus a 965x448 preview pane. QuickSort's
+Sumatra resize now switches temporarily into the embedded viewer's DPI
+awareness context before `SetWindowPos`. The subsequent GUI acceptance
+**PASSED**, receipt `dcm-pdfium-gui-20261122-021014-a25e0b3`:
+- Windows.Data.Pdf, PDFium and Auto each rendered the same PDF
+- Sumatra's owned child `SUMATRA_PDF_FRAME` attached entirely within the
+  preview (accepted size 962x445), with native control visible
+- Switching away from Sumatra removed its owned process, restored Auto,
+  and displayed the same PDF via PDFium
+- Rename/Undo and Move/Undo preserved original bytes and journal integrity;
+  application exited normally with worker cleanup
+
+For interactive user comparison a separate development session was launched
+on Lenovo, QuickSort PID **24188**, with `DCM_PDF_PROVIDER=sumatra` and
+`DCM_SUMATRA_EXE` scoped to that process. Sumatra child PID **7448** was
+confirmed running with `-restrict`, private `-appdata`, and `-plugin`
+arguments for the sample `tests\fixtures\sumatra-scroll.pdf`. The window
+was brought to the foreground and intentionally left open for manual testing.
+The older development session was not disturbed. Production QuickSort and
+FileFlow Suite remain untouched.
