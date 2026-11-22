@@ -289,3 +289,31 @@ The earlier failed/incomplete attempts remain documented as investigation
 history, but the mixed-document keyboard acceptance is now **qualified**.
 This work changes only the GitHub development branch and test fixtures; the
 production QuickSort and FileFlow Suite installations remain unchanged.
+
+## Interactive PDF Previewer selector — Lenovo dev session, 2026-11-22
+
+The `pdfium_dev` development build now offers **Tools > PDF Previewer**:
+**Auto (development default)**, **PDFium (FlowPDF)**,
+**Windows.Data.Pdf**, and **SumatraPDF (restricted)**. The checked option
+shows the selected backend. Switching a selection reopens the same active PDF
+without restarting QuickSort. It is a **session-only** choice implemented
+through the existing `DCM_PDF_PROVIDER` backend policy: no production
+settings or release defaults are changed. Explicit PDFium requires the
+managed DLL and persistent worker; restricted Sumatra requires its separately
+approved pinned executable and no-write policy. Unavailable dependencies
+are reported instead of silently substituting an unapproved viewer.
+
+The complete Go test suite and candidate build passed on Lenovo. GUI selector
+acceptance `dcm-pdfium-gui-20261122-015102-ee62116`: PASS, normal exit;
+Windows.Data.Pdf, PDFium and Auto each rendered page 1 of 2 of the same
+PDF; file Rename/Undo and Move/Undo preserved bytes, and the final PDFium
+worker exited cleanly. Deliberate renderer changes are excluded from the
+strict unexpected-worker-restart invariant **only in this comparison test**.
+Sumatra integration itself was not newly qualified, and Lenovo did not have
+a configured `DCM_SUMATRA_EXE` machine runtime.
+
+The development executable
+`D:\\FlowverseTesting\\Builds\\DCM-QuickSort\\two-pane-ui-20261121\\two-pane-pdfium-dev.exe`
+was started interactively on Lenovo, PID 31068, with
+`tests\\fixtures\\sumatra-scroll.pdf` selected. The main window was brought
+to the foreground. This is an interactive dev run, not a production install.
