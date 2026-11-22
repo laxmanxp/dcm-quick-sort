@@ -322,7 +322,6 @@ var (
 	procSetCapture           = user32.NewProc("SetCapture")
 	procSetCursor            = user32.NewProc("SetCursor")
 	procGetCursorPos         = user32.NewProc("GetCursorPos")
-	procScreenToClient       = user32.NewProc("ScreenToClient")
 	procGetDC                = user32.NewProc("GetDC")
 	procReleaseDC            = user32.NewProc("ReleaseDC")
 	procReleaseCapture       = user32.NewProc("ReleaseCapture")
