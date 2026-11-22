@@ -10,7 +10,7 @@ func TestPDFPreviewerSessionChoice(t *testing.T) {
   {"auto","auto"},
   {"PDFIUM","pdfium"},
   {"windows","windows"},
-  {"SUMATRA","sumatra"},
+  {"SUMATRA","auto"},
   {"unknown","auto"},
  }{
   t.Run(tc.env,func(t *testing.T){
@@ -21,7 +21,7 @@ func TestPDFPreviewerSessionChoice(t *testing.T) {
 }
 
 func TestPDFPreviewerNames(t *testing.T) {
- for _,choice:=range []string{"auto","pdfium","windows","sumatra"} {
+ for _,choice:=range []string{"auto","pdfium","windows"} {
   if pdfPreviewChoiceName(choice)=="" {t.Fatal("empty menu label for "+choice)}
  }
 }
