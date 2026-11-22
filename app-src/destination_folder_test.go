@@ -6,7 +6,7 @@ import (
  "testing"
 )
 
-func TestExistingDestinationFolder(t *testing.T){
+func TestResolveExistingDestinationFolderPath(t *testing.T){
  root:=t.TempDir()
  got,err:=resolveExistingDestinationFolder(root)
  if err!=nil||got!=filepath.Clean(root){t.Fatalf("valid folder: %q %v",got,err)}
