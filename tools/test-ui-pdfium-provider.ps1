@@ -1090,13 +1090,14 @@ try{
  if($VerifyCodeText){
   $samples=@(
    @{name='15-sample_test.go';body="package example`nfunc TestSourceFile() {}`n";marker='TestSourceFile'},
-   @{name='16-test-config.json';body='{"fixture":"read-as-text-check"}';marker='read-as-text-check'}
+   @{name='16-test-config.json';body='{"fixture":"read-as-text-check"}';marker='read-as-text-check'},
+   @{name='17-sample_test.py';body="def test_preview():`n    return 'python-preview-marker'`n";marker='python-preview-marker'}
   )
   foreach($sample in $samples){
    [IO.File]::WriteAllText((Join-Path $fixture.inbox $sample.name),$sample.body,[Text.UTF8Encoding]::new($false))
   }
   [DcmNative]::ClickAsync($hwnd,$app.Id,1011)
-  Wait 'code samples listed' { $items=@([DcmNative]::ListItems($hwnd,$app.Id,1016));($items -contains '15-sample_test.go') -and ($items -contains '16-test-config.json') }
+  Wait 'code samples listed' { $items=@([DcmNative]::ListItems($hwnd,$app.Id,1016));($items -contains '15-sample_test.go') -and ($items -contains '16-test-config.json') -and ($items -contains '17-sample_test.py') }
   foreach($sample in $samples){
    List-Selected $sample.name
    $check=[DcmNative]::Control($hwnd,$app.Id,1014)
