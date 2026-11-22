@@ -832,9 +832,9 @@ try{
   $manager=[IntPtr]::Zero
   if(-not [DcmPDFPickerProbe]::PostMessage([IntPtr]$hwnd,0x0111,[IntPtr]1019,[IntPtr]::Zero)){throw 'Cannot open Destination Manager'}
   Wait 'Destination Manager opens' {
-   $manager=[DcmDestinationManagerProbe]::FindOwned([IntPtr]$hwnd,$app.Id)
-   $manager -ne [IntPtr]::Zero
+   [DcmDestinationManagerProbe]::FindOwned([IntPtr]$hwnd,$app.Id) -ne [IntPtr]::Zero
   }
+  $manager=[DcmDestinationManagerProbe]::FindOwned([IntPtr]$hwnd,$app.Id)
   [DcmSumatraProbe]::SetEdit($manager,$app.Id,1601,'Office Records')
   [DcmSumatraProbe]::SetEdit($manager,$app.Id,1602,$destination)
   [DcmNative]::ClickAsync($manager,$app.Id,1604)
