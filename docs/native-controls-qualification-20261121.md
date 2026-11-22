@@ -590,3 +590,46 @@ It did verify the native header/columns before failing, but did not
 reach splitter qualification. Do not treat isolated splitter PASS as
 native row-selection acceptance. No production or release checkout
 changes.
+
+
+## Native selection crash investigation — 2026-11-22
+
+The earlier native-selection hard exit was reproduced with the old test
+harness. Root cause identified in `DcmNativeReportProbe.SelectRow`:
+the PowerShell/C# tester allocated an LVITEM-compatible buffer in
+**the test process** and passed that pointer through
+`SendMessage(WM_USER+43 / LVM_SETITEMSTATE)` to the separate QuickSort
+process. Windows does **not** marshal that structure for this message.
+A foreign-process pointer is invalid and can terminate the QuickSort
+application. Commit `dcb585e` removes this unsafe test operation and
+uses posted native Home/Down keyboard navigation instead. Application
+selection code was not changed.
+
+Lenovo Go regression suite PASS. Native full-run receipt
+`dcm-pdfium-gui-20261122-081222-7fc942c` demonstrates native
+selection adapter, Name and Updated header sort, selected filename
+retention, PDF page controls, Rename/Undo, Move/Undo and damaged/
+protected PDF recovery all progressed successfully after correcting
+the harness. This run ultimately FAILED with an intermittent
+`Snapshot: Window PID mismatch` late in the PDF preview cycle;
+`normal_exit=true`. This is separate from the previous pointer
+crash and must not be marked as full acceptance.
+
+Commit `486ceac` adds `-VerifyNativeSelectionOnly` for scoped
+acceptance. Receipt `dcm-pdfium-gui-20261122-081330-47e5ebf`
+**PASS** normal exit: native `SysListView32` with four-column
+`SysHeader32`, row selection propagated to QuickSort filename field,
+Name header sort, Updated ascending/descending and file identity
+retained across sorting.
+
+Commit `9cac54b` adds `-VerifyNativeMultiOnly`. Its scoped
+Ctrl-click run `dcm-pdfium-gui-20261122-081415-45b64d5` **FAIL**
+with `Deadline waiting for Native Ctrl selection propagated into
+queue`; normal exit. The harness injects mouse messages with a Ctrl
+modifier bit but does not establish physical keyboard Ctrl state, so
+the failure is not yet a confirmed application defect. Multiselection
+and end-to-end native regression remain open.
+
+Keep application behavior and production unchanged until multiselection
+can be qualified with valid input and the intermittent snapshot failure
+is investigated.
