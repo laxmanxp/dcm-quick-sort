@@ -37,6 +37,7 @@ const (
 	WM_KEYUP                    = 0x0101
 	WM_SYSKEYDOWN               = 0x0104
 	WM_MOUSEMOVE                = 0x0200
+	WM_CAPTURECHANGED          = 0x0215
 	WM_LBUTTONDOWN              = 0x0201
 	WM_LBUTTONUP                = 0x0202
 	WM_MOUSEWHEEL               = 0x020A
@@ -318,6 +319,7 @@ var (
 	procIsWindowEnabled      = user32.NewProc("IsWindowEnabled")
 	procIsWindowVisible      = user32.NewProc("IsWindowVisible")
 	procSetCapture           = user32.NewProc("SetCapture")
+	procSetCursor            = user32.NewProc("SetCursor")
 	procReleaseCapture       = user32.NewProc("ReleaseCapture")
 	procCreateMenu           = user32.NewProc("CreateMenu")
 	procCreatePopupMenu      = user32.NewProc("CreatePopupMenu")
@@ -3176,8 +3178,60 @@ func showError(msg string) {
 	procMessageBoxW.Call(app.hwnd, uintptr(unsafe.Pointer(wstr(msg))), uintptr(unsafe.Pointer(wstr("DCM - Quick Sort"))), 0x10)
 }
 
+// queueSplitterHit only matches the free gap between queue and preview.
+func queueSplitterHit(hwnd uintptr, x,y int32) bool {
+ var rc RECT
+ procGetClientRect.Call(hwnd,uintptr(unsafe.Pointer(&rc)))
+ w,h:=rc.Right-rc.Left,rc.Bottom-rc.Top
+ if w<760 {w=760}
+ if h<650 {h=650}
+ headerY:=compactFilterLayout(w).HeaderY
+ top:=headerY+28
+ bottom:=top+h-369-(headerY-120)
+ if bottom-top<245 {bottom=top+245}
+ left:=int32(20)+queueSplitterPosition(w)
+ return x>=left && x<left+10 && y>=top && y<bottom
+}
+
 func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 	switch msg {
+	case WM_LBUTTONDOWN:
+		if queueSplitterHit(hwnd,signedLoword(lParam),signedHiword(lParam)) {
+			queueSplitterDragging=true
+			procSetCapture.Call(hwnd)
+			return 0
+		}
+	case WM_MOUSEMOVE:
+		if queueSplitterDragging {
+			if wParam&MK_LBUTTON == 0 {
+				queueSplitterDragging=false
+				procReleaseCapture.Call()
+				return 0
+			}
+			var bounds RECT
+			procGetClientRect.Call(hwnd,uintptr(unsafe.Pointer(&bounds)))
+			next:=queueSplitterClamp(bounds.Right-bounds.Left,signedLoword(lParam)-20)
+			if next!=queueSplitterPosition(bounds.Right-bounds.Left) {
+				queueSplitterWidth=next
+				layoutUI(hwnd)
+				procInvalidateRect.Call(hwnd,0,1)
+			}
+			return 0
+		}
+		if queueSplitterHit(hwnd,signedLoword(lParam),signedHiword(lParam)) {
+			cursor,_,_:=procLoadCursorW.Call(0,32644) // IDC_SIZEWE
+			procSetCursor.Call(cursor)
+			return 0
+		}
+	case WM_LBUTTONUP:
+		if queueSplitterDragging {
+			queueSplitterDragging=false
+			procReleaseCapture.Call()
+			return 0
+		}
+	case WM_CAPTURECHANGED:
+		queueSplitterDragging=false
+
 	case WM_GETMINMAXINFO:
 		if lParam != 0 {
 			info := (*MINMAXINFO)(unsafe.Pointer(lParam))
@@ -3755,10 +3809,7 @@ func layoutUI(hwnd uintptr) {
 	}
 	// Two working panes: queue/history share the left, preview fills the right.
 	// Keep at least 420 px for preview, including on the minimum-size window.
-	listW := w * 35 / 100
-	if listW < 260 { listW = 260 }
-	if listW > 460 { listW = 460 }
-	if w-listW-50 < 420 { listW = w-470 }
+	listW := queueSplitterPosition(w)
 	processedW := listW
 	gap := int32(10)
 	previewX := int32(20) + listW + gap
