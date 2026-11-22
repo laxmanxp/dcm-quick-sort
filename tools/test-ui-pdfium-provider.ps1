@@ -7,6 +7,7 @@ param(
   [switch]$DevDefault,
   [switch]$WindowsRollback,
   [switch]$VerifyRotation,
+  [switch]$VerifyNarrowToolbar,
   [switch]$VerifyActualFilename,
   [switch]$VerifyTwoPane,
   [switch]$VerifyColumns,
@@ -720,6 +721,37 @@ try{
   Assert-ActualFilenameLayout
  }
  PageReady 'Page 1 of 2'
+ if($VerifyNarrowToolbar){
+  $area=[Windows.Forms.Screen]::FromHandle($hwnd).WorkingArea
+  foreach($requestedWidth in @(1350,920,800)){
+   $targetWidth=[Math]::Min($requestedWidth,$area.Width-20)
+   if(-not [DcmTwoPaneGeometry]::MoveWindow([IntPtr]$hwnd,$area.Left+10,$area.Top+10,$targetWidth,[Math]::Min(760,$area.Height-20),$true)){
+    throw ('Unable to resize QuickSort for toolbar width '+$targetWidth)
+   }
+   Start-Sleep -Milliseconds 350
+   Owned
+   $preview=[DcmNative]::ChildByClass($hwnd,$app.Id,'QuickSortPreview')
+   $bounds=[DcmTwoPaneGeometry+RECT]::new()
+   if(-not [DcmTwoPaneGeometry]::GetWindowRect($preview,[ref]$bounds)){throw 'Preview pane geometry unavailable'}
+   $buttons=@()
+   foreach($id in @(1063,1062)){
+    if(-not (Is-Visible $id)){throw ('Rotation button hidden at window width '+$targetWidth+' (ID '+$id+')')}
+    $r=Rect $id
+    if($r.Left -lt $bounds.Left -or $r.Right -gt $bounds.Right -or $r.Top -lt $bounds.Top -or $r.Bottom -gt $bounds.Bottom){
+     throw ('Rotation button outside preview at width '+$targetWidth+' (ID '+$id+')')
+    }
+    $buttons+=@($r)
+   }
+   if($buttons[0].Right -gt $buttons[1].Left){throw ('Rotation buttons overlap at window width '+$targetWidth)}
+   Step 'narrow-toolbar-rotation-visible' @{window_width=$targetWidth;preview_width=($bounds.Right-$bounds.Left);left_id=1063;right_id=1062;both_visible=$true;no_overlap=$true}
+   Capture ('narrow-toolbar-'+$targetWidth) 'teal'
+  }
+  if(-not [DcmTwoPaneGeometry]::MoveWindow([IntPtr]$hwnd,$area.Left+10,$area.Top+10,[Math]::Min(1350,$area.Width-20),[Math]::Min(820,$area.Height-20),$true)){
+   throw 'Unable to restore QuickSort window after narrow-toolbar verification'
+  }
+  Start-Sleep -Milliseconds 350
+  PageReady 'Page 1 of 2'
+ }
  if($VerifyColumns){Capture 'queue-three-columns' 'teal'}
  Step 'page-one-controls' (PreviewSnapshot)
  Capture '01-page-one' 'teal'
