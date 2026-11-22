@@ -17,6 +17,7 @@ param(
   [switch]$VerifyColumns,
   [switch]$VerifyNativeReport,
   [switch]$VerifyNativeSelectionOnly,
+  [switch]$VerifyNativeMultiOnly,
   [switch]$VerifyPDFPicker,
   [string]$SumatraRuntime='',
   [switch]$LegacyQueue,
@@ -611,6 +612,11 @@ try{
    $nativeSelectedCount=[DcmTwoPaneGeometry]::SendMessage($native,0x1032,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64()
    if($nativeSelectedCount -ne 2){throw ('Native Ctrl click selection count mismatch: '+$nativeSelectedCount)}
    Step 'native-report-multiselection' @{native_count=$nativeSelectedCount;legacy_indices=$legacySelected;preserved=$true}
+   if($VerifyNativeMultiOnly){
+    Step 'native-multiselection-isolated-acceptance' @{selected_count=2;native_and_legacy_agree=$true}
+    $receipt.passed=$true
+    return
+   }
   }
   if($VerifyRefreshSelection){
    if(-not $VerifyNativeMulti){throw 'VerifyRefreshSelection requires VerifyNativeMulti'}
