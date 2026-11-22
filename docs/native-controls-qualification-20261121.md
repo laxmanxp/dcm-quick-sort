@@ -427,3 +427,47 @@ requested 800-wide test, leaving a preview of 655. Thus the
 A deterministic narrow-preview fixture (or testable pure layout calculation),
 plus an unoccluded visual capture and clean full regression, is still required
 before accepting that adaptive branch. Production and Suite unchanged.
+
+
+## Worker-sidecar correction and compact layout qualification — 2026-11-22
+
+The earlier unexpected-worker-restart verdict in
+`dcm-pdfium-gui-20261122-030502-d250827` was a **deployment/test-mode
+misclassification**, not evidence that the persistent PDFium worker itself
+restarted incorrectly. The temporary `pdfium_dev` app had been compiled in
+a separate directory without its required
+`flowpdf-preview-worker-persistent.exe` sidecar. With `-DevDefault`, the
+app therefore used the Windows.Data.Pdf fallback. The test harness incorrectly
+applied the persistent-worker PID invariant to those Windows render subprocesses.
+
+The verified worker (SHA-256
+`a376b587bc4d682b796cc0abd7d7fba158bad0571e50fe0576a18b0a88e70a03`)
+was copied beside the isolated development EXE. The corrected test
+deployment passed `dcm-pdfium-gui-20261122-035425-e805ce3`, with normal
+exit. Commit `d05a6ed` adds a fail-closed harness preflight requiring
+the expected sidecar and matching worker hash in `-DevDefault` mode.
+
+The runtime Win32 toolbar now consumes a pure Go placement plan
+(`pdf_toolbar_layout.go`), tested by
+`pdf_toolbar_layout_test.go`. It preserves the full-width order and places
+both rotation buttons before Fit/Zoom controls at compact widths. Tests
+cover all widths 0..453 for no overlap/out-of-bounds, both rotation controls
+at widths 240/260/320/400/453 and complete original ordering at 454.
+This provides deterministic coverage for the compact branch which cannot
+currently be reached by whole-window resizing due to minimum-size clamping.
+
+At exact candidate `dabea236`, Lenovo Go full suite
+(`go test -p 1 -vet=off -tags pdfium_dev ./... -count=1`) **PASS** and
+development build **PASS**. GUI receipt
+`dcm-pdfium-gui-20261122-035602-21fa13a` **PASS**, normal exit, checked
+existing PDF navigation, clockwise and counterclockwise rotation, narrow
+toolbar geometry at the reachable whole-window widths, file operations,
+damaged/protected PDF recovery, and persistent worker ownership.
+Its 33 render requests used two owned PIDs with **one accepted ordered
+cancellation restart**, zero one-shot fallbacks and owned worker shutdown.
+
+**Scope limitation:** GUI screenshots were intentionally skipped because
+unrelated desktop foreground occlusion had prevented trustworthy capture.
+The actual <454px preview appearance has deterministic placement tests, not
+physical GUI visual acceptance. No release, production app, Suite, or
+registered release checkout was changed.
