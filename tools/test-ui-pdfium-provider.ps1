@@ -381,6 +381,15 @@ try{
  Add-Type -Path (Join-Path $repo 'tests/native/dcm-native-modifier-input.cs') -ReferencedAssemblies @('System.dll','System.Core.dll')
  . (Join-Path $repo 'tests/native/new-fixtures.ps1')
  $fixture=New-DcmFixtures $lab
+ if($VerifyDestinationFolderOnly){
+  # Explicitly remove the Vault dependency from the isolated test profile.
+  $settingsPath=Join-Path $fixture.config 'settings.json'
+  $settings=Get-Content -LiteralPath $settingsPath -Raw | ConvertFrom-Json
+  $settings.vault_root=''
+  $settings | ConvertTo-Json | Set-Content -LiteralPath $settingsPath -Encoding UTF8
+  $outsideFolder=Join-Path $lab 'OrdinaryDestination'
+  $null=New-Item -ItemType Directory -Path $outsideFolder
+ }
  $pdf=Join-Path $fixture.inbox '08-preview.pdf'
  $sha=(Get-FileHash $pdf -Algorithm SHA256).Hash
  $journal=Join-Path $fixture.config 'recovery\move-journal.jsonl'
@@ -822,11 +831,11 @@ try{
   [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1003,(Join-Path $lab 'not-an-existing-folder'))
   Wait 'nonexistent folder rejected' {-not [DcmNative]::IsWindowEnabled($move)}
   Step 'folder-move-nonexistent-disabled' @{enabled=$false}
-  [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1003,$fixture.destination)
+  [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1003,$outsideFolder)
   Wait 'existing physical folder accepted' {[DcmNative]::IsWindowEnabled($move)}
-  Step 'folder-move-real-folder-enabled' @{enabled=$true;folder=$fixture.destination}
+  Step 'folder-move-real-folder-enabled' @{enabled=$true;folder=$outsideFolder;vault_root='not configured'}
   [DcmNative]::ClickAsync($hwnd,$app.Id,1041)
-  $moved=Join-Path $fixture.destination '08-preview.pdf'
+  $moved=Join-Path $outsideFolder '08-preview.pdf'
   Wait 'folder move completed' {(Test-Path -LiteralPath $moved) -and -not(Test-Path -LiteralPath $pdf)}
   if((Hash $moved) -ne $sha.ToLowerInvariant()){throw 'Folder move altered file bytes'}
   Step 'folder-move-complete' @{bytes_preserved=$true;destination=$moved}
