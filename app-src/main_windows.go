@@ -611,7 +611,7 @@ type appState struct {
 	queueSortReverse bool
 	queueRowDetails []queueRowDetail
 	showHistoryTab bool
-	currentLabel, countLabel, processedTitleLabel, statusLabel, keyboardHintLabel                                                                      uintptr
+	currentLabel, countLabel, processedTitleLabel, historyNarrationTitle, historyNarrationEdit, statusLabel, keyboardHintLabel                                                                      uintptr
 	nameLabel, renameToolLabel, destinationLabel, pathLabel                                                                                            uintptr
 	actualNameLabel, actualNameEdit, actualTypeLabel                                                                                                  uintptr
 	sourceBtn, destBtn, destOpenBtn, destConfigBtn, renameBtn, fileFlowBtn, moveBtn, nextBtn, undoBtn, undoBatchBtn, openBtn, openFolderBtn, reloadBtn uintptr
@@ -3640,6 +3640,7 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 					} else {
 						showSelectedProcessedStatus()
 					}
+					updateHistoryNarration()
 				}
 			}
 		}
@@ -3742,11 +3743,16 @@ func createUI(hwnd uintptr) {
 	app.currentLabel = createControl("STATIC", "PREVIEW", WS_CHILD|WS_VISIBLE|SS_LEFT, 250, 120, 720, 24, hwnd, 0)
 	app.readTextCheck = createControl("BUTTON", "Read as &text", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_AUTOCHECKBOX, 650, 116, 105, 27, hwnd, ID_READ_TEXT)
 	app.processedTitleLabel = createControl("STATIC", "PROCESSED · 0", WS_CHILD|WS_VISIBLE|SS_LEFT, 980, 120, 92, 24, hwnd, 0)
+	app.historyNarrationTitle = createControl("STATIC", "TRANSACTION DETAILS", WS_CHILD|SS_LEFT, 570, 120, 310, 24, hwnd, 0)
+	app.historyNarrationEdit = createControl("EDIT", "", WS_CHILD|WS_BORDER|WS_VSCROLL|ES_MULTILINE|ES_READONLY|ES_AUTOVSCROLL, 570, 155, 610, 340, hwnd, 0)
+	setText(app.historyNarrationEdit, historyEmptyNarration())
 	app.undoBatchBtn = createControl("BUTTON", "Undo &Batch", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 1076, 116, 88, 27, hwnd, ID_UNDO_BATCH)
 	app.undoBtn = createControl("BUTTON", "&Undo", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 1168, 116, 72, 27, hwnd, ID_UNDO)
 	setControlFont(app.countLabel, app.headingFont)
 	setControlFont(app.currentLabel, app.headingFont)
 	setControlFont(app.processedTitleLabel, app.headingFont)
+	setControlFont(app.historyNarrationTitle, app.headingFont)
+	setControlFont(app.historyNarrationEdit, app.smallFont)
 	app.zoomOutBtn = createControl("BUTTON", "-", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 790, 116, 34, 27, hwnd, ID_ZOOM_OUT)
 	app.zoom100Btn = createControl("BUTTON", "100%", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 828, 116, 56, 27, hwnd, ID_ZOOM_100)
 	app.zoomInBtn = createControl("BUTTON", "+", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 888, 116, 34, 27, hwnd, ID_ZOOM_IN)
@@ -3868,7 +3874,9 @@ func syncQueueHistoryTabVisibility() {
  show(app.processedList, app.showHistoryTab)
  show(app.processedSearchEdit, app.showHistoryTab)
  show(app.processedTitleLabel, app.showHistoryTab)
- // History occupies the entire content region; preview belongs to Queue.
+ show(app.historyNarrationTitle, app.showHistoryTab)
+ show(app.historyNarrationEdit, app.showHistoryTab)
+ // File preview belongs to Queue; History uses the right pane for action narration.
  show(app.previewHwnd, !app.showHistoryTab)
  show(app.currentLabel, !app.showHistoryTab)
  show(app.readTextCheck, !app.showHistoryTab)
@@ -3910,11 +3918,10 @@ func layoutUI(hwnd uintptr) {
 	if previewH < 245 {
 		previewH = 245
 	}
-	// Queue retains the resizable list/preview split. History is a
-	// full-width journal: no stale Queue preview beside processed records.
+	// Both tabs share the splitter. Queue previews files; History
+	// describes the selected transaction and Undo in the right pane.
 	listW := queueSplitterPosition(w)
 	processedW := listW
-	if app.showHistoryTab { processedW = w-40 }
 	gap := int32(10)
 	previewX := int32(20) + listW + gap
 	processedX := int32(20)
@@ -3986,7 +3993,7 @@ func layoutUI(hwnd uintptr) {
 	recordAttachmentTrace("layout-after-filterClearBtn")
 	recordAttachmentTrace("layout-before-countLabel")
 	updateQueueHeaderCaptions()
-	procMoveWindow.Call(app.queueTabControl, 20, uintptr(headerY-3), uintptr(processedW), 27, 0)
+	procMoveWindow.Call(app.queueTabControl, 20, uintptr(headerY-3), uintptr(listW), 27, 0)
 	procMoveWindow.Call(app.countLabel, 184, uintptr(headerY), uintptr(listW-164), 24, 0)
 	recordAttachmentTrace("layout-after-countLabel")
 	zoomGap := int32(4)
@@ -4025,7 +4032,8 @@ func layoutUI(hwnd uintptr) {
 	procMoveWindow.Call(app.zoomFitWidthBtn, uintptr(zoomX), uintptr(headerY-4), uintptr(zoomFitWidthW), 27, 0)
 	recordAttachmentTrace("layout-after-zoomFitWidthBtn")
 	recordAttachmentTrace("layout-before-processedTitleLabel")
-	procMoveWindow.Call(app.processedTitleLabel, 184, uintptr(headerY), uintptr(processedW-164), 24, 0)
+	procMoveWindow.Call(app.processedTitleLabel, 184, uintptr(headerY), uintptr(listW-164), 24, 0)
+	procMoveWindow.Call(app.historyNarrationTitle, uintptr(previewX), uintptr(headerY), uintptr(previewW), 24, 0)
 	recordAttachmentTrace("layout-after-processedTitleLabel")
 	// History has its own action footer immediately below the processed list.
 	// Reserve 38px for two buttons and 8px between list and footer.
@@ -4048,6 +4056,7 @@ func layoutUI(hwnd uintptr) {
 	recordAttachmentTrace("layout-after-fileList")
 	recordAttachmentTrace("layout-before-previewHwnd")
 	procMoveWindow.Call(app.previewHwnd, uintptr(previewX), uintptr(previewTop), uintptr(previewW), uintptr(previewH), 0)
+	procMoveWindow.Call(app.historyNarrationEdit, uintptr(previewX), uintptr(previewTop), uintptr(previewW), uintptr(previewH), 1)
 	recordAttachmentTrace("layout-after-previewHwnd")
 	recordAttachmentTrace("layout-before-processedSearchEdit")
 	procMoveWindow.Call(app.processedSearchEdit, uintptr(processedX), uintptr(previewTop), uintptr(processedW), 27, 0)
@@ -4312,6 +4321,7 @@ func populateProcessedList(preferredSelection int) {
 	} else {
 		procEnableWindow.Call(app.undoBatchBtn, 0)
 	}
+	updateHistoryNarration()
 	if len(app.processedRows) > 0 {
 		procEnableWindow.Call(app.processedList, 1)
 	} else {
@@ -4322,10 +4332,25 @@ func populateProcessedList(preferredSelection int) {
 func showSelectedProcessedStatus() {
 	idx := selectedProcessedIndex()
 	if idx < 0 {
+		updateHistoryNarration()
+		return
+	}
+	updateHistoryNarration()
+	rec := app.history[idx]
+	setText(app.statusLabel, "Processed: "+rec.From+"  →  "+rec.To+"   |   Alt+U to undo selected")
+}
+
+func updateHistoryNarration() {
+	if app.historyNarrationEdit == 0 { return }
+	idx := selectedProcessedIndex()
+	if idx < 0 {
+		setText(app.historyNarrationTitle, "TRANSACTION DETAILS")
+		setText(app.historyNarrationEdit, historyEmptyNarration()+historyBatchNarration(app.history))
 		return
 	}
 	rec := app.history[idx]
-	setText(app.statusLabel, "Processed: "+rec.From+"  →  "+rec.To+"   |   Alt+U to undo selected")
+	setText(app.historyNarrationTitle, historyOperationName(rec))
+	setText(app.historyNarrationEdit, historyTransactionNarration(rec)+historyBatchNarration(app.history))
 }
 
 func recordProcessed(rec MoveRecord) {
