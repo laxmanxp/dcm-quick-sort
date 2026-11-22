@@ -3213,8 +3213,7 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 			next:=queueSplitterClamp(bounds.Right-bounds.Left,signedLoword(lParam)-20)
 			if next!=queueSplitterPosition(bounds.Right-bounds.Left) {
 				queueSplitterWidth=next
-				layoutUI(hwnd)
-				procInvalidateRect.Call(hwnd,0,1)
+				layoutSplitterDrag(hwnd)
 			}
 			return 0
 		}
@@ -3227,10 +3226,18 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 		if queueSplitterDragging {
 			queueSplitterDragging=false
 			procReleaseCapture.Call()
+			// Reconcile all controls and deferred native preview providers once
+			// at the final width, not for every mouse pixel.
+			layoutUI(hwnd)
+			resizePreviewHandler()
 			return 0
 		}
 	case WM_CAPTURECHANGED:
-		queueSplitterDragging=false
+		if queueSplitterDragging {
+			queueSplitterDragging=false
+			layoutUI(hwnd)
+			resizePreviewHandler()
+		}
 
 	case WM_GETMINMAXINFO:
 		if lParam != 0 {
@@ -5374,8 +5381,10 @@ func previewWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr
 			}
 		}
 	case WM_SIZE:
-		resizeSumatraPreview()
-		resizePreviewHandler()
+		if !queueSplitterDragging {
+			resizeSumatraPreview()
+			resizePreviewHandler()
+		}
 		resizeTextPreview()
 		resizeXLSXPreview()
 		resizePPTXPreview()
