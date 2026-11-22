@@ -855,11 +855,11 @@ try{
   if([DcmNative]::IsWindowEnabled($move)){throw 'Move enabled without destination'}
   Step 'move-gating-no-destination' @{selected_file='08-preview.pdf';button_enabled=$false}
   [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1003,'does-not-exist')
-  Wait 'Move rejects missing logical location' {-not [DcmNative]::IsWindowEnabled($move)}
+  Wait 'Move rejects missing destination folder' {-not [DcmNative]::IsWindowEnabled($move)}
   Step 'move-gating-invalid-destination' @{button_enabled=$false}
-  [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1003,'Accepted')
+  [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1003,$fixture.destination)
   Wait 'Move enables valid location' {[DcmNative]::IsWindowEnabled($move)}
-  Step 'move-gating-valid-destination' @{button_enabled=$true;logical_location='Accepted'}
+  Step 'move-gating-valid-destination' @{button_enabled=$true;physical_folder=$fixture.destination}
   [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1030,'no-such-acceptance-file')
   Wait 'Move disabled with empty filtered selection' {
    @([DcmNative]::ListItems($hwnd,$app.Id,1016)).Count -eq 0 -and
@@ -1173,7 +1173,7 @@ try{
  Capture '06-reopened-pdf' 'teal'
  Step 'pdf-reopen' 'same PDF reopened after exclusive file access'
  # Operate only on the disposable PDF fixture, never on a user file.
- [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1003,'Accepted')
+ [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1003,$fixture.destination)
  [DcmSumatraProbe]::SetEdit($hwnd,$app.Id,1005,'undo-preview')
  [DcmNative]::ClickAsync($hwnd,$app.Id,1006)
  $renamed=Join-Path $fixture.inbox 'undo-preview.pdf'
