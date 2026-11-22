@@ -178,7 +178,7 @@ func TestSourceDestinationLearningAndSuggestionManagementAreMenuOnly(t *testing.
 			t.Fatalf("management control still clutters main workflow: %s", forbidden)
 		}
 	}
-	for _, want := range []string{`"&Sources…"`, `"Choose &Destination Folder…"`, `"&Learning Center…"`, `"S&uggestion Center…"`} {
+	for _, want := range []string{`"&Sources…"`, `"&Destinations…"`, `"&Learning Center…"`, `"S&uggestion Center…"`} {
 		if !strings.Contains(src, want) {
 			t.Fatalf("management command missing from Tools menu: %s", want)
 		}
@@ -754,7 +754,7 @@ func TestPDFDefaultViewPreferenceMenuAndStartupAreWired(t *testing.T) {
 func TestDestinationFolderMenuAndMoveUndoWiring(t *testing.T) {
 	src := windowsMainSource(t)
 	for _, needle := range []string{
-		"Choose &Destination Folder…",
+		"&Destinations…",
 		"chooseDestinationFolder()",
 		"resolveExistingDestinationFolder(getText(app.destEdit))",
 		"moveCurrent()",
