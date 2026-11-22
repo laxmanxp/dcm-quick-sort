@@ -168,15 +168,10 @@ public static class DcmNativeReportProbe {
       && PostMessage(hwnd,0x0202,IntPtr.Zero,point);
  }
  public static void SelectRow(IntPtr hwnd,int row) {
-  IntPtr payload=Marshal.AllocHGlobal(88);
-  try {
-   for(int i=0;i<88;i++) Marshal.WriteByte(payload,i,0);
-   Marshal.WriteInt32(payload,12,0); // clear prior selection/focus
-   Marshal.WriteInt32(payload,16,3); // LVIS_SELECTED | LVIS_FOCUSED mask
-   SendMessage(hwnd,0x102B,new IntPtr(-1),payload);
-   Marshal.WriteInt32(payload,12,3); // select/focus one test row
-   SendMessage(hwnd,0x102B,new IntPtr(row),payload);
-  } finally {Marshal.FreeHGlobal(payload);}
+  // LVM_SETITEMSTATE (WM_USER + 43) does NOT marshal LVITEM pointers across
+  // process boundaries. Passing locally allocated memory here previously
+  // crashed the QuickSort process. Exercise normal keyboard selection instead.
+  if(!NavigateToRow(hwnd,row))throw new InvalidOperationException("Cannot navigate native row "+row);
  }
 }
 '@
