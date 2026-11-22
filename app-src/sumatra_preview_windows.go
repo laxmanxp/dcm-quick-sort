@@ -178,7 +178,17 @@ func resizeSumatraPreview() {
 	if w < 1 || h < 1 {
 		return
 	}
-	// Async cross-thread positioning avoids blocking QuickSort on the PDF renderer.
+	// Sumatra may run at a different DPI awareness than QuickSort. Resize
+	// in the viewer's DPI context so SetWindowPos dimensions aren't virtually
+	// scaled by Windows (e.g. 125% child in a 100% host preview pane).
+	context, _, _ := spGetWindowDPIContext.Call(v.child)
+	if context != 0 {
+		previous, _, _ := spSetThreadDPIContext.Call(context)
+		if previous != 0 {
+			defer spSetThreadDPIContext.Call(previous)
+		}
+	}
+	// Async cross-thread positioning avoids blocking QuickSort on the renderer.
 	spSetWindowPos.Call(v.child, 0, 0, 0, uintptr(w), uintptr(h), 0x4000|0x0040|0x0010|0x0004)
 }
 
