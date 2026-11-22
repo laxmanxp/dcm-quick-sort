@@ -384,3 +384,46 @@ The updated dev app was launched interactively on Lenovo, PID **12208**, from
 with `DCM_PDF_PROVIDER=auto` and no Sumatra configuration. Its window was
 brought to the foreground for manual inspection. Production QuickSort and
 FileFlow Suite installations remain unchanged.
+
+
+## Narrow PDF toolbar qualification — 2026-11-22 (PARTIAL)
+
+Development change `7d36c8d` preserves the existing wide-toolbar order and
+prioritizes previous-page, editable page/Go, next-page and both rotation icons
+before Fit, Zoom and page-count decoration when the preview client is below
+454 units. No renderer/transaction code or release default changed.
+
+Targeted GUI assertions were added in `0909713`, then the test harness was
+corrected in `3a5c9c4` to (a) capture the actual resized window rather than
+silently restoring it, and (b) avoid demanding a new PDF render after a
+pure window resize. The exact development source built successfully on Lenovo,
+and the Go suite passed on the previous product-only commit `7d36c8d`.
+
+Native receipts (retain failures, do not relabel):
+- `dcm-pdfium-gui-20261122-030219-c9b8f44`: native queue run
+  exited early at an owned-window/control selection check, before toolbar
+  measurements. Not a toolbar acceptance.
+- `dcm-pdfium-gui-20261122-030244-3010e8d`: legacy queue; both
+  rotation controls visible, within preview, no overlap at requested whole-window
+  widths 1350/920/800. Measured preview clients 824/655/655.
+  Rendering and source PDF visual marker checks passed. Full run failed
+  because the harness incorrectly required a new result-applied generation
+  after a resize without a render. Its captures were made after a generic
+  Restore and do **not** prove actual narrow-width appearance.
+- `dcm-pdfium-gui-20261122-030419-688d9b6`: corrected width-specific
+  screenshot attempt failed strict occlusion check (unrelated
+  XamlExplorerHostIslandWindow in foreground); owned app shut down normally.
+  Do not accept or bypass an occluded image.
+- `dcm-pdfium-gui-20261122-030502-d250827`: screenshot-free legacy queue
+  run passed the width-specific rotation-geometry assertions and subsequent
+  page navigation, rotation, PDF preview recovery and damaged/protected
+  refusal steps. Overall FAIL: unexpected persistent PDFium worker restart
+  (PID 29352 -> 31776) without a matching ordered cancellation; normal app exit.
+  Investigate separately before claiming a complete GUI PASS.
+
+Important limit: QuickSort's minimum whole-window geometry clamped the
+requested 800-wide test, leaving a preview of 655. Thus the
+`width < 454` priority branch is not yet physically exercised by the GUI.
+A deterministic narrow-preview fixture (or testable pure layout calculation),
+plus an unoccluded visual capture and clean full regression, is still required
+before accepting that adaptive branch. Production and Suite unchanged.
