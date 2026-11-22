@@ -214,7 +214,18 @@ function Verify-TwoPaneTab([bool]$history){
  if((QueueIsVisible) -eq $history){throw 'Queue list visibility disagrees with active tab'}
  if((Is-Visible 1017) -ne $history -or (Is-Visible 1046) -ne $history){throw 'History list/search visibility disagrees with active tab'}
  if((Is-Visible 1008) -ne $history -or (Is-Visible 1048) -ne $history){throw 'Undo and Undo Batch must be visible only in History'}
+ $preview=[DcmTwoPaneGeometry]::FindWindowEx([IntPtr]$hwnd,[IntPtr]::Zero,'QuickSortPreview',$null)
+ if($preview -eq [IntPtr]::Zero){throw 'Preview HWND missing'}
+ if([DcmTwoPaneGeometry]::IsWindowVisible($preview) -eq $history){throw 'Preview should appear only in Queue'}
+ if((Is-Visible 1061) -eq $history){throw 'Preview title should appear only in Queue'}
  if($history){
+  $main=New-Object DcmTwoPaneGeometry+RECT
+  $listBounds=New-Object DcmTwoPaneGeometry+RECT
+  if(-not [DcmTwoPaneGeometry]::GetWindowRect([IntPtr]$hwnd,[ref]$main) -or
+     -not [DcmTwoPaneGeometry]::GetWindowRect([DcmNative]::Control($hwnd,$app.Id,1017),[ref]$listBounds)){throw 'Cannot measure History width'}
+  if(($listBounds.Right-$listBounds.Left) -lt (($main.Right-$main.Left)-100)){throw 'History did not expand across the former preview area'}
+  Step 'history-full-width-no-preview' @{history_width=$listBounds.Right-$listBounds.Left;preview_visible=$false}
+
   $list=Rect 1017
   $batch=Rect 1048
   $undo=Rect 1008
