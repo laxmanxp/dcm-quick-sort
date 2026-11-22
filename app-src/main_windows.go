@@ -3867,10 +3867,10 @@ func syncQueueHistoryTabVisibility() {
  show(app.processedList, app.showHistoryTab)
  show(app.processedSearchEdit, app.showHistoryTab)
  show(app.processedTitleLabel, app.showHistoryTab)
- // Undo must remain available during Queue processing; it is not a
- // History-only action. Both buttons live beside the lower action row.
- show(app.undoBatchBtn, true)
- show(app.undoBtn, true)
+ // Undo actions belong to the History tab. Their handlers and journal
+ // remain available, but Queue does not display the reversal controls.
+ show(app.undoBatchBtn, app.showHistoryTab)
+ show(app.undoBtn, app.showHistoryTab)
  syncNativeTabSelection()
 }
 
