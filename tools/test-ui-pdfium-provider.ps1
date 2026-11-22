@@ -588,10 +588,11 @@ try{
    Start-Sleep -Milliseconds 850
    $app.Refresh()
    if($app.HasExited){throw 'Native report exited after physical-style row click'}
-  }elseif($VerifyNativeRangeKeyboard){
-   [DcmNativeModifierInput]::PlainClick($hwnd,$native,$app.Id,2)
   }else{
-   [DcmNativeReportProbe]::SelectRow($native,2)
+   # A real owned mouse click establishes selection even when previewer
+   # switching has shifted keyboard focus elsewhere in the main window.
+   # Posted Home/Down on an unfocused ListView is not reliable acceptance.
+   [DcmNativeModifierInput]::PlainClick($hwnd,$native,$app.Id,2)
   }
   $selectedNative=[DcmTwoPaneGeometry]::SendMessage($native,0x100C,[IntPtr](-1),[IntPtr]2).ToInt64()
   Step 'native-report-after-select' @{diagnostic=$NativeReportDiagnostic;selected_index=$selectedNative;current_name=(TextControl 1005)}
