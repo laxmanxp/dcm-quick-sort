@@ -214,6 +214,17 @@ function Verify-TwoPaneTab([bool]$history){
  if((QueueIsVisible) -eq $history){throw 'Queue list visibility disagrees with active tab'}
  if((Is-Visible 1017) -ne $history -or (Is-Visible 1046) -ne $history){throw 'History list/search visibility disagrees with active tab'}
  if((Is-Visible 1008) -ne $history -or (Is-Visible 1048) -ne $history){throw 'Undo and Undo Batch must be visible only in History'}
+ if($history){
+  $list=Rect 1017
+  $batch=Rect 1048
+  $undo=Rect 1008
+  if($batch.Top -lt ($list.Bottom+5) -or $undo.Top -lt ($list.Bottom+5) -or
+     $batch.Left -lt $list.Left -or $undo.Right -gt $list.Right -or
+     $undo.Left -le $batch.Right -or $undo.Bottom -gt ($list.Bottom+48)){
+   throw 'Undo actions are not located directly under the History list'
+  }
+  Step 'history-footer-buttons-below-list' @{list_bottom=$list.Bottom;batch_top=$batch.Top;undo_top=$undo.Top;inside_history_pane=$true}
+ }
  }
 function Verify-TwoPaneGeometry([string]$label){
  $queue=Rect $(if($LegacyQueue){1016}else{1071})
