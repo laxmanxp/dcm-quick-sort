@@ -1198,7 +1198,7 @@ func reloadDestinationAliases() {
 		setText(app.statusLabel, "Could not load destination favorites: "+err.Error())
 		return
 	}
-	app.destAliases = existingDestinationFolderFavorites(raw)
+	app.destAliases = raw // Keep unavailable saved destinations visible for editing, like Sources.
 	populateDestinationAliases()
 	// Keep an external latest snapshot current without creating duplicate history entries.
 	_, _ = backupCurrentConfiguration("configuration-loaded")
