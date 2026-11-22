@@ -12,8 +12,7 @@ param(
   [switch]$VerifyColumns,
   [switch]$VerifyNativeReport,
   [switch]$VerifyPDFPicker,
-  [string]$SumatraRuntime=''
-  ,
+  [string]$SumatraRuntime='',
   [switch]$LegacyQueue,
   [switch]$NativeReportDiagnostic,
   [switch]$NativeReportMouse,
