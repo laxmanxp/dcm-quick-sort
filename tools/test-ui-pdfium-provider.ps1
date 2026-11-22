@@ -11,6 +11,7 @@ param(
   [switch]$VerifyTwoPane,
   [switch]$VerifyColumns,
   [switch]$VerifyNativeReport,
+  [switch]$VerifyPDFPicker,
   [switch]$LegacyQueue,
   [switch]$NativeReportDiagnostic,
   [switch]$NativeReportMouse,
@@ -100,6 +101,21 @@ function Rect([int]$id){
 Add-Type -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
+public static class DcmPDFPickerProbe {
+ [DllImport("user32.dll")] public static extern IntPtr GetMenu(IntPtr hwnd);
+ [DllImport("user32.dll")] public static extern IntPtr GetSubMenu(IntPtr menu,int position);
+ [DllImport("user32.dll")] public static extern int GetMenuItemCount(IntPtr menu);
+ [DllImport("user32.dll")] public static extern uint GetMenuState(IntPtr menu,uint item,uint flags);
+ [DllImport("user32.dll",SetLastError=true)] public static extern bool PostMessage(IntPtr hwnd,uint msg,IntPtr wparam,IntPtr lparam);
+ public static bool IsChecked(IntPtr menu,uint id) {
+  if(menu==IntPtr.Zero)return false;
+  uint state=GetMenuState(menu,id,0);
+  if(state!=0xffffffff)return (state&8)!=0;
+  int count=GetMenuItemCount(menu);
+  for(int i=0;i<count;i++)if(IsChecked(GetSubMenu(menu,i),id))return true;
+  return false;
+ }
+}
 public static class DcmNativeReportProbe {
  [DllImport("user32.dll", CharSet=CharSet.Unicode, EntryPoint="SendMessageW")]
  public static extern IntPtr SendMessage(IntPtr hWnd,uint msg,IntPtr wParam,IntPtr lParam);
@@ -365,6 +381,20 @@ try{
   $itemCount=[DcmTwoPaneGeometry]::SendMessage($native,0x1004,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64()
   if($columnCount -ne 4 -or $itemCount -ne 4){throw ('Native ListView columns/items mismatch '+$columnCount+'/'+$itemCount)}
   Step 'native-report-four-columns' @{class='SysListView32';header_class='SysHeader32';columns=$columnCount;items=$itemCount;visible=$true}
+  if($VerifyPDFPicker){
+   List-Selected '08-preview.pdf'
+   PageReady 'Page 1 of 2'
+   $mainMenu=[DcmPDFPickerProbe]::GetMenu([IntPtr]$hwnd)
+   if($mainMenu -eq [IntPtr]::Zero){throw 'PDF previewer menu missing'}
+   foreach($choice in @(2012,2011,2010)){
+    if(-not [DcmPDFPickerProbe]::PostMessage([IntPtr]$hwnd,0x0111,[IntPtr]$choice,[IntPtr]::Zero)){throw ('Could not select PDF backend '+$choice)}
+    $expected=$choice
+    Wait ('PDF menu choice '+$choice) {[DcmPDFPickerProbe]::IsChecked($mainMenu,[uint32]$expected)} 12
+    PageReady 'Page 1 of 2'
+    Step 'pdf-preview-selector-switch' @{command=$choice;checked=$true;page_rendered=$true}
+   }
+   Step 'pdf-preview-selector' @{windows=$true;pdfium=$true;auto=$true;active_file='08-preview.pdf'}
+  }
   if($KeyboardSoakSteps -gt 0){
    Write-Output 'KBD_STAGE=starting-mixed-queue'
    if(-not $NativeReportMouse){throw 'Keyboard soak requires native mouse-driven selection'}
