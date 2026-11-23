@@ -6304,6 +6304,10 @@ func resizePreviewHandlerFor(initial bool) {
 			rc.Right, rc.Bottom = pptxCOMRectSize(rc.Right, rc.Bottom, physical.Right, physical.Bottom, true, true)
 		}
 	}
+	if app.previewNativeDPIContextMode == "physical-setrect" || app.previewNativeDPIContextMode == "physical-both" {
+		physical, ok := excelLayoutPhysicalClientRect(pane)
+		rc.Right, rc.Bottom = htmlPreviewRectForCall(app.previewNativeDPIContextMode, "SetRect", rc.Right, rc.Bottom, physical.Right, physical.Bottom, ok)
+	}
 	traceCall = beginNativePreviewTrace(traceSession, "SetRect", pane, handler, 0, &rc)
 	hr := invokeNativePreviewCOMWithDPIContext(app.previewNativeDPIContextMode, func() uintptr {
 		result, _, _ := syscall.SyscallN(ph.Vtbl.SetRect, handler, uintptr(unsafe.Pointer(&rc)))
@@ -6410,6 +6414,10 @@ func loadWindowsPreviewHandler(path string) bool {
 		}
 	}
 	nativeRectMode := nativePreviewDPIContextMode(path, os.Getenv("DCM_WORD_COM_RECT_MODE"), os.Getenv("DCM_HTML_COM_RECT_MODE"))
+	if nativeRectMode == "physical-both" {
+		physical, ok := excelLayoutPhysicalClientRect(app.previewHwnd)
+		rc.Right, rc.Bottom = htmlPreviewRectForCall(nativeRectMode, "SetWindow", rc.Right, rc.Bottom, physical.Right, physical.Bottom, ok)
+	}
 	traceCall = beginNativePreviewTrace(traceSession, "SetWindow", app.previewHwnd, self, 0, &rc)
 	hr := invokeNativePreviewCOMWithDPIContext(nativeRectMode, func() uintptr {
 		result, _, _ := syscall.SyscallN(ph.Vtbl.SetWindow, self, app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
