@@ -5687,7 +5687,9 @@ func previewWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr
 			barBrush, _, _ := procGetSysColorBrush.Call(15) // COLOR_BTNFACE
 			procFillRect.Call(hdc, uintptr(unsafe.Pointer(&bar)), barBrush)
 		}
-		if app.image != 0 {
+		if pdfPreview.active && pdfPreview.viewMode==PDFViewContinuous {
+			drawPDFContinuousStack(hdc,rc)
+		} else if app.image != 0 {
 			drawImagePreview(hdc, rc)
 		} else if app.pptxPreviewActive {
 			drawPPTXPreview(hdc, rc)
