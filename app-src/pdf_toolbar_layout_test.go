@@ -20,8 +20,8 @@ func TestPDFToolbarPlanCompactRetainsBothRotationButtons(t *testing.T) {
 }
 
 func TestPDFToolbarPlanWidePreservesOriginalOrder(t *testing.T) {
- slots:=pdfToolbarPlan(454)
- if len(slots)!=11 {t.Fatalf("wide pane has %d controls, want 11",len(slots))}
+ slots:=pdfToolbarPlan(750)
+ if len(slots)!=12 {t.Fatalf("wide pane has %d controls, want 12",len(slots))}
  for i,s:=range slots {
   if s.Index!=i {t.Fatalf("wide control %d in position %d",s.Index,i)}
  }
@@ -37,4 +37,9 @@ func TestPDFToolbarPlanNeverOverlapsAtTinyWidths(t *testing.T) {
    previousEnd=s.X+s.Width
   }
  }
+}
+
+func TestPDFModeToggleFollowsPageControls(t *testing.T){
+ slots:=pdfToolbarPlan(900)
+ if len(slots)!=12 || slots[len(slots)-1].Index!=11 {t.Fatalf("mode button missing at wide width: %+v",slots)}
 }
