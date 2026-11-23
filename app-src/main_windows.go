@@ -5358,6 +5358,17 @@ func loadPreview(path string) {
 	if isPDFPath(path) && startPDFPreview(path) {
 		return
 	}
+	// The Word COM handler can render beyond its host pane and overlap other
+	// controls. Prefer DCM's bounded, readable DOCX structure preview.
+	// Native Word remains available when our parser cannot read the file.
+	if preferOwnedDOCXPreview(path) {
+		if text, stats, ok := docxPreviewText(path); ok {
+			if showTextPreviewContentKind(text, "DOCX") {
+				setText(app.statusLabel, fmt.Sprintf("DCM DOCX text preview: %d paragraphs · %d tables · %d image placeholders", stats.Paragraphs, stats.Tables, stats.Images))
+				return
+			}
+		}
+	}
 	if isImage(path) {
 		if err := loadImageWithError(path); err != nil {
 			app.fallback = "Could not preview this image.\n\n" + err.Error()
@@ -5389,8 +5400,8 @@ func loadPreview(path string) {
 }
 
 func loadOfficeFallbackPreview(path string, handlerRegistered bool) {
-	// Prefer Windows' native Office preview when available. If it is missing or
-	// fails, DCM renders the actual DOCX body locally from the Open XML package.
+	// For DOCX, the built-in structured text preview is tried first in
+	// loadPreview. This fallback also serves Office formats without a handler.
 	// XLSX now has a built-in grid fallback with sheet switching; PPTX now has a built-in slide renderer with navigation, text, tables and embedded images.
 	if text, stats, ok := docxPreviewText(path); ok {
 		if showTextPreviewContentKind(text, "DOCX") {
