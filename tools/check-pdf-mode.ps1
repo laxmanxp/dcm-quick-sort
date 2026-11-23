@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][int]$TargetPid)
+param([Parameter(Mandatory=$true)][int]$TargetPid, [int]$WheelSteps=25)
 $ErrorActionPreference='Stop'
 $p=Get-CimInstance Win32_Process -Filter "ProcessId = $TargetPid"
 if ($null -eq $p -or $p.ExecutablePath -ne 'C:\DCMQuickSortCollisionAcceptance\dcm-pdf-continuous-dev.exe' -or $p.CommandLine -notmatch 'sumatra-scroll.pdf') {throw "Refusing non-fixture process"}
@@ -25,8 +25,8 @@ Write-Output ("Before: mode={0}; page={1}" -f (ReadLabel $mode),(ReadLabel $page
 [void][PDFModeAcceptance]::SendMessage($mode,0x00F5,[IntPtr]::Zero,[IntPtr]::Zero)
 Start-Sleep -Milliseconds 300
 Write-Output ("After toggle: mode={0}; page={1}" -f (ReadLabel $mode),(ReadLabel $page))
-for($i=0;$i -lt 5;$i++){
+for($i=0;$i -lt $WheelSteps;$i++){
  [void][PDFModeAcceptance]::SendMessage($pane,0x020A,[IntPtr]::new([long]0xFF880000),[IntPtr]::Zero)
- Start-Sleep -Milliseconds 200
+ Start-Sleep -Milliseconds 80
 }
 Write-Output ("After wheel: mode={0}; page={1}" -f (ReadLabel $mode),(ReadLabel $page))
