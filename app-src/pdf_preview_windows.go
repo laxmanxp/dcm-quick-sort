@@ -45,6 +45,7 @@ type pdfPreviewState struct {
  neighborRendering int
  neighborGeneration uint64
  neighborPath string
+ neighborFailed map[int]bool
  pendingDirection int
 	path             string
 	page             int
