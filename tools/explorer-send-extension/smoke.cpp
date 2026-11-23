@@ -118,6 +118,7 @@ int wmain(int argc,wchar_t** argv){
  require(std::filesystem::exists(receipt),"batch helper delivered single manifest to harmless receiver");
  std::ifstream in(receipt,std::ios::binary);
  std::string payload((std::istreambuf_iterator<char>(in)),std::istreambuf_iterator<char>());
+ in.close();
  require(payload.find("\"alias_name\":\"Accounts\"")!=std::string::npos,"selected alias carried");
  require(payload.find("first selected.txt")!=std::string::npos && payload.find("second file.png")!=std::string::npos,"all selected file paths carried");
  require(std::filesystem::file_size(fileA)==1 && std::filesystem::file_size(fileB)==1,"source files unchanged");
