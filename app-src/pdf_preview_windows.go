@@ -28,6 +28,7 @@ const (
 	ID_PDF_FIT_PAGE = 1076
 	ID_PDF_ZOOM_OUT = 1077
 	ID_PDF_ZOOM_IN = 1078
+ ID_PDF_VIEW_MODE = 1079
 	pdfToolbarHeight   = int32(34)
 	createNoWindow     = 0x08000000
 )
@@ -37,6 +38,8 @@ var bundledPDFRendererScript []byte
 
 type pdfPreviewState struct {
 	active           bool
+ viewMode PDFViewMode
+ scrollY int32
 	path             string
 	page             int
 	pageCount        int
@@ -50,7 +53,7 @@ type pdfPreviewState struct {
 	rotateBtn        uintptr // clockwise icon
 	rotateLeftBtn    uintptr // counterclockwise icon
 	pageLabel        uintptr
-	pageEdit, pageGo, fitWidthBtn, fitPageBtn, zoomOutBtn, zoomInBtn uintptr
+	pageEdit, pageGo, fitWidthBtn, fitPageBtn, zoomOutBtn, zoomInBtn, viewModeBtn uintptr
 	lastWidth        int
 	lastHeight       int
 	lastScalePercent int
@@ -66,7 +69,7 @@ var pdfShutdown pdfShutdownCoordinator
 
 func pdfToolbarHandles() []uintptr {
  return []uintptr{pdfPreview.prevBtn,pdfPreview.pageEdit,pdfPreview.pageGo,pdfPreview.pageLabel,pdfPreview.nextBtn,
- pdfPreview.fitWidthBtn,pdfPreview.fitPageBtn,pdfPreview.rotateLeftBtn,pdfPreview.rotateBtn,pdfPreview.zoomOutBtn,pdfPreview.zoomInBtn}
+ pdfPreview.fitWidthBtn,pdfPreview.fitPageBtn,pdfPreview.rotateLeftBtn,pdfPreview.rotateBtn,pdfPreview.zoomOutBtn,pdfPreview.zoomInBtn,pdfPreview.viewModeBtn}
 }
 
 func createPDFPreviewControls() {
@@ -83,6 +86,7 @@ func createPDFPreviewControls() {
  pdfPreview.rotateBtn=createControl("BUTTON","Rotate right 90 degrees",WS_CHILD|WS_TABSTOP|BS_OWNERDRAW,346,4,32,26,parent,ID_PDF_ROTATE)
  pdfPreview.zoomOutBtn=createControl("BUTTON","-",WS_CHILD|WS_TABSTOP|BS_PUSHBUTTON,382,4,30,26,parent,ID_PDF_ZOOM_OUT)
  pdfPreview.zoomInBtn=createControl("BUTTON","+",WS_CHILD|WS_TABSTOP|BS_PUSHBUTTON,416,4,30,26,parent,ID_PDF_ZOOM_IN)
+ pdfPreview.viewModeBtn=createControl("BUTTON","Single",WS_CHILD|WS_TABSTOP|BS_PUSHBUTTON,450,4,67,26,parent,ID_PDF_VIEW_MODE)
  for _,h:=range pdfToolbarHandles(){setExplorerTheme(h)}
  hidePDFPreviewControls()
 }
@@ -122,6 +126,7 @@ func updatePDFPreviewControls() {
  if pdfPreview.pageCount>0 {pageText=fmt.Sprintf("/ %d",pdfPreview.pageCount)}
  if pdfPreview.rotation!=0 {pageText+=fmt.Sprintf("  %d°",pdfPreview.rotation)}
  setText(pdfPreview.pageLabel,pageText)
+ if pdfPreview.viewModeBtn!=0 { label:="Single"; if pdfPreview.viewMode==PDFViewContinuous {label="Scroll"}; setText(pdfPreview.viewModeBtn,label) }
  // Never overwrite an in-progress page-number edit.
  if focused,_,_:=procGetFocus.Call();focused!=pdfPreview.pageEdit {
   setText(pdfPreview.pageEdit,strconv.Itoa(pdfPreview.page+1))
@@ -132,10 +137,45 @@ func updatePDFPreviewControls() {
  procEnableWindow.Call(pdfPreview.nextBtn,on(ready&&pdfPreview.page+1<pdfPreview.pageCount))
  procEnableWindow.Call(pdfPreview.pageEdit,on(ready))
  procEnableWindow.Call(pdfPreview.pageGo,on(ready))
- for _,h:=range []uintptr{pdfPreview.fitWidthBtn,pdfPreview.fitPageBtn,pdfPreview.rotateLeftBtn,pdfPreview.rotateBtn,pdfPreview.zoomOutBtn,pdfPreview.zoomInBtn}{
+ for _,h:=range []uintptr{pdfPreview.fitWidthBtn,pdfPreview.fitPageBtn,pdfPreview.rotateLeftBtn,pdfPreview.rotateBtn,pdfPreview.zoomOutBtn,pdfPreview.zoomInBtn,pdfPreview.viewModeBtn}{
   procEnableWindow.Call(h,1)
  }
  layoutPDFPreviewControls()
+}
+
+func togglePDFViewMode() {
+ if !pdfPreview.active {return}
+ if pdfPreview.viewMode==PDFViewSingle {
+  pdfPreview.viewMode=PDFViewContinuous
+  pdfPreview.scrollY=0
+  app.previewFit=false
+  app.previewFitWidth=true
+ } else {
+  pdfPreview.viewMode=PDFViewSingle
+  pdfPreview.scrollY=0
+  app.previewPanY=0
+ }
+ requestPDFPreviewRender()
+ updatePDFPreviewControls()
+}
+
+func scrollPDFContinuousWheel(delta int) bool {
+ if !pdfPreview.active || pdfPreview.viewMode!=PDFViewContinuous {return false}
+ if delta==0{return true}
+ var rc RECT
+ procGetClientRect.Call(app.previewHwnd,uintptr(unsafe.Pointer(&rc)))
+ viewport:=rc.Bottom-rc.Top-pdfToolbarHeight-8
+ if viewport<1 {viewport=1}
+ pixels:=-previewPanPixels(delta,viewport)
+ next,position:=pdfScrollStep(pdfPreview.page,pdfPreview.pageCount,pdfPreview.scrollY,viewport,int32(pdfPreview.lastHeight),pixels)
+ if next!=pdfPreview.page {
+  goToPDFPage(next-pdfPreview.page)
+  pdfPreview.scrollY=position
+ } else {
+  pdfPreview.scrollY=position
+  procInvalidateRect.Call(app.previewHwnd,0,1)
+ }
+ return true
 }
 
 func goToPDFPageNumber() {
@@ -148,6 +188,7 @@ func goToPDFPageNumber() {
  }
  if pdfPreview.page==number-1{return}
  pdfPreview.page=number-1
+ pdfPreview.scrollY=0
  app.previewPanX,app.previewPanY=0,0
  pdfPreview.cursorAnchor=PDFCursorAnchor{}
  pdfPreview.panAnchored=false
@@ -272,6 +313,8 @@ func startPDFPreview(path string) bool {
 	pdfPreview.path = full
 	pdfPreview.page = 0
 	pdfPreview.pageCount = 0
+	pdfPreview.viewMode=PDFViewSingle
+	pdfPreview.scrollY=0
 	pdfPreview.rotation = 0
 	pdfPreview.lastWidth = 0
 	pdfPreview.lastHeight = 0
@@ -334,6 +377,7 @@ func goToPDFPage(delta int) {
 		return
 	}
 	pdfPreview.page = next
+	pdfPreview.scrollY=0
 	pdfPreview.cursorAnchor = PDFCursorAnchor{}
 	pdfPreview.panAnchored = false
 	app.previewPanX, app.previewPanY = 0, 0
@@ -554,6 +598,7 @@ func finishPDFRender() {
 			pdfPreview.page = result.Meta.PageIndex
 			pdfPreview.lastWidth = result.Meta.Width
 			pdfPreview.lastHeight = result.Meta.Height
+ if pdfPreview.viewMode==PDFViewContinuous { _,vh:=pdfRenderViewport(); maxScroll:=int32(result.Meta.Height-vh); if maxScroll<0 {maxScroll=0}; if pdfPreview.scrollY<0 || pdfPreview.scrollY>maxScroll {pdfPreview.scrollY=maxScroll} }
 			if result.Meta.ScalePercent > 0 {
 				pdfPreview.lastScalePercent = result.Meta.ScalePercent
 				app.previewZoom = result.Meta.ScalePercent
