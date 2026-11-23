@@ -5014,6 +5014,10 @@ func startBatchMove(selected []string, dest, logicalDestination string) {
 		setText(app.statusLabel, "Batch move cancelled; no files were changed.")
 		return
 	}
+	startApprovedBatchMove(plan,logicalDestination)
+}
+
+func startApprovedBatchMove(plan []batchMovePlanItem,logicalDestination string) {
 	app.destDir = logicalDestination
 	setDestinationText(logicalDestination)
 	app.batchMoveActive = true
