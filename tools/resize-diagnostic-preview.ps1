@@ -10,7 +10,9 @@ $approvedHTML = $p.ProcessName -eq "dcm-html-host-repair-dev" -and
  (Get-CimInstance Win32_Process -Filter "ProcessId = $TargetPid").CommandLine -match "TraceHTMLHostRepair"
 $approvedDOCX = $p.ProcessName -eq "dcm-docx-lifecycle-test" -and
  (Get-CimInstance Win32_Process -Filter "ProcessId = $TargetPid").CommandLine -match "TraceWordLifecycle"
-if (-not ($approvedWord -or $approvedHTML -or $approvedDOCX)) {throw "Refusing to resize non-diagnostic process"}
+$approvedWordRecovery = $p.ProcessName -eq "dcm-word-outer-recovery-test" -and
+ (Get-CimInstance Win32_Process -Filter "ProcessId = $TargetPid").CommandLine -match "TraceWordOuterRecovery"
+if (-not ($approvedWord -or $approvedHTML -or $approvedDOCX -or $approvedWordRecovery)) {throw "Refusing to resize non-diagnostic process"}
 Add-Type -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
