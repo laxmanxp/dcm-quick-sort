@@ -8,7 +8,9 @@ $p=Get-Process -Id $TargetPid -ErrorAction Stop
 $approvedWord = $p.ProcessName -eq "dcm-word-dpi-aware-test"
 $approvedHTML = $p.ProcessName -eq "dcm-html-host-repair-dev" -and
  (Get-CimInstance Win32_Process -Filter "ProcessId = $TargetPid").CommandLine -match "TraceHTMLHostRepair"
-if (-not ($approvedWord -or $approvedHTML)) {throw "Refusing to resize non-diagnostic process"}
+$approvedDOCX = $p.ProcessName -eq "dcm-docx-lifecycle-test" -and
+ (Get-CimInstance Win32_Process -Filter "ProcessId = $TargetPid").CommandLine -match "TraceWordLifecycle"
+if (-not ($approvedWord -or $approvedHTML -or $approvedDOCX)) {throw "Refusing to resize non-diagnostic process"}
 Add-Type -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
