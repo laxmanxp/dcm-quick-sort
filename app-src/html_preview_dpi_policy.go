@@ -13,7 +13,7 @@ func htmlPreviewDPIContextMode(path, setting string) string {
  case ".html", ".htm":
   switch strings.ToLower(strings.TrimSpace(setting)) {
   case "", "aware": return "aware"
-  case "physical-setrect", "physical-both": return strings.ToLower(strings.TrimSpace(setting))
+  case "physical-setrect", "physical-both", "physical-window": return strings.ToLower(strings.TrimSpace(setting))
   }
  }
  return ""
@@ -25,7 +25,7 @@ func nativePreviewDPIContextMode(path, wordSetting, htmlSetting string) string {
 
 func htmlPreviewRectForCall(mode, method string, logicalW, logicalH, physicalW, physicalH int32, measured bool) (int32,int32) {
  if !measured || physicalW <= 0 || physicalH <= 0 { return logicalW,logicalH }
- if mode == "physical-both" || (mode == "physical-setrect" && method == "SetRect") {
+ if mode == "physical-both" || (mode == "physical-setrect" && method == "SetRect") || (mode == "physical-window" && method == "SetWindow") {
   return physicalW,physicalH
  }
  return logicalW,logicalH
