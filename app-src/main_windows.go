@@ -5358,17 +5358,8 @@ func loadPreview(path string) {
 	if isPDFPath(path) && startPDFPreview(path) {
 		return
 	}
-	// The Word COM handler can render beyond its host pane and overlap other
-	// controls. Prefer DCM's bounded, readable DOCX structure preview.
-	// Native Word remains available when our parser cannot read the file.
-	if preferOwnedDOCXPreview(path) {
-		if text, stats, ok := docxPreviewText(path); ok {
-			if showTextPreviewContentKind(text, "DOCX") {
-				setText(app.statusLabel, fmt.Sprintf("DCM DOCX text preview: %d paragraphs · %d tables · %d image placeholders", stats.Paragraphs, stats.Tables, stats.Images))
-				return
-			}
-		}
-	}
+	// Word/DOCX returns to the registered native Windows preview handler.
+	// The DCM text/structure renderer remains available if native preview fails.
 	if isImage(path) {
 		if err := loadImageWithError(path); err != nil {
 			app.fallback = "Could not preview this image.\n\n" + err.Error()
@@ -5400,8 +5391,8 @@ func loadPreview(path string) {
 }
 
 func loadOfficeFallbackPreview(path string, handlerRegistered bool) {
-	// For DOCX, the built-in structured text preview is tried first in
-	// loadPreview. This fallback also serves Office formats without a handler.
+	// Prefer Windows' native Office preview when available. If it is missing or
+	// fails, DCM renders the DOCX body as a text/structure fallback.
 	// XLSX now has a built-in grid fallback with sheet switching; PPTX now has a built-in slide renderer with navigation, text, tables and embedded images.
 	if text, stats, ok := docxPreviewText(path); ok {
 		if showTextPreviewContentKind(text, "DOCX") {
@@ -6410,14 +6401,6 @@ func loadWindowsPreviewHandler(path string) bool {
 	// Initialize the native PowerPoint child once, outside its SetWindow call.
 	// If COM is input-synchronous this requests one deferred resize retry.
 	if pptxPhysical {
-		resizePreviewHandler()
-	}
-	// Word/DOCX and other registered preview handlers can create their inner
-	// content surface only during DoPreview. Give those handlers one final
-	// full-pane SetRect after DoPreview, rather than relying solely on the
-	// earlier SetWindow rectangle. Leave Excel's separately qualified initial
-	// logical/physical sizing path and PowerPoint's sizing path unchanged.
-	if !excelOuterRepair && !pptxPhysical {
 		resizePreviewHandler()
 	}
 	autoFitPreviewIfSupported(path, clsidText)
