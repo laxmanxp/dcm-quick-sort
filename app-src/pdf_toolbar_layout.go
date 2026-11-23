@@ -12,11 +12,11 @@ type pdfToolbarSlot struct {
 // widths. Narrow controls share the available width instead of disappearing.
 // At extremely small widths optional commands yield to page + rotation.
 func pdfToolbarPlan(width int32) []pdfToolbarSlot {
- preferred := [...]int32{30,42,32,48,30,48,48,32,32,30,30}
- minimum := [...]int32{22,30,24,28,22,35,35,26,26,22,22}
- order := [...]int{0,1,2,3,4,5,6,7,8,9,10}
+ preferred := [...]int32{30,42,32,48,30,48,48,32,32,30,30,67}
+ minimum := [...]int32{22,30,24,28,22,35,35,26,26,22,22,40}
+ order := [...]int{0,1,2,3,4,5,6,7,8,9,10,11}
  if width < 454 {
-  order = [...]int{0,1,2,4,7,8,5,6,9,10,3}
+  order = [...]int{0,1,2,4,7,8,11,5,6,9,10,3}
  }
  available := width-10 // five-pixel horizontal margins
  if available <= 0 {return nil}
