@@ -23,13 +23,16 @@ if ($mode -eq [IntPtr]::Zero -or $page -eq [IntPtr]::Zero){throw 'PDF view mode 
 function ReadLabel([IntPtr]$h){$b=New-Object System.Text.StringBuilder 128;[void][PDFModeAcceptance]::GetWindowText($h,$b,128);return $b.ToString()}
 $static=[IntPtr]::Zero
 $foundCountLabel=''
+$allStaticLabels=@()
 while ($true) {
  $static=[PDFModeAcceptance]::FindWindowEx($pane,$static,'Static',$null)
  if ($static -eq [IntPtr]::Zero) {break}
  $label=ReadLabel $static
+ $allStaticLabels+=('['+$label+']')
  if ($label.StartsWith('/ ')) {$foundCountLabel=$label;break}
 }
 Write-Output ("PDF page count label: "+$foundCountLabel)
+Write-Output ('PDF static captions: '+($allStaticLabels -join ', '))
 Write-Output ("Before: mode={0}; page={1}" -f (ReadLabel $mode),(ReadLabel $page))
 if ((ReadLabel $mode) -eq 'Single') {
  [void][PDFModeAcceptance]::SendMessage($mode,0x00F5,[IntPtr]::Zero,[IntPtr]::Zero)
