@@ -3852,6 +3852,7 @@ func createUI(hwnd uintptr) {
 	app.nativeFileList = createNativeQueueReport(hwnd)
 	app.previewHwnd = createControl("QuickSortPreview", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_CLIPCHILDREN, 250, 148, 720, 362, hwnd, 0)
 	createPDFPreviewControls()
+	createImagePreviewControls()
 	app.processedSearchEdit = createControl("EDIT", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_TABSTOP|ES_AUTOHSCROLL, 980, 148, 260, 25, hwnd, ID_PROCESSED_SEARCH)
 	procSendMessageW.Call(app.processedSearchEdit, EM_SETCUEBANNER, 1, uintptr(unsafe.Pointer(wstr("Search processed..."))))
 	app.processedList = createControl("LISTBOX", "", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_TABSTOP|LBS_NOTIFY|WS_VSCROLL, 980, 181, 260, 329, hwnd, ID_PROCESSED_LIST)
@@ -5422,6 +5423,7 @@ func loadPreview(path string) {
 		app.previewFitWidth = false
 		app.previewZoom = imageFitZoomPercent()
 		app.previewPanX, app.previewPanY = 0, 0
+		showImagePreviewControls()
 		updatePreviewZoomControls()
 		procInvalidateRect.Call(app.previewHwnd, 0, 1)
 		setText(app.statusLabel, fmt.Sprintf("Image preview: Fit · %d%%", app.previewZoom))
@@ -5545,6 +5547,7 @@ func unloadPreview() {
 		sumatraError(err)
 	}
 	stopPDFPreview()
+	resetImagePreviewControls()
 	hideTextPreview()
 	hideXLSXPreview()
 	hidePPTXPreview()
@@ -5592,6 +5595,7 @@ func previewWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr
 		resizeXLSXPreview()
 		resizePPTXPreview()
 		layoutPDFPreviewControls()
+		layoutImagePreviewControls()
 		if !queueSplitterDragging { schedulePDFViewportResize() }
 		procInvalidateRect.Call(hwnd, 0, 1)
 		return 0
@@ -5600,6 +5604,20 @@ func previewWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr
 		notify := hiword(wParam)
 		if notify == BN_CLICKED {
 			switch id {
+			case idImageFit:
+				if imagePreviewActive(){fitPreview();return 0}
+			case idImageFitWidth:
+				if imagePreviewActive(){fitPreviewWidth();return 0}
+			case idImageZoomOut:
+				if imagePreviewActive(){adjustPreviewZoom(-1);return 0}
+			case idImageZoomIn:
+				if imagePreviewActive(){adjustPreviewZoom(1);return 0}
+			case idImageZoomActual:
+				if imagePreviewActive(){setPreviewZoom100();return 0}
+			case idImageRotateLeft:
+				if imagePreviewActive(){rotateImagePreview(-90);return 0}
+			case idImageRotateRight:
+				if imagePreviewActive(){rotateImagePreview(90);return 0}
 			case ID_PDF_PREV:
 				goToPDFPage(-1)
 				return 0
@@ -5687,10 +5705,12 @@ func previewWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr
 		procGetClientRect.Call(hwnd, uintptr(unsafe.Pointer(&rc)))
 		brush, _, _ := procGetStockObject.Call(WHITE_BRUSH)
 		procFillRect.Call(hdc, uintptr(unsafe.Pointer(&rc)), brush)
-		if pdfPreview.active {
-			// Paint an opaque, full-width native toolbar strip. PDF content
+		if pdfPreview.active || imagePreviewActive() {
+			// Paint an opaque, full-width native toolbar strip. Document content
 			// starts below pdfToolbarHeight, so the strip never covers pages.
-			bar := RECT{Left: 0, Top: 0, Right: rc.Right, Bottom: pdfToolbarHeight}
+			barHeight:=pdfToolbarHeight
+			if imagePreviewActive(){barHeight=imageToolbarHeight}
+			bar := RECT{Left: 0, Top: 0, Right: rc.Right, Bottom: barHeight}
 			barBrush, _, _ := procGetSysColorBrush.Call(15) // COLOR_BTNFACE
 			procFillRect.Call(hdc, uintptr(unsafe.Pointer(&bar)), barBrush)
 		}
@@ -5740,7 +5760,7 @@ func drawImagePreview(hdc uintptr, rc RECT) {
 	}
 	// Fit is the default. Manual zoom uses actual image pixels scaled by the
 	// selected percentage. Large zoomed images can be dragged inside the pane.
-	rc = pdfContentRect(rc)
+	if imagePreviewActive(){rc=imageContentRect(rc)}else{rc=pdfContentRect(rc)}
 	availW, availH := rc.Right-rc.Left-8, rc.Bottom-rc.Top-8
 	var dw, dh int32
 	if pdfPreview.active {
@@ -5780,8 +5800,8 @@ func drawImagePreview(hdc uintptr, rc RECT) {
 	if st, _, _ := procGdipCreateFromHDC.Call(hdc, uintptr(unsafe.Pointer(&graphics))); st != 0 || graphics == 0 {
 		return
 	}
-	if pdfPreview.active {
-		// The toolbar is a separate, opaque region in both PDF view modes.
+	if pdfPreview.active || imagePreviewActive() {
+		// The toolbar is a separate, opaque region for PDF and raster image previews.
 		// Even when zoom/pan places the bitmap above the document origin,
 		// never let GDI+ paint outside the document content rectangle.
 		procGdipSetClipRectI.Call(graphics, uintptr(rc.Left), uintptr(rc.Top),
@@ -6118,6 +6138,7 @@ func adjustPreviewZoomAt(detents int, screenPoint POINT) {
    capturePDFCursorAnchor(point)
   }
  }
+ if imagePreviewActive(){zoomImagePreviewAt(detents,screenPoint);return}
  adjustPreviewZoomInternal(detents)
 }
 
