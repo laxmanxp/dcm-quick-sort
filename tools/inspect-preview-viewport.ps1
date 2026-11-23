@@ -15,6 +15,7 @@ public static class DcmWindows {
   [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hwnd, out RECT rect);
   [DllImport("user32.dll")] public static extern bool GetClientRect(IntPtr hwnd, out RECT rect);
   [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr hwnd);
+  [DllImport("user32.dll")] public static extern uint GetDpiForWindow(IntPtr hwnd);
   [DllImport("user32.dll")] public static extern IntPtr GetParent(IntPtr hwnd);
   [DllImport("user32.dll", EntryPoint="GetWindowLongPtrW")] public static extern IntPtr GetWindowLongPtr(IntPtr hwnd, int index);
 }
@@ -43,8 +44,10 @@ function Describe([IntPtr]$h,[string]$kind) {
   [void][DcmWindows]::GetWindowRect($h,[ref]$rect)
   [void][DcmWindows]::GetClientRect($h,[ref]$client)
   $style = [DcmWindows]::GetWindowLongPtr($h,-16).ToInt64()
+  [uint32]$windowOwnerPid = 0
+  [void][DcmWindows]::GetWindowThreadProcessId($h,[ref]$windowOwnerPid)
   $parent = [DcmWindows]::GetParent($h)
-  [pscustomobject]@{ Kind=$kind; Hwnd=$h.ToInt64(); Parent=$parent.ToInt64(); Class=$cl.ToString(); Title=$tt.ToString(); Visible=[DcmWindows]::IsWindowVisible($h); Left=$rect.L; Top=$rect.T; Width=($rect.R-$rect.L); Height=($rect.B-$rect.T); ClientWidth=($client.R-$client.L); ClientHeight=($client.B-$client.T); Style=('0x{0:X}' -f $style)}
+  [pscustomobject]@{ Kind=$kind; Hwnd=$h.ToInt64(); Parent=$parent.ToInt64(); WindowPid=$windowOwnerPid; Dpi=[DcmWindows]::GetDpiForWindow($h); Class=$cl.ToString(); Title=$tt.ToString(); Visible=[DcmWindows]::IsWindowVisible($h); Left=$rect.L; Top=$rect.T; Width=($rect.R-$rect.L); Height=($rect.B-$rect.T); ClientWidth=($client.R-$client.L); ClientHeight=($client.B-$client.T); Style=('0x{0:X}' -f $style)}
 }
 Write-Output "Process $TargetPid, roots $($roots.Count)"
 foreach ($root in $roots) {
