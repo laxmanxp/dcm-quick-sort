@@ -1,17 +1,20 @@
 package main
 
-// pdfPageTop returns the page's y-coordinate relative to the PDF content area.
-// The toolbar is excluded before this calculation. Fit Width starts directly
-// below it; Fit Page remains centered within the space below the toolbar.
-// Manual zoom keeps its existing centered/pan behavior.
-func pdfPageTop(contentTop, contentBottom, pageHeight, panY int32, fitPage,fitWidth bool) int32 {
+// PDF pixels use the content rectangle BELOW the opaque toolbar. In Fit Width,
+// vertical scrolling is top-origin: zero means the page begins immediately
+// below the toolbar and negative positions reveal later content. Fit Page and
+// manual zoom retain their centered presentation within that same rectangle.
+func pdfTopAnchoredPan(pageHeight, viewportHeight, pan int32) int32 {
+ if pageHeight<=viewportHeight || viewportHeight<=0 {return 0}
+ minimum:=viewportHeight-pageHeight
+ if pan<minimum{return minimum}
+ if pan>0{return 0}
+ return pan
+}
+
+func pdfPageTop(contentTop, contentBottom, pageHeight, panY int32, fitPage, fitWidth bool) int32 {
+ if fitWidth {return contentTop+pdfTopAnchoredPan(pageHeight,contentBottom-contentTop,panY)}
  height:=contentBottom-contentTop
  if height<0 {height=0}
- if fitWidth {
-  // Existing wheel pan uses centered coordinates; subtract the nominal
-  // top-edge pan so an initial fit-width page always begins at contentTop.
-  topPan:=previewTopPanOffset(pageHeight,height-8)
-  return contentTop+4+panY-topPan
- }
  return contentTop+(height-pageHeight)/2+panY
 }
