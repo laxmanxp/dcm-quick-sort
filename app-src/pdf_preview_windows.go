@@ -63,6 +63,8 @@ type pdfPreviewState struct {
 	pageEdit, pageGo, fitWidthBtn, fitPageBtn, zoomOutBtn, zoomInBtn, viewModeBtn uintptr
 	lastWidth        int
 	lastHeight       int
+	renderViewportW int
+	renderViewportH int
 	lastScalePercent int
 	lastFallback     string
 	cursorAnchor     PDFCursorAnchor
@@ -310,6 +312,8 @@ func startPDFPreview(path string) bool {
 	pdfPreview.rotation = 0
 	pdfPreview.lastWidth = 0
 	pdfPreview.lastHeight = 0
+	pdfPreview.renderViewportW = 0
+	pdfPreview.renderViewportH = 0
 	pdfPreview.lastScalePercent = 0
 	pdfPreview.lastFallback = ""
 	pdfPreview.cursorAnchor = PDFCursorAnchor{}
@@ -333,6 +337,7 @@ func tracePDFPreview(event string, req PDFRenderRequest, failed bool) {
 }
 
 func stopPDFPreview() {
+	cancelPDFViewportResize()
 	clearPDFNeighborCache()
 	pdfPreview.viewMode=PDFViewSingle
 	pdfPreview.scrollY=0
@@ -356,6 +361,8 @@ func stopPDFPreview() {
 	pdfPreview.pending = false
 	pdfPreview.lastWidth = 0
 	pdfPreview.lastHeight = 0
+	pdfPreview.renderViewportW = 0
+	pdfPreview.renderViewportH = 0
 	pdfPreview.lastScalePercent = 0
 	pdfPreview.cursorAnchor = PDFCursorAnchor{}
 	pdfPreview.panAnchored = false
@@ -445,6 +452,7 @@ func requestPDFPreviewRender() {
 
 	generation := pdfPreview.generation
 	vw, vh := pdfRenderViewport()
+	pdfPreview.renderViewportW, pdfPreview.renderViewportH = vw, vh
 	req := PDFRenderRequest{
 		InputPath:      pdfPreview.path,
 		OutputPath:     outputPath,
