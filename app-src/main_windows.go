@@ -5598,6 +5598,9 @@ func previewWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr
 			case ID_PDF_NEXT:
 				goToPDFPage(1)
 				return 0
+			case ID_PDF_VIEW_MODE:
+				togglePDFViewMode()
+				return 0
 			case ID_PDF_ROTATE:
 				rotatePDFPreviewClockwise()
 				return 0
@@ -5754,6 +5757,9 @@ func drawImagePreview(hdc uintptr, rc RECT) {
 	}
 	x := rc.Left + (rc.Right-rc.Left-dw)/2 + app.previewPanX
 	y := rc.Top + (rc.Bottom-rc.Top-dh)/2 + app.previewPanY
+	if pdfPreview.active && pdfPreview.viewMode==PDFViewContinuous {
+		y=rc.Top+4-pdfPreview.scrollY
+	}
 	var graphics uintptr
 	if st, _, _ := procGdipCreateFromHDC.Call(hdc, uintptr(unsafe.Pointer(&graphics))); st != 0 || graphics == 0 {
 		return
@@ -6202,6 +6208,9 @@ func handlePreviewWheelPan(delta int, horizontal bool) bool {
 	}
 	if app.xlsxPreviewActive && app.xlsxGridEdit != 0 {
 		return scrollPreviewEdit(app.xlsxGridEdit, delta, horizontal)
+	}
+	if pdfPreview.active && pdfPreview.viewMode==PDFViewContinuous && !horizontal {
+		return scrollPDFContinuousWheel(delta)
 	}
 	if app.image != 0 || app.pptxPreviewActive {
 		var rc RECT
