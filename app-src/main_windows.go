@@ -635,6 +635,7 @@ type appState struct {
 	preview                                                                                                                                            *iPreviewHandler
 	previewExcelOuterRepair, previewHostSizingAllowed                                                                                                                            bool
 	previewNativeDPIContextMode string
+	previewHTMLHostRepair bool
 	previewExcelRetryPending, previewExcelRetryRunning                                                                                                                            bool
  	previewPptxPhysical, previewPptxRetryPending, previewPptxRetryRunning bool
 	previewPptxRetryEpoch uint64
@@ -5518,6 +5519,7 @@ func unloadPreview() {
 	app.previewExcelOuterRepair = false
 	app.previewHostSizingAllowed = false
 	app.previewNativeDPIContextMode = ""
+	app.previewHTMLHostRepair = false
 	app.nativeViewportResizePending = false
 	app.nativeViewportResizeEpoch++
 	// Disarm queued retries for a retiring COM object and pane.
@@ -6304,16 +6306,17 @@ func resizePreviewHandlerFor(initial bool) {
 			rc.Right, rc.Bottom = pptxCOMRectSize(rc.Right, rc.Bottom, physical.Right, physical.Bottom, true, true)
 		}
 	}
-	if app.previewNativeDPIContextMode == "physical-setrect" || app.previewNativeDPIContextMode == "physical-both" {
-		physical, ok := excelLayoutPhysicalClientRect(pane)
-		rc.Right, rc.Bottom = htmlPreviewRectForCall(app.previewNativeDPIContextMode, "SetRect", rc.Right, rc.Bottom, physical.Right, physical.Bottom, ok)
-	}
 	traceCall = beginNativePreviewTrace(traceSession, "SetRect", pane, handler, 0, &rc)
 	hr := invokeNativePreviewCOMWithDPIContext(app.previewNativeDPIContextMode, func() uintptr {
 		result, _, _ := syscall.SyscallN(ph.Vtbl.SetRect, handler, uintptr(unsafe.Pointer(&rc)))
 		return result
 	})
 	endNativePreviewTraceHRESULT(traceCall, hr, handler)
+	if int32(hr) == int32(S_OK) && app.preview == ph && app.previewHwnd == pane && app.previewHTMLHostRepair {
+		traceCall = beginNativePreviewTrace(traceSession, "HTMLOuterRepairRequest", pane, handler, 0, nil)
+		accepted := repairHTMLPreviewOuterWindow(pane)
+		endNativePreviewTraceBOOL(traceCall, accepted)
+	}
 	// Office COM cannot be called out from certain synchronous window-input
 	// contexts (RPC_E_CANTCALLOUT_ININPUTSYNCCALL). Coalesce one safe posted
 	// retry for this still-active Excel viewer; never spin, delay or touch a
@@ -6414,10 +6417,6 @@ func loadWindowsPreviewHandler(path string) bool {
 		}
 	}
 	nativeRectMode := nativePreviewDPIContextMode(path, os.Getenv("DCM_WORD_COM_RECT_MODE"), os.Getenv("DCM_HTML_COM_RECT_MODE"))
-	if nativeRectMode == "physical-both" || nativeRectMode == "physical-window" {
-		physical, ok := excelLayoutPhysicalClientRect(app.previewHwnd)
-		rc.Right, rc.Bottom = htmlPreviewRectForCall(nativeRectMode, "SetWindow", rc.Right, rc.Bottom, physical.Right, physical.Bottom, ok)
-	}
 	traceCall = beginNativePreviewTrace(traceSession, "SetWindow", app.previewHwnd, self, 0, &rc)
 	hr := invokeNativePreviewCOMWithDPIContext(nativeRectMode, func() uintptr {
 		result, _, _ := syscall.SyscallN(ph.Vtbl.SetWindow, self, app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
@@ -6440,6 +6439,7 @@ func loadWindowsPreviewHandler(path string) bool {
 	}
 	app.preview, app.previewExcelOuterRepair = ph, excelOuterRepair
 	app.previewNativeDPIContextMode = nativeRectMode
+	app.previewHTMLHostRepair = nativeRectMode == "repair"
 	app.nativeViewportResizePending = false
 	app.nativeViewportResizeEpoch++
 	app.previewPptxPhysical = pptxPhysical
