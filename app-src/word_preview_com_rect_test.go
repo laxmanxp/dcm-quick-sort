@@ -6,6 +6,8 @@ func TestWordPreviewDPIContextMode(t *testing.T) {
  for _, tc := range []struct{path,setting,want string}{
   {"sample.docx","","aware"},
   {"sample.docx","aware","aware"},
+  {"sample.docx","lifecycle","lifecycle"},
+  {"sample.pdf","lifecycle",""},
   {"sample.DOCX","AWARE","aware"},
   {"sample.docx","off",""},
   {"sample.docx","setrect",""},
