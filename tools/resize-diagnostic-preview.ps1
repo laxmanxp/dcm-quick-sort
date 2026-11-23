@@ -12,7 +12,9 @@ $approvedDOCX = $p.ProcessName -eq "dcm-docx-lifecycle-test" -and
  (Get-CimInstance Win32_Process -Filter "ProcessId = $TargetPid").CommandLine -match "TraceWordLifecycle"
 $approvedWordRecovery = $p.ProcessName -eq "dcm-word-outer-recovery-test" -and
  (Get-CimInstance Win32_Process -Filter "ProcessId = $TargetPid").CommandLine -match "TraceWordOuterRecovery"
-if (-not ($approvedWord -or $approvedHTML -or $approvedDOCX -or $approvedWordRecovery)) {throw "Refusing to resize non-diagnostic process"}
+$approvedPDFResize = $p.ProcessName -eq "dcm-pdf-resize-refresh-dev" -and
+ (Get-CimInstance Win32_Process -Filter "ProcessId = $TargetPid").CommandLine -match "sumatra-scroll.pdf"
+if (-not ($approvedWord -or $approvedHTML -or $approvedDOCX -or $approvedWordRecovery -or $approvedPDFResize)) {throw "Refusing to resize non-diagnostic process"}
 Add-Type -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
