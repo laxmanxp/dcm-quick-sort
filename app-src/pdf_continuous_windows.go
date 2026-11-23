@@ -255,7 +255,7 @@ func scrollPDFContinuousStack(delta int)bool{
 
 func drawPDFContinuousStack(hdc uintptr,rc RECT){
  if app.image==0{return}
- contentTop:=pdfToolbarHeight+4
+ contentTop:=pdfToolbarHeight
  bottom:=rc.Bottom
  if bottom<=contentTop{return}
  var g uintptr
