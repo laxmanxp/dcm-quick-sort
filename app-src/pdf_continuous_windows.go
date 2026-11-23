@@ -29,6 +29,7 @@ func clearPDFNeighborCache() {
   if p.stream!=nil {releaseUnknown(p.stream)}
  }
  pdfPreview.neighborCache=nil
+ pdfPreview.neighborFailed=nil
  pdfPreview.pendingDirection=0
 }
 
@@ -103,6 +104,7 @@ func startPDFNeighborPrefetch(){
  for _,candidate:=range []int{pdfPreview.page+1,pdfPreview.page-1} {
   if candidate<0 || candidate>=pdfPreview.pageCount {continue}
   if _,ok:=pdfPreview.neighborCache[candidate];ok {continue}
+  if pdfPreview.neighborFailed[candidate] {continue}
   nextIndex=candidate
   break
  }
@@ -168,10 +170,19 @@ func finishPDFNeighborRender(result PDFRenderResult){
  }
  defer os.Remove(result.Request.OutputPath)
  defer func(){if pdfPreview.active && !pdfPreview.neighborBusy {startPDFNeighborPrefetch()}}()
- if result.Err!=nil || !pdfPreview.active || pdfPreview.viewMode!=PDFViewContinuous ||
+ if !pdfPreview.active || pdfPreview.viewMode!=PDFViewContinuous ||
   result.Request.Generation!=pdfPreview.generation ||
   !strings.EqualFold(filepath.Clean(result.Request.InputPath),filepath.Clean(pdfPreview.path)) {return}
- if err:=cachePDFNeighborImage(result.Request.OutputPath,result.Meta);err!=nil{return}
+ if result.Err!=nil {
+  if pdfPreview.neighborFailed==nil {pdfPreview.neighborFailed=make(map[int]bool)}
+  pdfPreview.neighborFailed[result.Request.PageIndex]=true
+  return
+ }
+ if err:=cachePDFNeighborImage(result.Request.OutputPath,result.Meta);err!=nil{
+  if pdfPreview.neighborFailed==nil {pdfPreview.neighborFailed=make(map[int]bool)}
+  pdfPreview.neighborFailed[result.Request.PageIndex]=true
+  return
+ }
  if pdfPreview.pendingDirection!=0 {
   target:=pdfPreview.page+pdfPreview.pendingDirection
   if target==result.Meta.PageIndex {
