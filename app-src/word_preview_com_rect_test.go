@@ -5,6 +5,7 @@ import "testing"
 func TestWordPreviewExperimentalMode(t *testing.T) {
  for _, tc := range []struct{path,setting,want string}{
   {"sample.docx","both","both"},
+  {"sample.docx","aware","aware"},
   {"sample.DOCX","setrect","setrect"},
   {"sample.docx","invalid",""},
   {"sample.docx","",""},
