@@ -628,15 +628,9 @@ func finishPDFRender() {
 			if app.previewFit {
 				app.previewPanX, app.previewPanY = 0, 0
 			} else if app.previewFitWidth {
-				// Fit Width is a reading mode: enter at the top of the page.
-				// The drawing model is centered, so top alignment is represented
-				// by the maximum positive vertical pan offset.
-				var rc RECT
-				procGetClientRect.Call(app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
-				rc = pdfContentRect(rc)
-				availH := rc.Bottom - rc.Top - 8
-				app.previewPanX = 0
-				app.previewPanY = previewTopPanOffset(int32(result.Meta.Height), availH)
+				// Fit Width now uses a true top-origin model: zero starts exactly
+				// at the bottom of the toolbar, regardless of bitmap height.
+				app.previewPanX, app.previewPanY = 0, 0
 			}
 			showPDFPreviewControls()
 			updatePreviewZoomControls()
