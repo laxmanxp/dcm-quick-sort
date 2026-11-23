@@ -25,6 +25,7 @@ type PDFRenderRequest struct {
 	ViewportWidth  int
 	ViewportHeight int
 	Generation     uint64
+	Neighbor bool // adjacent page prefetch; never becomes the active page automatically
 }
 
 type PDFRenderMetadata struct {
