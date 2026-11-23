@@ -2,7 +2,7 @@ param(
  [string]$Build = "C:\DCMQuickSortCollisionAcceptance\dcm-viewport-resize-dev.exe",
  [string]$Fixture = "C:\DCMQuickSortCollisionAcceptance\tests\fixtures\dcm33-legacy.source.docx",
  [string]$TraceRoot = "C:\DCMQuickSortCollisionAcceptance\TraceDOCX",
- [ValidateSet("off","setrect","both","aware")][string]$WordRectMode="off"
+ [ValidateSet("off","aware")][string]$WordRectMode="off"
 )
 $ErrorActionPreference="Stop"
 New-Item -ItemType Directory -Force $TraceRoot | Out-Null
