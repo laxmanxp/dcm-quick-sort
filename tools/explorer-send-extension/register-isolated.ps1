@@ -28,6 +28,11 @@ if(-not $ApprovedIsolatedAccount) {
  Write-Output 'Not registered. Supply -Register or -Unregister and -ApprovedIsolatedAccount in a disposable Windows test profile.'
  return
 }
+function Get-DefaultValue([string]$Path) {
+ $key=Get-Item -LiteralPath $Path -ErrorAction SilentlyContinue
+ if($null -eq $key){return $null}
+ return $key.GetValue('')
+}
 if($Register){
  foreach($entry in @(@($DllPath,$expectedName),@($HelperPath,'DCMQuickSortExplorerSend.exe'),@($AppPath,'DCM-QuickSort.exe'))){
   $p=[IO.Path]::GetFullPath($entry[0])
@@ -36,13 +41,15 @@ if($Register){
   }
  }
  $appDir=[IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($AppPath))
+ $expectedInstall=[IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA 'Programs\DCM Quick Sort'))
+ if($appDir -ine $expectedInstall){throw 'This DLL only resolves helper and app from the standard per-user installation directory.'}
  if([IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($HelperPath)) -ine $appDir -or
     [IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($DllPath)) -ine $appDir) {
    throw 'The DLL, helper and app must be in the same installed QuickSort directory.'
  }
- $existing=(Get-ItemProperty -LiteralPath "$classKey\InprocServer32" -ErrorAction SilentlyContinue).'(default)'
+ $existing=Get-DefaultValue "$classKey\InprocServer32"
  if($existing -and $existing -ine ([IO.Path]::GetFullPath($DllPath))){throw 'CLSID is already registered to a different path'}
- $existingHandler=(Get-ItemProperty -LiteralPath $handler -ErrorAction SilentlyContinue).'(default)'
+ $existingHandler=Get-DefaultValue $handler
  if($existingHandler -and $existingHandler -ine $clsid){throw 'ContextMenuHandlers key belongs to a different COM class'}
  New-Item -Path "$classKey\InprocServer32" -Force | Out-Null
  Set-Item -Path "$classKey\InprocServer32" -Value ([IO.Path]::GetFullPath($DllPath))
