@@ -6312,7 +6312,10 @@ func resizePreviewHandlerFor(initial bool) {
 		rc.Right, rc.Bottom = chosen.W, chosen.H
 	}
 	traceCall = beginNativePreviewTrace(traceSession, "SetRect", pane, handler, 0, &rc)
-	hr, _, _ := syscall.SyscallN(ph.Vtbl.SetRect, handler, uintptr(unsafe.Pointer(&rc)))
+	hr := invokeWordCOMWithTestDPIContext(app.previewWordExperimentalMode, func() uintptr {
+		result, _, _ := syscall.SyscallN(ph.Vtbl.SetRect, handler, uintptr(unsafe.Pointer(&rc)))
+		return result
+	})
 	endNativePreviewTraceHRESULT(traceCall, hr, handler)
 	// Office COM cannot be called out from certain synchronous window-input
 	// contexts (RPC_E_CANTCALLOUT_ININPUTSYNCCALL). Coalesce one safe posted
@@ -6422,7 +6425,10 @@ func loadWindowsPreviewHandler(path string) bool {
 		rc.Right, rc.Bottom = chosen.W, chosen.H
 	}
 	traceCall = beginNativePreviewTrace(traceSession, "SetWindow", app.previewHwnd, self, 0, &rc)
-	hr, _, _ := syscall.SyscallN(ph.Vtbl.SetWindow, self, app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
+	hr := invokeWordCOMWithTestDPIContext(wordRectMode, func() uintptr {
+		result, _, _ := syscall.SyscallN(ph.Vtbl.SetWindow, self, app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
+		return result
+	})
 	endNativePreviewTraceHRESULT(traceCall, hr, self)
 	if hresultFailed(hr) {
 		procIUnknownSetSite.Call(self, 0)
