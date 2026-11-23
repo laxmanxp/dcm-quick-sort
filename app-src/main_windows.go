@@ -667,6 +667,8 @@ type appState struct {
 	pptxImages                                                                                                                                         []pptxLoadedImage
 	previewDragX, previewDragY, previewPanStartX, previewPanStartY                                                                                     int32
 	backgroundMoveBusy                                                                                                                                 bool
+	nativeViewportResizePending                                                                                                                        bool
+	nativeViewportResizeEpoch                                                                                                                          uint64
 	pendingFileOperation                                                                                                                               fileOperationMode
 	activeMoveJournal                                                                                                                                  MoveRecord
 	batchMoveActive                                                                                                                                    bool
@@ -3269,15 +3271,26 @@ func queueSplitterHit(hwnd uintptr, x,y int32) bool {
 // A splitter drag changes the preview child dimensions without sending WM_SIZE
 // to the main window. Post the COM resize outside the mouse-input callback:
 // Word and other out-of-process handlers can reject synchronous SetRect calls.
+func scheduleNativeViewportResize() {
+	if app.preview == nil || app.previewHwnd == 0 || app.hwnd == 0 || app.nativeViewportResizePending {
+		return
+	}
+	if posted, _, _ := procPostMessageW.Call(app.hwnd, WM_SPLITTER_PREVIEW_RESIZE,
+		uintptr(app.nativeViewportResizeEpoch), app.previewHwnd); posted != 0 {
+		app.nativeViewportResizePending = true
+	}
+}
+
+// Every preview host resize uses the current measured pane bounds. Native COM
+// receives the coalesced request only after the input/window-sizing callback
+// has returned; it must not be called synchronously from child WM_SIZE.
 func commitQueueSplitterLayout(hwnd uintptr) {
 	layoutUI(hwnd)
 	resizeTextPreview()
 	resizeXLSXPreview()
 	resizePPTXPreview()
 	layoutPDFPreviewControls()
-	if app.preview != nil {
-		procPostMessageW.Call(hwnd, WM_SPLITTER_PREVIEW_RESIZE, 0, 0)
-	}
+	scheduleNativeViewportResize()
 }
 
 func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
@@ -3404,8 +3417,10 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 		layoutTraceFence(hwnd, wParam)
 		return 0
 	case WM_SPLITTER_PREVIEW_RESIZE:
-		// The post also guards against a viewer being unloaded meanwhile.
-		if app.preview != nil && app.previewHwnd != 0 {
+		if app.nativeViewportResizePending &&
+			shouldRunNativeViewportResize(uint64(wParam), app.nativeViewportResizeEpoch,
+				lParam, app.previewHwnd, app.preview != nil) {
+			app.nativeViewportResizePending = false
 			resizePreviewHandler()
 		}
 		return 0
@@ -3459,7 +3474,7 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 	case WM_SIZE:
 		recordLayoutTrace(hwnd, "size-enter", 0)
 		layoutUI(hwnd)
-		resizePreviewHandler()
+		scheduleNativeViewportResize()
 		resizeTextPreview()
 		resizeXLSXPreview()
 		layoutPDFPreviewControls()
@@ -5501,6 +5516,8 @@ func unloadPreview() {
 	// Preserve its normal cleanup calls, but do not request an outer repair.
 	app.previewExcelOuterRepair = false
 	app.previewHostSizingAllowed = false
+	app.nativeViewportResizePending = false
+	app.nativeViewportResizeEpoch++
 	// Disarm queued retries for a retiring COM object and pane.
 	app.previewExcelRetryPending = false
 	app.previewExcelRetryEpoch++
@@ -5552,7 +5569,7 @@ func previewWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr
 	case WM_SIZE:
 		if !queueSplitterDragging {
 			resizeSumatraPreview()
-			resizePreviewHandler()
+			scheduleNativeViewportResize()
 		}
 		resizeTextPreview()
 		resizeXLSXPreview()
@@ -6405,6 +6422,8 @@ func loadWindowsPreviewHandler(path string) bool {
 		return false
 	}
 	app.preview, app.previewExcelOuterRepair = ph, excelOuterRepair
+	app.nativeViewportResizePending = false
+	app.nativeViewportResizeEpoch++
 	app.previewPptxPhysical = pptxPhysical
 	app.previewPptxRetryEpoch++
 	app.previewPptxRetryPending = false
@@ -6423,6 +6442,9 @@ func loadWindowsPreviewHandler(path string) bool {
 	// If COM is input-synchronous this requests one deferred resize retry.
 	if pptxPhysical {
 		resizePreviewHandler()
+	}
+	if !excelOuterRepair && !pptxPhysical {
+		scheduleNativeViewportResize()
 	}
 	autoFitPreviewIfSupported(path, clsidText)
 	updatePreviewZoomControls()
