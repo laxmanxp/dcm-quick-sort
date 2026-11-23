@@ -1,4 +1,4 @@
-param([int]$TargetPid = 0)
+param([int]$TargetPid = 0, [switch]$OnlyPreview)
 $ErrorActionPreference = 'Stop'
 Add-Type -TypeDefinition @'
 using System;
@@ -65,6 +65,8 @@ foreach ($root in $roots) {
   Write-Output ("Descendant count: {0}" -f $children.Count)
   foreach ($h in $children) {
     $child = Describe $h 'CHILD'
-    if ($child.Visible -or $child.Class -match 'QuickSortPreview') { $child }
+    if ($OnlyPreview) {
+      if ($child.Class -match 'QuickSortPreview|^_Ww|NUIScrollbar') { $child }
+    } elseif ($child.Visible -or $child.Class -match 'QuickSortPreview') { $child }
   }
 }
