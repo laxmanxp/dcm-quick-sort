@@ -19,8 +19,15 @@ func consumeExplorerBatchStartup() {
  explorerBatchRequestPath=""
  if requestPath=="" {return}
  if app.batchMoveActive || app.backgroundMoveBusy {showError("QuickSort is already processing files.");return}
+ // Only launcher-owned request manifests are removed. Arbitrary paths
+ // supplied through a command line must never be deleted by QuickSort.
+ trustedDir:=filepath.Join(settingsDirectory(),"explorer-requests")
+ trusted:=filepath.Clean(filepath.Dir(requestPath))==filepath.Clean(trustedDir) &&
+  strings.HasPrefix(filepath.Base(requestPath),"batch-") &&
+  filepath.Ext(requestPath)==".json"
  raw,err:=os.ReadFile(requestPath)
  if err!=nil {showError("Cannot read Explorer batch request: "+err.Error());return}
+ if trusted {_=os.Remove(requestPath)}
  req,err:=parseExplorerBatchRequest(raw)
  if err!=nil {showError(err.Error());return}
  aliases,err:=loadDestinationAliases("")
