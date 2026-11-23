@@ -13,7 +13,14 @@ func wordPreviewDPIContextMode(path, setting string) string {
  if !strings.EqualFold(filepath.Ext(path), ".docx") { return "" }
  switch strings.ToLower(strings.TrimSpace(setting)) {
  case "", "aware": return "aware"
- case "lifecycle": return "lifecycle"
  default: return ""
  }
+}
+
+ 
+// The Word child viewport needs a one-time outer-host layout nudge in the
+// tested two-pane configuration. Keep it separate from the COM DPI policy.
+func wordPreviewOuterRepairEnabled(path, setting string) bool {
+ if !strings.EqualFold(filepath.Ext(strings.TrimSpace(path)), ".docx") { return false }
+ return !strings.EqualFold(strings.TrimSpace(setting), "off")
 }
