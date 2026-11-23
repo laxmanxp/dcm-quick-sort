@@ -5767,11 +5767,14 @@ func drawImagePreview(hdc uintptr, rc RECT) {
 	if st, _, _ := procGdipCreateFromHDC.Call(hdc, uintptr(unsafe.Pointer(&graphics))); st != 0 || graphics == 0 {
 		return
 	}
-	if pdfPreview.active && pdfPreview.viewMode==PDFViewContinuous {
-  // The scrolling page must never overpaint the PDF toolbar.
-  procGdipSetClipRectI.Call(graphics,uintptr(rc.Left),uintptr(rc.Top),uintptr(rc.Right-rc.Left),uintptr(rc.Bottom-rc.Top),0)
- }
- procGdipDrawImageRectI.Call(graphics, app.image, uintptr(x), uintptr(y), uintptr(dw), uintptr(dh))
+	if pdfPreview.active {
+		// The toolbar is a separate, opaque region in both PDF view modes.
+		// Even when zoom/pan places the bitmap above the document origin,
+		// never let GDI+ paint outside the document content rectangle.
+		procGdipSetClipRectI.Call(graphics, uintptr(rc.Left), uintptr(rc.Top),
+			uintptr(rc.Right-rc.Left), uintptr(rc.Bottom-rc.Top), 0)
+	}
+	procGdipDrawImageRectI.Call(graphics, app.image, uintptr(x), uintptr(y), uintptr(dw), uintptr(dh))
 	procGdipDeleteGraphics.Call(graphics)
 }
 
