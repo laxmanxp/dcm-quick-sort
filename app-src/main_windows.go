@@ -5884,7 +5884,7 @@ func imageFitWidthZoomPercent() int {
 	procGdipGetImageHeight.Call(app.image, uintptr(unsafe.Pointer(&ih)))
 	var rc RECT
 	procGetClientRect.Call(app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
-	rc = pdfContentRect(rc)
+	rc = imageContentRect(rc)
 	availW := rc.Right - rc.Left - 8
 	dw, _ := fitWidthDimensions(int32(iw), int32(ih), availW)
 	if iw == 0 || dw <= 0 {
@@ -5903,6 +5903,7 @@ func imageFitZoomPercent() int {
 	procGdipGetImageHeight.Call(app.image, uintptr(unsafe.Pointer(&ih)))
 	var rc RECT
 	procGetClientRect.Call(app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
+	rc = imageContentRect(rc)
 	availW, availH := rc.Right-rc.Left-8, rc.Bottom-rc.Top-8
 	dw, _ := fitDimensions(int32(iw), int32(ih), availW, availH)
 	if iw == 0 || dw <= 0 {
@@ -6117,7 +6118,7 @@ func fitPreviewWidth() {
 		procGdipGetImageHeight.Call(app.image, uintptr(unsafe.Pointer(&ih)))
 		var rc RECT
 		procGetClientRect.Call(app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
-		rc = pdfContentRect(rc)
+		rc = imageContentRect(rc)
 		availW, availH := rc.Right-rc.Left-8, rc.Bottom-rc.Top-8
 		_, dh := fitWidthDimensions(int32(iw), int32(ih), availW)
 		app.previewPanY = previewTopPanOffset(dh, availH)
