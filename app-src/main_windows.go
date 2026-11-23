@@ -634,6 +634,7 @@ type appState struct {
 	imageStream                                                                                                                                        *iUnknown
 	preview                                                                                                                                            *iPreviewHandler
 	previewExcelOuterRepair, previewHostSizingAllowed                                                                                                                            bool
+	previewWordExperimentalMode string
 	previewExcelRetryPending, previewExcelRetryRunning                                                                                                                            bool
  	previewPptxPhysical, previewPptxRetryPending, previewPptxRetryRunning bool
 	previewPptxRetryEpoch uint64
@@ -5516,6 +5517,7 @@ func unloadPreview() {
 	// Preserve its normal cleanup calls, but do not request an outer repair.
 	app.previewExcelOuterRepair = false
 	app.previewHostSizingAllowed = false
+	app.previewWordExperimentalMode = ""
 	app.nativeViewportResizePending = false
 	app.nativeViewportResizeEpoch++
 	// Disarm queued retries for a retiring COM object and pane.
@@ -6302,6 +6304,13 @@ func resizePreviewHandlerFor(initial bool) {
 			rc.Right, rc.Bottom = pptxCOMRectSize(rc.Right, rc.Bottom, physical.Right, physical.Bottom, true, true)
 		}
 	}
+	if app.previewWordExperimentalMode != "" {
+		physical, ok := excelLayoutPhysicalClientRect(pane)
+		chosen := wordPreviewRectForCall(app.previewWordExperimentalMode, "SetRect",
+			previewRectSize{rc.Right, rc.Bottom},
+			previewRectSize{physical.Right, physical.Bottom}, ok)
+		rc.Right, rc.Bottom = chosen.W, chosen.H
+	}
 	traceCall = beginNativePreviewTrace(traceSession, "SetRect", pane, handler, 0, &rc)
 	hr, _, _ := syscall.SyscallN(ph.Vtbl.SetRect, handler, uintptr(unsafe.Pointer(&rc)))
 	endNativePreviewTraceHRESULT(traceCall, hr, handler)
@@ -6404,6 +6413,14 @@ func loadWindowsPreviewHandler(path string) bool {
 			rc.Right, rc.Bottom = pptxCOMRectSize(rc.Right, rc.Bottom, physical.Right, physical.Bottom, true, true)
 		}
 	}
+	wordRectMode := wordPreviewExperimentalMode(path, os.Getenv("DCM_WORD_COM_RECT_MODE"))
+	if wordRectMode != "" {
+		physical, ok := excelLayoutPhysicalClientRect(app.previewHwnd)
+		chosen := wordPreviewRectForCall(wordRectMode, "SetWindow",
+			previewRectSize{rc.Right, rc.Bottom},
+			previewRectSize{physical.Right, physical.Bottom}, ok)
+		rc.Right, rc.Bottom = chosen.W, chosen.H
+	}
 	traceCall = beginNativePreviewTrace(traceSession, "SetWindow", app.previewHwnd, self, 0, &rc)
 	hr, _, _ := syscall.SyscallN(ph.Vtbl.SetWindow, self, app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
 	endNativePreviewTraceHRESULT(traceCall, hr, self)
@@ -6422,6 +6439,7 @@ func loadWindowsPreviewHandler(path string) bool {
 		return false
 	}
 	app.preview, app.previewExcelOuterRepair = ph, excelOuterRepair
+	app.previewWordExperimentalMode = wordRectMode
 	app.nativeViewportResizePending = false
 	app.nativeViewportResizeEpoch++
 	app.previewPptxPhysical = pptxPhysical
