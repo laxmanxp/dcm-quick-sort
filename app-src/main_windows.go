@@ -52,6 +52,7 @@ const (
 	WM_BATCH_MOVE_NEXT          = 0x8005 // WM_APP + 5
 	WM_EXCEL_PREVIEW_RETRY       = 0x8010 // deferred native Excel COM call outside WM_SIZE
 	WM_PPTX_PREVIEW_RETRY        = 0x8011 // deferred native PowerPoint COM outside WM_SIZE
+	WM_SPLITTER_PREVIEW_RESIZE   = 0x8012 // refresh native preview after splitter drag completes
 	EM_SETLIMITTEXT             = 0x00C5
 	EM_SETSEL                   = 0x00B1
 	EM_SETCUEBANNER             = 0x1501
@@ -3265,6 +3266,20 @@ func queueSplitterHit(hwnd uintptr, x,y int32) bool {
  return x>=left && x<left+10 && y>=top && y<bottom
 }
 
+// A splitter drag changes the preview child dimensions without sending WM_SIZE
+// to the main window. Post the COM resize outside the mouse-input callback:
+// Word and other out-of-process handlers can reject synchronous SetRect calls.
+func commitQueueSplitterLayout(hwnd uintptr) {
+	layoutUI(hwnd)
+	resizeTextPreview()
+	resizeXLSXPreview()
+	resizePPTXPreview()
+	layoutPDFPreviewControls()
+	if app.preview != nil {
+		procPostMessageW.Call(hwnd, WM_SPLITTER_PREVIEW_RESIZE, 0, 0)
+	}
+}
+
 func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 	switch msg {
 	case WM_SETCURSOR:
@@ -3306,7 +3321,7 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 				queueSplitterDragging=false
 				queueSplitterWidth=queueSplitterPendingWidth
 				procReleaseCapture.Call()
-				layoutUI(hwnd)
+				commitQueueSplitterLayout(hwnd)
 				return 0
 			}
 			var bounds RECT
@@ -3332,7 +3347,7 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 			procReleaseCapture.Call()
 			// Native ListView columns and embedded preview resize only once,
 			// after the drag ends; never recompute them per mouse movement.
-			layoutUI(hwnd)
+			commitQueueSplitterLayout(hwnd)
 			return 0
 		}
 	case WM_CAPTURECHANGED:
@@ -3387,6 +3402,12 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 		return 0
 	case wmLayoutTraceFence:
 		layoutTraceFence(hwnd, wParam)
+		return 0
+	case WM_SPLITTER_PREVIEW_RESIZE:
+		// The post also guards against a viewer being unloaded meanwhile.
+		if app.preview != nil && app.previewHwnd != 0 {
+			resizePreviewHandler()
+		}
 		return 0
 	case WM_EXCEL_PREVIEW_RETRY:
 		// Posted from a nested WM_SIZE after Excel rejected COM SetRect in an
