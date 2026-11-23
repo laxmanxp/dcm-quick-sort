@@ -50,6 +50,7 @@ const (
 	WM_BACKGROUND_ACTION_DONE   = 0x8003 // WM_APP + 3
 	WM_BACKGROUND_MOVE_PROGRESS = 0x8004 // WM_APP + 4
 	WM_BATCH_MOVE_NEXT          = 0x8005 // WM_APP + 5
+	WM_EXPLORER_BATCH_READY     = 0x8019 // consume approved Explorer batch request after startup
 	WM_EXCEL_PREVIEW_RETRY       = 0x8010 // deferred native Excel COM call outside WM_SIZE
 	WM_PPTX_PREVIEW_RETRY        = 0x8011 // deferred native PowerPoint COM outside WM_SIZE
 	WM_SPLITTER_PREVIEW_RESIZE   = 0x8012 // refresh native preview after splitter drag completes
@@ -3405,6 +3406,7 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 		populateProcessedList(-1)
 		refreshRecoveryCenterBadge()
 		refreshLearningCenterBadge()
+		if explorerBatchRequestPath!="" {procPostMessageW.Call(hwnd,WM_EXPLORER_BATCH_READY,0,0)}
 		if compactSummary, compactErr := compactMoveJournal(moveJournalFilePath(), defaultJournalCompactionThreshold); compactErr == nil && compactSummary.Compacted {
 			journalSummary = strings.TrimSpace(journalSummary + fmt.Sprintf(" · journal compacted %d→%d events", compactSummary.BeforeEvents, compactSummary.AfterEvents))
 		}
@@ -3733,6 +3735,9 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 		return 0
 	case WM_BACKGROUND_MOVE_PROGRESS:
 		finishBackgroundMoveProgress()
+		return 0
+	case WM_EXPLORER_BATCH_READY:
+		consumeExplorerBatchStartup()
 		return 0
 	case WM_BATCH_MOVE_NEXT:
 		advanceBatchMove()
@@ -4733,7 +4738,13 @@ func initDefaultFolders() {
 	setDestinationText("")
 }
 
+var explorerBatchRequestPath string
+
 func applyStartupArgument() {
+	if len(os.Args) >= 3 && os.Args[1] == "--explorer-send-request" {
+		explorerBatchRequestPath = os.Args[2]
+		return
+	}
 	if len(os.Args) < 2 {
 		return
 	}
