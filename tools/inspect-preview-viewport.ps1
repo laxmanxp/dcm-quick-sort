@@ -27,9 +27,9 @@ if ($TargetPid -eq 0) {
 $roots = New-Object System.Collections.Generic.List[System.IntPtr]
 $rootCallback = [DcmWindows+WindowCallback]{
   param([IntPtr]$hwnd,[IntPtr]$param)
-  [uint32]$pid = 0
-  [void][DcmWindows]::GetWindowThreadProcessId($hwnd,[ref]$pid)
-  if ($pid -eq $TargetPid) { $roots.Add($hwnd) }
+  [uint32]$windowPid = 0
+  [void][DcmWindows]::GetWindowThreadProcessId($hwnd,[ref]$windowPid)
+  if ($windowPid -eq $TargetPid) { $roots.Add($hwnd) }
   return $true
 }
 [void][DcmWindows]::EnumWindows($rootCallback,[IntPtr]::Zero)
