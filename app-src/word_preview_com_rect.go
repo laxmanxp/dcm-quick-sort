@@ -13,6 +13,7 @@ func wordPreviewDPIContextMode(path, setting string) string {
  if !strings.EqualFold(filepath.Ext(path), ".docx") { return "" }
  switch strings.ToLower(strings.TrimSpace(setting)) {
  case "", "aware": return "aware"
+ case "lifecycle": return "lifecycle"
  default: return ""
  }
 }
