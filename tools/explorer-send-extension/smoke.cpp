@@ -61,7 +61,7 @@ static std::wstring menuLabel(HMENU menu,UINT pos){
  return buf;
 }
 int wmain(int argc,wchar_t** argv){
- require(argc==2,"usage: smoke <dll>");
+ require(argc==4,"usage: smoke <dll> <helper-exe> <receiver-fixture-exe>");
  HRESULT init=CoInitializeEx(nullptr,COINIT_APARTMENTTHREADED);
  require(SUCCEEDED(init),"COM init");
  auto root=std::filesystem::temp_directory_path() / (L"DCMQuickSortShellIsolated-"+std::to_wstring(GetCurrentProcessId()));
@@ -71,6 +71,10 @@ int wmain(int argc,wchar_t** argv){
  auto letters=root/L"Letters";
  std::filesystem::create_directories(accounts);
  std::filesystem::create_directories(letters);
+ auto install=root/L"Programs"/L"DCM Quick Sort";
+ std::filesystem::create_directories(install);
+ std::filesystem::copy_file(argv[2],install/L"DCMQuickSortExplorerSend.exe",std::filesystem::copy_options::overwrite_existing);
+ std::filesystem::copy_file(argv[3],install/L"DCM-QuickSort.exe",std::filesystem::copy_options::overwrite_existing);
  auto fileA=root/L"first selected.txt",fileB=root/L"second file.png";
  {std::ofstream(fileA).put('a');std::ofstream(fileB).put('b');}
  // Use ASCII-only disposable test paths to simplify UTF8 fixture serialization.
@@ -105,6 +109,19 @@ int wmain(int argc,wchar_t** argv){
  require(menuLabel(sub,0)==L"Accounts" && menuLabel(sub,1)==L"Correspondence","favorite order and labels");
  require(GetMenuItemID(sub,0)==100 && GetMenuItemID(sub,1)==101,"child command offset");
  std::cout<<"PASS: 2 selected files, 2 live destination favorites, one dynamic submenu\n";
+ CMINVOKECOMMANDINFO invoke{};
+ invoke.cbSize=sizeof(invoke);
+ invoke.lpVerb=MAKEINTRESOURCEA(0); // Accounts, first submenu item
+ require(SUCCEEDED(ctx->InvokeCommand(&invoke)),"invoke Accounts selection");
+ auto receipt=root/L"shell-lab-receipt.json";
+ for(int i=0;i<100 && !std::filesystem::exists(receipt);i++)Sleep(100);
+ require(std::filesystem::exists(receipt),"batch helper delivered single manifest to harmless receiver");
+ std::ifstream in(receipt,std::ios::binary);
+ std::string payload((std::istreambuf_iterator<char>(in)),std::istreambuf_iterator<char>());
+ require(payload.find("\"alias_name\":\"Accounts\"")!=std::string::npos,"selected alias carried");
+ require(payload.find("first selected.txt")!=std::string::npos && payload.find("second file.png")!=std::string::npos,"all selected file paths carried");
+ require(std::filesystem::file_size(fileA)==1 && std::filesystem::file_size(fileB)==1,"source files unchanged");
+ std::cout<<"PASS: submenu command launched one helper handoff carrying both files; fixture source bytes unchanged\n";
  DestroyMenu(top);
  Drop* folder=new Drop({accounts.wstring()});
  require(SUCCEEDED(ext->Initialize(nullptr,folder,nullptr)),"initialize folder selection");
