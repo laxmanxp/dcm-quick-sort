@@ -12,7 +12,7 @@ var wordDPISetThreadContext = user32.NewProc("SetThreadDpiAwarenessContext")
 // rectangle or directly resize any renderer-owned HWND. Always restore the
 // original caller context before returning to QuickSort's message loop.
 func invokeNativePreviewCOMWithDPIContext(mode string, invoke func() uintptr) uintptr {
- if mode != "aware" { return invoke() }
+ if mode != "aware" && mode != "lifecycle" { return invoke() }
  runtime.LockOSThread()
  defer runtime.UnlockOSThread()
  if wordDPIGetThreadContext.Find()!=nil || wordDPISetThreadContext.Find()!=nil { return invoke() }
