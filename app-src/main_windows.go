@@ -6429,7 +6429,14 @@ func loadWindowsPreviewHandler(path string) bool {
 		return false
 	}
 	traceCall = beginNativePreviewTrace(traceSession, "DoPreview", app.previewHwnd, self, 0, nil)
-	hr, _, _ = syscall.SyscallN(ph.Vtbl.DoPreview, self)
+	if nativeRectMode == "lifecycle" {
+		hr = invokeNativePreviewCOMWithDPIContext(nativeRectMode, func() uintptr {
+			result, _, _ := syscall.SyscallN(ph.Vtbl.DoPreview, self)
+			return result
+		})
+	} else {
+		hr, _, _ = syscall.SyscallN(ph.Vtbl.DoPreview, self)
+	}
 	endNativePreviewTraceHRESULT(traceCall, hr, self)
 	if hresultFailed(hr) {
 		syscall.SyscallN(ph.Vtbl.Unload, self)
