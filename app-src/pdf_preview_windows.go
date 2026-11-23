@@ -40,6 +40,10 @@ type pdfPreviewState struct {
 	active           bool
  viewMode PDFViewMode
  scrollY int32
+ neighborCache map[int]pdfCachedPage
+ neighborBusy bool
+ neighborRendering int
+ pendingDirection int
 	path             string
 	page             int
 	pageCount        int
