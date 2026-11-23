@@ -132,6 +132,8 @@ func startPDFNeighborPrefetch(){
  if !pdfShutdown.workerStarted(){return}
  pdfPreview.neighborBusy=true
  pdfPreview.neighborRendering=nextIndex
+ pdfPreview.neighborGeneration=req.Generation
+ pdfPreview.neighborPath=req.InputPath
  go func(){
   result:=PDFRenderResult{Request:req}
   if pdfiumPersistentOptIn() {
@@ -159,10 +161,13 @@ func startPDFNeighborPrefetch(){
 }
 
 func finishPDFNeighborRender(result PDFRenderResult){
- if pdfPreview.neighborBusy && pdfPreview.neighborRendering==result.Request.PageIndex {
+ if pdfPreview.neighborBusy && pdfPreview.neighborRendering==result.Request.PageIndex &&
+  pdfPreview.neighborGeneration==result.Request.Generation &&
+  strings.EqualFold(filepath.Clean(pdfPreview.neighborPath),filepath.Clean(result.Request.InputPath)) {
   pdfPreview.neighborBusy=false
  }
  defer os.Remove(result.Request.OutputPath)
+ defer func(){if pdfPreview.active && !pdfPreview.neighborBusy {startPDFNeighborPrefetch()}}()
  if result.Err!=nil || !pdfPreview.active || pdfPreview.viewMode!=PDFViewContinuous ||
   result.Request.Generation!=pdfPreview.generation ||
   !strings.EqualFold(filepath.Clean(result.Request.InputPath),filepath.Clean(pdfPreview.path)) {return}
