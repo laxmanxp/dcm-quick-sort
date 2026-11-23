@@ -5767,8 +5767,11 @@ func drawImagePreview(hdc uintptr, rc RECT) {
 	}
 	x := rc.Left + (rc.Right-rc.Left-dw)/2 + app.previewPanX
 	y := rc.Top + (rc.Bottom-rc.Top-dh)/2 + app.previewPanY
-	if pdfPreview.active && pdfPreview.viewMode==PDFViewContinuous {
-		y=rc.Top+4-pdfPreview.scrollY
+	if pdfPreview.active {
+		y = pdfPageTop(rc.Top, rc.Bottom, dh, app.previewPanY, app.previewFit, app.previewFitWidth)
+		if pdfPreview.viewMode == PDFViewContinuous {
+			y = rc.Top + 4 - pdfPreview.scrollY
+		}
 	}
 	var graphics uintptr
 	if st, _, _ := procGdipCreateFromHDC.Call(hdc, uintptr(unsafe.Pointer(&graphics))); st != 0 || graphics == 0 {
