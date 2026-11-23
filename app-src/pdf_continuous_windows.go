@@ -132,6 +132,7 @@ func startPDFNeighborPrefetch(){
   Generation:pdfPreview.generation,Neighbor:true,
  }
  if !pdfShutdown.workerStarted(){return}
+ tracePDFPreview(fmt.Sprintf("neighbor-prefetch-request-page-%d",nextIndex+1),req,false)
  pdfPreview.neighborBusy=true
  pdfPreview.neighborRendering=nextIndex
  pdfPreview.neighborGeneration=req.Generation
@@ -163,6 +164,7 @@ func startPDFNeighborPrefetch(){
 }
 
 func finishPDFNeighborRender(result PDFRenderResult){
+ tracePDFPreview(fmt.Sprintf("neighbor-prefetch-result-page-%d",result.Request.PageIndex+1),result.Request,result.Err!=nil)
  if pdfPreview.neighborBusy && pdfPreview.neighborRendering==result.Request.PageIndex &&
   pdfPreview.neighborGeneration==result.Request.Generation &&
   strings.EqualFold(filepath.Clean(pdfPreview.neighborPath),filepath.Clean(result.Request.InputPath)) {
@@ -206,6 +208,7 @@ func scrollPDFContinuousStack(delta int)bool{
  if pdfPreview.lastHeight<=0 {return true}
  move:=-previewPanPixels(delta,vh)
  target:=pdfPreview.scrollY+move
+ tracePDFPreview(fmt.Sprintf("continuous-wheel-page-%d-pos-%d-to-%d-nextcached-%t-neighborbusy-%t",pdfPreview.page+1,pdfPreview.scrollY,target,pdfPreview.neighborCache[pdfPreview.page+1].image!=0,pdfPreview.neighborBusy),PDFRenderRequest{InputPath:pdfPreview.path,Generation:pdfPreview.generation},false)
  boundary:=int32(pdfPreview.lastHeight)+pdfContinuousGap
  if target>=boundary && pdfPreview.page+1<pdfPreview.pageCount {
   if promotePDFNeighborPage(pdfPreview.page+1,target-boundary) {return true}
