@@ -137,7 +137,15 @@ int wmain(int argc,wchar_t** argv){
  FreeLibrary(dll);
  if(prev>0&&prev<32768)SetEnvironmentVariableW(L"LOCALAPPDATA",previous);
  else SetEnvironmentVariableW(L"LOCALAPPDATA",nullptr);
- std::filesystem::remove_all(root);
+ std::error_code cleanupError;
+ for(int i=0;i<50;i++){
+   cleanupError.clear();
+   std::filesystem::remove_all(root,cleanupError);
+   if(!cleanupError || !std::filesystem::exists(root))break;
+   Sleep(100);
+ }
+ require(!std::filesystem::exists(root),"disposable fixture cleanup");
+
  CoUninitialize();
  std::cout<<"PASS: unloaded DLL and removed disposable fixture\n";
  return 0;
