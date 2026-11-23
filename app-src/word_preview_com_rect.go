@@ -12,6 +12,7 @@ func wordPreviewExperimentalMode(path, setting string) string {
  switch strings.ToLower(strings.TrimSpace(setting)) {
  case "setrect": return "setrect"
  case "both": return "both"
+ case "aware": return "aware"
  default: return ""
  }
 }
