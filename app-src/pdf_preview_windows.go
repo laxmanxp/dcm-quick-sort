@@ -43,6 +43,8 @@ type pdfPreviewState struct {
  neighborCache map[int]pdfCachedPage
  neighborBusy bool
  neighborRendering int
+ neighborGeneration uint64
+ neighborPath string
  pendingDirection int
 	path             string
 	page             int
@@ -130,7 +132,7 @@ func updatePDFPreviewControls() {
  if pdfPreview.pageCount>0 {pageText=fmt.Sprintf("/ %d",pdfPreview.pageCount)}
  if pdfPreview.rotation!=0 {pageText+=fmt.Sprintf("  %d°",pdfPreview.rotation)}
  setText(pdfPreview.pageLabel,pageText)
- if pdfPreview.viewModeBtn!=0 { label:="Single"; if pdfPreview.viewMode==PDFViewContinuous {label="Scroll"}; setText(pdfPreview.viewModeBtn,label) }
+ if pdfPreview.viewModeBtn!=0 { label:="Single"; if pdfPreview.viewMode==PDFViewContinuous {label="Continuous"}; setText(pdfPreview.viewModeBtn,label) }
  // Never overwrite an in-progress page-number edit.
  if focused,_,_:=procGetFocus.Call();focused!=pdfPreview.pageEdit {
   setText(pdfPreview.pageEdit,strconv.Itoa(pdfPreview.page+1))
@@ -164,22 +166,7 @@ func togglePDFViewMode() {
 }
 
 func scrollPDFContinuousWheel(delta int) bool {
- if !pdfPreview.active || pdfPreview.viewMode!=PDFViewContinuous {return false}
- if delta==0{return true}
- var rc RECT
- procGetClientRect.Call(app.previewHwnd,uintptr(unsafe.Pointer(&rc)))
- viewport:=rc.Bottom-rc.Top-pdfToolbarHeight-8
- if viewport<1 {viewport=1}
- pixels:=-previewPanPixels(delta,viewport)
- next,position:=pdfScrollStep(pdfPreview.page,pdfPreview.pageCount,pdfPreview.scrollY,viewport,int32(pdfPreview.lastHeight),pixels)
- if next!=pdfPreview.page {
-  goToPDFPage(next-pdfPreview.page)
-  pdfPreview.scrollY=position
- } else {
-  pdfPreview.scrollY=position
-  procInvalidateRect.Call(app.previewHwnd,0,1)
- }
- return true
+ return scrollPDFContinuousStack(delta)
 }
 
 func goToPDFPageNumber() {
@@ -345,6 +332,9 @@ func tracePDFPreview(event string, req PDFRenderRequest, failed bool) {
 }
 
 func stopPDFPreview() {
+	clearPDFNeighborCache()
+	pdfPreview.viewMode=PDFViewSingle
+	pdfPreview.scrollY=0
 	previous := PDFRenderRequest{Generation: pdfPreview.generation, InputPath: pdfPreview.path}
 	if pdfPreview.active && pdfiumPersistentOptIn() {
 		// Cancel the obsolete render without waiting for the worker's
@@ -380,6 +370,7 @@ func goToPDFPage(delta int) {
 	if next < 0 || next >= pdfPreview.pageCount || next == pdfPreview.page {
 		return
 	}
+	if pdfPreview.viewMode==PDFViewContinuous && promotePDFNeighborPage(next,0) {return}
 	pdfPreview.page = next
 	pdfPreview.scrollY=0
 	pdfPreview.cursorAnchor = PDFCursorAnchor{}
@@ -411,6 +402,7 @@ func requestPDFPreviewRender() {
 	if pdfShutdown.closing || !pdfPreview.active || strings.TrimSpace(pdfPreview.path) == "" {
 		return
 	}
+	clearPDFNeighborCache()
 	// Coalesce rapid Ctrl+wheel/button clicks. Only one PowerShell/WinRT render
 	// runs at a time per selection; changes during that run become one latest
 	// render. Workers from stopped selections can finish later but own no slot.
@@ -565,6 +557,10 @@ func finishPDFRender() {
 					procPostMessageW.Call(app.hwnd, WM_CLOSE, 0, 0)
 				}
 			}()
+			if result.Request.Neighbor {
+				finishPDFNeighborRender(result)
+				return
+			}
 			if result.Request.Generation != pdfPreview.generation || !pdfPreview.active || !strings.EqualFold(filepath.Clean(result.Request.InputPath), filepath.Clean(pdfPreview.path)) {
 				_ = os.Remove(result.Request.OutputPath)
 				// A stopped selection may finish after its replacement has started.
@@ -647,6 +643,7 @@ func finishPDFRender() {
 			}
 			setText(app.statusLabel, fmt.Sprintf("DCM PDF Preview · Page %d/%d · %s", pdfPreview.page+1, pdfPreview.pageCount, mode))
 			tracePDFPreview("result-applied", result.Request, false)
+			startPDFNeighborPrefetch()
 			return
 		default:
 			return
