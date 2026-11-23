@@ -5566,6 +5566,10 @@ func unloadPreview() {
 
 func previewWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 	switch msg {
+	case WM_ERASEBKGND:
+		// Raster images are fully presented by one buffered WM_PAINT frame.
+		// Avoid exposing the cleared background between wheel/drag frames.
+		if imagePreviewActive(){return 1}
 	case WM_CTLCOLORSTATIC:
 		if lParam == pdfPreview.pageLabel && pdfPreview.active {
 			// System button-face fill, not transparent document content.
@@ -5597,7 +5601,7 @@ func previewWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr
 		layoutPDFPreviewControls()
 		layoutImagePreviewControls()
 		if !queueSplitterDragging { schedulePDFViewportResize() }
-		procInvalidateRect.Call(hwnd, 0, 1)
+		procInvalidateRect.Call(hwnd, 0, 0)
 		return 0
 	case WM_COMMAND:
 		id := int(loword(wParam))
@@ -5703,6 +5707,10 @@ func previewWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr
 		hdc, _, _ := procBeginPaint.Call(hwnd, uintptr(unsafe.Pointer(&ps)))
 		var rc RECT
 		procGetClientRect.Call(hwnd, uintptr(unsafe.Pointer(&rc)))
+		if imagePreviewActive() && paintImagePreviewBuffered(hdc,rc) {
+			procEndPaint.Call(hwnd,uintptr(unsafe.Pointer(&ps)))
+			return 0
+		}
 		brush, _, _ := procGetStockObject.Call(WHITE_BRUSH)
 		procFillRect.Call(hdc, uintptr(unsafe.Pointer(&rc)), brush)
 		if pdfPreview.active || imagePreviewActive() {
