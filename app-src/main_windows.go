@@ -635,7 +635,7 @@ type appState struct {
 	preview                                                                                                                                            *iPreviewHandler
 	previewExcelOuterRepair, previewHostSizingAllowed                                                                                                                            bool
 	previewNativeDPIContextMode string
-	previewHTMLHostRepair bool
+	previewHTMLHostRepair, previewWordHostRepair bool
 	previewExcelRetryPending, previewExcelRetryRunning                                                                                                                            bool
  	previewPptxPhysical, previewPptxRetryPending, previewPptxRetryRunning bool
 	previewPptxRetryEpoch uint64
@@ -5525,6 +5525,7 @@ func unloadPreview() {
 	app.previewHostSizingAllowed = false
 	app.previewNativeDPIContextMode = ""
 	app.previewHTMLHostRepair = false
+	app.previewWordHostRepair = false
 	app.nativeViewportResizePending = false
 	app.nativeViewportResizeEpoch++
 	// Disarm queued retries for a retiring COM object and pane.
@@ -6318,7 +6319,7 @@ func resizePreviewHandlerFor(initial bool) {
 	})
 	endNativePreviewTraceHRESULT(traceCall, hr, handler)
 	if int32(hr) == int32(S_OK) && app.preview == ph && app.previewHwnd == pane &&
-		app.previewNativeDPIContextMode != "" && os.Getenv("DCM_WORD_OUTER_REPAIR") == "1" {
+		app.previewWordHostRepair {
 		beginWordOuterRepair(pane, handler)
 	}
 	if int32(hr) == int32(S_OK) && app.preview == ph && app.previewHwnd == pane && app.previewHTMLHostRepair {
@@ -6438,14 +6439,7 @@ func loadWindowsPreviewHandler(path string) bool {
 		return false
 	}
 	traceCall = beginNativePreviewTrace(traceSession, "DoPreview", app.previewHwnd, self, 0, nil)
-	if nativeRectMode == "lifecycle" {
-		hr = invokeNativePreviewCOMWithDPIContext(nativeRectMode, func() uintptr {
-			result, _, _ := syscall.SyscallN(ph.Vtbl.DoPreview, self)
-			return result
-		})
-	} else {
-		hr, _, _ = syscall.SyscallN(ph.Vtbl.DoPreview, self)
-	}
+	hr, _, _ = syscall.SyscallN(ph.Vtbl.DoPreview, self)
 	endNativePreviewTraceHRESULT(traceCall, hr, self)
 	if hresultFailed(hr) {
 		syscall.SyscallN(ph.Vtbl.Unload, self)
@@ -6456,6 +6450,7 @@ func loadWindowsPreviewHandler(path string) bool {
 	app.preview, app.previewExcelOuterRepair = ph, excelOuterRepair
 	app.previewNativeDPIContextMode = nativeRectMode
 	app.previewHTMLHostRepair = nativeRectMode == "repair"
+	app.previewWordHostRepair = wordPreviewOuterRepairEnabled(path, os.Getenv("DCM_WORD_OUTER_REPAIR"))
 	app.nativeViewportResizePending = false
 	app.nativeViewportResizeEpoch++
 	app.previewPptxPhysical = pptxPhysical
