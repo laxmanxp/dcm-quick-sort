@@ -7,11 +7,11 @@ import "runtime"
 var wordDPIGetThreadContext = user32.NewProc("GetThreadDpiAwarenessContext")
 var wordDPISetThreadContext = user32.NewProc("SetThreadDpiAwarenessContext")
 
-// Native Word interprets its document viewport correctly when its COM sizing
+// Word and HTML native handlers interpret their viewports correctly when their COM sizing
 // calls run in a temporarily per-monitor-aware V2 context. Do not scale the
-// rectangle or directly resize any Word-owned HWND. Always restore the
+// rectangle or directly resize any renderer-owned HWND. Always restore the
 // original caller context before returning to QuickSort's message loop.
-func invokeWordCOMWithPreviewDPIContext(mode string, invoke func() uintptr) uintptr {
+func invokeNativePreviewCOMWithDPIContext(mode string, invoke func() uintptr) uintptr {
  if mode != "aware" { return invoke() }
  runtime.LockOSThread()
  defer runtime.UnlockOSThread()
