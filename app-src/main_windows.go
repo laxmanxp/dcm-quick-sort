@@ -366,6 +366,7 @@ var (
 	procGdipCreateFromHDC   = gdiplus.NewProc("GdipCreateFromHDC")
 	procGdipDeleteGraphics  = gdiplus.NewProc("GdipDeleteGraphics")
 	procGdipDrawImageRectI  = gdiplus.NewProc("GdipDrawImageRectI")
+	procGdipSetClipRectI = gdiplus.NewProc("GdipSetClipRectI")
 
 	procCoInitializeEx        = ole32.NewProc("CoInitializeEx")
 	procCoUninitialize        = ole32.NewProc("CoUninitialize")
@@ -5764,7 +5765,11 @@ func drawImagePreview(hdc uintptr, rc RECT) {
 	if st, _, _ := procGdipCreateFromHDC.Call(hdc, uintptr(unsafe.Pointer(&graphics))); st != 0 || graphics == 0 {
 		return
 	}
-	procGdipDrawImageRectI.Call(graphics, app.image, uintptr(x), uintptr(y), uintptr(dw), uintptr(dh))
+	if pdfPreview.active && pdfPreview.viewMode==PDFViewContinuous {
+  // The scrolling page must never overpaint the PDF toolbar.
+  procGdipSetClipRectI.Call(graphics,uintptr(rc.Left),uintptr(rc.Top),uintptr(rc.Right-rc.Left),uintptr(rc.Bottom-rc.Top),0)
+ }
+ procGdipDrawImageRectI.Call(graphics, app.image, uintptr(x), uintptr(y), uintptr(dw), uintptr(dh))
 	procGdipDeleteGraphics.Call(graphics)
 }
 
