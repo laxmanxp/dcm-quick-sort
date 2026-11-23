@@ -6278,7 +6278,10 @@ func handlePreviewWheelPan(delta int, horizontal bool) bool {
 		} else {
 			app.previewPanY += amount
 		}
-		procInvalidateRect.Call(app.previewHwnd, 0, 1)
+		// The image buffer owns the entire frame; request no background erase.
+		erase:=uintptr(1)
+		if imagePreviewActive(){erase=0}
+		procInvalidateRect.Call(app.previewHwnd, 0, erase)
 		return true
 	}
 	// Native preview handlers retain their own scrolling semantics because DCM
