@@ -78,6 +78,11 @@ func promotePDFNeighborPage(target int, scroll int32) bool {
  }
  app.image,app.imageStream=next.image,next.stream
  pdfPreview.page=target
+ // Refresh the navigation field when it still contains the previous page.
+ // Preserve any different number the user is actively entering.
+ if pdfPreview.pageEdit!=0 && strings.TrimSpace(getText(pdfPreview.pageEdit))==fmt.Sprintf("%d",oldIndex+1) {
+  setText(pdfPreview.pageEdit,fmt.Sprintf("%d",target+1))
+ }
  pdfPreview.lastWidth,pdfPreview.lastHeight,pdfPreview.lastScalePercent=next.width,next.height,next.scale
  pdfPreview.scrollY=scroll
  pdfPreview.pendingDirection=0
@@ -89,6 +94,7 @@ func promotePDFNeighborPage(target int, scroll int32) bool {
  }
  prunePDFNeighborCache()
  updatePDFPreviewControls()
+ setText(app.statusLabel,fmt.Sprintf("DCM PDF Preview · Page %d/%d · Continuous · %d%%",pdfPreview.page+1,pdfPreview.pageCount,app.previewZoom))
  procInvalidateRect.Call(app.previewHwnd,0,1)
  startPDFNeighborPrefetch()
  return true
