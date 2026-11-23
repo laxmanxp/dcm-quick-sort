@@ -634,7 +634,7 @@ type appState struct {
 	imageStream                                                                                                                                        *iUnknown
 	preview                                                                                                                                            *iPreviewHandler
 	previewExcelOuterRepair, previewHostSizingAllowed                                                                                                                            bool
-	previewWordDPIContextMode string
+	previewNativeDPIContextMode string
 	previewExcelRetryPending, previewExcelRetryRunning                                                                                                                            bool
  	previewPptxPhysical, previewPptxRetryPending, previewPptxRetryRunning bool
 	previewPptxRetryEpoch uint64
@@ -5517,7 +5517,7 @@ func unloadPreview() {
 	// Preserve its normal cleanup calls, but do not request an outer repair.
 	app.previewExcelOuterRepair = false
 	app.previewHostSizingAllowed = false
-	app.previewWordDPIContextMode = ""
+	app.previewNativeDPIContextMode = ""
 	app.nativeViewportResizePending = false
 	app.nativeViewportResizeEpoch++
 	// Disarm queued retries for a retiring COM object and pane.
@@ -6305,7 +6305,7 @@ func resizePreviewHandlerFor(initial bool) {
 		}
 	}
 	traceCall = beginNativePreviewTrace(traceSession, "SetRect", pane, handler, 0, &rc)
-	hr := invokeWordCOMWithPreviewDPIContext(app.previewWordDPIContextMode, func() uintptr {
+	hr := invokeNativePreviewCOMWithDPIContext(app.previewNativeDPIContextMode, func() uintptr {
 		result, _, _ := syscall.SyscallN(ph.Vtbl.SetRect, handler, uintptr(unsafe.Pointer(&rc)))
 		return result
 	})
@@ -6409,9 +6409,9 @@ func loadWindowsPreviewHandler(path string) bool {
 			rc.Right, rc.Bottom = pptxCOMRectSize(rc.Right, rc.Bottom, physical.Right, physical.Bottom, true, true)
 		}
 	}
-	wordRectMode := wordPreviewDPIContextMode(path, os.Getenv("DCM_WORD_COM_RECT_MODE"))
+	nativeRectMode := nativePreviewDPIContextMode(path, os.Getenv("DCM_WORD_COM_RECT_MODE"), os.Getenv("DCM_HTML_COM_RECT_MODE"))
 	traceCall = beginNativePreviewTrace(traceSession, "SetWindow", app.previewHwnd, self, 0, &rc)
-	hr := invokeWordCOMWithPreviewDPIContext(wordRectMode, func() uintptr {
+	hr := invokeNativePreviewCOMWithDPIContext(nativeRectMode, func() uintptr {
 		result, _, _ := syscall.SyscallN(ph.Vtbl.SetWindow, self, app.previewHwnd, uintptr(unsafe.Pointer(&rc)))
 		return result
 	})
@@ -6431,7 +6431,7 @@ func loadWindowsPreviewHandler(path string) bool {
 		return false
 	}
 	app.preview, app.previewExcelOuterRepair = ph, excelOuterRepair
-	app.previewWordDPIContextMode = wordRectMode
+	app.previewNativeDPIContextMode = nativeRectMode
 	app.nativeViewportResizePending = false
 	app.nativeViewportResizeEpoch++
 	app.previewPptxPhysical = pptxPhysical
