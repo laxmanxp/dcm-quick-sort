@@ -1,7 +1,7 @@
 param([Parameter(Mandatory=$true)][int]$TargetPid, [int]$WheelSteps=25)
 $ErrorActionPreference='Stop'
 $p=Get-CimInstance Win32_Process -Filter "ProcessId = $TargetPid"
-if ($null -eq $p -or $p.ExecutablePath -ne 'C:\DCMQuickSortCollisionAcceptance\dcm-pdf-continuous-dev.exe' -or $p.CommandLine -notmatch 'sumatra-scroll.pdf') {throw "Refusing non-fixture process"}
+if ($null -eq $p -or $p.ExecutablePath -notin @('C:\DCMQuickSortCollisionAcceptance\dcm-pdf-continuous-dev.exe','C:\DCMQuickSortCollisionAcceptance\dcm-pdf-continuous-trace-dev.exe') -or $p.CommandLine -notmatch 'sumatra-scroll.pdf') {throw "Refusing non-fixture process"}
 Add-Type -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
