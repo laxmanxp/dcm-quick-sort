@@ -5758,7 +5758,10 @@ func drawImagePreview(hdc uintptr, rc RECT) {
 	if dw <= 0 || dh <= 0 {
 		return
 	}
-	if pdfPreview.active && pdfPreview.panAnchored && usingFlowPDFiumProvider() {
+	if pdfPreview.active && app.previewFitWidth && pdfPreview.viewMode == PDFViewSingle {
+		app.previewPanX = 0
+		app.previewPanY = pdfTopAnchoredPan(dh, rc.Bottom-rc.Top, app.previewPanY)
+	} else if pdfPreview.active && pdfPreview.panAnchored && usingFlowPDFiumProvider() {
 		app.previewPanX = pdfClampAnchorPan(dw, availW, app.previewPanX)
 		app.previewPanY = pdfClampAnchorPan(dh, availH, app.previewPanY)
 	} else {
@@ -5770,7 +5773,7 @@ func drawImagePreview(hdc uintptr, rc RECT) {
 	if pdfPreview.active {
 		y = pdfPageTop(rc.Top, rc.Bottom, dh, app.previewPanY, app.previewFit, app.previewFitWidth)
 		if pdfPreview.viewMode == PDFViewContinuous {
-			y = rc.Top + 4 - pdfPreview.scrollY
+			y = rc.Top - pdfPreview.scrollY
 		}
 	}
 	var graphics uintptr
