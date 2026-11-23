@@ -184,11 +184,21 @@ func finishPDFNeighborRender(result PDFRenderResult){
  if result.Err!=nil || result.Meta.PageIndex!=result.Request.PageIndex || result.Meta.Width<=0 || result.Meta.Height<=0 {
   if pdfPreview.neighborFailed==nil {pdfPreview.neighborFailed=make(map[int]bool)}
   pdfPreview.neighborFailed[result.Request.PageIndex]=true
+  if pdfPreview.pendingDirection!=0 && pdfPreview.page+pdfPreview.pendingDirection==result.Request.PageIndex {
+   direction:=pdfPreview.pendingDirection
+   pdfPreview.pendingDirection=0
+   goToPDFPage(direction)
+  }
   return
  }
  if err:=cachePDFNeighborImage(result.Request.OutputPath,result.Meta);err!=nil{
   if pdfPreview.neighborFailed==nil {pdfPreview.neighborFailed=make(map[int]bool)}
   pdfPreview.neighborFailed[result.Request.PageIndex]=true
+  if pdfPreview.pendingDirection!=0 && pdfPreview.page+pdfPreview.pendingDirection==result.Request.PageIndex {
+   direction:=pdfPreview.pendingDirection
+   pdfPreview.pendingDirection=0
+   goToPDFPage(direction)
+  }
   return
  }
  if pdfPreview.pendingDirection!=0 {
@@ -218,6 +228,7 @@ func scrollPDFContinuousStack(delta int)bool{
  boundary:=int32(pdfPreview.lastHeight)+pdfContinuousGap
  if target>=boundary && pdfPreview.page+1<pdfPreview.pageCount {
   if promotePDFNeighborPage(pdfPreview.page+1,target-boundary) {return true}
+  if pdfPreview.neighborFailed[pdfPreview.page+1] {goToPDFPage(1);return true}
   pdfPreview.pendingDirection=1
   if target>boundary-1 {target=boundary-1}
   startPDFNeighborPrefetch()
@@ -226,6 +237,7 @@ func scrollPDFContinuousStack(delta int)bool{
   if ok && prev.image!=0 {
    if promotePDFNeighborPage(pdfPreview.page-1,int32(prev.height)+pdfContinuousGap+target){return true}
   }
+  if pdfPreview.neighborFailed[pdfPreview.page-1] {goToPDFPage(-1);return true}
   pdfPreview.pendingDirection=-1
   target=0
   startPDFNeighborPrefetch()
