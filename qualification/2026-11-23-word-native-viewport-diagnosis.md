@@ -26,3 +26,16 @@ The inner `_WwG` size and its scrollbars explain the apparent overlay: Word's ou
 
 ## Next diagnostic gate
 Correlate `IPreviewHandler::SetWindow/SetRect` requested sizes, Word internal `_WwB/_WwG` sizes, monitor effective DPI and initial `DoPreview` timing. Test on disposable DOCX fixtures using an isolated build. Do not directly destroy or resize Word-owned child windows in production, do not replace the native Word renderer, and do not classify this as a shared preview-engine defect without evidence from other file types.
+
+
+## Resolution candidate — verified on isolated DOCX fixture
+
+The application recorded `SetWindow(770,356)` and `SetRect(770,356)` with HRESULT `0x00000000`, but native Word's `_WwG` viewport was only `602 × 271`. The disparity closely follows 125% display scaling.
+
+Experiments:
+- **Physical rectangle supplied to Word (`setrect`): rejected.** Word's outer `_WwB` expanded to `962 × 445` while the QuickSort client stayed `770 × 356`, overflowing the intended pane. This experiment was removed.
+- **Temporary PMv2 DPI awareness around COM calls, unchanged logical rectangles: verified by Win32 geometry.** At initial pane `770 × 356`, Word's outer was `770 × 356` and inner `753 × 339`, leaving only the expected 17px scrollbars.
+- After resizing the diagnostic main window, pane and Word outer were both `653 × 296`, and Word inner `636 × 279`, again leaving only 17px scrollbars.
+- The diagnostic trace recorded successful `SetWindow` and both `SetRect` calls (HRESULT `0x00000000`) and identical observed thread DPI awareness (`0`) immediately before and after each call, consistent with context restoration.
+
+The correction is now **default for native `.docx` only** in the development feature branch. It does not scale COM rectangles, modify Word-owned HWNDs, or alter other preview backends. The environment variable `DCM_WORD_COM_RECT_MODE=off` can temporarily disable the correction for A/B acceptance. Full Go tests and the isolated Windows build passed. A live screenshot-based GUI acceptance for the user's real DOCX is **still pending**, as is cross-format viewport qualification.
