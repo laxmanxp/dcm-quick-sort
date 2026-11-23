@@ -12,6 +12,7 @@ public static class DcmWordProbe {
  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h, out RECT r);
  [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr h, IntPtr insert, int x, int y, int w, int height, uint flags);
  [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr h,out uint pid);
+ [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr h);
 }
 '@
 $main=(Get-Process -Id $TargetPid).MainWindowHandle
@@ -20,8 +21,16 @@ $pane=[DcmWordProbe]::FindWindowEx($main,[IntPtr]::Zero,'QuickSortPreview',$null
 if ($pane -eq [IntPtr]::Zero -or [DcmWordProbe]::FindWindowEx($main,$pane,'QuickSortPreview',$null) -ne [IntPtr]::Zero) {throw 'Ambiguous preview pane'}
 $outer=[DcmWordProbe]::FindWindowEx($pane,[IntPtr]::Zero,'_WwB',$null)
 if ($outer -eq [IntPtr]::Zero -or [DcmWordProbe]::FindWindowEx($pane,$outer,'_WwB',$null) -ne [IntPtr]::Zero) {throw 'Ambiguous Word outer'}
-$inner=[DcmWordProbe]::FindWindowEx($outer,[IntPtr]::Zero,'_WwG',$null)
-if ($inner -eq [IntPtr]::Zero -or [DcmWordProbe]::FindWindowEx($outer,$inner,'_WwG',$null) -ne [IntPtr]::Zero) {throw 'Ambiguous Word inner'}
+$inners=New-Object System.Collections.Generic.List[System.IntPtr]
+$next=[IntPtr]::Zero
+while($true){
+ $next=[DcmWordProbe]::FindWindowEx($outer,$next,'_WwG',$null)
+ if ($next -eq [IntPtr]::Zero){break}
+ if ([DcmWordProbe]::IsWindowVisible($next)){$inners.Add($next)}
+ if ($inners.Count -gt 1){break}
+}
+if ($inners.Count -ne 1){throw ("Expected one visible Word document window; found "+$inners.Count)}
+$inner=$inners[0]
 [uint32]$outerPid=0
 [uint32]$innerPid=0
 [void][DcmWordProbe]::GetWindowThreadProcessId($outer,[ref]$outerPid)
