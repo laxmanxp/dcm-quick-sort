@@ -5,7 +5,10 @@ param(
 )
 $ErrorActionPreference="Stop"
 $p=Get-Process -Id $TargetPid -ErrorAction Stop
-if ($p.ProcessName -ne "dcm-word-dpi-aware-test") { throw "Refusing to resize non-diagnostic process" }
+$approvedWord = $p.ProcessName -eq "dcm-word-dpi-aware-test"
+$approvedHTML = $p.ProcessName -eq "dcm-html-host-repair-dev" -and
+ (Get-CimInstance Win32_Process -Filter "ProcessId = $TargetPid").CommandLine -match "TraceHTMLHostRepair"
+if (-not ($approvedWord -or $approvedHTML)) {throw "Refusing to resize non-diagnostic process"}
 Add-Type -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
