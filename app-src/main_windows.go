@@ -3734,7 +3734,11 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 	case WM_BATCH_MOVE_NEXT:
 		advanceBatchMove()
 		return 0
-	case 0x0113: // WM_TIMER: short native Queue preview coalescing and Sumatra liveness.
+	case 0x0113: // WM_TIMER: native preview recovery, queue coalescing and Sumatra liveness.
+		if wParam == wordOuterRepairTimerID {
+			finishWordOuterRepair()
+			return 0
+		}
 		if wParam == nativeQueuePreviewTimerID {
 			flushNativeQueuePreview()
 			return 0
@@ -5513,6 +5517,7 @@ func loadImageWithError(path string) error {
 }
 
 func unloadPreview() {
+	cancelWordOuterRepair()
 	cancelNativeQueuePreview()
 	// A retiring handler may cause nested size messages during COM cleanup.
 	// Preserve its normal cleanup calls, but do not request an outer repair.
@@ -6312,6 +6317,10 @@ func resizePreviewHandlerFor(initial bool) {
 		return result
 	})
 	endNativePreviewTraceHRESULT(traceCall, hr, handler)
+	if int32(hr) == int32(S_OK) && app.preview == ph && app.previewHwnd == pane &&
+		app.previewNativeDPIContextMode != "" && os.Getenv("DCM_WORD_OUTER_REPAIR") == "1" {
+		beginWordOuterRepair(pane, handler)
+	}
 	if int32(hr) == int32(S_OK) && app.preview == ph && app.previewHwnd == pane && app.previewHTMLHostRepair {
 		traceCall = beginNativePreviewTrace(traceSession, "HTMLOuterRepairRequest", pane, handler, 0, nil)
 		accepted := repairHTMLPreviewOuterWindow(pane)
