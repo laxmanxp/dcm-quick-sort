@@ -714,8 +714,9 @@ func TestFitWidthResetsVerticalPanToTop(t *testing.T) {
 		t.Fatal("finishPDFRender end missing")
 	}
 	pdfBody := pdfSrc[pdfStart : pdfStart+pdfEnd]
-	if !strings.Contains(pdfBody, "app.previewFitWidth") || !strings.Contains(pdfBody, "previewTopPanOffset(") {
-		t.Fatal("PDF Fit Width render completion does not reset the viewport to the top")
+	if !strings.Contains(pdfBody, "app.previewFitWidth") ||
+		!strings.Contains(pdfBody, "app.previewPanX, app.previewPanY = 0, 0") {
+		t.Fatal("PDF Fit Width render completion must reset top-origin pan to zero")
 	}
 }
 
