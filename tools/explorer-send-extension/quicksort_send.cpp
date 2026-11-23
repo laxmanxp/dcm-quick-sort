@@ -147,7 +147,7 @@ class Menu final : public IShellExtInit, public IContextMenu {
   std::vector<Favorite> entries;
 public:
   Menu(){++g_instances;}
-  ~Menu()override{--g_instances;}
+  ~Menu(){--g_instances;}
   HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid,void** ppv)override{
     if(!ppv)return E_POINTER;
     *ppv=nullptr;
