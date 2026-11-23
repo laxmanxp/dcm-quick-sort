@@ -3289,6 +3289,7 @@ func scheduleNativeViewportResize() {
 // has returned; it must not be called synchronously from child WM_SIZE.
 func commitQueueSplitterLayout(hwnd uintptr) {
 	layoutUI(hwnd)
+	schedulePDFViewportResize()
 	resizeTextPreview()
 	resizeXLSXPreview()
 	resizePPTXPreview()
@@ -3481,6 +3482,7 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 		resizeTextPreview()
 		resizeXLSXPreview()
 		layoutPDFPreviewControls()
+		schedulePDFViewportResize()
 		recordLayoutTrace(hwnd, "size-exit", 0)
 		return 0
 	case WM_ERASEBKGND:
@@ -3736,6 +3738,10 @@ func mainWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 		advanceBatchMove()
 		return 0
 	case 0x0113: // WM_TIMER: native preview recovery, queue coalescing and Sumatra liveness.
+		if wParam == pdfViewportResizeTimerID {
+			refreshPDFViewportAfterResize()
+			return 0
+		}
 		if wParam == wordOuterRepairTimerID {
 			finishWordOuterRepair()
 			return 0
@@ -5586,6 +5592,7 @@ func previewWindowProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr
 		resizeXLSXPreview()
 		resizePPTXPreview()
 		layoutPDFPreviewControls()
+		if !queueSplitterDragging { schedulePDFViewportResize() }
 		procInvalidateRect.Call(hwnd, 0, 1)
 		return 0
 	case WM_COMMAND:
