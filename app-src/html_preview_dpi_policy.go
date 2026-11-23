@@ -5,28 +5,20 @@ import (
  "strings"
 )
 
-// The HTML native preview host on Lenovo measured 80% of its allocated pane
-// despite successful SetWindow and SetRect calls. Match the proven DOCX DPI
-// context contract while leaving the rectangle unchanged. "off" is an opt-out.
+// HTML's native Windows preview host needs its outer child resized to the
+// QuickSort pane; PMv2 COM calls alone did not work in Lenovo qualification.
+// "off" restores the unmodified HTML handler for A/B testing.
 func htmlPreviewDPIContextMode(path, setting string) string {
  switch strings.ToLower(filepath.Ext(strings.TrimSpace(path))) {
  case ".html", ".htm":
   switch strings.ToLower(strings.TrimSpace(setting)) {
-  case "", "aware": return "aware"
-  case "physical-setrect", "physical-both", "physical-window": return strings.ToLower(strings.TrimSpace(setting))
+  case "", "repair": return "repair"
+  case "aware": return "aware" // isolated diagnostic; not production default
   }
  }
  return ""
 }
 func nativePreviewDPIContextMode(path, wordSetting, htmlSetting string) string {
- if mode:=wordPreviewDPIContextMode(path,wordSetting);mode!="" { return mode }
+ if mode:=wordPreviewDPIContextMode(path,wordSetting);mode!="" {return mode}
  return htmlPreviewDPIContextMode(path,htmlSetting)
-}
-
-func htmlPreviewRectForCall(mode, method string, logicalW, logicalH, physicalW, physicalH int32, measured bool) (int32,int32) {
- if !measured || physicalW <= 0 || physicalH <= 0 { return logicalW,logicalH }
- if mode == "physical-both" || (mode == "physical-setrect" && method == "SetRect") || (mode == "physical-window" && method == "SetWindow") {
-  return physicalW,physicalH
- }
- return logicalW,logicalH
 }
