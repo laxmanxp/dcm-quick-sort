@@ -21,21 +21,9 @@ $pane=[DcmWordProbe]::FindWindowEx($main,[IntPtr]::Zero,'QuickSortPreview',$null
 if ($pane -eq [IntPtr]::Zero -or [DcmWordProbe]::FindWindowEx($main,$pane,'QuickSortPreview',$null) -ne [IntPtr]::Zero) {throw 'Ambiguous preview pane'}
 $outer=[DcmWordProbe]::FindWindowEx($pane,[IntPtr]::Zero,'_WwB',$null)
 if ($outer -eq [IntPtr]::Zero -or [DcmWordProbe]::FindWindowEx($pane,$outer,'_WwB',$null) -ne [IntPtr]::Zero) {throw 'Ambiguous Word outer'}
-$inners=New-Object System.Collections.Generic.List[System.IntPtr]
-$next=[IntPtr]::Zero
-while($true){
- $next=[DcmWordProbe]::FindWindowEx($outer,$next,'_WwG',$null)
- if ($next -eq [IntPtr]::Zero){break}
- if ([DcmWordProbe]::IsWindowVisible($next)){$inners.Add($next)}
- if ($inners.Count -gt 1){break}
-}
-if ($inners.Count -ne 1){throw ("Expected one visible Word document window; found "+$inners.Count)}
-$inner=$inners[0]
 [uint32]$outerPid=0
-[uint32]$innerPid=0
 [void][DcmWordProbe]::GetWindowThreadProcessId($outer,[ref]$outerPid)
-[void][DcmWordProbe]::GetWindowThreadProcessId($inner,[ref]$innerPid)
-if ($outerPid -ne $innerPid -or $outerPid -eq $TargetPid) {throw 'Unexpected Word process ownership'}
+if ($outerPid -eq $TargetPid -or $outerPid -eq 0) {throw 'Unexpected Word process ownership'}
 $rc=New-Object DcmWordProbe+RECT
 $or=New-Object DcmWordProbe+RECT
 [void][DcmWordProbe]::GetClientRect($pane,[ref]$rc)
