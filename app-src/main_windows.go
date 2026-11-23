@@ -6414,7 +6414,7 @@ func loadWindowsPreviewHandler(path string) bool {
 		}
 	}
 	nativeRectMode := nativePreviewDPIContextMode(path, os.Getenv("DCM_WORD_COM_RECT_MODE"), os.Getenv("DCM_HTML_COM_RECT_MODE"))
-	if nativeRectMode == "physical-both" {
+	if nativeRectMode == "physical-both" || nativeRectMode == "physical-window" {
 		physical, ok := excelLayoutPhysicalClientRect(app.previewHwnd)
 		rc.Right, rc.Bottom = htmlPreviewRectForCall(nativeRectMode, "SetWindow", rc.Right, rc.Bottom, physical.Right, physical.Bottom, ok)
 	}
