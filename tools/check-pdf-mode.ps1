@@ -22,8 +22,10 @@ $page=[PDFModeAcceptance]::GetDlgItem($pane,1073)
 if ($mode -eq [IntPtr]::Zero -or $page -eq [IntPtr]::Zero){throw 'PDF view mode control not found'}
 function ReadLabel([IntPtr]$h){$b=New-Object System.Text.StringBuilder 128;[void][PDFModeAcceptance]::GetWindowText($h,$b,128);return $b.ToString()}
 Write-Output ("Before: mode={0}; page={1}" -f (ReadLabel $mode),(ReadLabel $page))
-[void][PDFModeAcceptance]::SendMessage($mode,0x00F5,[IntPtr]::Zero,[IntPtr]::Zero)
-Start-Sleep -Milliseconds 300
+if ((ReadLabel $mode) -eq 'Single') {
+ [void][PDFModeAcceptance]::SendMessage($mode,0x00F5,[IntPtr]::Zero,[IntPtr]::Zero)
+ Start-Sleep -Milliseconds 300
+}
 Write-Output ("After toggle: mode={0}; page={1}" -f (ReadLabel $mode),(ReadLabel $page))
 for($i=0;$i -lt $WheelSteps;$i++){
  [void][PDFModeAcceptance]::SendMessage($pane,0x020A,[IntPtr]::new([long]0xFF880000),[IntPtr]::Zero)
