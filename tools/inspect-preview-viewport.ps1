@@ -48,16 +48,20 @@ function Describe([IntPtr]$h,[string]$kind) {
 }
 Write-Output "Process $TargetPid, roots $($roots.Count)"
 foreach ($root in $roots) {
-  Describe $root 'TOP'
+  $children = New-Object System.Collections.Generic.List[System.IntPtr]
   $callback = [DcmWindows+WindowCallback]{
     param([IntPtr]$hwnd,[IntPtr]$param)
-    $class = New-Object System.Text.StringBuilder 256
-    [void][DcmWindows]::GetClassName($hwnd,$class,256)
-    $name = $class.ToString()
-    if ($name -match 'QuickSortPreview|Word|Opus|Excel|PPT|Preview|Internet|RICHEDIT|_Ww|Doc|Pane') {
-      Describe $hwnd 'CHILD'
-    }
+    $children.Add($hwnd)
     return $true
   }
   [void][DcmWindows]::EnumChildWindows($root,$callback,[IntPtr]::Zero)
+  $rootClass = New-Object System.Text.StringBuilder 256
+  [void][DcmWindows]::GetClassName($root,$rootClass,256)
+  if ($rootClass.ToString() -ne 'QuickSortMain') { continue }
+  Describe $root 'TOP'
+  Write-Output ("Descendant count: {0}" -f $children.Count)
+  foreach ($h in $children) {
+    $child = Describe $h 'CHILD'
+    if ($child.Visible -or $child.Class -match 'QuickSortPreview') { $child }
+  }
 }
