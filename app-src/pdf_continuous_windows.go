@@ -173,7 +173,7 @@ func finishPDFNeighborRender(result PDFRenderResult){
  if !pdfPreview.active || pdfPreview.viewMode!=PDFViewContinuous ||
   result.Request.Generation!=pdfPreview.generation ||
   !strings.EqualFold(filepath.Clean(result.Request.InputPath),filepath.Clean(pdfPreview.path)) {return}
- if result.Err!=nil {
+ if result.Err!=nil || result.Meta.PageIndex!=result.Request.PageIndex || result.Meta.Width<=0 || result.Meta.Height<=0 {
   if pdfPreview.neighborFailed==nil {pdfPreview.neighborFailed=make(map[int]bool)}
   pdfPreview.neighborFailed[result.Request.PageIndex]=true
   return
