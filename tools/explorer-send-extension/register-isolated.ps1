@@ -24,6 +24,7 @@ $classes='HKCU:\Software\Classes'
 $classKey="$classes\CLSID\$clsid"
 $handler="$classes\*\shellex\ContextMenuHandlers\DCMQuickSortSend"
 $expectedName='DCMQuickSortExplorerSend.dll'
+. (Join-Path $PSScriptRoot 'registration-ownership.ps1')
 if(-not $ApprovedIsolatedAccount) {
  Write-Output 'Not registered. Supply -Register or -Unregister and -ApprovedIsolatedAccount in a disposable Windows test profile.'
  return
@@ -48,9 +49,8 @@ if($Register){
    throw 'The DLL, helper and app must be in the same installed QuickSort directory.'
  }
  $existing=Get-DefaultValue "$classKey\InprocServer32"
- if($existing -and $existing -ine ([IO.Path]::GetFullPath($DllPath))){throw 'CLSID is already registered to a different path'}
  $existingHandler=Get-DefaultValue $handler
- if($existingHandler -and $existingHandler -ine $clsid){throw 'ContextMenuHandlers key belongs to a different COM class'}
+ $null=Get-QuickSortRegistrationDecision -HandlerValue $existingHandler -ServerValue $existing -ExpectedClsid $clsid -ExpectedDllPath $DllPath
  New-Item -Path "$classKey\InprocServer32" -Force | Out-Null
  Set-Item -Path "$classKey\InprocServer32" -Value ([IO.Path]::GetFullPath($DllPath))
  New-ItemProperty -LiteralPath "$classKey\InprocServer32" -Name 'ThreadingModel' -PropertyType String -Value 'Apartment' -Force | Out-Null
@@ -59,15 +59,15 @@ if($Register){
  Write-Output 'Registered DCM QuickSort Send submenu for the current isolated Windows user.'
  Write-Output 'On Windows 11, check Explorer > Show more options.'
 } elseif($Unregister){
- $value=(Get-ItemProperty -LiteralPath $handler -ErrorAction SilentlyContinue).'(default)'
- if($value -and $value -ine $clsid){throw "Refusing to alter unrelated Explorer handler: $value"}
- if($value){Remove-Item -LiteralPath $handler -Recurse -Force}
- $registered=(Get-ItemProperty -LiteralPath "$classKey\InprocServer32" -ErrorAction SilentlyContinue).'(default)'
- if($registered -and [IO.Path]::GetFileName($registered) -ine $expectedName){
-  throw 'Refusing to unregister a different COM server'
- }
- if($registered){Remove-Item -LiteralPath $classKey -Recurse -Force}
- Write-Output 'Unregistered the current isolated user QuickSort Send submenu.'
+ $expectedInstall=[IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA 'Programs\DCM Quick Sort'))
+ $expectedDll=Join-Path $expectedInstall $expectedName
+ $value=Get-DefaultValue $handler
+ $registered=Get-DefaultValue "$classKey\InprocServer32"
+ # Validate both keys before any mutation, and require an exact path match.
+ $decision=Get-QuickSortRegistrationDecision -HandlerValue $value -ServerValue $registered -ExpectedClsid $clsid -ExpectedDllPath $expectedDll
+ if($decision.HandlerOwned){Remove-Item -LiteralPath $handler -Recurse -Force}
+ if($decision.ServerOwned){Remove-Item -LiteralPath $classKey -Recurse -Force}
+ Write-Output 'Unregistered only owned QuickSort Explorer keys for the current isolated user.'
 } else {
  Write-Output "QuickSort Send CLSID: $clsid"
  Write-Output "Handler: $handler"
