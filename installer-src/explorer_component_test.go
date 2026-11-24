@@ -111,3 +111,14 @@ func TestExplorerPreflightCLI(t *testing.T){
   if requested!=tc.requested||(err==nil)!=tc.valid{t.Errorf("args=%v requested=%v err=%v",tc.args,requested,err)}
  }
 }
+
+func TestExplorerComponentPowerShellUTF8BOM(t *testing.T){
+ dir:=makeExplorerPackage(t)
+ path:=filepath.Join(dir,"manifest.json")
+ raw,err:=os.ReadFile(path)
+ if err!=nil{t.Fatal(err)}
+ if err=os.WriteFile(path,append([]byte{0xef,0xbb,0xbf},raw...),0600);err!=nil{t.Fatal(err)}
+ plan,err:=planExplorerComponent(dir,true)
+ if err!=nil{t.Fatalf("PowerShell UTF-8 BOM rejected: %v",err)}
+ if len(plan.Payloads)!=2 || plan.ActivationAllowed{t.Fatalf("unexpected plan: %+v",plan)}
+}
