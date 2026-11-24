@@ -65,3 +65,39 @@ func TestExplorerRequestPathMustBeTrustedBeforeRead(t *testing.T) {
   t.Fatal("accepted absent trust root")
  }
 }
+
+func TestExplorerTrustedRequestReader(t *testing.T) {
+ root:=t.TempDir()
+ trusted:=filepath.Join(root,"explorer-requests")
+ if err:=os.Mkdir(trusted,0700);err!=nil{t.Fatal(err)}
+ good:=filepath.Join(trusted,"batch-123.json")
+ if err:=os.WriteFile(good,[]byte(`{"schema":1}`),0600);err!=nil{t.Fatal(err)}
+ raw,err:=readTrustedExplorerRequest(good,trusted)
+ if err!=nil || string(raw)!=`{"schema":1}`{t.Fatalf("valid request: %q %v",raw,err)}
+ other:=filepath.Join(root,"batch-other.json")
+ if err:=os.WriteFile(other,[]byte("outside"),0600);err!=nil{t.Fatal(err)}
+ if _,err=readTrustedExplorerRequest(other,trusted);err==nil{t.Fatal("accepted request outside directory")}
+ folder:=filepath.Join(trusted,"batch-folder.json")
+ if err:=os.Mkdir(folder,0700);err!=nil{t.Fatal(err)}
+ if _,err=readTrustedExplorerRequest(folder,trusted);err==nil{t.Fatal("accepted directory as request")}
+ oversized:=filepath.Join(trusted,"batch-large.json")
+ if err:=os.WriteFile(oversized,make([]byte,explorerBatchMaxBytes+1),0600);err!=nil{t.Fatal(err)}
+ if _,err=readTrustedExplorerRequest(oversized,trusted);err==nil{t.Fatal("accepted oversized request")}
+ empty:=filepath.Join(trusted,"batch-empty.json")
+ if err:=os.WriteFile(empty,nil,0600);err!=nil{t.Fatal(err)}
+ if _,err=readTrustedExplorerRequest(empty,trusted);err==nil{t.Fatal("accepted empty request")}
+}
+func TestExplorerTrustedRequestRejectsSymlinks(t *testing.T) {
+ root:=t.TempDir()
+ trusted:=filepath.Join(root,"explorer-requests")
+ if err:=os.Mkdir(trusted,0700);err!=nil{t.Fatal(err)}
+ outside:=filepath.Join(root,"outside.json")
+ if err:=os.WriteFile(outside,[]byte("outside"),0600);err!=nil{t.Fatal(err)}
+ symlink:=filepath.Join(trusted,"batch-symlink.json")
+ if err:=os.Symlink(outside,symlink);err!=nil{t.Skipf("symlink unsupported on this test account: %v",err)}
+ if _,err:=readTrustedExplorerRequest(symlink,trusted);err==nil{t.Fatal("accepted symlink request")}
+ trustedLink:=filepath.Join(root,"trusted-link")
+ if err:=os.Symlink(trusted,trustedLink);err==nil {
+  if _,err:=readTrustedExplorerRequest(filepath.Join(trustedLink,"batch-123.json"),trustedLink);err==nil{t.Fatal("accepted symlink request directory")}
+ }
+}
