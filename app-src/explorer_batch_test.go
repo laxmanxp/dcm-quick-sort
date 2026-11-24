@@ -41,3 +41,27 @@ func TestExplorerBatchValidatesFilesWithoutMoving(t *testing.T){
  data,err:=os.ReadFile(file)
  if err!=nil||string(data)!="unchanged"{t.Fatal("fixture changed")}
 }
+
+func TestExplorerRequestPathMustBeTrustedBeforeRead(t *testing.T) {
+ root:=t.TempDir()
+ trusted:=filepath.Join(root,"explorer-requests")
+ cases:=[]struct{path string;allowed bool}{
+  {filepath.Join(trusted,"batch-123.json"),true},
+  {filepath.Join(trusted,"batch-.json"),false},
+  {filepath.Join(trusted,"batch-abc.txt"),false},
+  {filepath.Join(trusted,"untrusted.json"),false},
+  {filepath.Join(root,"batch-other.json"),false},
+  {filepath.Join(trusted,"nested","batch-abc.json"),false},
+  {filepath.Join(trusted,"..","batch-sibling.json"),false},
+  {"batch-123.json",false},
+  {"",false},
+ }
+ for _,tc:=range cases {
+  if got:=isTrustedExplorerRequestPath(tc.path,trusted);got!=tc.allowed {
+   t.Errorf("path=%q got=%t want=%t",tc.path,got,tc.allowed)
+  }
+ }
+ if isTrustedExplorerRequestPath(filepath.Join(trusted,"batch-123.json"),"") {
+  t.Fatal("accepted absent trust root")
+ }
+}
