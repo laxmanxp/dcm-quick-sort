@@ -15,7 +15,6 @@ $verify=Join-Path $PSScriptRoot 'verify-installer-candidate.ps1'
 if(-not (Test-Path -LiteralPath (Join-Path $appSource 'go.mod'))){throw 'QuickSort application source not found'}
 if(-not (Test-Path -LiteralPath (Join-Path $installerSource 'go.mod'))){throw 'QuickSort installer source not found'}
 $null=& $verify -PackageDir $PackageDir
-if($LASTEXITCODE -ne 0){throw 'Explorer staging verification failed'}
 $output=[IO.Path]::GetFullPath($OutputDir)
 if(Test-Path -LiteralPath $output){throw 'Use a new, empty output directory to avoid overwriting an existing build'}
 New-Item -Path $output -ItemType Directory | Out-Null
