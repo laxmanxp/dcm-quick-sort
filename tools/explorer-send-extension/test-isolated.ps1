@@ -38,6 +38,8 @@ try {
     'PASS: 2 selected files, 2 live destination favorites, one dynamic submenu',
     'PASS: submenu command launched one helper handoff carrying both files; fixture source bytes unchanged',
     'PASS: folder selection is excluded',
+    'PASS: bounded command IDs, default-only suppression, invalid verb refusal',
+    'PASS: absent destination configuration hides submenu',
     'PASS: unloaded DLL and removed disposable fixture'
   )
   foreach ($line in $required) {
