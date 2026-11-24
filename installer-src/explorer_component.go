@@ -4,6 +4,7 @@ package main
 // This module only builds a validated packaging plan. It never copies payloads,
 // registers COM, restarts Explorer, or changes the existing installer behavior.
 import (
+ "bytes"
  "crypto/sha256"
  "encoding/hex"
  "encoding/json"
@@ -48,6 +49,7 @@ func planExplorerComponent(packageDir string, requested bool) (explorerInstallPl
  raw,err:=os.ReadFile(filepath.Join(packageDir,"manifest.json"))
  if err!=nil{return explorerInstallPlan{},fmt.Errorf("read Explorer manifest: %w",err)}
  var manifest explorerManifest
+ raw=bytes.TrimPrefix(raw,[]byte{0xef,0xbb,0xbf})
  if err=json.Unmarshal(raw,&manifest);err!=nil{return explorerInstallPlan{},fmt.Errorf("decode Explorer manifest: %w",err)}
  if manifest.Schema!=1 || manifest.Component!=explorerComponentName || !manifest.Passed ||
     manifest.EnabledByDefault || manifest.InstallationPerformed || manifest.RegistryModified || manifest.ExplorerRestarted {
