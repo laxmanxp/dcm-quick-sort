@@ -22,12 +22,13 @@ func consumeExplorerBatchStartup() {
  // Only launcher-owned request manifests are removed. Arbitrary paths
  // supplied through a command line must never be deleted by QuickSort.
  trustedDir:=filepath.Join(settingsDirectory(),"explorer-requests")
- trusted:=filepath.Clean(filepath.Dir(requestPath))==filepath.Clean(trustedDir) &&
-  strings.HasPrefix(filepath.Base(requestPath),"batch-") &&
-  filepath.Ext(requestPath)==".json"
+ if !isTrustedExplorerRequestPath(requestPath,trustedDir) {
+  showError("Explorer batch request is outside the trusted request folder; no files moved.")
+  return
+ }
  raw,err:=os.ReadFile(requestPath)
  if err!=nil {showError("Cannot read Explorer batch request: "+err.Error());return}
- if trusted {_=os.Remove(requestPath)}
+ _=os.Remove(requestPath)
  req,err:=parseExplorerBatchRequest(raw)
  if err!=nil {showError(err.Error());return}
  aliases,err:=loadDestinationAliases("")
