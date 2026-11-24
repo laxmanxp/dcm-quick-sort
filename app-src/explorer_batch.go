@@ -63,3 +63,18 @@ func validateExplorerBatchFiles(files []string)error{
  }
  return nil
 }
+
+ // isTrustedExplorerRequestPath refuses request manifests outside the dedicated
+ // per-user request directory. This must be evaluated before any file read.
+func isTrustedExplorerRequestPath(requestPath, trustedDir string) bool {
+ if requestPath=="" || trustedDir=="" || !filepath.IsAbs(requestPath) || !filepath.IsAbs(trustedDir) {
+  return false
+ }
+ requestPath=filepath.Clean(requestPath)
+ trustedDir=filepath.Clean(trustedDir)
+ filename:=filepath.Base(requestPath)
+ if filepath.Clean(filepath.Dir(requestPath))!=trustedDir || !strings.HasPrefix(filename,"batch-") || filepath.Ext(filename)!=".json" {
+  return false
+ }
+ return len(filename)>len("batch-.json")
+}
