@@ -101,3 +101,25 @@ func TestExplorerTrustedRequestRejectsSymlinks(t *testing.T) {
   if _,err:=readTrustedExplorerRequest(filepath.Join(trustedLink,"batch-123.json"),trustedLink);err==nil{t.Fatal("accepted symlink request directory")}
  }
 }
+
+func TestExplorerOpenedManifestIdentity(t *testing.T) {
+ root:=t.TempDir()
+ checked:=filepath.Join(root,"checked.json")
+ replacement:=filepath.Join(root,"replacement.json")
+ if err:=os.WriteFile(checked,[]byte("first"),0600);err!=nil{t.Fatal(err)}
+ if err:=os.WriteFile(replacement,[]byte("second"),0600);err!=nil{t.Fatal(err)}
+ before,err:=os.Lstat(checked)
+ if err!=nil{t.Fatal(err)}
+ opened,err:=os.Open(checked)
+ if err!=nil{t.Fatal(err)}
+ openedInfo,err:=opened.Stat()
+ opened.Close()
+ if err!=nil{t.Fatal(err)}
+ if !sameExplorerRequestFile(before,openedInfo){t.Fatal("unchanged opened file rejected")}
+ if sameExplorerRequestFile(before,nil){t.Fatal("nil opened file accepted")}
+ if err:=os.Remove(checked);err!=nil{t.Fatal(err)}
+ if err:=os.Rename(replacement,checked);err!=nil{t.Fatal(err)}
+ after,err:=os.Stat(checked)
+ if err!=nil{t.Fatal(err)}
+ if sameExplorerRequestFile(before,after){t.Fatal("replaced request file accepted")}
+}
