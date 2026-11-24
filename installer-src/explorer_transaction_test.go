@@ -10,6 +10,8 @@ type fakeExplorerStore struct {
  current explorerRegistrationSnapshot
  writes int
  failOnWrite int
+ failAfterWriteOn int
+ failRollbackAfterWriteOn int
  concurrentOnWrite int
  injectForeignOnWrite int
  failReadAt int
@@ -33,6 +35,8 @@ func (s *fakeExplorerStore) CompareAndSwap(before,after explorerRegistrationSnap
  if s.failOnWrite>0 && s.writes==s.failOnWrite {return errors.New("injected write failure")}
  if s.current!=before {return errExplorerRegistryChanged}
  s.current=after
+ if s.failAfterWriteOn>0 && s.writes==s.failAfterWriteOn {return errors.New("injected error after successful registry write")}
+ if s.failRollbackAfterWriteOn>0 && s.writes==s.failRollbackAfterWriteOn {return errors.New("injected error after successful rollback")}
  return nil
 }
 func TestExplorerTransactionLifecycle(t *testing.T){
@@ -74,7 +78,7 @@ func TestExplorerTransactionRollbackAndConflicts(t *testing.T){
   {"fail-second-step","install",initial,2,0,0,0,true,false,initial},
   {"failed-read-after-first-step","install",initial,0,0,0,3,true,false,initial},
   {"uninstall-fail-second-step","uninstall",full,2,0,0,0,true,false,full},
-  {"concurrent-first-step","install",initial,0,1,0,0,true,false,explorerRegistrationSnapshot{HandlerCLSID:"{00000000-0000-0000-0000-000000000000}"}},
+  {"concurrent-first-step","install",initial,0,1,0,0,false,true,explorerRegistrationSnapshot{HandlerCLSID:"{00000000-0000-0000-0000-000000000000}"}},
   {"concurrent-second-step","install",initial,0,2,0,0,false,true,explorerRegistrationSnapshot{HandlerCLSID:"{00000000-0000-0000-0000-000000000000}",ServerPath:testExplorerDLL}},
   {"foreign-server-second-step","install",initial,0,0,2,0,false,true,explorerRegistrationSnapshot{ServerPath:`C:\OtherApp\DCMQuickSortExplorerSend.dll`}},
  }
@@ -93,5 +97,36 @@ func TestExplorerTransactionForeignOwnershipNeverWrites(t *testing.T){
   s:=&fakeExplorerStore{current:explorerRegistrationSnapshot{ServerPath:`C:\Another\DCMQuickSortExplorerSend.dll`}}
   _,err:=executeExplorerRegistrationTransaction(s,action,testExplorerCLSID,testExplorerDLL)
   if err==nil || s.writes!=0 || !strings.Contains(err.Error(),"owned by another installation") {t.Fatalf("action=%s err=%v writes=%d",action,err,s.writes)}
+ }
+}
+
+func TestExplorerTransactionPartialWrites(t *testing.T) {
+ cases:=[]struct{
+  name string
+  afterWrite,afterRollback int
+  wantSteps int
+ }{
+  {"first-write-committed-then-error",1,0,1},
+  {"second-write-committed-then-error",2,0,2},
+  {"rollback-committed-then-error",2,3,2},
+ }
+ for _,tc:=range cases {
+  t.Run(tc.name,func(t *testing.T){
+   store:=&fakeExplorerStore{failAfterWriteOn:tc.afterWrite,failRollbackAfterWriteOn:tc.afterRollback}
+   result,err:=executeExplorerRegistrationTransaction(store,"install",testExplorerCLSID,testExplorerDLL)
+   if err==nil || result.Committed || !result.RolledBack || result.RollbackConflict ||
+      result.StepsApplied!=tc.wantSteps || store.current!=(explorerRegistrationSnapshot{}) {
+    t.Fatalf("unexpected partial-write recovery: result=%+v err=%v state=%+v",result,err,store.current)
+   }
+  })
+ }
+}
+
+func TestExplorerTransactionForeignChangeAfterFailedWrite(t *testing.T) {
+ store:=&fakeExplorerStore{concurrentOnWrite:2}
+ result,err:=executeExplorerRegistrationTransaction(store,"install",testExplorerCLSID,testExplorerDLL)
+ if err==nil || result.Committed || result.RolledBack || !result.RollbackConflict ||
+    store.current.ServerPath!=testExplorerDLL {
+  t.Fatalf("unsafe rollback: result=%+v err=%v state=%+v",result,err,store.current)
  }
 }
