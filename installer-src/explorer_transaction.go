@@ -67,7 +67,24 @@ func executeExplorerRegistrationTransaction(
    err=fmt.Errorf("registration ownership changed: %w",checkErr);break
   }
   if writeErr:=store.CompareAndSwap(before,next);writeErr!=nil {
-   err=fmt.Errorf("apply registration step: %w",writeErr);break
+   err=fmt.Errorf("apply registration step: %w",writeErr)
+   // A registry adapter may fail after a write has reached Windows. Inspect
+   // its post-error state before deciding whether a compensating write is safe.
+   observed,inspectErr:=store.Snapshot()
+   if inspectErr!=nil {
+    result.RollbackConflict=true
+    return result,errors.Join(err,fmt.Errorf("cannot inspect failed write: %w",inspectErr))
+   }
+   if observed==next {
+    // This operation completed despite reporting an error. It must be undone.
+    applied=append(applied,next)
+    result.StepsApplied++
+   } else if observed!=before {
+    // Foreign/intermediate state: never overwrite another writer.
+    result.RollbackConflict=true
+    return result,errors.Join(err,errExplorerRegistryChanged)
+   }
+   break
   }
   applied=append(applied,next)
   result.StepsApplied++
@@ -78,9 +95,15 @@ func executeExplorerRegistrationTransaction(
  rollbackOK:=true
  for i:=len(applied)-1;i>0;i-- {
   if rollbackErr:=store.CompareAndSwap(applied[i],applied[i-1]);rollbackErr!=nil {
+   // A rollback itself may have succeeded before returning an error.
+   observed,inspectErr:=store.Snapshot()
+   if inspectErr==nil && observed==applied[i-1] {
+    continue
+   }
    rollbackOK=false
    result.RollbackConflict=true
    err=errors.Join(err,fmt.Errorf("rollback step %d: %w",i,rollbackErr))
+   if inspectErr!=nil {err=errors.Join(err,inspectErr)}
    break
   }
  }
