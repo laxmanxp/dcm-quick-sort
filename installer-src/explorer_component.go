@@ -73,3 +73,26 @@ func planExplorerComponent(packageDir string, requested bool) (explorerInstallPl
  // authorize Explorer shell registration. That requires separate GUI acceptance.
  return explorerInstallPlan{SourceCommit:manifest.SourceCommit,Payloads:manifest.Files,ActivationAllowed:false},nil
 }
+
+ // explorerPreflightArgument recognizes one explicit verification-only CLI mode.
+ // It never installs or activates an extension.
+func explorerPreflightArgument(args []string)(string,bool,error){
+ const prefix="--verify-explorer-package="
+ requested:=false
+ path:=""
+ for _,arg:=range args {
+  if strings.HasPrefix(strings.ToLower(arg),prefix) {
+   if requested{return "",true,errors.New("Explorer verification option supplied twice")}
+   requested=true
+   path=strings.TrimSpace(arg[len(prefix):])
+  } else if requested || len(args)>1 {
+   // Once the explicit preflight mode is used, reject any second argument.
+   // Ordinary single-argument installer invocations remain unchanged.
+   if len(args)>1 {
+    for _,a:=range args {if strings.HasPrefix(strings.ToLower(a),prefix){return "",true,errors.New("Explorer preflight cannot be combined with install or uninstall arguments")}}
+   }
+  }
+ }
+ if requested && path=="" {return "",true,errors.New("Explorer package path is empty")}
+ return path,requested,nil
+}
