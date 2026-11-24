@@ -3,9 +3,10 @@
 package main
 
 import (
+ "crypto/rand"
+ "encoding/hex"
  "errors"
  "fmt"
- "strings"
  "syscall"
  "testing"
  "unsafe"
@@ -30,12 +31,10 @@ type sandboxExplorerRegistry struct {
 
 func newSandboxExplorerRegistry(t *testing.T) *sandboxExplorerRegistry {
  t.Helper()
- // Create a unique run scope. t.TempDir has a random leaf not controlled by
- // external callers; it is used only for a unique registry suffix.
- suffix:=strings.ReplaceAll(strings.ReplaceAll(t.TempDir(),"\\","_"),":","_")
- parts:=strings.Split(suffix,"_")
- id:=parts[len(parts)-1]
- if len(id)<5 {t.Fatal("invalid unique test registry id")}
+ // Random 128-bit run ID, never supplied by the caller.
+ nonce:=make([]byte,16)
+ if _,err:=rand.Read(nonce);err!=nil{t.Fatal(err)}
+ id:=hex.EncodeToString(nonce)
  base:=`Software\DCMQuickSortAcceptance\`+id
  store:=&sandboxExplorerRegistry{handlerKey:base+`\Handler`,serverKey:base+`\Server`}
  t.Cleanup(func(){
