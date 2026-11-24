@@ -636,6 +636,12 @@ func runGUI() {
 }
 
 func main() {
+ if len(os.Args)==2 && os.Args[1]=="--verify-release-bundle" {
+  report,err:=verifyEmbeddedExplorerRelease()
+  if err!=nil{fmt.Fprintln(os.Stderr,"Release verification failed:",err);os.Exit(2)}
+  fmt.Print(report)
+  return
+ }
  if packageDir,requested,err:=explorerPreflightArgument(os.Args[1:]);requested {
   if err==nil {_,err=planExplorerComponent(packageDir,true)}
   if err!=nil {
