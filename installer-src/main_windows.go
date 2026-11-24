@@ -631,6 +631,15 @@ func runGUI() {
 }
 
 func main() {
+ if packageDir,requested,err:=explorerPreflightArgument(os.Args[1:]);requested {
+  if err==nil {_,err=planExplorerComponent(packageDir,true)}
+  if err!=nil {
+   fmt.Fprintln(os.Stderr,"Explorer package verification failed:",err)
+   os.Exit(2)
+  }
+  fmt.Println("Explorer package verified for planning only; installation and registration remain disabled.")
+  return
+ }
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	procCoInitializeEx.Call(0, COINIT_APARTMENTTHREADED)
