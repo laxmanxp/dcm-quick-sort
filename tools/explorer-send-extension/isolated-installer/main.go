@@ -46,7 +46,7 @@ func safeRoot(root string)(string,error){
  if err!=nil{return "",err}
  if !strings.EqualFold(filepath.Dir(full),filepath.Clean(temp)) || !strings.HasPrefix(filepath.Base(full),isolatedMarker) ||
    len(filepath.Base(full))<=len(isolatedMarker) {
-  return "",errors.New("test root must be a direct, uniquely named child of the system temp directory")
+  return "",fmt.Errorf("test root must be a direct uniquely named child of system temp: root=%q temp=%q basename=%q",full,temp,filepath.Base(full))
  }
  return full,nil
 }
