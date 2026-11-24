@@ -147,7 +147,7 @@ int wmain(int argc,wchar_t** argv){
  DestroyMenu(top);
  invoke.lpVerb=MAKEINTRESOURCEA(77);
  require(ctx->InvokeCommand(&invoke)==E_INVALIDARG,"invalid command offset refused");
- std::cout<<"PASS: bounded command IDs, default-only suppression, invalid verb refusal\\n";
+ std::cout<<"PASS: bounded command IDs, default-only suppression, invalid verb refusal\n";
  // Unavailable destinations and vanished selected files must not create a handoff.
  std::filesystem::remove(config/L"destinations.conf");
  Drop* noFavorites=new Drop({fileA.wstring(),fileB.wstring()});
@@ -157,7 +157,7 @@ int wmain(int argc,wchar_t** argv){
  hr=ctx->QueryContextMenu(top,0,100,200,CMF_NORMAL);
  require(SUCCEEDED(hr)&&GetMenuItemCount(top)==0,"missing favorites hide submenu");
  DestroyMenu(top);
- std::cout<<"PASS: absent destination configuration hides submenu\\n";
+ std::cout<<"PASS: absent destination configuration hides submenu\n";
  ctx->Release();ext->Release();factory->Release();
  auto canUnload=reinterpret_cast<HRESULT (STDAPICALLTYPE *)()>(GetProcAddress(dll,"DllCanUnloadNow"));
  require(canUnload && canUnload()==S_OK,"COM object released");
