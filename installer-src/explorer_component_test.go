@@ -95,3 +95,19 @@ func TestExplorerComponentDuplicateAndUnknownFilesRejected(t *testing.T){
   })
  }
 }
+
+func TestExplorerPreflightCLI(t *testing.T){
+ cases:=[]struct{args []string;requested bool;valid bool}{
+  {[]string{},false,true},
+  {[]string{"/S"},false,true},
+  {[]string{"--verify-explorer-package=C:\\fixture"},true,true},
+  {[]string{"--verify-explorer-package="},true,false},
+  {[]string{"--verify-explorer-package=C:\\fixture","/S"},true,false},
+  {[]string{"/uninstall","--verify-explorer-package=C:\\fixture"},true,false},
+  {[]string{"--verify-explorer-package=C:\\one","--verify-explorer-package=C:\\two"},true,false},
+ }
+ for _,tc:=range cases{
+  _,requested,err:=explorerPreflightArgument(tc.args)
+  if requested!=tc.requested||(err==nil)!=tc.valid{t.Errorf("args=%v requested=%v err=%v",tc.args,requested,err)}
+ }
+}
