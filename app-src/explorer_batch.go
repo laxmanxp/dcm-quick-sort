@@ -4,6 +4,7 @@ import (
  "encoding/json"
  "errors"
  "fmt"
+ "io"
  "os"
  "path/filepath"
  "strings"
@@ -77,4 +78,31 @@ func isTrustedExplorerRequestPath(requestPath, trustedDir string) bool {
   return false
  }
  return len(filename)>len("batch-.json")
+}
+
+ // readTrustedExplorerRequest checks both the request directory and file
+ // before reading. This rejects reparse/symlink paths, oversized payloads and
+ // folders masquerading as manifests. The helper-generated file is disposable.
+func readTrustedExplorerRequest(requestPath, trustedDir string) ([]byte,error) {
+ if !isTrustedExplorerRequestPath(requestPath,trustedDir) {
+  return nil,errors.New("Explorer batch request is outside the trusted request folder")
+ }
+ directory,err:=os.Lstat(trustedDir)
+ if err!=nil{return nil,fmt.Errorf("trusted Explorer request directory: %w",err)}
+ if !directory.IsDir() || directory.Mode()&os.ModeSymlink!=0 {
+  return nil,errors.New("Explorer request directory must be an ordinary directory")
+ }
+ fileInfo,err:=os.Lstat(requestPath)
+ if err!=nil{return nil,fmt.Errorf("Explorer request file: %w",err)}
+ if !fileInfo.Mode().IsRegular() || fileInfo.Mode()&os.ModeSymlink!=0 || fileInfo.Size()<=0 || fileInfo.Size()>explorerBatchMaxBytes {
+  return nil,errors.New("Explorer request must be an ordinary JSON file of valid size")
+ }
+ file,err:=os.Open(requestPath)
+ if err!=nil{return nil,err}
+ defer file.Close()
+ // Cap bytes even if another writer extends the file after the size check.
+ raw,err:=io.ReadAll(io.LimitReader(file,explorerBatchMaxBytes+1))
+ if err!=nil{return nil,err}
+ if len(raw)==0 || len(raw)>explorerBatchMaxBytes {return nil,errors.New("invalid Explorer request size")}
+ return raw,nil
 }
