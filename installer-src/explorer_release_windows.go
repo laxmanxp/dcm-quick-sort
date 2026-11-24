@@ -4,6 +4,7 @@ package main
 
 import (
  "crypto/sha256"
+ "encoding/hex"
  _ "embed"
  "errors"
  "fmt"
@@ -109,4 +110,21 @@ func uninstallExplorerSendComponent(installDir string) error {
   if err:=os.Remove(path);err!=nil && !os.IsNotExist(err) {return fmt.Errorf("remove Explorer component %s: %w",filepath.Base(path),err)}
  }
  return nil
+}
+
+func verifyEmbeddedExplorerRelease() (string,error) {
+ items:=[]struct{name string;data []byte}{
+  {"DCM-QuickSort.exe",appPayload},
+  {"DCMQuickSortExplorerSend.dll",explorerDLLPayload},
+  {"DCMQuickSortExplorerSend.exe",explorerHelperPayload},
+ }
+ var result strings.Builder
+ for _,item:=range items {
+  if len(item.data)<512 || item.data[0]!='M' || item.data[1]!='Z' {
+   return "",fmt.Errorf("invalid or missing embedded executable: %s",item.name)
+  }
+  hash:=sha256.Sum256(item.data)
+  fmt.Fprintf(&result,"%s: %d bytes SHA256 %s\n",item.name,len(item.data),hex.EncodeToString(hash[:]))
+ }
+ return result.String(),nil
 }
