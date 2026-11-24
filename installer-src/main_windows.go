@@ -351,6 +351,9 @@ func install(source string, restorePrevious bool) error {
 	if err := writeExplorerIntegration(appExe); err != nil {
 		return fmt.Errorf("register Explorer integration: %w", err)
 	}
+	if err := installExplorerSendComponent(installDir); err != nil {
+		return fmt.Errorf("register Explorer destination submenu: %w",err)
+	}
 	return nil
 }
 
@@ -385,6 +388,8 @@ func uninstall(silent bool) error {
 	if backupErr != nil && !errors.Is(backupErr, ErrNoConfiguration) {
 		return fmt.Errorf("back up configuration before uninstall: %w", backupErr)
 	}
+	// Remove owned Explorer COM registrations before deleting their DLL or app.
+	if err:=uninstallExplorerSendComponent(installDir);err!=nil{return err}
 	_ = os.Remove(shortcut)
 	_ = os.Remove(appExe)
 	_ = os.Remove(settingsPath)
