@@ -22,7 +22,7 @@ $receipt = [ordered]@{
 }
 try {
   $build = Join-Path $PSScriptRoot 'build.ps1'
-  $buildOutput = @(& $build -OutDir $stage 2>&1 | ForEach-Object { $_.ToString() })
+  $buildOutput = @(& $build -OutDir $stage | ForEach-Object { $_.ToString() })
   if ($LASTEXITCODE -ne 0) { throw 'Extension build failed' }
   $smoke = Join-Path $stage 'explorer-smoke.exe'
   $receiver = Join-Path $stage 'fixture-receiver.exe'
