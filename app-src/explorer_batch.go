@@ -104,7 +104,7 @@ func readTrustedExplorerRequest(requestPath, trustedDir string) ([]byte,error) {
  if err!=nil{return nil,err}
  // Revalidate the opened handle, not only the previously checked pathname:
  // a concurrent replacement or symlink swap must not change which file we read.
- if !openedInfo.Mode().IsRegular() || !os.SameFile(fileInfo,openedInfo) {
+ if !sameExplorerRequestFile(fileInfo,openedInfo) {
   return nil,errors.New("Explorer request file changed while being opened")
  }
  // Cap bytes even if another writer extends the file after the size check.
@@ -112,4 +112,8 @@ func readTrustedExplorerRequest(requestPath, trustedDir string) ([]byte,error) {
  if err!=nil{return nil,err}
  if len(raw)==0 || len(raw)>explorerBatchMaxBytes {return nil,errors.New("invalid Explorer request size")}
  return raw,nil
+}
+
+func sameExplorerRequestFile(inspected, opened os.FileInfo) bool {
+ return inspected!=nil && opened!=nil && opened.Mode().IsRegular() && os.SameFile(inspected,opened)
 }
