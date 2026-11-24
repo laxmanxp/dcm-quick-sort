@@ -132,6 +132,32 @@ int wmain(int argc,wchar_t** argv){
  require(SUCCEEDED(hr)&&GetMenuItemCount(top)==0,"folder selection suppressed");
  DestroyMenu(top);
  std::cout<<"PASS: folder selection is excluded\n";
+ // QueryContextMenu must honor the available command-ID range and default-only mode.
+ Drop* again=new Drop({fileA.wstring(),fileB.wstring()});
+ require(SUCCEEDED(ext->Initialize(nullptr,again,nullptr)),"reinitialize file selection");
+ again->Release();
+ top=CreatePopupMenu();
+ hr=ctx->QueryContextMenu(top,0,100,100,CMF_NORMAL);
+ require(SUCCEEDED(hr)&&HRESULT_CODE(hr)==1,"one available ID permits one destination");
+ require(GetMenuItemCount(GetSubMenu(top,0))==1,"command limit clips submenu");
+ DestroyMenu(top);
+ top=CreatePopupMenu();
+ hr=ctx->QueryContextMenu(top,0,100,200,CMF_DEFAULTONLY);
+ require(SUCCEEDED(hr)&&HRESULT_CODE(hr)==0&&GetMenuItemCount(top)==0,"default-only menu suppressed");
+ DestroyMenu(top);
+ invoke.lpVerb=MAKEINTRESOURCEA(77);
+ require(ctx->InvokeCommand(&invoke)==E_INVALIDARG,"invalid command offset refused");
+ std::cout<<"PASS: bounded command IDs, default-only suppression, invalid verb refusal\\n";
+ // Unavailable destinations and vanished selected files must not create a handoff.
+ std::filesystem::remove(config/L"destinations.conf");
+ Drop* noFavorites=new Drop({fileA.wstring(),fileB.wstring()});
+ require(SUCCEEDED(ext->Initialize(nullptr,noFavorites,nullptr)),"reinitialize without destination config");
+ noFavorites->Release();
+ top=CreatePopupMenu();
+ hr=ctx->QueryContextMenu(top,0,100,200,CMF_NORMAL);
+ require(SUCCEEDED(hr)&&GetMenuItemCount(top)==0,"missing favorites hide submenu");
+ DestroyMenu(top);
+ std::cout<<"PASS: absent destination configuration hides submenu\\n";
  ctx->Release();ext->Release();factory->Release();
  auto canUnload=reinterpret_cast<HRESULT (STDAPICALLTYPE *)()>(GetProcAddress(dll,"DllCanUnloadNow"));
  require(canUnload && canUnload()==S_OK,"COM object released");
