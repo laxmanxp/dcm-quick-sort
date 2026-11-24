@@ -40,6 +40,10 @@ func writeEmbeddedExplorerFile(path string, payload []byte) error {
  if len(payload)==0{return errors.New("empty embedded Explorer component")}
  if info,err:=os.Lstat(path);err==nil {
   if !info.Mode().IsRegular(){return fmt.Errorf("refusing non-file Explorer payload: %s",path)}
+  existing,readErr:=os.ReadFile(path)
+  if readErr!=nil{return readErr}
+  if sha256.Sum256(existing)==sha256.Sum256(payload){return nil}
+  return fmt.Errorf("Explorer component already exists with different bytes: %s; close the old Explorer extension before upgrading",path)
  }else if !os.IsNotExist(err){return err}
  tmp:=path+".new"
  if err:=os.WriteFile(tmp,payload,0600);err!=nil{return err}
@@ -63,11 +67,25 @@ func installExplorerSendComponent(installDir string) error {
  if err:=writeEmbeddedExplorerFile(helper,explorerHelperPayload);err!=nil{return err}
  state,err:=newWindowsExplorerRegistryStore().Snapshot()
  if err!=nil{return err}
+ // Best-effort rollback of only newly introduced owned entries. Windows
+ // registry APIs do not make these separate operations atomic.
+ registered:=false
+ defer func(){
+  if registered{return}
+  current,readErr:=newWindowsExplorerRegistryStore().Snapshot()
+  if readErr!=nil{return}
+  if state.HandlerCLSID=="" && strings.EqualFold(current.HandlerCLSID,explorerSendCLSID) {
+   deleteRegistryTree(explorerSendHandlerKey)
+  }
+  if state.ServerPath=="" && strings.EqualFold(filepath.Clean(current.ServerPath),filepath.Clean(dll)) {
+   deleteRegistryTree(filepath.Dir(explorerSendServerKey))
+  }
+ }()
  // Register server before publishing the Explorer handler.
  if err:=regSetString(explorerSendServerKey,"",dll);err!=nil{return err}
  if err:=regSetString(explorerSendServerKey,"ThreadingModel",explorerSendThreadingModel);err!=nil{return err}
  if err:=regSetString(explorerSendHandlerKey,"",explorerSendCLSID);err!=nil{return err}
- _=state // The earlier ownership snapshot prevents knowingly taking foreign keys.
+ registered=true
  return nil
 }
 
