@@ -11,6 +11,8 @@ import (
  "os"
  "path/filepath"
  "strings"
+ "syscall"
+ "unsafe"
 )
 
 // These are compiled into the real installer, not loaded from an arbitrary
@@ -90,6 +92,18 @@ func installExplorerSendComponent(installDir string) error {
  return nil
 }
 
+// removeOwnedExplorerRegistryTree reports failures instead of treating failed
+// COM unregistration as a successful uninstall.
+func removeOwnedExplorerRegistryTree(path string) error {
+ ptr,err:=syscall.UTF16PtrFromString(path)
+ if err!=nil{return err}
+ code,_,_:=procRegDeleteTreeW.Call(HKEY_CURRENT_USER,uintptr(unsafe.Pointer(ptr)))
+ if code!=0 && code!=uintptr(syscall.ERROR_FILE_NOT_FOUND) && code!=uintptr(syscall.ERROR_PATH_NOT_FOUND) {
+  return fmt.Errorf("remove Explorer registration %s: Windows error %d",path,code)
+ }
+ return nil
+}
+
 func uninstallExplorerSendComponent(installDir string) error {
  dll,helper:=explorerInstalledPaths(installDir)
  state,err:=newWindowsExplorerRegistryStore().Snapshot()
@@ -98,11 +112,11 @@ func uninstallExplorerSendComponent(installDir string) error {
   return fmt.Errorf("refusing to remove foreign Explorer registration: %w",err)
  }
  if strings.EqualFold(strings.TrimSpace(state.HandlerCLSID),explorerSendCLSID) {
-  deleteRegistryTree(explorerSendHandlerKey)
+  if err:=removeOwnedExplorerRegistryTree(explorerSendHandlerKey);err!=nil{return err}
  }
  if state.ServerPath!="" && strings.EqualFold(filepath.Clean(state.ServerPath),filepath.Clean(dll)) {
   // Remove the class's InprocServer32 parent only when we own its exact path.
-  deleteRegistryTree(filepath.Dir(explorerSendServerKey))
+  if err:=removeOwnedExplorerRegistryTree(filepath.Dir(explorerSendServerKey));err!=nil{return err}
  }
  // A loaded DLL may be locked by Explorer. Report this instead of claiming the
  // uninstall succeeded; no Explorer process is forcibly restarted.
