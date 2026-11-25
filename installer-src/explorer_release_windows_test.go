@@ -79,3 +79,37 @@ func TestReleaseExplorerRejectsForeignServerIsolatedKeys(t *testing.T){
   if err!=nil || state.HandlerCLSID!="" || state.ServerPath!=foreign{t.Fatalf("foreign registration modified: %+v err=%v",state,err)}
  })
 }
+
+func TestReleaseExplorerPreflightRejectsForeignWithoutFiles(t *testing.T){
+ withIsolatedExplorerKeys(t,func(keys explorerRegistryLocations){
+  root:=t.TempDir()
+  foreign:=filepath.Join(root,"foreign.dll")
+  if err:=regSetString(keys.server,"",foreign);err!=nil{t.Fatal(err)}
+  if err:=preflightExplorerSendInstallAt(root,keys);err==nil{t.Fatal("accepted foreign COM owner")}
+  dll,helper:=explorerInstalledPaths(root)
+  for _,path:=range []string{dll,helper}{
+   if _,err:=os.Lstat(path);!errors.Is(err,os.ErrNotExist){t.Fatalf("modified files during preflight: %s",path)}
+  }
+ })
+}
+func TestReleaseExplorerPreflightRejectsModifiedPayload(t *testing.T){
+ withIsolatedExplorerKeys(t,func(keys explorerRegistryLocations){
+  root:=t.TempDir()
+  dll,helper:=explorerInstalledPaths(root)
+  if err:=os.WriteFile(dll,[]byte("foreign DLL"),0600);err!=nil{t.Fatal(err)}
+  if err:=preflightExplorerSendInstallAt(root,keys);err==nil{t.Fatal("accepted foreign DLL bytes")}
+  if err:=os.Remove(dll);err!=nil{t.Fatal(err)}
+  if err:=os.WriteFile(helper,[]byte("foreign helper"),0600);err!=nil{t.Fatal(err)}
+  if err:=preflightExplorerSendInstallAt(root,keys);err==nil{t.Fatal("accepted foreign helper bytes")}
+  if err:=os.Remove(helper);err!=nil{t.Fatal(err)}
+  if err:=preflightExplorerSendInstallAt(root,keys);err!=nil{t.Fatalf("fresh install preflight rejected: %v",err)}
+ })
+}
+func TestReleaseExplorerPreflightAcceptsOwnedInstalledPayload(t *testing.T){
+ withIsolatedExplorerKeys(t,func(keys explorerRegistryLocations){
+  root:=t.TempDir()
+  if err:=installExplorerSendComponentAt(root,keys);err!=nil{t.Fatal(err)}
+  if err:=preflightExplorerSendInstallAt(root,keys);err!=nil{t.Fatalf("existing owned payload rejected: %v",err)}
+  if err:=uninstallExplorerSendComponentAt(root,keys);err!=nil{t.Fatal(err)}
+ })
+}
