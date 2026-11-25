@@ -296,7 +296,7 @@ func install(source string, restorePrevious bool) error {
 	if err := os.MkdirAll(source, 0o755); err != nil {
 		return fmt.Errorf("create source folder: %w", err)
 	}
-	installDir, appExe, uninstallExe, settingsPath, shortcut = installPaths()
+	_, appExe, uninstallExe, settingsPath, shortcut := installPaths()
 	configDir := filepath.Dir(settingsPath)
 	backupRoot := configurationBackupRoot()
 	var restoreSnapshot *installerConfigurationSnapshot
