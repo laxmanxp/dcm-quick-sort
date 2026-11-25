@@ -55,6 +55,31 @@ func verifyExplorerRegistryOwnerAt(expectedDLL string,keys explorerRegistryLocat
  return err
 }
 
+// preflightExplorerSendInstall checks registry ownership and existing payloads
+// before the ordinary installer replaces the application or configuration.
+// A failed Explorer integration must not destroy a working QuickSort install.
+func preflightExplorerSendInstall(installDir string) error {
+ return preflightExplorerSendInstallAt(installDir,productionExplorerRegistryLocations)
+}
+func preflightExplorerSendInstallAt(installDir string,keys explorerRegistryLocations) error {
+ dll,helper:=explorerInstalledPaths(installDir)
+ if err:=verifyExplorerRegistryOwnerAt(dll,keys);err!=nil{return err}
+ for _,item:=range []struct{path string;payload []byte}{
+  {dll,explorerDLLPayload},{helper,explorerHelperPayload},
+ } {
+  info,err:=os.Lstat(item.path)
+  if os.IsNotExist(err){continue}
+  if err!=nil{return err}
+  if !info.Mode().IsRegular(){return fmt.Errorf("foreign Explorer component file: %s",item.path)}
+  existing,err:=os.ReadFile(item.path)
+  if err!=nil{return err}
+  if sha256.Sum256(existing)!=sha256.Sum256(item.payload) {
+   return fmt.Errorf("different Explorer component already exists: %s",item.path)
+  }
+ }
+ return nil
+}
+
 func writeEmbeddedExplorerFile(path string, payload []byte) error {
  if len(payload)==0{return errors.New("empty embedded Explorer component")}
  if info,err:=os.Lstat(path);err==nil {
@@ -83,7 +108,7 @@ func installExplorerSendComponent(installDir string) error {
 }
 func installExplorerSendComponentAt(installDir string,keys explorerRegistryLocations) error {
  dll,helper:=explorerInstalledPaths(installDir)
- if err:=verifyExplorerRegistryOwnerAt(dll,keys);err!=nil{return fmt.Errorf("Explorer registration ownership: %w",err)}
+ if err:=preflightExplorerSendInstallAt(installDir,keys);err!=nil{return fmt.Errorf("Explorer component preflight: %w",err)}
  // A pre-existing component file must never be silently destroyed on upgrade.
  if err:=writeEmbeddedExplorerFile(dll,explorerDLLPayload);err!=nil{return err}
  if err:=writeEmbeddedExplorerFile(helper,explorerHelperPayload);err!=nil{return err}
