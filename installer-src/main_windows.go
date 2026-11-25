@@ -286,11 +286,17 @@ func installPaths() (installDir, appExe, uninstallExe, settingsPath, shortcut st
 }
 
 func install(source string, restorePrevious bool) error {
+	// Reject foreign or mismatched Explorer components before modifying any
+	// existing app binary, configuration, shortcut, or uninstall registration.
+	installDir, _, _, _, _ := installPaths()
+	if err:=preflightExplorerSendInstall(installDir);err!=nil {
+		return fmt.Errorf("Explorer destination integration preflight: %w",err)
+	}
 	source = filepath.Clean(source)
 	if err := os.MkdirAll(source, 0o755); err != nil {
 		return fmt.Errorf("create source folder: %w", err)
 	}
-	installDir, appExe, uninstallExe, settingsPath, shortcut := installPaths()
+	installDir, appExe, uninstallExe, settingsPath, shortcut = installPaths()
 	configDir := filepath.Dir(settingsPath)
 	backupRoot := configurationBackupRoot()
 	var restoreSnapshot *installerConfigurationSnapshot
